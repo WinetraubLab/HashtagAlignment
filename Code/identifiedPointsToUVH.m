@@ -30,7 +30,7 @@ function [u,v,h,d] = identifiedPointsToUVH (pts,lnDist, lnDir)
 %       On n3: (80,10), (80,50)
 %       On n4: (90,10)
 %   Then we shall run function as following:
-%       pts =    [ 15 10;  15 50;  25 10  -15 10; -15 50; -25 10];
+%       pts =    [ 15 10;  15 50;  25 10; -15 10; -15 50; -25 10];
 %       lnDist = [-50e-6; -50e-6; +50e-6; -50e-6; -50e-6; +50e-6];
 %       lnDir =  [ 0     ; 0    ;  0    ;  1    ;  1    ;  1    ];
 
