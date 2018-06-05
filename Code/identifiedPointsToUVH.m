@@ -7,13 +7,13 @@ function [u,v,h,d] = identifiedPointsToUVH (pts,lnDist, lnDir)
 %   pts - containing position of points identified (in pixels)
 %   lns - vector containing the distance of the line identified from the
 %       origin (in meters)
-%   lnDir - vector for each line is it of the form x=c, up/down (lnDir=0) or 
-%       y=c, left/right (lnDir=1)
+%   lnDir - vector for each line is it of the form x=c, up/down (lnDir=1) or 
+%       y=c, left/right (lnDir=0)
 %OUTPUTs
-%   u - the real space coordinates of image's u direction (units of meters)
-%   v - the real space coordinates of images's v direction (units of meters)
+%   u - the real space coordinates of image's u direction (units of meters): (x,y,z)
+%   v - the real space coordinates of images's v direction (units of meters): (x,y,z)
 %   h - location of image's origin (point 0*u + 0*v, sometimes called top
-%       left corner of the image)
+%       left corner of the image): (x,y,z)
 %   d - when looking in a birds eye view. What is distance between each point
 %       to the axis along the photobleach plane in [m]
 %Notice:
@@ -39,7 +39,7 @@ npts = size(pts,1);
 z = zeros(npts,1);
 o = z+1;
 
-A = [pts(:,1) z pts(:,2) z o z].*(lnDir == 0) + [z pts(:,1) z pts(:,2) z o].*(lnDir == 1);
+A = [pts(:,1) z pts(:,2) z o z].*(lnDir == 1) + [z pts(:,1) z pts(:,2) z o].*(lnDir == 0);
 
 %% Solve Least Square Problem for x-y plane
 tmp = A\lnDist;
