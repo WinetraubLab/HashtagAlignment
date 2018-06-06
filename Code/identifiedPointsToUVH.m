@@ -1,4 +1,4 @@
-function [u,v,h,d] = identifiedPointsToUVH (pts,lnDist, lnDir)
+function [u,v,h] = identifiedPointsToUVH (pts,lnDist, lnDir)
 %Use the identified points hashtag lines to estimate what is the u,v,h
 %vectors. Solving a least square structure.
 %USAGE:
@@ -14,8 +14,6 @@ function [u,v,h,d] = identifiedPointsToUVH (pts,lnDist, lnDir)
 %   v - the real space coordinates of images's v direction (units of meters): (x,y,z)
 %   h - location of image's origin (point 0*u + 0*v, sometimes called top
 %       left corner of the image): (x,y,z)
-%   d - when looking in a birds eye view. What is distance between each point
-%       to the axis along the photobleach plane in [m]
 %Notice:
 %   To compute u(z),v(z) we assume
 %       1) Histology image can isometirally shrink |u|=|v|
@@ -43,25 +41,48 @@ A = [pts(:,1) z pts(:,2) z o z].*(lnDir == 1) + [z pts(:,1) z pts(:,2) z o].*(ln
 
 %% Solve Least Square Problem for x-y plane
 tmp = A\lnDist;
-u(1:2) = tmp(1:2); u = u(:);
-v(1:2) = tmp(3:4); v = v(:);
-h(1:2) = tmp(5:6); h = h(:);
+u = tmp(1:2); u = u(:);
+v = tmp(3:4); v = v(:);
+h = tmp(5:6); h = h(:);
 
 %% Solve z by solving non linear cuppled equation
 
-%Define a cupled equations
-f1 = @(a) (a(1)*a(2)+dot(u(1:2),v(1:2))); %Orthogonality Condition
-f2 = @(a) (sqrt(a(1).^2-a(2).^2+sum(u(1:2).^2)-sum(v(1:2).^2))); %Norm Condition
-F  = @(a) [f1(a); f2(a)];
+zvLim = [-2 2]*max([norm(u(1:2)) norm(v(1:2))]);
+for k=1:10
+    %All options for zv
+    zv = linspace(zvLim(1),zvLim(2),1e2);
 
-%Solve
-a = fsolve(F, ...
-    max([norm(u(1:2)) norm(v(1:2))]).*[1 1]);
-u(3) = a(1);
-v(3) = a(2);
-h(3) = NaN; %Cannot estimate hz
+    %Equal Norm Condtion
+    zu_1 = (sqrt(zv.^2 + norm(v).^2 - norm(u).^2)); 
+    zu_1(imag(zu_1)>0) = Inf; %If imaginary, reject solution
+    zu_2 = -zu_1;
 
-%% Bonus, compute d
-d = repmat(pts(:,1),[1 2]).*repmat(u(1:2)',[size(pts,1) 1])+repmat(h(1:2)',[size(pts,1) 1]);
-d = sqrt(sum(d.^2,2));
+    %Dot Product Condition
+    ddot_1 = ((zu_1.*zv-dot(u,v)));
+    ddot_2 = ((zu_2.*zv-dot(u,v)));
+
+    if false
+        %Debug plots
+        plot(zv,(ddot_2),zv,(ddot_1),zv,zv*0);
+        m = min(abs([ddot_2 ddot_1]));
+        ylim(m*[-50 50]);
+        pause(1)
+    end
+
+    %Find Best Fit
+    zzv = [zv zv];
+    zzu = [zu_1 zu_2];
+    ddot = [ddot_1 ddot_2];
+    i = find (abs(ddot)==min(abs(ddot)),1,'first');
+    
+    dzv = zv(2)-zv(1);
+    zvLim = zzv(i) + 5*[-dzv dzv];
+    
+    if (dot([u;zzu(i)],[v;zzv(i)])/(norm([u;zzu(i)]).*norm([v;zzv(i)]))<1e-4)
+        break;
+    end
+end
+v(3)=double(zzv(i));
+u(3)=double(zzu(i));
+%dot(u,v)./(norm(u)*norm(v))*180/pi
 
