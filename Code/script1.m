@@ -3,9 +3,9 @@
 %% Inputs
 
 %Histology 
-histologyFluorescenceFP = 'Y:\tmpData2\06052018\row data\Experiment.lif_Image009_ch00.tif';
+histologyFluorescenceFP = 'C:\Users\Itamar\Desktop\Experiment.lif_Image012_ch00.tif';
 histologyFluorescenceIm = fliplr(flipud(double(imread(histologyFluorescenceFP))));
-histologyImageFP = 'Y:\tmpData2\06052018\row data\Experiment.lif_Image009_ch00.tif';
+histologyImageFP = 'C:\Users\Itamar\Desktop\Experiment.lif_Image012_ch00.tif';
 histologyImage = fliplr(flipud(double(imread(histologyImageFP))));
 
 %# Alignment Markers Specifications
@@ -31,10 +31,10 @@ isPlotStepResults = [ false true false];
 %% Step #1: Find Feducial Marker in Fluorescence Image: ptsPixPosition, ptsId
 if (~exist('ptsPixPosition','var'))
     %TBD, merge with Itamar
-    
+    [ptsPixPosition, ptsId] = findLines (histologyFluorescenceIm,lnNames);
     
     %Output points, in case we would want to use them
-    fs1 = sprintf('%d,%d;',ptsPixPosition');
+    s1 = sprintf('%d,%d;',ptsPixPosition');
     s2 = sprintf('%d,',ptsId);
     fprintf('ptsPixPosition = [%s]; %%(pixX,pixY)\n',s1(1:(end-1)));
     fprintf('ptsId = [%s];\n',s2(1:(end-1)));
