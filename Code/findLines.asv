@@ -13,11 +13,10 @@ while 1
  if mod(j, 2) == 0
        x_av=mean(Points_temp_x(:,j-1:j),2);
        y_av=mean(Points_temp_y(:,j-1:j),2);
-       hold on;
-       plot(x_av,y_av,'b');
    for i=1:length(Points_temp_x(:,j))
        dis=round(abs(Points_temp_x(i,j)-Points_temp_x(i,j-1)));
-       intensity=mean(img(((round(y_av(i))):(round(y_av(i))+10)),((round(x_av(i))-3*dis):(round(x_av(i))+3*dis))));
+       intensity=mean(img(((round(y_av(i))):(round(y_av(i))+5)),((round(x_av(i))-3*dis):(round(x_av(i))+3*dis))));
+       %intensity=mean(img(:,((round(x_av(i))-3*dis):(round(x_av(i))+3*dis))));
        intensity=(intensity - min(intensity )) / ( max(intensity ) - min(intensity ) );
        intensity=smoothdata(smoothdata(intensity));
        var = maxGausVar(intensity,dis);
