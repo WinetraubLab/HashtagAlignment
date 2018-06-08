@@ -1,6 +1,29 @@
 function [ptsPixPosition, ptsId] = findLines (img,lnNames)
+%User interface. User marks the edages of each line and the algorithm estimate the location of the  
+% middle of the line using cross corelation with Gausian function.
+%USAGE:
+%   [ptsPixPosition, ptsId] = findLines (img,lnNames)
+%INPUTS:
+%   img - Histology fluorescence image with "bar cod" on it 
+%   InNames- a strinf containin ght ename of the line (for example -x)
+%  
+%OUTPUTs
+%   ptsPixPosition - containing position of lines identified (in pixels)
+%   ptsId -  Vector of line identifier 
+%   
+%Example:
+%   Let us assume 4 lines in the image:
+%       n1,n2 parallel to y axis positioned in x=-50microns, x=+50 microns
+%       n3,n4 parallel to x axis positioned in y=-50microns, y=+50 microns
+% - The user will be asked to mark the edages of the lines (will apear as red lines)
+% - The algorithm will compute the estimate location of the line (will apear as green line)
+%Notice:
+%       1) For each line edge mark points. Try to match between the y 
+%         location of the lines edges at the first and last points.
+%       2) double click to finish to mark an edge
+%       3) use the 'delete' buttonin order to delete unwanted marked point 
 
-
+% Reading the image
 imagesc(img);
 colormap gray;
 resp= 'Y';
@@ -11,10 +34,16 @@ while 1
         break;
     end
  if mod(j, 2) == 0
+       % Calculation the location of the line
+       
+       % Finding the average x and y points of the edges and plotting it
        x_av=mean(Points_temp_x(:,j-1:j),2);
        y_av=mean(Points_temp_y(:,j-1:j),2);
        hold on;
        plot(x_av,y_av,'b');
+       % Estimating the X locations for different x points of the line
+       % by comp[uting the cross correlation function of the image data
+       % with gausian
    for i=1:length(Points_temp_x(:,j))
        dis=round(abs(Points_temp_x(i,j)-Points_temp_x(i,j-1)));
        intensity=mean(img(((round(y_av(i))):(round(y_av(i))+10)),((round(x_av(i))-3*dis):(round(x_av(i))+3*dis))));
@@ -41,6 +70,7 @@ while 1
     clear x_av; clear y_av; clear dis; clear intensity; clear gaus; clear acor; clear lag;
     clear I; clear lagDiff; clear x_estimate; clear p;
  else
+     % Marking the edges of a line
      title(['Mark ' lnNames{round(j/2)} ' Left Side of the line. double click to finish']);
      [x1,y1] = getline;
      Nx1=length(x1);

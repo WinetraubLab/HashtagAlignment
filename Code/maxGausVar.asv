@@ -1,11 +1,34 @@
 function [var] = maxGausVar (intensity,dis)
+% Use to find the gaussian variance that will yield maximum cross correllation between the intensity and a gaussian.  
+%USAGE:
+%   [var] = findLines (intensity,dis)
+%INPUTS:
+%   intensity - 1D vector that contain the image  normalize intensity at a
+%   specific Y location.
+%   Dis- (scalar) the distance between the two edegs of the line in a specific Y location 
+%  
+%OUTPUTs
+%   ptsPixPosition - containing position of lines identified (in pixels)
+%   ptsId -  Vector of line identifier 
+%   
+%Example:
+%   Let us assume 4 lines in the image:
+%       n1,n2 parallel to y axis positioned in x=-50microns, x=+50 microns
+%       n3,n4 parallel to x axis positioned in y=-50microns, y=+50 microns
+% - The user will be asked to mark the edages of the lines (will apear as red lines)
+% - The algorithm will compute the estimate location of the line (will apear as green line)
+%Notice:
+%       1) For each line edge mark points. Try to match between the y 
+%         location of the lines edges at the first and last points.
+%       2) double click to finish to mark an edge
+
        
-      for i = 10:1:100
-       Gaus= -1*gausswin([4*dis +1],i);
+      for i = 1:1:20
+       Gaus= -1*gausswin([6*dis +1],i);
        Gaus=(Gaus - min(Gaus)) / ( max(Gaus) - min(Gaus) );
        [acor,lag] = xcorr(intensity,Gaus);
        [val,~] = max(abs(acor));
-       MaxAcor(i)=val
+       MaxAcor(i)=val;
       end
       [val ind]=max(MaxAcor);
       var=ind;

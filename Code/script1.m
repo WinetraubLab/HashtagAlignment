@@ -3,9 +3,9 @@
 %% Inputs
 
 %Histology 
-histologyFluorescenceFP = 'C:\Users\Itamar\Desktop\Experiment.lif_Image011_ch00.tif';
+histologyFluorescenceFP = 'C:\Users\Itamar\Documents\Test_HashTag_Alignment\Experiment_001.lif_Image014_ch01.tif';
 histologyFluorescenceIm = fliplr(flipud(double(imread(histologyFluorescenceFP))));
-histologyImageFP = 'C:\Users\Itamar\Desktop\Experiment.lif_Image011_ch00.tif';
+histologyImageFP = 'C:\Users\Itamar\Documents\Test_HashTag_Alignment\Experiment_001.lif_Image014_ch01.tif';
 histologyImage = fliplr(flipud(double(imread(histologyImageFP))));
 
 %# Alignment Markers Specifications
