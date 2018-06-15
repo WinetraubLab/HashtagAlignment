@@ -47,8 +47,8 @@ h = tmp(5:6); h = h(:);
 
 %% Solve z by solving non linear cuppled equation
 
-zvLim = [-2 2]*max([norm(u(1:2)) norm(v(1:2))]);
-for k=1:10
+zvLim = [0 2]*max([norm(u(1:2)) norm(v(1:2))]); %Choose zv that points on image down
+for k=1:20
     %All options for zv
     zv = linspace(zvLim(1),zvLim(2),1e2);
 
@@ -78,7 +78,7 @@ for k=1:10
     dzv = zv(2)-zv(1);
     zvLim = zzv(i) + 5*[-dzv dzv];
     
-    if (dot([u;zzu(i)],[v;zzv(i)])/(norm([u;zzu(i)]).*norm([v;zzv(i)]))<1e-4)
+    if (abs(dot([u;zzu(i)],[v;zzv(i)])/(norm([u;zzu(i)]).*norm([v;zzv(i)]))*180/pi)<5)
         break;
     end
 end
