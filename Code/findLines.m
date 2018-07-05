@@ -1,13 +1,14 @@
 %User interface. User marks the edges of each line and the algorithm estimates the location of the  
-% middle of the line using cross correlation with a Gausian function.
+% middle of the line.
 %USAGE:
-%   [ptsPixPosition, ptsId] = findLines (img,lnNames)
+%   [ptsPixPosition, ptsId] = findLines (img, imgSize,lnNames)
 %INPUTS:
 %   img - Histology fluorescence image with "bar code" on it 
 %   InNames- A string that contains the name of the line (for example -x)
 %  
 %OUTPUTs
-%   ptsPixPosition - Vector containing position of lines identified (in pixels)
+%   ptsPixPosition - Vector containing position of lines identified (in pixels, x,y)
+%   imgSize - size of the image (in meters)
 %   ptsId -  Vector of line identifiers
 %   
 %Example:
@@ -25,148 +26,96 @@
 %     1: Cross Correlation with Gaussian Fit
 %     2: FMinSearch with Gaussian Fit
 
-function [ptsPixPosition, ptsId] = findLines (img,lnNames)
-    % Options
-    MODE_CENTERING = 2;
-    AVG_SLICES = 2; % How many slices to average below and above the current value
-    FINDPEAK_EXPECTEDMINDIST = 30;
-    FINDPEAK_EXPECTEDNUMPEAKS = 1;
-    FINDPEAK_EXPECTEDMINDEPTH = 0.4;
-    gaussian = @(a, x) a(1).*exp(-((x-a(2)).^2)./(2.*a(3).^2))+a(4);
+function [ptsPixPosition, ptsId] = findLines (img,lnNames) 
 
-    % Reading the image
-    
-    mainFigure = figure();
+    %% GUI Hendling
+
+    %Draw image 
+    figure(21);
+    subplot(1,1,1);
     imagesc(img);
     colormap gray;
-    resp= 'Y';
-    j = 1;
 
-    x_estimate = []; % format is [xValue (pixels), lineNumber]
-    y_estimate = []; % format is [yValue (pixels), lineNumber]
-    % Processes all potential lines
-    while 1
-        if strcmpi(resp,'N')
-            break;
-        end
-        % Finds bounding polygon around a line
-        title(['Mark ' lnNames{round(j / 2)} 'Select the region containing one line']);
-        binaryImage = roipoly;
-        bottomIndex = find(sum(binaryImage, 2), 1, 'first');
-        topIndex = find(sum(binaryImage, 2), 1, 'last');
-        % Then finds the central line
-        possibleLength = topIndex - bottomIndex;
-        y_estimate_local = zeros(possibleLength, 1);
-        x_estimate_local = zeros(possibleLength, 1);
-        writeIndex = 1;
-        for rowIndex = 1:possibleLength % Takes cross section along each row
-            currentRow = bottomIndex + rowIndex;
-            leftIndex = find(binaryImage(currentRow, :), 1, 'first');
-            rightIndex = find(binaryImage(currentRow, :), 1, 'last');
-            intensity = double(mean(img(currentRow - AVG_SLICES : currentRow + AVG_SLICES, leftIndex:rightIndex), 1)).*-1; % Row cross section inverted to use minpeak
-            intensity = (intensity - min(intensity)) / (max(intensity) - min(intensity)); % Normalizes the section
-            intensity = smooth(intensity, 5); % Smooths the section
-            switch MODE_CENTERING
-                case 1 % Correlation TODO
-                    %{
-                    var = maxGausVar(intensity, dis);
-                    gauss = -1 * gausswin([6 * dis + 1],var);
-                    gauss = (gauss - min(gauss)) / (max(gauss) - min(gauss));
-                    [acor,lag] = xcorr(intensity, gauss);
-                    [~,I] = max(abs(acor));
-                    lagDiff = lag(I);
-                    x_estimate(row) = x_av(row) - lagDiff + 1;
-                    %}
-                case 2 % Gaussian fit TODO actually do fit
-                    range = leftIndex:rightIndex;
-                    if(length(range) > 5)
-                        minimumDistance = min([FINDPEAK_EXPECTEDMINDIST, (length(intensity) - 2)]);
-                        [peaks, locs, width, prominence] = findpeaks(intensity, range, 'MinPeakDistance', minimumDistance, 'NPeaks', FINDPEAK_EXPECTEDNUMPEAKS, 'MinPeakProminence', FINDPEAK_EXPECTEDMINDEPTH);
-                        if(~isempty(locs))
-                            if(mod(writeIndex, 5) == 1)
-                                %{
-                                figure;
-                                hold on;
-                                findpeaks(intensity, leftIndex:rightIndex, 'MinPeakDistance', minimumDistance, 'NPeaks', FINDPEAK_EXPECTEDNUMPEAKS, 'MinPeakProminence', FINDPEAK_EXPECTEDMINDEPTH);
-                                hold off;
-                                %}
-                            end
-                            %{
-                            for index = 1:length(locs_row) % Patched in
-                            % from the wasatch calibration script, needs to be modified 
-                                % --> Range
-                                startIndex = find(rowRange > (locs(index) - (width(index) * rangeWidthFromPeakWidth)/2), 1);
-                                stopIndex = find(rowRange > (locs(index) + (width(index) * rangeWidthFromPeakWidth)/2), 1);
-                                approximationRange = rowRange(startIndex:stopIndex, 1);
-                                % --> Magnitude
-                                magnitude = prominence(index) * amplitudeFromPeakProminance;
-                                % --> Variance
-                                variance = width_row(index) * varianceFromPeakWidth;
-                                % --> Calculates
-                                initialGuess = [magnitude, locs_row(index), variance, pks_row(index) - magnitude];
-                                result = fminsearch(@(a) sum((rowCrossSectionAvg(startIndex: stopIndex)' - gaussian(a, approximationRange)).^2), initialGuess);
-                                gaussianApproximations_row = [gaussianApproximations_row; result];
-                                gaussianFirstGuess_row = [gaussianFirstGuess_row; initialGuess];
-                            end
-                            %}
-                            x_estimate_local(writeIndex) = locs(1);
-                            y_estimate_local(writeIndex) = currentRow;
-                            writeIndex = writeIndex + 1;
-                        end
-                    end
-                otherwise
-                    error('findLines: error, MODE_CENTERING is invalid.');
+    %Ask user to mark lines by there order
+    linePts = zeros(2,2,length(lnNames)); %(xy,StartEnd,line)
+    linePs = zeros(2,length(lnNames));
+    for i=1:length(lnNames)
+        title(sprintf('Mark %s.\n Select the Center of the Line. Double Click To Finish',lnNames{i}));
+        lns = getline();
+
+        linePts(:,:,i) = lns;
+        linePs(:,i) = polyfit(lns(:,2),lns(:,1),1); %Linear fit between 2 lines x as a function of (y)
+
+        %Update Image
+        imagesc(img);
+        hold on;
+        plot(squeeze(linePts(:,1,1:i)),squeeze(linePts(:,2,1:i)));
+        hold off;
+    end
+
+    %% Find minimal distance between all lines
+    minDist = Inf;
+    for i=1:length(lnNames)
+        for j=1:length(lnNames)
+            if (i==j)
+                continue;
+            end
+            %Compute x-distance assuming y is equal
+            d = abs(squeeze(linePts(:,1,i))-polyval(linePs(:,j),linePts(:,2,i)));
+            d = min(d);
+            if (d<minDist)
+                minDist = d;
             end
         end
-        figure(mainFigure);
-        hold on;
-        plot(x_estimate_local, y_estimate_local, 'o');
-        hold off;
-        x_estimate = [x_estimate; [x_estimate_local, ones(length(x_estimate_local), 1) * j]];
-        y_estimate = [y_estimate; [y_estimate_local, ones(length(y_estimate_local), 1) * j]];
-        %{
-        hold on;
-        plot(x_estimate_local, y_estimate_local, 'Color', [0.4660, 0.6740, 0.1880]);
-        p = polyfit(x_estimate_local, y_estimate_local, 1)
-        plot(x_estimate_local, p(1) * x_estimate_local + p(2), 'Color', [0.8500, 0.3250, 0.0980]);
-        hold off;
-        %}
     end
-    % REVIEW AFTER ME
-    ptsPixPosition_x(:,j/2) = [x_estimate];
-    ptsPixPosition_y(:,j/2) = [p(1)*x_estimate+p(2)];
-    ptsId(:,j/2) = repmat([j/2],[11,1]);
-    j = j + 1;
-    resp = inputdlg('Do you wish to continue to mark lines? Y/N: ','s');
-    clear x1; clear y1; clear x2; clear y2; clear Nx1; clear Ny1; clear Nx2; clear Ny2; 
-    clear x_av; clear y_av; clear dis; clear intensity; clear gauss; clear acor; clear lag;
-    clear I; clear lagDiff; clear x_estimate; clear p; 
-    ptsPixPosition=[ptsPixPosition_x(:) ptsPixPosition_y(:)];
-    ptsId=ptsId(:);
-end
+    delta = minDist/3; %What is the width 
+    
+    %Update Image
+    subplot(2,1,1);
+    imagesc(img);
+    hold on;
+    plot(squeeze(linePts(:,1,1:i)),squeeze(linePts(:,2,1:i)));
+    plot(squeeze(linePts(:,1,1:i))-delta,squeeze(linePts(:,2,1:i)),'--k');
+    plot(squeeze(linePts(:,1,1:i))+delta,squeeze(linePts(:,2,1:i)),'--k');
+    hold off;
+            
+    %% Main Algorithm Loop for each line and fit 
+    gaussian = @(a, x) a(1)-a(2).*exp(-((x-a(3)).^2)./(2.*a(4).^2));
 
-% Found at https://stackoverflow.com/questions/12987905/how-to-make-a-curve-smoothing-in-matlab
-% because I do not have the curve fitting toolbox.
-function yy = smooth(y, span)
-    yy = y;
-    l = length(y);
-
-    for i = 1 : l
-        if i < span
-            d = i;
-        else
-            d = span;
+    ptsPixPosition=[];
+    ptsId=[];
+    for i=1:length(lnNames)
+        
+        %For every points on the line
+        for y=round(linePts(1,2,i)):round(linePts(2,2,i)) %ystart to yend
+            xCenter = polyval(linePs(:,i),y);
+            x = round(xCenter-delta):round(xCenter+delta);
+            data = mean(img(y+(-5:5),x),1); %Get data required for fitting
+            
+            a = [max(data),max(data)-min(data),xCenter,delta/2];
+            a = fminsearch(@(a)(sum(( data - gaussian(a,x) ).^2)),a);
+            
+            if false
+                subplot(2,1,2);
+                plot(x,data,x,gaussian(a,x));
+                grid on;
+                legend('Data','Gaussian Fit');   
+                pause(0.01);
+            end
+                
+            %Save Result
+            ptsPixPosition(end+1,:) = [a(3) y];
+            ptsId(end+1) = i;
         end
-
-        w = d - 1;
-        p2 = floor(w / 2);
-
-        if i > (l - p2)
-           p2 = l - i; 
-        end
-
-        p1 = w - p2;
-
-        yy(i) = sum(y(i - p1 : i + p2)) / d;
     end
+    ptsId = ptsId(:);
+    
+    %% Update With Final Lines
+    subplot(2,1,2);
+    imagesc(img);
+    hold on;
+    for i = 1:length(lnNames)
+        plot(ptsPixPosition(ptsId==i,1),ptsPixPosition(ptsId==i,2),'o');
+    end
+    hold off
 end
