@@ -81,7 +81,7 @@ function [ptsPixPosition, ptsId] = findLines (img,lnNames)
                     range = leftIndex:rightIndex;
                     if(length(range) > 5)
                         minimumDistance = min([FINDPEAK_EXPECTEDMINDIST, (length(intensity) - 2)]);
-                        [peaks, locs] = findpeaks(intensity, range, 'MinPeakDistance', minimumDistance, 'NPeaks', FINDPEAK_EXPECTEDNUMPEAKS, 'MinPeakProminence', FINDPEAK_EXPECTEDMINDEPTH);
+                        [peaks, locs, width, prominence] = findpeaks(intensity, range, 'MinPeakDistance', minimumDistance, 'NPeaks', FINDPEAK_EXPECTEDNUMPEAKS, 'MinPeakProminence', FINDPEAK_EXPECTEDMINDEPTH);
                         if(~isempty(locs))
                             if(mod(writeIndex, 5) == 1)
                                 %{
@@ -91,7 +91,24 @@ function [ptsPixPosition, ptsId] = findLines (img,lnNames)
                                 hold off;
                                 %}
                             end
-                            locs(1)
+                            %{
+                            for index = 1:length(locs_row) % Patched in
+                            % from the wasatch calibration script, needs to be modified 
+                                % --> Range
+                                startIndex = find(rowRange > (locs(index) - (width(index) * rangeWidthFromPeakWidth)/2), 1);
+                                stopIndex = find(rowRange > (locs(index) + (width(index) * rangeWidthFromPeakWidth)/2), 1);
+                                approximationRange = rowRange(startIndex:stopIndex, 1);
+                                % --> Magnitude
+                                magnitude = prominence(index) * amplitudeFromPeakProminance;
+                                % --> Variance
+                                variance = width_row(index) * varianceFromPeakWidth;
+                                % --> Calculates
+                                initialGuess = [magnitude, locs_row(index), variance, pks_row(index) - magnitude];
+                                result = fminsearch(@(a) sum((rowCrossSectionAvg(startIndex: stopIndex)' - gaussian(a, approximationRange)).^2), initialGuess);
+                                gaussianApproximations_row = [gaussianApproximations_row; result];
+                                gaussianFirstGuess_row = [gaussianFirstGuess_row; initialGuess];
+                            end
+                            %}
                             x_estimate_local(writeIndex) = locs(1);
                             y_estimate_local(writeIndex) = currentRow;
                             writeIndex = writeIndex + 1;
