@@ -1,14 +1,13 @@
 %User interface. User marks the edges of each line and the algorithm estimates the location of the  
 % middle of the line.
 %USAGE:
-%   [ptsPixPosition, ptsId] = findLines (img, imgSize,lnNames)
+%   [ptsPixPosition, ptsId] = findLines (img,lnNames)
 %INPUTS:
 %   img - Histology fluorescence image with "bar code" on it 
 %   InNames- A string that contains the name of the line (for example -x)
 %  
 %OUTPUTs
 %   ptsPixPosition - Vector containing position of lines identified (in pixels, x,y)
-%   imgSize - size of the image (in meters)
 %   ptsId -  Vector of line identifiers
 %   
 %Example:
@@ -43,7 +42,7 @@ function [ptsPixPosition, ptsId] = findLines (img,lnNames)
         title(sprintf('Mark %s.\n Select the Center of the Line. Double Click To Finish',lnNames{i}));
         lns = getline();
 
-        linePts(:,:,i) = lns;
+        linePts(:,:,i) = lns(1:2,:);
         linePs(:,i) = polyfit(lns(:,2),lns(:,1),1); %Linear fit between 2 lines x as a function of (y)
 
         %Update Image
@@ -68,7 +67,7 @@ function [ptsPixPosition, ptsId] = findLines (img,lnNames)
             end
         end
     end
-    delta = minDist/3; %What is the width 
+    delta = minDist/2*0.6; %What is the width 
     
     %Update Image
     subplot(2,1,1);
