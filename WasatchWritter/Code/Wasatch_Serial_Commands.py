@@ -6,7 +6,7 @@
 #
 # Description:
 #   These methods return strings to be
-#   sent to the Wasatch via serial.
+#   sent directly to the Wasatch via serial.
 #
 
 #---------------------- Included Libraries -------------------------------------

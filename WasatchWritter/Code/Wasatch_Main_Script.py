@@ -23,8 +23,19 @@ microscopeCommand = Wasatch_Serial_Interface_DirectSerial()
 
 #--> Put your commands here:
 
-# Note: Specify units using the pint library, ex:
-# width = 10 * unitRegistry.millimeters # Value has a length of 10 mm
+# Note:
+#
+#   Coordinate system is centered in the middle of the Wasatch OCT
+#   field of view as (0, 0). Positive x coordinates are right, and
+#   positive y coordinates are up.
+#
+#   To specify units, multiply your vale by unitRegistry.[unitName] ex,
+#   2.5 meters would be written as 'value = 2.5 * unitRegistry.meters'
+#   If unitRegistry is not used, commands will default to millimeters
+#   and seconds. If the flag 'wasatchUnits' is used, commands will be
+#   interpreted directly as wasatch units.
+#
+
 
 #lineHeight = 5.0 unitRegistry.millimeters
 #lineXPosition = 0.0 unitRegistry.millimeters from center

@@ -1,5 +1,3 @@
-# TODO: Conversions: Bleachpercentage overhaul, use default values for conversions
-# COMBAK Conversions: Standardize documentation. Add more conversions.
 #
 # File: WasatchInterface_MicroscopeSettings
 # ------------------------------
@@ -57,6 +55,9 @@ DUTY_CYCLE = 0.75 # Percentage of on time for pulses, this is the assumed duty c
 def WConvert_PointToCenteredInput(inputPoint):
     val = ((((inputPoint[0].to(unitRegistry.millimeter) + (MM_X / 2.0)) * ((MAX_X - MIN_X) / MM_X)) + MIN_X), ((inputPoint[1].to(unitRegistry.millimeters) + (MM_Y / 2.0)).to(unitRegistry.millimeters) * ((MAX_Y - MIN_Y) / MM_Y)) + MIN_Y)
     return val
+
+def WConvert_XToCenteredWasatchUnits(inputX):
+    val = inputX.to(unitRegistry.millimeter) + (MM_X / 2.0)) * ((MAX_X - MIN_X) / MM_X)) + MIN_X
 
 #
 # Description:
