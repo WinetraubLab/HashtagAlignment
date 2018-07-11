@@ -20,7 +20,7 @@ from Wasatch_Units import *
 
 #--> Setup:
 microscopeCommand = Wasatch_Serial_Interface_DirectSerial()
-
+print("Starting")
 #--> Put your commands here:
 
 # Note:
@@ -38,30 +38,38 @@ microscopeCommand = Wasatch_Serial_Interface_DirectSerial()
 #   and seconds. If the flag 'wasatchUnits' is used, commands will be
 #   interpreted directly as wasatch units.
 #
+# Available Commands:
+#   GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duration, *flags)
+#   GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markGapWidth, duration, *flags):
+#
 
 # Your script here:
 
 # Examples:
 #
-# Draws a grid
+# Draws a grid using Wasatch units directly:
 #
-# Row_Number = 200
-# Row_Spacing = 100
-# Column_Number = 100
-# Column_SPacing = 200
-# Duration = 1
+# rowNumber = 200
+# rowSpacing = 100
+# columnNumber = 100
+# columnSpacing = 200
+# duration = 1 # defaults to seconds
 #
-# for xIndex in range
+# for xIndex in range(-rowNumber / 2, rowNumber / 2):
+#   GCommand_BleachLine(microscopeCommand, -columnNumber / 2 * columnSpacing, rowNumber * rowSpacing, columnNumber / 2 * columnSpacing, rowNumber * rowSpacing, duration, "wasatchUnits")
+# for yIndex in range(-columnNumber / 2, columnNumber / 2):
+#   GCommand_BleachLine(microscopeCommand, columnNumber * columnSpacing, -rowNumber / 2 * rowSpacing, columnNumber * columnSpacing, rowNumber / 2 * rowSpacing, duration, "wasatchUnits")
 #
-
-#lineHeight = 5.0 unitRegistry.millimeters
-#lineXPosition = 0.0 unitRegistry.millimeters from center
-#exposure = 1 unitRegistry.second per line
-#GCommand_BleachLine(microscopeCommand, (5.0+lineXPosition, 5.0-lineHeight/2), (5.0+lineXPosition, 5.0+lineHeight/2), exposure)
-
-#(x,y) in mm, args are (module, center, length of mark, seperation b/ outermost pairs, exposure per line in (s), "V" is vertical, "H" is horizontal)
-#GCommand_BleachFiducial(microscopeCommand, (5.0, 5.0), 5.0, 0.1, 5, "V")
-
+# Draws a fiducial mark:
+#
+# centerX = -0.1 # defaults to millimeters
+# centerY = 0.1 # defaults to millimeters
+# markWidth = 0.5 * unitRegistry.millimeter
+# markGapWidth = 100 * unitRegistry.micrometer
+# duration = 1 * unitRegistry.seconds
+#
+# GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markGapWidth, duration):
+#
 
 #This part below creates lines in different exposure times
 #lineHeight = 5.0 * unitRegistry.millimeters
@@ -71,10 +79,7 @@ microscopeCommand = Wasatch_Serial_Interface_DirectSerial()
 #    exposure = exposures[i] #[sec] per line
 #    print('Current exposure :', exposure)
 #    GCommand_BleachLine(microscopeCommand, (lineXPosition, 5.0-lineHeight/2), (lineXPosition, 5.0+lineHeight/2), exposure)
-print("Drawing grid")
-#GCommand_BleachGrid(microscopeCommand, (0 * unitRegistry.millimeters, 0 * unitRegistry.millimeters), 30, 0, 100 * unitRegistry.micrometer, 0 * unitRegistry.millimeter, 5 * unitRegistry.millimeter, 0 * unitRegistry.millimeter, 1 * unitRegistry.second)
-GCommand_TestGrid(microscopeCommand, (5000, 5000), 50, 100, 400, 200, 2 * unitRegistry.seconds)
-#GCommand_TestBars(microscopeCommand, (5000, 5000), 50, 200, 10000, 1 * unitRegistry.second)
-print("Done!")
+
 #--> Closes connection:
 microscopeCommand.close()
+print("Done!")

@@ -25,19 +25,19 @@ from Wasatch_Units import *
 #   'microscopeCommand' Serial interface module
 #
 #   'startX'        (float) (If unitRegistry units specified [Length],
-#                   unspecified assumes mm, if flag 'wasatch' used uses
+#                   unspecified assumes mm, if flag 'wasatchUnits' used uses
 #                   wasatch units) X coordinate of starting point.
 #
 #   'startY'        (float) (If unitRegistry units specified [Length],
-#                   unspecified assumes mm, if flag 'wasatch' used uses
+#                   unspecified assumes mm, if flag 'wasatchUsed' used uses
 #                   wasatch units) Y coordinate of starting point.
 #
 #   'stopX'         (float) (If unitRegistry units specified [Length],
-#                   unspecified assumes mm, if flag 'wasatch' used uses
+#                   unspecified assumes mm, if flag 'wasatchUnits' used uses
 #                   wasatch units) X coordinate of starting point.
 #
 #   'stopY'         (float) (If unitRegistry units specified [Length],
-#                   unspecified assumes mm, if flag 'wasatch' used uses
+#                   unspecified assumes mm, if flag 'wasatchUnits' used uses
 #                   wasatch units) Y coordinate of starting point.
 #
 #   'duration'      (float) (If unitRegistry units specified [Time], otherwise assumes seconds)
@@ -89,7 +89,7 @@ def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duratio
 #   'flags'             (string) (variable number of args) (optional) Flags for the line.
 #                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
 #
-def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markGapWidth, duration, flags):
+def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markGapWidth, duration, *flags):
     # Prints out a hash mark with a line in the middle, consists of 5 lines
     boundXStart = centerPointX - (markWidth / 2)
     boundXStop = centerPointX + (markWidth / 2)

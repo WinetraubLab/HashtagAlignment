@@ -7,6 +7,9 @@
 # Description:
 #   These methods return strings to be
 #   sent directly to the Wasatch via serial.
+#   They take in inputs with familiar units and
+#   convert them to the required input format for
+#   the Wasatch OCT.
 #
 
 #---------------------- Included Libraries -------------------------------------
@@ -92,10 +95,10 @@ def WCommand_Ping():
 def WCommand_Focus(value = 'default_value'):
     if(value == 'default_value'):
         return "focus"
-    if(isinstance(value, int) and (value > 4095 or value < 0)):
-        raise ValueError("Serial Error: Requested Wasatch focus value %s is invalid." % (value))
-    else:
+    if(isinstance(value, int) and (0 <= value <= 4095)):
         return "focus %d" % (value)
+    else:
+        raise ValueError("Serial Error: Requested Wasatch focus value %s is invalid." % (value))
 
 #
 # Description:
@@ -114,10 +117,10 @@ def WCommand_Focus(value = 'default_value'):
 def WCommand_Foci(value = 'default_value'):
     if(value == 'default_value'):
         return "foci"
-    if(isinstance(value, int) and (value > 255 or value < 0)):
-        raise ValueError("Serial Error: Requested Wasatch foci value %s is invalid." % (value))
-    else:
+    if(isinstance(value, int) and (0 <= value <= 255)):
         return "foci %d" % (value)
+    else:
+        raise ValueError("Serial Error: Requested Wasatch foci value %s is invalid." % (value))
 
 #
 # Description:
@@ -209,7 +212,7 @@ def WCommand_WriteEEPROM(address, value):
 def WCommand_ScanAScans(numScans = "default_value"):
     if(numScans != "default_value"):
         numScans = int(numScans)
-        if(isinstance(numScans, int)):
+        if(isinstance(numScans, int) and (2 <= numScans ,+ 65535)):
             return "a_scans %d" % (numScans)
         else:
             raise ValueError("Serial Error: Requested Wasatch triggers per minor sweep %s is invalid." % (numScans))
@@ -236,7 +239,7 @@ def WCommand_ScanAScans(numScans = "default_value"):
 def WCommand_ScanBScans(numScans = "default_value"):
     if numScans != "default_value":
         numScans = int(numScans)
-        if(isinstance(numScans, int) and (numScans % 2 == 0) and (numScans >= 0) and (numScans <= 65534)):
+        if(isinstance(numScans, int) and (numScans % 2 == 0) and (0<= numScans <= 65534)):
             return "b_scans %d" % (numScans)
         else:
             raise ValueError("Serial Error: Requested Wasatch minor sweeps per major sweep %s is invalid." % (numScans))
@@ -577,7 +580,7 @@ def WCommand_ScanYRamp(startY, stopY, bRepeats = 1, *flags):
 # Returns:
 #   String to be entered directly into the Wasatch serial terminal.
 #
-def WCommand_ScanXYRamp(startX, startY, stopX, stopY, bRepeats = 1):
+def WCommand_ScanXYRamp(startX, startY, stopX, stopY, bRepeats = 1, *flags):
     xStartWU = CENTER_X - WConvert_XToWasatchUnits(startX, flags)
     yStartWU = CENTER_Y - WConvert_YToWasatchUnits(startY, flags)
     xStopWU = CENTER_X + WConvert_XToWasatchUnits(stopX, flags)
