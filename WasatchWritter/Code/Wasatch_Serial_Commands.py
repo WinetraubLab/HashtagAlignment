@@ -208,6 +208,7 @@ def WCommand_WriteEEPROM(address, value):
 #
 def WCommand_ScanAScans(numScans = "default_value"):
     if(numScans != "default_value"):
+        numScans = int(numScans)
         if(isinstance(numScans, int)):
             return "a_scans %d" % (numScans)
         else:
@@ -234,6 +235,7 @@ def WCommand_ScanAScans(numScans = "default_value"):
 #
 def WCommand_ScanBScans(numScans = "default_value"):
     if numScans != "default_value":
+        numScans = int(numScans)
         if(isinstance(numScans, int) and (numScans % 2 == 0) and (numScans >= 0) and (numScans <= 65534)):
             return "b_scans %d" % (numScans)
         else:
@@ -245,10 +247,10 @@ def WCommand_ScanBScans(numScans = "default_value"):
 #   Sets the delay between camera pulses in microseconds.
 #
 # Parameters:
-#   'duration' (Float) ([Time]) (optional) Delay between camera pulses.
-#                                          Range is [3,65535], default is 50.
-#                                          Leave blank to return current
-#                                          settings.
+#   'duration' (Float) (If specified unitRegistry units [Time], otherwise
+#              assumed to be in seconds) (optional) Delay between camera pulses.
+#              Range in microseconds is [3,65535], default is 50. Leave blank
+#              to return current settings.
 #
 # Response:
 #   With settings: "ok.\n"
@@ -259,7 +261,7 @@ def WCommand_ScanBScans(numScans = "default_value"):
 #
 def WCommand_ScanPulseDelay(duration = "default_value"):
     if(duration != "default_value"):
-        microseconds = int(round(duration.to(unitRegistry.microsecond).magnitude))
+        microseconds = int(WConvert_ToSeconds(duration).to(unitRegistry.microseconds).magnitude))
         if(isinstance(microseconds, int) and (microseconds >= 3) and (microseconds <= 65535)):
             return "delay %d" % (microseconds)
         else:
@@ -272,9 +274,10 @@ def WCommand_ScanPulseDelay(duration = "default_value"):
 #   no pulses occur. Will return current settings without parameters.
 #
 # Parameters:
-#   'duration' (Float) ([Time]) (optional) The duration of a camera pulse.
-#                                          Range is [0, 65535], default is 5
-#                                          Leave blank to return current settings.
+#   'duration' (Float) (If specified unitRegistry units [Time], otherwise
+#              assumed to be in seconds) (optional) Delay between camera pulses.
+#              Range in microseconds is [0,65535], default is 5. Leave blank
+#              to return current settings.
 #
 # Response:
 #   With parameters 'ok.\n'
@@ -285,7 +288,7 @@ def WCommand_ScanPulseDelay(duration = "default_value"):
 #
 def WCommand_ScanPulseDuration(duration = "default_value"):
     if(duration != "default_value"):
-        microseconds = round(duration.to(unitRegistry.microsecond).magnitude)
+        microseconds = round(WConvert_ToSeconds(duration).to(unitRegistry.microsecond).magnitude)
         if (isinstance(microseconds, int) and (microseconds >= 0) and (microseconds <= 605535)):
             return "pulse %d" % (microseconds)
         else:
@@ -297,9 +300,9 @@ def WCommand_ScanPulseDuration(duration = "default_value"):
 #   Sets the duration of a non-triggering return pulse and delay combined.
 #
 # Parameters:
-#   'duration' (Float) ([Time]) (optional) The duration of a return period.
-#                                          Range is [0, 255], default is 7. Leave
-#                                          blank to return current settings.
+#   'duration' (Float) (If specified unitRegistry units [Time], otherwise
+#              assumed to be in seconds) (optional) The duration of a return period.
+#              Range is [0, 255], default is 7. Leave blank to return current settings.
 #
 # Response:
 #   With parameters 'ok.\n'
@@ -310,8 +313,8 @@ def WCommand_ScanPulseDuration(duration = "default_value"):
 #
 def WCommand_ScanReturnSetDuration(duration = "default_value"):
     if(duration != "default_value"):
-        microseconds = round(duration.to(unitRegistry.microsecond).magnitude)
-        if (isinstance(microseconds, int) and (microseconds >= 0) and (microseconds <= 605535)):
+        microseconds = round(WConvert_Seconds(duration).to(unitRegistry.microsecond).magnitude)
+        if (isinstance(microseconds, int) and (microseconds >= 0) and (microseconds <= 255)):
             return "t_ret %d" % (microseconds)
         else:
             raise ValueError("Serial Error: Requested Wasatch delay period duration %s is invalid." % (duration))
@@ -487,10 +490,19 @@ def WCommand_ScanTriggerDelayEnable(enable = "default_value"):
 #   Configures the X ramp scanning parameters for the Wasatch
 #
 # Parameters:
-#   'startX'   (float) ([Length]) Starting X position of the rectangle.
-#   'stopX'    (float) ([Length]) End X position of the rectangle
-#   'bRepeats' (integer)          The number of times to repeat
-#                                 each scan line, defaults to 1
+#   'startX'   (Float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units) Starting X position of the rectangle.
+#
+#   'stopX'    (Float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units) End X position of the rectangle.
+#
+#   'bRepeats' (Integer) The number of times to repeat
+#                        each scan line, defaults to 1
+#
+#   'flags'    (string) (variable number of args) (optional) Flags for the line.
+#                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
 #
 # Response:
 #   Always 'A'
@@ -498,11 +510,11 @@ def WCommand_ScanTriggerDelayEnable(enable = "default_value"):
 # Returns:
 #   String to be entered directly into the Wasatch serial terminal.
 #
-def WCommand_ScanXRamp(startX, stopX, bRepeats = 1):
-    if(isinstance(startX.magnitude, float) and isinstance(stopX.magnitude, float) and isinstance(bRepeats, int)):
-        startPoint = WConvert_PointToCenteredInput((startX, 0 * unitRegistry.millimeter))
-        stopPoint = WConvert_PointToCenteredInput((stopX, 0 * unitRegistry.millimeter))
-        return "xramp %d %d %d" % (startPoint[0], stopPoint[0], bRepeats)
+def WCommand_ScanXRamp(startX, stopX, bRepeats = 1, *flags):
+    xStartWU = CENTER_X - WConvert_XToWasatchUnits(startX, flags)
+    xStopWU = CENTER_X + WConvert_XToWasatchUnits(stopX, flags)
+    if(MIN_X <= xStartWU <= MAX_X and MIN_X <= xStopWU <= MAX_X and isinstance(bRepeats, int)):
+        return "xramp %d %d %d" % (xStartWU, xStopWU, bRepeats)
     else:
         raise ValueError("Serial Error: Requested Wasatch coordinates are invalid.")
 
@@ -511,10 +523,19 @@ def WCommand_ScanXRamp(startX, stopX, bRepeats = 1):
 #   Configures the Y ramp scanning parameters for the Wasatch
 #
 # Parameters:
-#   'startY'   (float) ([Length]) Starting Y position of the rectangle.
-#   'stopY'    (float) ([Length]) End Y position of the rectangle
-#   'bRepeats' (integer)          The number of times to repeat
-#                                 each scan line, defaults to 1
+#   'startY'   (Float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units) Starting Y position of the rectangle.
+#
+#   'stopY'    (Float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units) End Y position of the rectangle.
+#
+#   'bRepeats' (Integer) The number of times to repeat
+#                        each scan line, defaults to 1
+#
+#   'flags'    (string) (variable number of args) (optional) Flags for the line.
+#                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
 #
 # Response:
 #   Always 'A'
@@ -522,11 +543,11 @@ def WCommand_ScanXRamp(startX, stopX, bRepeats = 1):
 # Returns:
 #   String to be entered directly into the Wasatch serial terminal.
 #
-def WCommand_ScanYRamp(startY, stopY, bRepeats = 1):
-    if(isinstance(startX.magnitude, float) and isinstance(stopY.magnitude, float) and isinstance(bRepeats, int)):
-        startPoint = WConvert_PointToCenteredInput((0 * unitRegistry.millimeter, startY))
-        stopPoint = WConvert_PointToCenteredInput((0 * unitRegistry.millimeter, stopY))
-        return "yramp %d %d %d" % (startPoint[1], stopPoint[1], bRepeats)
+def WCommand_ScanYRamp(startY, stopY, bRepeats = 1, *flags):
+    yStartWU = CENTER_Y - WConvert_YToWasatchUnits(startY, flags)
+    yStopWU = CENTER_Y + WConvert_YToWasatchUnits(stopY, flags)
+    if(MIN_Y <= yStartWU <= MAX_Y and MIN_Y <= yStopWU <= MAX_Y and isinstance(bRepeats, int)):
+        return "yramp %d %d %d" % (yStartWU, yStopWU, bRepeats)
     else:
         raise ValueError("Serial Error: Requested Wasatch coordinates are invalid.")
 
@@ -537,10 +558,18 @@ def WCommand_ScanYRamp(startY, stopY, bRepeats = 1):
 #   All measurements are distance from the center.
 #
 # Parameters:
-#   'startPoint' (Tuple of floats) ([Length]) First corner of the rectangle
-#   'stopPoint'  (Tuple of floats) ([Length]) Last corner of the rectangle
-#   'bRepeats'   (Integer)                    The number of times to repeat
-#                                             each scan line, defaults to 1
+#   'startY'   (Float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units) Starting Y position of the rectangle.
+#
+#   'stopY'    (Float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units) End Y position of the rectangle.
+#
+#   'bRepeats' (Integer) The number of times to repeat each scan line, defaults to 1
+#
+#   'flags'    (string) (variable number of args) (optional) Flags for the line.
+#                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
 #
 # Response:
 #   Always 'A'
@@ -548,15 +577,17 @@ def WCommand_ScanYRamp(startY, stopY, bRepeats = 1):
 # Returns:
 #   String to be entered directly into the Wasatch serial terminal.
 #
-def WCommand_ScanXYRamp(startPoint, stopPoint, bRepeats = 1):
-    if(isinstance(startPoint[0].magnitude, float) and isinstance(stopPoint[0].magnitude, float) and isinstance(startPoint[1].magnitude, float) and isinstance(stopPoint[1].magnitude, float), isinstance(bRepeats, int)):
-        convertedStartPoint = WConvert_PointToCenteredInput(startPoint)
-        convertedStopPoint = WConvert_PointToCenteredInput(stopPoint)
-        return "xy_ramp %d %d %d %d %d" % (convertedStartPoint[0], convertedStopPoint[0], convertedStartPoint[1], convertedStopPoint[1], bRepeats)
+def WCommand_ScanXYRamp(startX, startY, stopX, stopY, bRepeats = 1):
+    xStartWU = CENTER_X - WConvert_XToWasatchUnits(startX, flags)
+    yStartWU = CENTER_Y - WConvert_YToWasatchUnits(startY, flags)
+    xStopWU = CENTER_X + WConvert_XToWasatchUnits(stopX, flags)
+    yStopWU = CENTER_Y + WConvert_YToWasatchUnits(stopY, flags)
+    if(MIN_X <= xStartWU <= MAX_X ,MIN_Y <= yStartWU <= MAX_Y, MIN_X <= xStopWU <= MAX_X, MIN_Y <= yStopWU <= MAX_Y, isinstance(bRepeats, int)):
+        return "xy_ramp %d %d %d %d %d" % (xStartWU, xStopWU, yStartWU, yStopWU, bRepeats)
     raise ValueError("Serial Error: Requested Wasatch coordinates are invalid.")
 
 #
-# Description:
+# Description: # TODO Wasatch_Serial_Commands: Revisit polar ramp w/ unit conversion change
 #   Draws a polar ramp (concentric circular scan).
 #   Note: Set the number of scanned points per circle with A_scans, set
 #   the number of concentric cirles with B_scans.
@@ -581,7 +612,7 @@ def WCommand_ScanPolar(centerPoint, radius, ringRepeats = 1):
         raise ValueError("Serial Error: Polar ramp with center point %s %s, radius %s, and repeats %s, is invalid." % (centerPoint[0], centerPoint[1], radius, ringRepeats))
 
 #
-# Description: # TODO Serial_Commands: spiral
+# Description: # TODO Serial_Commands: revisit spiral
 #   Draws an archimedes spiral. You set the number of samples per spiral with the
 #
 # Parameters:

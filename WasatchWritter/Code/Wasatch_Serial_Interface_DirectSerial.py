@@ -11,16 +11,6 @@
 # This class enables communication with the Wasatch microscope
 # by directly accessing serial communication.
 #
-# NOTES: # ignore until bypass has been implimented
-# * As of right now, requires NULL MODEM to work
-# * Setup:
-#   * Set up null modem
-#   * Plug in the microscope
-#   * Run the controller GUI, wait for confirmation that this program
-#    has gained control of the microscope
-#   * Run the SparkOCT application, wait for confirmation that the program
-#     has established communications with the "microscope" (really this program)
-#
 
 #----------------------- Imported Libraries ------------------------------------
 

@@ -25,6 +25,9 @@ microscopeCommand = Wasatch_Serial_Interface_DirectSerial()
 
 # Note:
 #
+#   You cannot run the Wasatch OCT program and this script at the same time,
+#   it seems that port access is exclusive.
+#
 #   Coordinate system is centered in the middle of the Wasatch OCT
 #   field of view as (0, 0). Positive x coordinates are right, and
 #   positive y coordinates are up.
@@ -36,6 +39,20 @@ microscopeCommand = Wasatch_Serial_Interface_DirectSerial()
 #   interpreted directly as wasatch units.
 #
 
+# Your script here:
+
+# Examples:
+#
+# Draws a grid
+#
+# Row_Number = 200
+# Row_Spacing = 100
+# Column_Number = 100
+# Column_SPacing = 200
+# Duration = 1
+#
+# for xIndex in range
+#
 
 #lineHeight = 5.0 unitRegistry.millimeters
 #lineXPosition = 0.0 unitRegistry.millimeters from center

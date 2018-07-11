@@ -27,6 +27,8 @@ MIN_Y = 3492.0
 MAX_Y = 24418.0 # Originally 24418, adjusted by 0.93
 MIN_X = 5081.0
 MAX_X = 26032.0 # Originally 26032, adjusted by 0.93
+CENTER_X = (MAX_X + MIN_X) / 2
+CENTER_Y = (MAX_Y + MIN_Y) / 2
 # Wasatch reach seems to be 10mm in each direction (calibrated for this)
 MM_Y = 10.0 * unitRegistry.millimeter
 MM_X = 10.0 * unitRegistry.millimeter
@@ -42,44 +44,93 @@ DUTY_CYCLE = 0.75 # Percentage of on time for pulses, this is the assumed duty c
 
 #
 # Description:
-#   Converts desired point to a point in wasatch units. Good for about 0.478 microns
-#   but there seems to be issues where the laser goes over etc. and is pretty
-#   wide?
+#   Converts the given value to Wasatch units using the calibration
+#   for the X axis.
 #
 # Parameters:
-#   'inputPoint' (Float) ([length]) A tuple of floats that has pint compatable units of length
+#   'inputX' (float) (If unitRegistry units specified [Length],
+#            unspecified assumes mm, if flag 'wasatchUnits' used does not
+#            alter the input argument) Length along X axis to convert.
 #
 # Returns:
-#   The function returns a tuple with wasatch units
+#   The function returns a floating point quantity of Wasatch units.
 #
-def WConvert_PointToCenteredInput(inputPoint):
-    val = ((((inputPoint[0].to(unitRegistry.millimeter) + (MM_X / 2.0)) * ((MAX_X - MIN_X) / MM_X)) + MIN_X), ((inputPoint[1].to(unitRegistry.millimeters) + (MM_Y / 2.0)).to(unitRegistry.millimeters) * ((MAX_Y - MIN_Y) / MM_Y)) + MIN_Y)
-    return val
+def WConvert_XToWasatchUnits(inputX, *flags):
+    inputX = float(inputX)
+    if("wasatchUnits" in flags):
+        return inputX
+    else:
+        if(!isinstance(inputX, Quantity)): # Default behavior is to assume millimeters if unspecified
+            inputX *= unitRegistry.millimeter
+        return inputX.to(unitRegistry.millimeter) * ((MAX_X - MIN_X) / MM_X)
 
-def WConvert_XToCenteredWasatchUnits(inputX):
     val = inputX.to(unitRegistry.millimeter) + (MM_X / 2.0)) * ((MAX_X - MIN_X) / MM_X)) + MIN_X
+
+#
+# Description:
+#   Converts the given value to Wasatch units using the calibration
+#   for the Y axis.
+#
+# Parameters:
+#   'inputX' (float) (If unitRegistry units specified [Length],
+#            unspecified assumes mm, if flag 'wasatchUnits' used does not
+#            alter the input argument) Length along Y axis to convert.
+#
+# Returns:
+#   The function returns a floating point quantity of Wasatch units.
+#
+def WConvert_YToWasatchUnits(inputY, *flags):
+    inputY = float(inputY)
+    if("wasatchUnits" in flags):
+        return inputY
+    else:
+        if(!isinstance(inputY, Quantity)): # Default behavior is to assume millimeters if unspecified
+            inputY *= unitRegistry.millimeter
+        return (inputY.to(unitRegistry.millimeter) * ((MAX_Y - MIN_Y) / MM_Y))
+
+#
+# Description:
+#   Utility function that converts the given duration to seconds.
+#
+# Parameters:
+#   'inputDuration' (float) (If unitRegistry units specified [Time],
+#                    unspecified assumes seconds)
+#
+# Returns:
+#   The function returns a floating point quantity of Wasatch units.
+#
+def WConvert_ToSeconds(inputDuration):
+    inputDuration = float(inputDuration)
+    if(!isinstance(inputDuration, Quantity)):
+        inputDuration *= unitRegistry.seconds
+    return inputDuration.to(unitRegistry.seconds)
+
+
 
 #
 # Description:
 #   Returns the number of scans from the required duration
 #
 # Parameters:
-#   'duration'       (float) How long the scan should last in pint compatable units of time.
-#   'pulsePeriod'    (int)   Period of a single pulse in pint compatable units of time.
+#   'duration'       (float) (If unitRegistry units specified [Time],
+#                    unspecified assumes seconds) Desired line duration.
+#
+#   'pulsePeriod'    (float) (If unitRegistry units specified [Time],
+#                    unspecified assumes seconds) Period of a single
+#                    camera pulse.
+#
 #   'pulsesPerSweep' (int)   Number of pulses in a primary scan.
 #
 # Returns:
 #   Integer number of scans required.
 #
 def WConvert_NumScansFromSecs(duration, pulsePeriod = PULSEPERIOD, pulseCount = PULSESPERSWEEP):
-    return int(math.ceil((duration) / (PULSEPERIOD * PULSESPERSWEEP)))
+    return int(math.ceil((WConvert_ToSeconds(duration)) / (WConvert_ToSeconds(PULSEPERIOD) * PULSESPERSWEEP)))
 
 #
 # Determines the number of complete scans required to achieve
 # the desired exposure percentage with the given duty cycle,
 # and period of the pulse.
-#
-# TODO Conversions: Exposure overhaul (may be bugged)
 #
 def WConvert_NumScans(distance, exposurePercentage, dutyCycle = DUTY_CYCLE, pulsePeriod = PULSEPERIOD, pulsesPerSweep = PULSESPERSWEEP):
     # Calculates scans for full exposure
@@ -118,13 +169,3 @@ def WConvert_PulseDelay(dutyCycle = DUTY_CYCLE):
 #
 def WConvert_PulsesPerSweep():
     return PULSESPERSWEEP
-
-#
-# Description:
-#   Returns the number of seconds required to bleach a line of the given
-#   length.
-#
-# TODO: Conversions: Exposure overhaul
-#
-def WConvert_BleachExposureTimeSecs(distance):
-    return USFORMM * distance.to(unitRegistry.millimeter)
