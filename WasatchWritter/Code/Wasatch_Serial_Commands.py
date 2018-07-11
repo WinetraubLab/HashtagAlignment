@@ -11,6 +11,9 @@
 #   convert them to the required input format for
 #   the Wasatch OCT.
 #
+#   Note: The X axis is flipped, runs natively right to left flipped here
+#   to run left to right.
+#
 
 #---------------------- Included Libraries -------------------------------------
 
@@ -141,9 +144,9 @@ def WCommand_Foci(value = 'default_value'):
 def WCommand_Toggle(output, value = 'default_value'):
     if(isinstance(output, int) and (output == 1 or output == 2)):
         if(value == 'default_value'):
-            return "out%d" % (servo)
+            return "out%d" % (output)
         if(isinstance(value, int) and (value >= 0)):
-            return "out%d %d" % (servo, value)
+            return "out%d %d" % (output, value)
         else:
             raise ValueError("Serial Error: Requested Wasatch motor state %s is invalid." % (value))
     else:
@@ -185,7 +188,7 @@ def WCommand_ReadEEPROM(address):
 #   Serial printable command string.
 #
 def WCommand_WriteEEPROM(address, value):
-    if(isinstance(address, int) and isInstance(value, int) and value <= 255):
+    if(isinstance(address, int) and isinstance(value, int) and value <= 255):
         return "eew %d %s" % (address, hex(value))
     else:
         raise ValueError("Serial Error: Requested Wasatch EEPROM write location %s value %s is invalid." % (address, value))
@@ -264,7 +267,7 @@ def WCommand_ScanBScans(numScans = "default_value"):
 #
 def WCommand_ScanPulseDelay(duration = "default_value"):
     if(duration != "default_value"):
-        microseconds = int(WConvert_ToSeconds(duration).to(unitRegistry.microseconds).magnitude))
+        microseconds = int(WConvert_ToSeconds(duration).to(unitRegistry.microseconds).magnitude)
         if(isinstance(microseconds, int) and (microseconds >= 3) and (microseconds <= 65535)):
             return "delay %d" % (microseconds)
         else:
@@ -343,7 +346,7 @@ def WCommand_ScanReturnSetDuration(duration = "default_value"):
 def WCommand_ScanReturnClockDivider(factor = "default_value"):
     if(factor != "default_value"):
         if (isinstance(factor, int) and (factor >= 0) and (factor <= 605535)):
-            return "A_div %d" % (factor))
+            return "A_div %d" % (factor)
         else:
             raise ValueError("Serial Error: Requested Wasatch return clock divider %s is invalid." % (factor))
     return "A_div"
@@ -393,7 +396,7 @@ def WCommand_ScanReturnTrigger(enable = "default_value"):
     if(enable != "default_value"):
         if (isinstance(enable, bool)):
             value = 0
-            if enable
+            if enable:
                 value = 1
             return "trigger %d" % (value)
         else:
@@ -454,11 +457,18 @@ def WCommand_ScanBTriggerGap(delayCount = "default_value"):
 #
 # Parameters:
 #   'delay' (Integer) Delay before first trigger (?). Units currently not known.
+    
+# Response:
+#   With parameters 'ok.\n'
+#   Without parameters returns current setting.
+#
+# Returns:
+#   String to be entered directly into the Wasatch serial terminal.
 #
 def WCommand_ScanTriggerDelay(delay = "default_value"):
     if(delay != "default_value"):
-        if (isinstance(delay, int) and (delayCount >= 0) and (delayCount <= 605535)):
-            return "trdelay %d" % (delayCount)
+        if (isinstance(delay, int) and (delay >= 0) and (delay <= 605535)):
+            return "trdelay %d" % (delay)
         else:
             raise ValueError("Serial Error: Requested Wasatch trigger delay %s is invalid." % (delay))
     return "trdelay"
@@ -513,9 +523,9 @@ def WCommand_ScanTriggerDelayEnable(enable = "default_value"):
 # Returns:
 #   String to be entered directly into the Wasatch serial terminal.
 #
-def WCommand_ScanXRamp(startX, stopX, bRepeats = 1, *flags):
-    xStartWU = CENTER_X - WConvert_XToWasatchUnits(startX, flags)
-    xStopWU = CENTER_X + WConvert_XToWasatchUnits(stopX, flags)
+def WCommand_ScanXRamp(startX, stopX, bRepeats, *flags):
+    xStartWU = CENTER_X - WConvert_XToWasatchUnits(startX, *flags)
+    xStopWU = CENTER_X - WConvert_XToWasatchUnits(stopX, *flags)
     if(MIN_X <= xStartWU <= MAX_X and MIN_X <= xStopWU <= MAX_X and isinstance(bRepeats, int)):
         return "xramp %d %d %d" % (xStartWU, xStopWU, bRepeats)
     else:
@@ -546,9 +556,9 @@ def WCommand_ScanXRamp(startX, stopX, bRepeats = 1, *flags):
 # Returns:
 #   String to be entered directly into the Wasatch serial terminal.
 #
-def WCommand_ScanYRamp(startY, stopY, bRepeats = 1, *flags):
-    yStartWU = CENTER_Y - WConvert_YToWasatchUnits(startY, flags)
-    yStopWU = CENTER_Y + WConvert_YToWasatchUnits(stopY, flags)
+def WCommand_ScanYRamp(startY, stopY, bRepeats, *flags):
+    yStartWU = CENTER_Y + WConvert_YToWasatchUnits(startY, *flags)
+    yStopWU = CENTER_Y + WConvert_YToWasatchUnits(stopY, *flags)
     if(MIN_Y <= yStartWU <= MAX_Y and MIN_Y <= yStopWU <= MAX_Y and isinstance(bRepeats, int)):
         return "yramp %d %d %d" % (yStartWU, yStopWU, bRepeats)
     else:
@@ -569,7 +579,7 @@ def WCommand_ScanYRamp(startY, stopY, bRepeats = 1, *flags):
 #                       no units assumes millimeters, if flag 'wasatchUnits' is
 #                       used uses Wasatch units) End Y position of the rectangle.
 #
-#   'bRepeats' (Integer) The number of times to repeat each scan line, defaults to 1
+#   'bRepeats' (Integer) The number of times to repeat each scan line
 #
 #   'flags'    (string) (variable number of args) (optional) Flags for the line.
 #                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
@@ -580,11 +590,11 @@ def WCommand_ScanYRamp(startY, stopY, bRepeats = 1, *flags):
 # Returns:
 #   String to be entered directly into the Wasatch serial terminal.
 #
-def WCommand_ScanXYRamp(startX, startY, stopX, stopY, bRepeats = 1, *flags):
-    xStartWU = CENTER_X - WConvert_XToWasatchUnits(startX, flags)
-    yStartWU = CENTER_Y - WConvert_YToWasatchUnits(startY, flags)
-    xStopWU = CENTER_X + WConvert_XToWasatchUnits(stopX, flags)
-    yStopWU = CENTER_Y + WConvert_YToWasatchUnits(stopY, flags)
+def WCommand_ScanXYRamp(startX, startY, stopX, stopY, bRepeats, *flags):
+    xStartWU = CENTER_X - WConvert_XToWasatchUnits(startX, *flags)
+    yStartWU = CENTER_Y + WConvert_YToWasatchUnits(startY, *flags)
+    xStopWU = CENTER_X - WConvert_XToWasatchUnits(stopX, *flags)
+    yStopWU = CENTER_Y + WConvert_YToWasatchUnits(stopY, *flags)
     if(MIN_X <= xStartWU <= MAX_X ,MIN_Y <= yStartWU <= MAX_Y, MIN_X <= xStopWU <= MAX_X, MIN_Y <= yStopWU <= MAX_Y, isinstance(bRepeats, int)):
         return "xy_ramp %d %d %d %d %d" % (xStartWU, xStopWU, yStartWU, yStopWU, bRepeats)
     raise ValueError("Serial Error: Requested Wasatch coordinates are invalid.")
@@ -608,10 +618,10 @@ def WCommand_ScanXYRamp(startX, startY, stopX, stopY, bRepeats = 1, *flags):
 #   String to be entered directly into the Wasatch serial terminal.
 #
 def WCommand_ScanPolar(centerPoint, radius, ringRepeats = 1):
-    if(isInstance(centerPoint[0].magnitude, float) and isInstance(centerPoint[1].magnitude, float) and isInstance(radius, float) and isInstance(ringRepeats, int)):
-        convertedCenter = WConvert_PointToCenteredInput(centerPoint)
-        return "pramp %d %d %d %d" % (convertedCenter[0], convertedCenter[1], WConvert_PointToCenteredInput(radius, 0)[0], ringRepeats) #TODO Serial_Commands: Single element conversion
-    else:
+    #if(isinstance(centerPoint[0].magnitude, float) and isinstance(centerPoint[1].magnitude, float) and isinstance(radius, float) and isinstance(ringRepeats, int)):
+        #convertedCenter = WConvert_PointToCenteredInput(centerPoint)
+        #return "pramp %d %d %d %d" % (convertedCenter[0], convertedCenter[1], WConvert_PointToCenteredInput(radius, 0)[0], ringRepeats) #TODO Serial_Commands: Single element conversion
+    #else:
         raise ValueError("Serial Error: Polar ramp with center point %s %s, radius %s, and repeats %s, is invalid." % (centerPoint[0], centerPoint[1], radius, ringRepeats))
 
 #
@@ -629,11 +639,11 @@ def WCommand_ScanPolar(centerPoint, radius, ringRepeats = 1):
 #   String to be entered directly into the Wasatch serial terminal.
 #
 def WCommand_ScanSpiral(centerPoint, radius):
-    if(isInstance(centerPoint[0].magnitude, float) and isInstance(centerPoint[1].magnitude, float) and isInstance(radius, float)):
-        convertedCenter = WConvert_PointToCenteredInput(centerPoint)
-        return "pramp %d %d %d %d" % (convertedCenter[0], convertedCenter[1], WConvert_PointToCenteredInput(radius, 0)[0]) #TODO Serial_Commands: Single element conversion
-    else:
-        raise ValueError("Serial Error: Polar ramp with center point %s %s, radius %s, and repeats %s, is invalid." % (centerPoint[0], centerPoint[1], radius, ringRepeats))
+    #if(isInstance(centerPoint[0].magnitude, float) and isInstance(centerPoint[1].magnitude, float) and isInstance(radius, float)):
+    #    convertedCenter = WConvert_PointToCenteredInput(centerPoint)
+    #    return "pramp %d %d %d %d" % (convertedCenter[0], convertedCenter[1], WConvert_PointToCenteredInput(radius, 0)[0]) #TODO Serial_Commands: Single element conversion
+    #else:
+        raise ValueError("Serial Error: Polar ramp with center point %s %s and radius %s is invalid." % (centerPoint[0], centerPoint[1], radius))
 
 #
 # Description:
@@ -765,9 +775,9 @@ def WCommand_MotorSetTopAcceleration(motorIdentifier, value = "default_value"):
 #   String to be directly entered into the Wasatch serial terminal.
 #
 def WCommand_MotorGoAbsolute(motorIdentifier, value):
-    if(motorIdentifier in MOTOR_IDENTIFIERS and isinstance(value.magnitude, float)):
-        return "mgr %s %d" % (motorIdentifier, WConvert_PointToCenteredInput(value))
-    else:
+    #if(motorIdentifier in MOTOR_IDENTIFIERS and isinstance(value.magnitude, float)):
+        #return "mgr %s %d" % (motorIdentifier, WConvert_PointToCenteredInput(value))
+    #else:
         ValueError("Serial Error: Requested Wasatch motor travel distance %s is invalid." % (motorIdentifier))
 
 #
@@ -786,9 +796,9 @@ def WCommand_MotorGoAbsolute(motorIdentifier, value):
 #   String to be directly entered into the Wasatch serial terminal.
 #
 def WCommand_MotorGoAbsolute(motorIdentifier, value):
-    if(motorIdentifier in MOTOR_IDENTIFIERS and isinstance(value.magnitude, float)):
-        return "mg2 %s %d" % (motorIdentifier, WConvert_PointToCenteredInput(value))
-    else:
+    #if(motorIdentifier in MOTOR_IDENTIFIERS and isinstance(value.magnitude, float)):
+        #return "mg2 %s %d" % (motorIdentifier, WConvert_PointToCenteredInput(value))
+    #else:
         ValueError("Serial Error: Requested Wasatch motor travel distance %s is invalid." % (motorIdentifier))
 
 #
@@ -832,10 +842,10 @@ def WCommand_MotorHome(motorIdentifier = 'a'):
 # Returns:
 #   String to be directly entered into the Wasatch serial terminal.
 #
-def WCommand_MotorDirection(motorIdentifier, forwards = true):
+def WCommand_MotorDirection(motorIdentifier, forwards = True):
     if(motorIdentifier in MOTOR_IDENTIFIERS and isinstance(forwards, bool)):
         value = 1
-        if forwards
+        if forwards:
             value = 0
         return "mgd %s %d" % (motorIdentifier, value)
     ValueError("Serial Error: Requested Wasatch motor %s or direction %s is invalid." % (motorIdentifier, forwards))

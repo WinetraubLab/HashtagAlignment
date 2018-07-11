@@ -47,13 +47,14 @@ from Wasatch_Units import *
 #                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
 #
 def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duration, *flags):
+    duration = WConvert_ToSeconds(duration);
     # Sets duty cycle and pulses per sweep
     microscopeCommand.sendCommand(WCommand_ScanPulseDuration(WConvert_PulseDuration()))
     microscopeCommand.sendCommand(WCommand_ScanPulseDelay(WConvert_PulseDelay()))
     microscopeCommand.sendCommand(WCommand_ScanAScans(WConvert_PulsesPerSweep()))
     microscopeCommand.sendCommand(WCommand_ScanBScans(0))
     # Configures paths
-    microscopeCommand.sendCommand(WCommand_ScanXYRamp(startX, startY, stopX, stopY, flags))
+    microscopeCommand.sendCommand(WCommand_ScanXYRamp(startX, startY, stopX, stopY, 1, *flags))
     # Draws the line, number of scans dependent on previous factors
     microscopeCommand.sendCommand(WCommand_ScanNTimes(WConvert_NumScansFromSecs(duration)), duration)
 
@@ -91,19 +92,19 @@ def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duratio
 #
 def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markGapWidth, duration, *flags):
     # Prints out a hash mark with a line in the middle, consists of 5 lines
-    boundXStart = centerPointX - (markWidth / 2)
-    boundXStop = centerPointX + (markWidth / 2)
-    boundYStart = centerPointY - (markWidth / 2)
-    boundYStop = centerPointY + (markWidth / 2)
+    boundXStart = centerX - (markWidth / 2)
+    boundXStop = centerX + (markWidth / 2)
+    boundYStart = centerY - (markWidth / 2)
+    boundYStop = centerY + (markWidth / 2)
     # Draws horizontal
-    hLowY = centerPointY - (markGapWidth / 2)
-    hHighY = centerPointY + (markGapWidth / 2)
-    GCommand_BleachLine(microscopeCommand, boundXStart, hLowY, boundXStop, hLowY, duration, flags)
-    GCommand_BleachLine(microscopeCommand, boundXStart, hHighY, boundXStop, hHighY, duration, flags)
+    hLowY = centerY - (markGapWidth / 2)
+    hHighY = centerY + (markGapWidth / 2)
+    GCommand_BleachLine(microscopeCommand, boundXStart, hLowY, boundXStop, hLowY, duration, *flags)
+    GCommand_BleachLine(microscopeCommand, boundXStart, hHighY, boundXStop, hHighY, duration, *flags)
     # Draws vertical
-    vLeftX = centerPointX - (markGapWidth / 2)
-    vRightX = centerPointX + (markGapWidth / 2)
-    GCommand_BleachLine(microscopeCommand, vLeftX, boundYStart, vLeftX, boundYStop, duration, flags)
-    GCommand_BleachLine(microscopeCommand, vRightX, boundYStart, vRightX, boundYStop, duration, flags)
+    vLeftX = centerX - (markGapWidth / 2)
+    vRightX = centerX + (markGapWidth / 2)
+    GCommand_BleachLine(microscopeCommand, vLeftX, boundYStart, vLeftX, boundYStop, duration, *flags)
+    GCommand_BleachLine(microscopeCommand, vRightX, boundYStart, vRightX, boundYStop, duration, *flags)
     # Draws central
-    GCommand_BleachLine(microscopeCommand, centerPointX, boundYStart, centerPointX, boundYStop, duration, flags)
+    GCommand_BleachLine(microscopeCommand, centerX, boundYStart, centerX, boundYStop, duration, *flags)

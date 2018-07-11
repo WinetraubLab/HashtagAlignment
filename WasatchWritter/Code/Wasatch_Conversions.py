@@ -56,15 +56,13 @@ DUTY_CYCLE = 0.75 # Percentage of on time for pulses, this is the assumed duty c
 #   The function returns a floating point quantity of Wasatch units.
 #
 def WConvert_XToWasatchUnits(inputX, *flags):
-    inputX = float(inputX)
     if("wasatchUnits" in flags):
         return inputX
     else:
-        if(!isinstance(inputX, Quantity)): # Default behavior is to assume millimeters if unspecified
+        if not isinstance(inputX, pint.quantity._Quantity): # Default behavior is to assume millimeters if unspecified
+            inputX = float(inputX)
             inputX *= unitRegistry.millimeter
         return inputX.to(unitRegistry.millimeter) * ((MAX_X - MIN_X) / MM_X)
-
-    val = inputX.to(unitRegistry.millimeter) + (MM_X / 2.0)) * ((MAX_X - MIN_X) / MM_X)) + MIN_X
 
 #
 # Description:
@@ -80,11 +78,11 @@ def WConvert_XToWasatchUnits(inputX, *flags):
 #   The function returns a floating point quantity of Wasatch units.
 #
 def WConvert_YToWasatchUnits(inputY, *flags):
-    inputY = float(inputY)
     if("wasatchUnits" in flags):
         return inputY
     else:
-        if(!isinstance(inputY, Quantity)): # Default behavior is to assume millimeters if unspecified
+        if not isinstance(inputY, pint.quantity._Quantity): # Default behavior is to assume millimeters if unspecified
+            inputY = float(inputY)
             inputY *= unitRegistry.millimeter
         return (inputY.to(unitRegistry.millimeter) * ((MAX_Y - MIN_Y) / MM_Y))
 
@@ -100,8 +98,8 @@ def WConvert_YToWasatchUnits(inputY, *flags):
 #   The function returns a floating point quantity of Wasatch units.
 #
 def WConvert_ToSeconds(inputDuration):
-    inputDuration = float(inputDuration)
-    if(!isinstance(inputDuration, Quantity)):
+    if not isinstance(inputDuration, pint.quantity._Quantity):
+        inputDuration = float(inputDuration)
         inputDuration *= unitRegistry.seconds
     return inputDuration.to(unitRegistry.seconds)
 
@@ -125,6 +123,7 @@ def WConvert_ToSeconds(inputDuration):
 #   Integer number of scans required.
 #
 def WConvert_NumScansFromSecs(duration, pulsePeriod = PULSEPERIOD, pulseCount = PULSESPERSWEEP):
+    duration = WConvert_ToSeconds(duration)
     return int(math.ceil((WConvert_ToSeconds(duration)) / (WConvert_ToSeconds(PULSEPERIOD) * PULSESPERSWEEP)))
 
 #

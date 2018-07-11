@@ -11,8 +11,9 @@
 
 #----------------------- Imported Libraries ------------------------------------
 
+import math
+
 from Wasatch_Main_Commands import *
-from Wasatch_Serial_Interface_AutoGUI import Wasatch_Serial_Interface_AutoGUI
 from Wasatch_Serial_Interface_DirectSerial import Wasatch_Serial_Interface_DirectSerial
 from Wasatch_Units import *
 
@@ -46,19 +47,36 @@ print("Starting")
 # Your script here:
 
 # Examples:
-#
+
 # Draws a grid using Wasatch units directly:
+"""
+rowNumber = 20
+rowSpacing = 1000
+columnNumber = 20
+columnSpacing = 1000
+duration = 1 # defaults to seconds
+
+for yIndex in range(-math.ceil(rowNumber / 2), math.ceil(rowNumber / 2)):
+    GCommand_BleachLine(microscopeCommand, -columnNumber / 2 * columnSpacing, yIndex * rowSpacing, columnNumber / 2 * columnSpacing, yIndex * rowSpacing, duration, "wasatchUnits")
+for xIndex in range(-math.ceil(columnNumber / 2), math.ceil(columnNumber / 2)):
+    GCommand_BleachLine(microscopeCommand, xIndex * columnSpacing, -rowNumber / 2 * rowSpacing, xIndex * columnSpacing, rowNumber / 2 * rowSpacing, duration, "wasatchUnits")
+"""
+
+# Draws a grid with assumed and real mm
+
+rowNumber = 20
+rowSpacing = 0.5 # defaults to mm
+columnNumber = 40
+columnSpacing = 0.025 * unitRegistry.cm
+duration = 1 # defaults to seconds
+
+for yIndex in range(-math.ceil(rowNumber / 2), math.ceil(rowNumber / 2)):
+    GCommand_BleachLine(microscopeCommand, -columnNumber / 2 * columnSpacing, yIndex * rowSpacing, columnNumber / 2 * columnSpacing, yIndex * rowSpacing, duration)
+for xIndex in range(-math.ceil(columnNumber / 2), math.ceil(columnNumber / 2)):
+    GCommand_BleachLine(microscopeCommand, xIndex * columnSpacing, -rowNumber / 2 * rowSpacing, xIndex * columnSpacing, rowNumber / 2 * rowSpacing, duration)
+
+
 #
-# rowNumber = 200
-# rowSpacing = 100
-# columnNumber = 100
-# columnSpacing = 200
-# duration = 1 # defaults to seconds
-#
-# for xIndex in range(-rowNumber / 2, rowNumber / 2):
-#   GCommand_BleachLine(microscopeCommand, -columnNumber / 2 * columnSpacing, rowNumber * rowSpacing, columnNumber / 2 * columnSpacing, rowNumber * rowSpacing, duration, "wasatchUnits")
-# for yIndex in range(-columnNumber / 2, columnNumber / 2):
-#   GCommand_BleachLine(microscopeCommand, columnNumber * columnSpacing, -rowNumber / 2 * rowSpacing, columnNumber * columnSpacing, rowNumber / 2 * rowSpacing, duration, "wasatchUnits")
 #
 # Draws a fiducial mark:
 #
