@@ -21,17 +21,16 @@ from Wasatch_Units import *
 # Microseconds of dwelling time to fully bleach one mm long section w/ standard profile
 USFORMM = 3000 * (unitRegistry.microsecond / unitRegistry.millimeter)
 
-# Borrowed from Edwin's code, Wasatch units seem to be roughly 2093 per mm
-# Udate: 6/27/2018, found that 50
-MIN_Y = 3492.0
-MAX_Y = 24418.0 # Originally 24418, adjusted by 0.93
-MIN_X = 5081.0
-MAX_X = 26032.0 # Originally 26032, adjusted by 0.93
+# Wasatch reach seems to be roughly 10mm in each direction
+# Values calibrated 7/13/2017
+WUPERMM_Y = 2207 / unitRegistry.millimeter
+WUPERMM_X = 2257 / unitRegistry.millimeter
+MIN_Y = 5000
+MAX_Y = 25000
+MIN_X = 5000
+MAX_X = 25000
 CENTER_X = (MAX_X + MIN_X) / 2
 CENTER_Y = (MAX_Y + MIN_Y) / 2
-# Wasatch reach seems to be 10mm in each direction (calibrated for this)
-MM_Y = 10.0 * unitRegistry.millimeter
-MM_X = 10.0 * unitRegistry.millimeter
 
 # Note that actual total exposure times are determined from USFORMM, these
 # are just preferences but should not effect the total amount of energy
@@ -62,7 +61,7 @@ def WConvert_XToWasatchUnits(inputX, *flags):
         if not isinstance(inputX, pint.quantity._Quantity): # Default behavior is to assume millimeters if unspecified
             inputX = float(inputX)
             inputX *= unitRegistry.millimeter
-        return inputX.to(unitRegistry.millimeter) * ((MAX_X - MIN_X) / MM_X)
+        return inputX.to(unitRegistry.millimeter) * WUPERMM_X
 
 #
 # Description:
@@ -84,7 +83,7 @@ def WConvert_YToWasatchUnits(inputY, *flags):
         if not isinstance(inputY, pint.quantity._Quantity): # Default behavior is to assume millimeters if unspecified
             inputY = float(inputY)
             inputY *= unitRegistry.millimeter
-        return (inputY.to(unitRegistry.millimeter) * ((MAX_Y - MIN_Y) / MM_Y))
+        return (inputY.to(unitRegistry.millimeter) * WUPERMM_Y
 
 #
 # Description:
