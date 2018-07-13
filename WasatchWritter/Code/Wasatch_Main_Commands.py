@@ -45,18 +45,19 @@ from Wasatch_Units import *
 #
 #   'flags'         (string) (variable number of args) (optional) Flags for the line.
 #                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
+#                       -> 'showSerial'   Serial commands are displayed when sent
 #
 def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duration, *flags):
     duration = WConvert_ToSeconds(duration);
     # Sets duty cycle and pulses per sweep
-    microscopeCommand.sendCommand(WCommand_ScanPulseDuration(WConvert_PulseDuration()))
-    microscopeCommand.sendCommand(WCommand_ScanPulseDelay(WConvert_PulseDelay()))
-    microscopeCommand.sendCommand(WCommand_ScanAScans(WConvert_PulsesPerSweep()))
-    microscopeCommand.sendCommand(WCommand_ScanBScans(0))
+    microscopeCommand.sendCommand(WCommand_ScanPulseDuration(WConvert_PulseDuration()), 0, *flags)
+    microscopeCommand.sendCommand(WCommand_ScanPulseDelay(WConvert_PulseDelay()), 0, *flags)
+    microscopeCommand.sendCommand(WCommand_ScanAScans(WConvert_PulsesPerSweep()), 0, *flags)
+    microscopeCommand.sendCommand(WCommand_ScanBScans(0), 0, *flags)
     # Configures paths
-    microscopeCommand.sendCommand(WCommand_ScanXYRamp(startX, startY, stopX, stopY, 1, *flags))
+    microscopeCommand.sendCommand(WCommand_ScanXYRamp(startX, startY, stopX, stopY, *flags), 0, *flags)
     # Draws the line, number of scans dependent on previous factors
-    microscopeCommand.sendCommand(WCommand_ScanNTimes(WConvert_NumScansFromSecs(duration)), duration)
+    microscopeCommand.sendCommand(WCommand_ScanNTimes(WConvert_NumScansFromSecs(duration)), duration, *flags)
 
 #
 # Description:
@@ -89,6 +90,7 @@ def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duratio
 #
 #   'flags'             (string) (variable number of args) (optional) Flags for the line.
 #                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
+#                       -> 'showSerial'   Serial commands are displayed when sent
 #
 def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markGapWidth, duration, *flags):
     # Prints out a hash mark with a line in the middle, consists of 5 lines

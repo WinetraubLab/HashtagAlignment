@@ -24,6 +24,7 @@ from serial.tools import list_ports
 from Wasatch_Serial_Interface_Abstract import Wasatch_Serial_Interface_Abstract
 from Wasatch_Serial_Commands import *
 from Wasatch_Units import *
+from Wasatch_Conversions import *
 
 #------------------------ Class Definition -------------------------------------
 
@@ -46,10 +47,11 @@ class Wasatch_Serial_Interface_DirectSerial(Wasatch_Serial_Interface_Abstract):
         return False
 
     # Sends a serial command to the Wasatch Microscope after 'time' milliseconds
-    def sendCommand(self, command, timeSecs = 0 * unitRegistry.seconds):
+    def sendCommand(self, command, timeDelay, *flags):
         self._serialPort.write(("%s\n" % command).encode('utf-8'))
-        print("Command is: %s" % command)
-        time.sleep(timeSecs.to(unitRegistry.seconds).magnitude)
+        if("showSerial" in flags)
+            print("Command is: %s" % command)
+        time.sleep(WConvert_ToSeconds(timeDelay).magnitude)
 
     # Safely closes the connection to the microscope.
     def close(self):
