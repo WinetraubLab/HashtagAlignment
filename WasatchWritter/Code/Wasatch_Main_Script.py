@@ -20,7 +20,7 @@ from Wasatch_Units import *
 #--------------------------- The Script ----------------------------------------
 
 #--> Setup:
-microscopeCommand = Wasatch_Serial_Interface_DirectSerial()
+"""microscopeCommand = Wasatch_Serial_Interface_DirectSerial()"""
 print("Starting")
 #--> Put your commands here:
 
@@ -78,6 +78,7 @@ for xIndex in range(-math.ceil(columnNumber / 2), math.ceil(columnNumber / 2)):
 """
 
 # Instructs the user on how to take a volumetric scan with the desired values:
+# Note: Can run just this line alone w/o initiating serial
 startX = -2 # Defaults to millimeters
 startY = -2
 stopX = 2
@@ -108,5 +109,5 @@ GCommand_TutorialVolumetricScan(startX, startY, stopX, stopY, brepeats)
 #    GCommand_BleachLine(microscopeCommand, (lineXPosition, 5.0-lineHeight/2), (lineXPosition, 5.0+lineHeight/2), exposure)
 
 #--> Closes connection:
-microscopeCommand.close()
+"""microscopeCommand.close()"""
 print("Done!")

@@ -114,25 +114,29 @@ def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, mark
 #
 # Description:
 #   Provides test to the user to type into the terminal to get the desired 3d
-#   volumetric scan.
+#   volumetric scan. The start and stop points define the bounding opposite corners
+#   of the rectangular region of the volume to be scanned. The scan proceeds 
+#   horizontally along the X axis in the direction away from the x coordinate
+#   of the stop point towards the x coordinate of the stop point. Similarily, the
+#   scan starts at the height of the start point and proceeds to the height of the 
+#   end point. Choose your start and end points accordingly.
 #
 # Parameters:
-#   'centerX'           (float) (If specified unitRegistry units [Length], if
+#   'startX'           (float) (If specified unitRegistry units [Length], if
 #                       no units assumes millimeters, if flag 'wasatchUnits' is
-#                       used uses Wasatch units). Center x coordinate of the mark.
+#                       used uses Wasatch units). Start X coordinate of the scan.
 #
-#   'centerY'           (float) (If specified unitRegistry units [Length], if
+#   'startY'           (float) (If specified unitRegistry units [Length], if
 #                       no units assumes millimeters, if flag 'wasatchUnits' is
-#                       used uses Wasatch units). Center y coordinate of the mark.
+#                       used uses Wasatch units). Start Y coordinate of the scan.
 #
-#   'width'             (float) (If specified unitRegistry units [Length], if
+#   'stopX'            (float) (If specified unitRegistry units [Length], if
 #                       no units assumes millimeters, if flag 'wasatchUnits' is
-#                       used uses Wasatch units) Width of the entire mark.
+#                       used uses Wasatch units). Stop X coordinate of the scan.
 #
-#   'height'            (float) (If specified unitRegistry units [Length], if
+#   'stopY'            (float) (If specified unitRegistry units [Length], if
 #                       no units assumes millimeters, if flag 'wasatchUnits' is
-#                       used uses Wasatch units) Width between outer parralel
-#                       members of the fiducial
+#                       used uses Wasatch units). Stop Y coordinate of the scan.
 #
 #   'flags'             (string) (variable number of args) (optional) Flags for the line.
 #                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
@@ -140,4 +144,4 @@ def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, mark
 def GCommand_TutorialVolumetricScan(startX, startY, stopX, stopY, brepeats, *flags):
     print("After setting the desired A and B scan values, type this command into the setup window: ")
     print(WCommand_ScanXYRamp(startX, startY, stopX, stopY, brepeats, *flags))
-    print("Then hit \"Save Volume\"")
+    print("Then hit \"update\" and then \"Save Volume\" when you are ready to collect data.")
