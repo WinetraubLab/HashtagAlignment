@@ -83,8 +83,8 @@ startX = -2 # Defaults to millimeters
 startY = -2
 stopX = 2
 stopY = 2
-brepeats = 1
-GCommand_TutorialVolumetricScan(startX, startY, stopX, stopY, brepeats)
+bScanAvg = 1
+GCommand_TutorialVolumetricScan(startX, startY, stopX, stopY, bScanAvg)
 
 #
 #
