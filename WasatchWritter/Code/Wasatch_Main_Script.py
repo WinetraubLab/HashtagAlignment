@@ -64,17 +64,26 @@ for xIndex in range(-math.ceil(columnNumber / 2), math.ceil(columnNumber / 2)):
 
 # Draws a grid with assumed and real mm
 
-rowNumber = 40
-rowSpacing = 0.25 # defaults to mm
-columnNumber = 20
+"""
+rowNumber = 2
+rowSpacing = 0.5 # defaults to mm
+columnNumber = 10
 columnSpacing = 0.1 * unitRegistry.mm
 duration = 1 # defaults to seconds
 
 for yIndex in range(-math.ceil(rowNumber / 2), math.ceil(rowNumber / 2)):
     GCommand_BleachLine(microscopeCommand, -columnNumber / 2 * columnSpacing, yIndex * rowSpacing, columnNumber / 2 * columnSpacing, yIndex * rowSpacing, duration, "showSerial")
 for xIndex in range(-math.ceil(columnNumber / 2), math.ceil(columnNumber / 2)):
-    GCommand_BleachLine(microscopeCommand, xIndex * columnSpacing, -rowNumber / 2 * rowSpacing, xIndex * columnSpacing, rowNumber / 2 * rowSpacing, duration)
+    GCommand_BleachLine(microscopeCommand, xIndex * columnSpacing, -rowNumber / 2 * rowSpacing, xIndex * columnSpacing, rowNumber / 2 * rowSpacing, duration, "showSerial")
+"""
 
+# Instructs the user on how to take a volumetric scan with the desired values:
+startX = -2 # Defaults to millimeters
+startY = -2
+stopX = 2
+stopY = 2
+brepeats = 1
+GCommand_TutorialVolumetricScan(startX, startY, stopX, stopY, brepeats)
 
 #
 #

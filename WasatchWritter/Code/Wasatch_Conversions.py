@@ -61,7 +61,7 @@ def WConvert_XToWasatchUnits(inputX, *flags):
         if not isinstance(inputX, pint.quantity._Quantity): # Default behavior is to assume millimeters if unspecified
             inputX = float(inputX)
             inputX *= unitRegistry.millimeter
-        return inputX.to(unitRegistry.millimeter) * WUPERMM_X
+        return (inputX.to(unitRegistry.millimeter) * WUPERMM_X)
 
 #
 # Description:
@@ -83,7 +83,7 @@ def WConvert_YToWasatchUnits(inputY, *flags):
         if not isinstance(inputY, pint.quantity._Quantity): # Default behavior is to assume millimeters if unspecified
             inputY = float(inputY)
             inputY *= unitRegistry.millimeter
-        return (inputY.to(unitRegistry.millimeter) * WUPERMM_Y
+        return (inputY.to(unitRegistry.millimeter) * WUPERMM_Y)
 
 #
 # Description:

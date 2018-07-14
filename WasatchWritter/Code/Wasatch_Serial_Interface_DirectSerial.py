@@ -49,7 +49,7 @@ class Wasatch_Serial_Interface_DirectSerial(Wasatch_Serial_Interface_Abstract):
     # Sends a serial command to the Wasatch Microscope after 'time' milliseconds
     def sendCommand(self, command, timeDelay, *flags):
         self._serialPort.write(("%s\n" % command).encode('utf-8'))
-        if("showSerial" in flags)
+        if("showSerial" in flags):
             print("Command is: %s" % command)
         time.sleep(WConvert_ToSeconds(timeDelay).magnitude)
 
@@ -72,10 +72,10 @@ class Wasatch_Serial_Interface_DirectSerial(Wasatch_Serial_Interface_Abstract):
                 except:
                     continue
                 self._serialPort.timeout = 1.0
-                self.sendCommand(WCommand_Ping())
+                self.sendCommand(WCommand_Ping(), 0, "showSerial")
                 val = self._serialPort.read();
                 if(val == b'A'):
-                    self.sendCommand(WCommand_ScanStop())
+                    self.sendCommand(WCommand_ScanStop(), 0,"showSerial")
                     print('Galvo connection initialized.')
                     return True
                 #else:

@@ -110,3 +110,34 @@ def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, mark
     GCommand_BleachLine(microscopeCommand, vRightX, boundYStart, vRightX, boundYStop, duration, *flags)
     # Draws central
     GCommand_BleachLine(microscopeCommand, centerX, boundYStart, centerX, boundYStop, duration, *flags)
+
+#
+# Description:
+#   Provides test to the user to type into the terminal to get the desired 3d
+#   volumetric scan.
+#
+# Parameters:
+#   'centerX'           (float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units). Center x coordinate of the mark.
+#
+#   'centerY'           (float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units). Center y coordinate of the mark.
+#
+#   'width'             (float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units) Width of the entire mark.
+#
+#   'height'            (float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units) Width between outer parralel
+#                       members of the fiducial
+#
+#   'flags'             (string) (variable number of args) (optional) Flags for the line.
+#                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
+#
+def GCommand_TutorialVolumetricScan(startX, startY, stopX, stopY, brepeats, *flags):
+    print("After setting the desired A and B scan values, type this command into the setup window: ")
+    print(WCommand_ScanXYRamp(startX, startY, stopX, stopY, brepeats, *flags))
+    print("Then hit \"Save Volume\"")
