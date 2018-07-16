@@ -108,6 +108,30 @@ GCommand_TutorialVolumetricScan(startX, startY, stopX, stopY, bScanAvg)
 #    print('Current exposure :', exposure)
 #    GCommand_BleachLine(microscopeCommand, (lineXPosition, 5.0-lineHeight/2), (lineXPosition, 5.0+lineHeight/2), exposure)
 
+#This part draws tick marks on the sample
+x = 0.5 #[mm] x point of intersection of tick line with x axis
+y = 0.5 #[mm] y point of intersection of tick line with x axis
+d = 0.25 #[mm line clearence from the axes
+
+xysqrt = np.sqrt(x*x+y*y)
+
+Ax = x*(1+d/y)
+Ay = -d
+Bx = x*(1+d/y+l/xysqrt)
+By = -d -l*y/xysqrt
+Cx = By
+Cy = Bx*y/x
+Dx = Ay
+Dy = Ax*y/x
+exposure = np.sqrt((Ax-Bx)**2+(Ay-By)**2)/5.0*1.0 #1 sec for 5 mm
+
+AD = xysqrt*(1+d*(1/x+1/y))
+print("AD Length [mm] " + AD + "Recomended to be <1.2[mm]")
+
+GCommand_BleachLine(microscopeCommand,Ax,Ay,Bx,By, exposure)
+GCommand_BleachLine(microscopeCommand,Cx,Cy,Dx,Dy, exposure)
+
+
 #--> Closes connection:
 """microscopeCommand.close()"""
 print("Done!")
