@@ -12,6 +12,7 @@
 #----------------------- Imported Libraries ------------------------------------
 
 import math
+import numpy as np
 
 from Wasatch_Main_Commands import *
 from Wasatch_Serial_Interface_DirectSerial import Wasatch_Serial_Interface_DirectSerial
@@ -20,7 +21,7 @@ from Wasatch_Units import *
 #--------------------------- The Script ----------------------------------------
 
 #--> Setup:
-"""microscopeCommand = Wasatch_Serial_Interface_DirectSerial()"""
+microscopeCommand = Wasatch_Serial_Interface_DirectSerial()
 print("Starting")
 #--> Put your commands here:
 
@@ -86,6 +87,9 @@ stopY = 2
 bScanAvg = 1
 GCommand_TutorialVolumetricScan(startX, startY, stopX, stopY, bScanAvg)
 
+
+GCommand_TutorialVolumetricScan(-1, -1, 1, 1, 10)
+
 #
 #
 # Draws a fiducial mark:
@@ -95,9 +99,10 @@ GCommand_TutorialVolumetricScan(startX, startY, stopX, stopY, bScanAvg)
 # markWidth = 0.5 * unitRegistry.millimeter
 # markGapWidth = 100 * unitRegistry.micrometer
 # duration = 1 * unitRegistry.seconds
+#GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markGapWidth, duration):
 #
-# GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markGapWidth, duration):
-#
+
+GCommand_BleachFiducial(microscopeCommand, 0, 0, 5, 0.1, 1)
 
 #This part below creates lines in different exposure times
 #lineHeight = 5.0 * unitRegistry.millimeters
@@ -111,7 +116,8 @@ GCommand_TutorialVolumetricScan(startX, startY, stopX, stopY, bScanAvg)
 #This part draws tick marks on the sample
 x = 0.5 #[mm] x point of intersection of tick line with x axis
 y = 0.5 #[mm] y point of intersection of tick line with x axis
-d = 0.25 #[mm line clearence from the axes
+d = 0.25 #[mm] line clearence from the axes
+l = 5   #[mm] marker size
 
 xysqrt = np.sqrt(x*x+y*y)
 
@@ -123,15 +129,16 @@ Cx = By
 Cy = Bx*y/x
 Dx = Ay
 Dy = Ax*y/x
-exposure = np.sqrt((Ax-Bx)**2+(Ay-By)**2)/5.0*1.0 #1 sec for 5 mm
+exposure = l/5.0*1.0 #1 sec for 5 mm
 
 AD = xysqrt*(1+d*(1/x+1/y))
-print("AD Length [mm] " + AD + "Recomended to be <1.2[mm]")
+text = "AD Length [mm] %f Recomended to be <1.2[mm]" % (AD)
+print(text)
 
 GCommand_BleachLine(microscopeCommand,Ax,Ay,Bx,By, exposure)
 GCommand_BleachLine(microscopeCommand,Cx,Cy,Dx,Dy, exposure)
 
 
 #--> Closes connection:
-"""microscopeCommand.close()"""
+microscopeCommand.close()
 print("Done!")

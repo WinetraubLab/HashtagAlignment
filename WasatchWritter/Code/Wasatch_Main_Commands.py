@@ -55,7 +55,7 @@ def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duratio
     microscopeCommand.sendCommand(WCommand_ScanAScans(WConvert_PulsesPerSweep()), 0, *flags)
     microscopeCommand.sendCommand(WCommand_ScanBScans(0), 0, *flags)
     # Configures paths
-    microscopeCommand.sendCommand(WCommand_ScanXYRamp(startX, startY, stopX, stopY, *flags), 0, *flags)
+    microscopeCommand.sendCommand(WCommand_ScanXYRamp(startX, startY, stopX, stopY, 1, *flags), 0, *flags)
     # Draws the line, number of scans dependent on previous factors
     microscopeCommand.sendCommand(WCommand_ScanNTimes(WConvert_NumScansFromSecs(duration)), duration, *flags)
 
