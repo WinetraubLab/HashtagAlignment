@@ -24,14 +24,14 @@ roughWUnitsPerMM = 2230; % Approximate guess for number of wasatch units per mm 
 upscaleFactor = 1; % Linear interpolation upscaling factor
 
 % Image set settings, format is [fileNumber, colspacing (Wasatch Units), rowspacing (Wasatch Units), imageColumnCount, imageRowCount, individualImageWidth (mm), individualImageHeight (mm), totalWidth (mm), totalHeight (mm), individualWidthPixels, individualHeightPixels]
-metaData = [ %{0, 8, 8, 800, 400, 1.48, 1.48, 10.49, 11.59, 512, 512;%} % TODO verify metadata for #1
-            1, 8, 9, 200, 100, 1.48, 1.48, 11.84, 11.80, 2048, 2048;
-            2, 16, 8, 100, 200, 1.48, 1.48, 11.84, 10.77, 2048, 2048];
+metaData = [ 0, 8, 8, 800, 400, 1.48, 1.48, 10.49, 11.59, 512, 512;
+             1, 8, 9, 200, 100, 1.48, 1.48, 11.84, 11.80, 2048, 2048;
+             2, 16, 8, 100, 200, 1.48, 1.48, 11.84, 10.77, 2048, 2048];
 
 % Add the file number to these vectors to enable:
 useSplineFit = []; % If not used, uses linear interpolation from raw
 plotRowPeaks = []; % Markers for peak detection
-plotRowGaussFits = []; % The gaussian distributions found
+plotRowGaussFits = [1]; % The gaussian distributions found
 plotColPeaks = [];
 plotColGaussFits = [];
 
@@ -120,9 +120,9 @@ for dataIndex = 1:metaDataSize(1)
                     figure;
                     hold on;
                     findpeaks(colCrossSectionAvg, colRange, 'MinPeakDistance', expectedDistanceMinimum_Col, 'MaxPeakWidth', expectedWidthMaximum_Col, 'MinPeakProminence', expectedProminanceMinimum_Col);
-                    titleText = sprintf('Column Section for R%d-C%d.tiff',rowIndex, colIndex);
-                    xlabel('x position in mm');
-                    ylabel('Y position in mm');
+                    xlabel('Y Position in mm');
+                    ylabel('Intensity');
+                    titleText = sprintf('File %d, Column Section for R%d-C%d.tiff',fileIndex ,rowIndex, colIndex);
                     title(titleText);
                     hold off;
                 end
@@ -136,10 +136,10 @@ for dataIndex = 1:metaDataSize(1)
                         plot(range, gaussian(gaussianFirstGuess_col(rIndex, :), range), 'Color', [0.4660, 0.6740, 0.1880], 'displayName', 'First Guess');
                         plot(range, gaussian(gaussianApproximations_col(rIndex, :), range), 'Color', [0.8500, 0.3250, 0.0980], 'displayName', 'Fitted Data');
                     end
-                    titleText = sprintf('Column Section for R%d-C%d.tiff',rowIndex, colIndex);
-                    title(titleText);
+                    titleText = sprintf('File %d, Column Section for R%d-C%d.tiff', fileIndex, rowIndex, colIndex);
                     xlabel('X position in mm');
                     ylabel('Intensity');
+                    title(titleText);
                     hold off;
                 end
 
@@ -184,8 +184,8 @@ for dataIndex = 1:metaDataSize(1)
                     figure;
                     hold on;
                     findpeaks(rowCrossSectionAvg, rowRange, 'MinPeakDistance', expectedDistanceMinimum_Row, 'MaxPeakWidth', expectedWidthMaximum_Row, 'MinPeakProminence', expectedProminanceMinimum_Row);
-                    ylabel('Y Position in mm');
-                    xlabel('Intensity');
+                    xlabel('Y Position in mm');
+                    ylabel('Intensity');
                     titleText = sprintf('Row Section for R%d-C%d.tiff',rowIndex, colIndex);
                     title(titleText);
                     hold off;
@@ -201,8 +201,8 @@ for dataIndex = 1:metaDataSize(1)
                     end
                     titleText = sprintf('Row Section for R%d-C%d.tiff',rowIndex, colIndex);
                     title(titleText);
-                    ylabel('x position in mm');
                     xlabel('Y position in mm');
+                    ylabel('Intensity');
                     hold off;
                 end
             else 
@@ -218,11 +218,11 @@ end
 %close all;
 
 % Derived mm/wasatchUnits value
-plotLocalWidthVariance_Fitted = [];
+plotLocalWidthVariance_Fitted = [2];
 plotLocalWidthVariance_Raw = [];
 
 % Corrected Derived mm/wasatchUnits value
-plotLocalWidthVariance_Fitted_Corrected = [1, 2];
+plotLocalWidthVariance_Fitted_Corrected = [2];
 plotLocalWidthVariance_Raw_Corrected = []; % Not implemented
 
 % Global Spatial Difference Distribution
@@ -242,7 +242,7 @@ plotLocalSpatialCorrection_Fitted = [];
 
 % Corrected Global Spatial Difference Distribution
 plotSpatialDistribution_Fitted_Corrected = [];
-plotSpatialDistribution_Fitted_Corrected_CenteredMicrons = [1, 2];
+plotSpatialDistribution_Fitted_Corrected_CenteredMicrons = [];
 
 % Corrected Local Spatial Difference Distribution
 plotLocalSpatialDistribution_Fitted_Corrected = [];
@@ -307,6 +307,7 @@ for dataIndex = 1:metaDataSize(1)
         plot(range, y_col, 'LineWidth', 2, 'displayName', 'Column Spacing (Wasatch Units / MM)');
         %}
         histogram(colDifferencesWU, 20, 'displayName', 'Fitted Column Spacing (Wasatch Units / MM)');
+        sprintf('File %d, Mean is %d, Standard Deviation is %d for Columns Uncorrected', fileIndex, mean(colDifferencesWU), std(colDifferencesWU))
         % -> Rows
         %{
         pd_row = fitdist(rowDifferences,'Kernel','Kernel','epanechnikov');
@@ -314,6 +315,7 @@ for dataIndex = 1:metaDataSize(1)
         plot(range, y_row, 'LineWidth', 2, 'displayName', 'Row Spacing (Wasatch Units / MM)');
         %}
         histogram(rowDifferencesWU, 20, 'displayName', 'Fitted Row Spacing (Wasatch Units / MM)');
+        sprintf('File %d, Mean is %d, Standard Deviation is %d for Rows Uncorrected', fileIndex, mean(rowDifferencesWU), std(rowDifferencesWU))
         % -> Plots
         legend('show');
         xlabel('Wasatch Units');
@@ -559,15 +561,17 @@ for dataIndex = 1:metaDataSize(1)
             end
         end
     end
-    medianFunctionCol = median(totalDataCol, 1) - mean(median(totalDataCol, 1));
-    medianFunctionCol = polyval(polyfit(resampleRangeCol, medianFunctionCol, 2), resampleRangeCol);
+    medianFunctionCol = (median(totalDataCol, 1))./mean(median(totalDataCol, 1));
+    polyFunctionCoefCol = polyfit(resampleRangeCol, medianFunctionCol, 2);
+    medianFunctionCol = polyval(polyFunctionCoefCol, resampleRangeCol);
     if(ismember(fileIndex, plotLocalSpatialCorrection_Fitted))
         figure;
         hold on;
         plot(resampleRangeCol, medianFunctionCol);
-        title('Difference Correction Along Columns');
+        titleText = sprintf('File %d, Normalized Difference Correction Along Columns', fileIndex);
+        title(titleText);
         xlabel('Local X Position (mm)');
-        ylabel('Difference (mm)');
+        ylabel('Normalized Value');
         hold off;
     end
     % -> Local Distortion Along Y
@@ -584,15 +588,17 @@ for dataIndex = 1:metaDataSize(1)
             end
         end
     end
-    medianFunctionRow = median(totalDataRow, 1) - mean(median(totalDataRow, 1));
-    medianFunctionRow = polyval(polyfit(resampleRangeRow, medianFunctionRow, 2), resampleRangeRow);
+    medianFunctionRow = (median(totalDataRow, 1))./(mean(median(totalDataRow, 1)));
+    polyFunctionCoefRow = polyfit(resampleRangeRow, medianFunctionRow, 2);
+    medianFunctionRow = polyval(polyFunctionCoefRow, resampleRangeRow);
     if(ismember(fileIndex, plotLocalSpatialCorrection_Fitted))
         figure;
         hold on;
         plot(resampleRangeCol, medianFunctionRow);
-        title('Difference Correction Along Rows');
+        titleText = sprintf('File %d, Normalized Difference Correction Along Rows', fileIndex);
+        title(titleText);
         xlabel('Local Y Position (mm)');
-        ylabel('Difference (mm)');
+        ylabel('Normalized Value');
         hold off;
     end
     
@@ -605,12 +611,13 @@ for dataIndex = 1:metaDataSize(1)
             for rIndex = 1:numRowImages
                 curLocations = nonzeros(colDiffs(:, 8) .* (colDiffs(:, 5) == rIndex).*(colDiffs(:, 6) == fileIndex).*(colDiffs(:, 9) == cIndex));
                 curSpaces = nonzeros(colDiffs(:, 4) .* (colDiffs(:, 5) == rIndex).*(colDiffs(:, 6) == fileIndex).*(colDiffs(:, 9) == cIndex));
-                curSpaces = curSpaces - interp1(resampleRangeCol, medianFunctionCol, curLocations);
+                curSpaces = curSpaces./interp1(resampleRangeCol, medianFunctionCol, curLocations);
                 labelText = sprintf('Column %d, Row %d', cIndex, rIndex);
                 plot(curLocations, curSpaces, 'displayName', labelText);
             end
         end
-        title(sprintf('File %d, Corrected Local Differences Along Column Range (Fitted)', fileIndex));
+        titleText = sprintf('File %d, Corrected Local Differences Along Column Range (Fitted)', fileIndex);
+        title(titleText);
         xlabel('Local X Position (mm)');
         ylabel('Difference (mm)');
         hold off;
@@ -621,12 +628,13 @@ for dataIndex = 1:metaDataSize(1)
             for rIndex = 1:numRowImages
                 curLocations = nonzeros(rowDiffs(:, 8) .* (rowDiffs(:, 5) == cIndex).*(rowDiffs(:, 6) == fileIndex).*(rowDiffs(:, 9) == rIndex));
                 curSpaces = nonzeros(rowDiffs(:, 4) .* (rowDiffs(:, 5) == cIndex).*(rowDiffs(:, 6) == fileIndex).*(rowDiffs(:, 9) == rIndex));
-                curSpaces = curSpaces - interp1(resampleRangeRow, medianFunctionRow, curLocations);
+                curSpaces = curSpaces./interp1(resampleRangeRow, medianFunctionRow, curLocations);
                 labelText = sprintf('Column %d, Row %d', cIndex, rIndex);
                 plot(curLocations, curSpaces, 'displayName', labelText);
             end
         end
-        title(sprintf('File %d, Corrected Local Differences Along Row Range (Fitted)', fileIndex));
+        titleText = sprintf('File %d, Corrected Local Differences Along Row Range (Fitted)', fileIndex);
+        title(titleText);
         xlabel('Local Y Position (mm)');
         ylabel('Difference (mm)');
         hold off;
@@ -641,7 +649,7 @@ for dataIndex = 1:metaDataSize(1)
             for rIndex = 1:numRowImages
                 curLocations = nonzeros(colDiffs(:, 8) .* (colDiffs(:, 5) == rIndex).*(colDiffs(:, 6) == fileIndex).*(colDiffs(:, 9) == cIndex));
                 curSpaces = nonzeros(colDiffs(:, 4) .* (colDiffs(:, 5) == rIndex).*(colDiffs(:, 6) == fileIndex).*(colDiffs(:, 9) == cIndex));
-                curSpaces = curSpaces - interp1(resampleRangeCol, medianFunctionCol, curLocations);
+                curSpaces = curSpaces./interp1(resampleRangeCol, medianFunctionCol, curLocations);
                 curSpaces = (curSpaces - mean(curSpaces)) * 1000;
                 labelText = sprintf('Column %d, Row %d', cIndex, rIndex);
                 plot(curLocations, curSpaces, 'displayName', labelText);
@@ -658,13 +666,14 @@ for dataIndex = 1:metaDataSize(1)
             for rIndex = 1:numRowImages
                 curLocations = nonzeros(rowDiffs(:, 8) .* (rowDiffs(:, 5) == cIndex).*(rowDiffs(:, 6) == fileIndex).*(rowDiffs(:, 9) == rIndex));
                 curSpaces = nonzeros(rowDiffs(:, 4) .* (rowDiffs(:, 5) == cIndex).*(rowDiffs(:, 6) == fileIndex).*(rowDiffs(:, 9) == rIndex));
-                curSpaces = curSpaces - interp1(resampleRangeRow, medianFunctionRow, curLocations);
+                curSpaces = curSpaces./interp1(resampleRangeRow, medianFunctionRow, curLocations);
                 curSpaces = (curSpaces - mean(curSpaces)) * 1000;
                 labelText = sprintf('Column %d, Row %d', cIndex, rIndex);
                 plot(curLocations, curSpaces, 'displayName', labelText);
             end
         end
-        title(sprintf('File %d, Corrected Local Differences Along Row Range (Fitted)', fileIndex));
+        titleText = sprintf('File %d, Corrected Local Differences Along Row Range (Fitted)', fileIndex);
+        title(titleText);
         xlabel('Local Y Position (mm)');
         ylabel('Difference (mm)');
         hold off;
@@ -680,7 +689,7 @@ for dataIndex = 1:metaDataSize(1)
             curLocations = nonzeros(colDiffs(:, 3).*(colDiffs(:, 5) == rIndex).*(colDiffs(:, 6) == fileIndex));
             curLocations_local = nonzeros(colDiffs(:, 8).*(colDiffs(:, 5) == rIndex).*(colDiffs(:, 6) == fileIndex));
             curSpaces = nonzeros(colDiffs(:, 4).*(colDiffs(:, 5) == rIndex).*(colDiffs(:, 6) == fileIndex));
-            curSpaces = curSpaces - interp1(resampleRangeCol, medianFunctionCol, curLocations_local);
+            curSpaces = curSpaces./interp1(resampleRangeCol, medianFunctionCol, curLocations_local);
             curSpaces = (curSpaces - mean(curSpaces)) * 1000;
             totalColumnVals = [totalColumnVals; curSpaces];
             labelText = sprintf('Row %d', rIndex);
@@ -701,7 +710,7 @@ for dataIndex = 1:metaDataSize(1)
             curLocations = nonzeros(rowDiffs(:, 3) .* (rowDiffs(:, 5) == cIndex).*(rowDiffs(:, 6) == fileIndex));
             curLocations_local = nonzeros(rowDiffs(:, 8).*(rowDiffs(:, 5) == cIndex).*(rowDiffs(:, 6) == fileIndex));
             curSpaces = nonzeros(rowDiffs(:, 4) .* (rowDiffs(:, 5) == cIndex).*(rowDiffs(:, 6) == fileIndex));
-            curSpaces = curSpaces - interp1(resampleRangeRow, medianFunctionRow, curLocations_local);
+            curSpaces = curSpaces./interp1(resampleRangeRow, medianFunctionRow, curLocations_local);
             curSpaces = (curSpaces - mean(curSpaces)) * 1000;
             totalRowVals = [totalRowVals; curSpaces];
             labelText = sprintf('Column %d', cIndex);
@@ -722,12 +731,12 @@ for dataIndex = 1:metaDataSize(1)
         hold on;
         curLocationsCols_local = nonzeros(colDiffs(:, 8).*(colDiffs(:, 6) == fileIndex));
         curSpacesCols = nonzeros(colDiffs(:, 4).*(colDiffs(:, 6) == fileIndex));
-        curSpacesCols = curSpacesCols - interp1(resampleRangeCol, medianFunctionCol, curLocationsCols_local);
+        curSpacesCols = curSpacesCols./interp1(resampleRangeCol, medianFunctionCol, curLocationsCols_local);
         colDifferencesWU = (ones(length(curSpacesCols), 1)* tileWUnitsColumns)./curSpacesCols;
         colAverage = mean(colDifferencesWU)
         curLocationsRows_local = nonzeros(rowDiffs(:, 8).*(rowDiffs(:, 6) == fileIndex));
         curSpacesRows = nonzeros(rowDiffs(:, 4).*(rowDiffs(:, 6) == fileIndex));
-        curSpacesRows = curSpacesRows - interp1(resampleRangeRow, medianFunctionRow, curLocationsRows_local);
+        curSpacesRows = curSpacesRows./interp1(resampleRangeRow, medianFunctionRow, curLocationsRows_local);
         rowDifferencesWU = (ones(length(curSpacesRows), 1)* tileWUnitsRows)./curSpacesRows;
         range = (min([colDifferencesWU; rowDifferencesWU]):1:max([colDifferencesWU; rowDifferencesWU]))';
         rowAverage = mean(rowDifferencesWU)
@@ -738,6 +747,7 @@ for dataIndex = 1:metaDataSize(1)
         plot(range, y_col, 'LineWidth', 2, 'displayName', 'Column Spacing (Wasatch Units / MM)');
         %}
         histogram(colDifferencesWU, 20, 'displayName', 'Fitted Column Spacing (Wasatch Units / MM)');
+        sprintf('File %d, Mean is %d, Standard Deviation is %d for Columns Corrected', fileIndex, mean(colDifferencesWU), std(colDifferencesWU))
         % -> Rows
         %{
         pd_row = fitdist(rowDifferences,'Kernel','Kernel','epanechnikov');
@@ -745,11 +755,12 @@ for dataIndex = 1:metaDataSize(1)
         plot(range, y_row, 'LineWidth', 2, 'displayName', 'Row Spacing (Wasatch Units / MM)');
         %}
         histogram(rowDifferencesWU, 20, 'displayName', 'Fitted Row Spacing (Wasatch Units / MM)');
+        sprintf('File %d, Mean is %d, Standard Deviation is %d for Rows Corrected', fileIndex, mean(rowDifferencesWU), std(rowDifferencesWU))
         % -> Plots
         legend('show');
         xlabel('Wasatch Units');
         ylabel('Quantity');
-        titleText = sprintf('File %d, Wasatch Units / MM From Line Division Data (Fitted)', fileIndex);
+        titleText = sprintf('File %d, Wasatch Units / MM From Line Division Data Corrected (Fitted)', fileIndex);
         title(titleText);
         hold off;
     end
