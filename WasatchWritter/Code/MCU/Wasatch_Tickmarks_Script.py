@@ -42,10 +42,10 @@ Ax = x*(1+d/y)
 Ay = -d
 Bx = x*(1+d/y+l/xysqrt)
 By = -d -l*y/xysqrt
-Cx = By
-Cy = Bx*y/x
-Dx = Ay
-Dy = Ax*y/x
+Cx = -d -l*x/xysqrt
+Cy = y*(1+d/x+l/xysqrt)
+Dx = -d
+Dy = y*(1+d/x)
 exposure = l/5.0*1.0 #1 sec for 5 mm
 
 AD = xysqrt*(1+d*(1/x+1/y))
