@@ -77,12 +77,24 @@ def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duratio
 #
 #   'markWidth'         (float) (If specified unitRegistry units [Length], if
 #                       no units assumes millimeters, if flag 'wasatchUnits' is
-#                       used uses Wasatch units) Width of the entire mark.
+#                       used uses Wasatch units) How far lines extend past the mark.
 #
-#   'markGapWidth'      (float) (If specified unitRegistry units [Length], if
+#   'markBaseGapWidth'  (float) (If specified unitRegistry units [Length], if
 #                       no units assumes millimeters, if flag 'wasatchUnits' is
-#                       used uses Wasatch units) Width between outer parralel
-#                       members of the fiducial
+#                       used uses Wasatch units) Base gap between lines in the
+#                       mark. Set the actual values with the 'ratios' parameter.
+#
+#   'xRatios'           (tuple of float) Locations of lines perpendicular to x
+#                       axis along x axis at multiples of 'markBaseGapWidth' away
+#                       from the origin. Negative ratios draw at negative values
+#                       relative to the center. Zero would draw along the origin
+#                       axis. Positive values draw beyond the origin.
+#
+#   'yRatios'           (tuple of float) Locations of lines perpendicular to y
+#                       axis along y axis at multiples of 'markBaseGapWidth' away
+#                       from the origin. Negative ratios draw at negative values
+#                       relative to the center. Zero would draw along the origin
+#                       axis. Positive values draw beyond the origin.
 #
 #   'duration'          (float) (If specified unitRegistry units [Time],
 #                       otherwise assumed to be in seconds) Duration of draw
@@ -92,33 +104,28 @@ def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duratio
 #                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
 #                       -> 'showSerial'   Serial commands are displayed when sent
 #
-def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markGapWidth, duration, *flags):
-    # Prints out a hash mark with a line in the middle, consists of 5 lines
-    boundXStart = centerX - (markWidth / 2)
-    boundXStop = centerX + (markWidth / 2)
-    boundYStart = centerY - (markWidth / 2)
-    boundYStop = centerY + (markWidth / 2)
+def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markBaseGapWidth, xRatios, yRatios, duration, *flags):
     # Draws horizontal
-    hLowY = centerY - (markGapWidth / 2)
-    hHighY = centerY + (markGapWidth / 2)
-    GCommand_BleachLine(microscopeCommand, boundXStart, hLowY, boundXStop, hLowY, duration, *flags)
-    GCommand_BleachLine(microscopeCommand, boundXStart, hHighY, boundXStop, hHighY, duration, *flags)
+    for currentY in yRatios:
+        boundXStart = centerX - (markWidth / 2)
+        boundXStop = centerX + (markWidth / 2)
+        yPosition = centerY + (currentY * markBaseGapWidth)
+        GCommand_BleachLine(microscopeCommand, boundXStart, yPosition, boundXStop, yPosition, duration, *flags)
     # Draws vertical
-    vLeftX = centerX - (markGapWidth / 2)
-    vRightX = centerX + (markGapWidth / 2)
-    GCommand_BleachLine(microscopeCommand, vLeftX, boundYStart, vLeftX, boundYStop, duration, *flags)
-    GCommand_BleachLine(microscopeCommand, vRightX, boundYStart, vRightX, boundYStop, duration, *flags)
-    # Draws central
-    GCommand_BleachLine(microscopeCommand, centerX, boundYStart, centerX, boundYStop, duration, *flags)
+    for currentX in xRatios:
+        boundYStart = centerY - (markWidth / 2)
+        boundYStop = centerY + (markWidth / 2)
+        xPosition = centerX + (currentX * markBaseGapWidth)
+        GCommand_BleachLine(microscopeCommand, xPosition, boundYStart, xPosition, boundYStop, duration, *flags)
 
 #
 # Description:
 #   Provides test to the user to type into the terminal to get the desired 3d
 #   volumetric scan. The start and stop points define the bounding opposite corners
-#   of the rectangular region of the volume to be scanned. The scan proceeds 
+#   of the rectangular region of the volume to be scanned. The scan proceeds
 #   horizontally along the X axis in the direction away from the x coordinate
 #   of the stop point towards the x coordinate of the stop point. Similarily, the
-#   scan starts at the height of the start point and proceeds to the height of the 
+#   scan starts at the height of the start point and proceeds to the height of the
 #   end point. Choose your start and end points accordingly.
 #
 # Parameters:
