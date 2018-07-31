@@ -46,6 +46,7 @@ from Wasatch_Units import *
 #   'flags'         (string) (variable number of args) (optional) Flags for the line.
 #                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
 #                       -> 'showSerial'   Serial commands are displayed when sent
+#                       -> 'disableOutput' Serial commands are not sent to the microcontroller
 #
 def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duration, *flags):
     duration = WConvert_ToSeconds(duration);
@@ -103,6 +104,7 @@ def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duratio
 #   'flags'             (string) (variable number of args) (optional) Flags for the line.
 #                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
 #                       -> 'showSerial'   Serial commands are displayed when sent
+#                       -> 'disableOutput' Serial commands are not sent to the microcontroller
 #
 def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markBaseGapWidth, xRatios, yRatios, duration, *flags):
     # Draws horizontal
@@ -146,7 +148,9 @@ def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, mark
 #                       used uses Wasatch units). Stop Y coordinate of the scan.
 #
 #   'flags'             (string) (variable number of args) (optional) Flags for the line.
-#                       -> 'wasatchUnits' Arguments are interpreted directly as wasatch units
+#                       -> 'wasatchUnits'  Arguments are interpreted directly as wasatch units
+#                       -> 'showSerial'    Serial commands are displayed when sent
+#                       -> 'disableOutput' Serial commands are not sent to the microcontroller
 #
 def GCommand_TutorialVolumetricScan(startX, startY, stopX, stopY, brepeats, *flags):
     print("After setting the desired A and B scan values, type this command into the setup window: ")
