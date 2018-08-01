@@ -21,7 +21,7 @@ lnNames=     { '-x' '+x' '-y' '0y' '+y'}; %Line names
 %OCT
 OCTVolumeFolder = dataFolder;
 OCTVolumePosition = [-1e-3     -1e-3      0; ...     %x,y,z position [m] of the first A scan in the first B scan (1,1)
-                     +0.998e-3 +0.998e-3  1984e-6]'; %x,y,z position [m] of the las A scan in the last B scan (end,end). z is deeper!
+                     +0.998e-3 +0.998e-3  1984e-6/1.33]'; %x,y,z position [m] of the las A scan in the last B scan (end,end). z is deeper!
 dispersionParameterA = 9.592e-02;  %Use this dispersion Parameter for air-water interface - Wasatch
 
 %Plotting
