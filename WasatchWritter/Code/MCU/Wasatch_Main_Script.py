@@ -99,10 +99,10 @@ GCommand_TutorialVolumetricScan(-1, -1, 1, 1, 10)
 # markWidth = 0.5 * unitRegistry.millimeter
 # markGapWidth = 100 * unitRegistry.micrometer
 # duration = 1 * unitRegistry.seconds
-#GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markGapWidth, duration):
+#GCommand_BleachFiducial(microscopeCommand, centerX, centerY, lineLength, markGapBaseWidth, columnRatios, rowRatios, duration):
 #
 
-GCommand_BleachFiducial(microscopeCommand, 0, 0, 5, 0.1, 1)
+GCommand_BleachFiducial(microscopeCommand, 0, 0, 5, 0.05, [-1, 0, 2], [-3, 0], 1)
 
 #This part below creates lines in different exposure times
 #lineHeight = 5.0 * unitRegistry.millimeters
@@ -137,7 +137,7 @@ print(text)
 
 GCommand_BleachLine(microscopeCommand,Ax,Ay,Bx,By, exposure)
 GCommand_BleachLine(microscopeCommand,Cx,Cy,Dx,Dy, exposure)
-
+print(WCommand_ScanXYRamp(Cx, Cy, Bx, By, 1))
 
 #--> Closes connection:
 microscopeCommand.close()

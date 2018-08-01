@@ -48,7 +48,7 @@ class Wasatch_Serial_Interface_DirectSerial(Wasatch_Serial_Interface_Abstract):
 
     # Sends a serial command to the Wasatch Microscope after 'time' milliseconds
     def sendCommand(self, command, timeDelay, *flags):
-        if("disableOutput" not in flags)
+        if("disableOutput" not in flags):
             self._serialPort.write(("%s\n" % command).encode('utf-8'))
         if("showSerial" in flags):
             print("Command is: %s" % command)

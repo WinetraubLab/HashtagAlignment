@@ -106,17 +106,17 @@ def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duratio
 #                       -> 'showSerial'   Serial commands are displayed when sent
 #                       -> 'disableOutput' Serial commands are not sent to the microcontroller
 #
-def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, markWidth, markBaseGapWidth, xRatios, yRatios, duration, *flags):
+def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, lineLength, markBaseGapWidth, xRatios, yRatios, duration, *flags):
     # Draws horizontal
     for currentY in yRatios:
-        boundXStart = centerX - (markWidth / 2)
-        boundXStop = centerX + (markWidth / 2)
+        boundXStart = centerX - (lineLength / 2)
+        boundXStop = centerX + (lineLength / 2)
         yPosition = centerY + (currentY * markBaseGapWidth)
         GCommand_BleachLine(microscopeCommand, boundXStart, yPosition, boundXStop, yPosition, duration, *flags)
     # Draws vertical
     for currentX in xRatios:
-        boundYStart = centerY - (markWidth / 2)
-        boundYStop = centerY + (markWidth / 2)
+        boundYStart = centerY - (lineLength / 2)
+        boundYStop = centerY + (lineLength / 2)
         xPosition = centerX + (currentX * markBaseGapWidth)
         GCommand_BleachLine(microscopeCommand, xPosition, boundYStart, xPosition, boundYStop, duration, *flags)
 

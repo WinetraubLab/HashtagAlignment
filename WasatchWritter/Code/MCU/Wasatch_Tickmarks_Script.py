@@ -17,6 +17,7 @@ import numpy as np
 from Wasatch_Main_Commands import *
 from Wasatch_Serial_Interface_DirectSerial import Wasatch_Serial_Interface_DirectSerial
 from Wasatch_Units import *
+from multiples_lines import mult_lines
 
 #--------------------------- The Script ----------------------------------------
 #This script draws alignment markers. All units are in mm, sec
@@ -27,12 +28,15 @@ microscopeCommand = Wasatch_Serial_Interface_DirectSerial()
 print("Starting")
 
 #--> Step #2 draw Fiducial marker lines
-GCommand_BleachFiducial(microscopeCommand, 0, 0, 5, 0.1, 1)
+#GCommand_BleachFiducial(microscopeCommand, centerX, centerY, lineLength, markGapBaseWidth, columnRatios, rowRatios, duration):
+GCommand_BleachFiducial(microscopeCommand, 0, 0, 5, 0.05, [-1, 0, 2], [-3, 0], 1)
 
 #--> Step #3 draw tick marks
 # Inputs
-x = 0.5 #[mm] x point of intersection of tick line with x axis
-y = 0.5 #[mm] y point of intersection of tick line with x axis
+#x = 0.5 -2*(np.cos(45*(180/math.pi))**2)*5*0.001  #[mm] x point of intersection of tick line with x axis
+#y = 0.5 -2*(np.cos(45*(180/math.pi))**2)*5*0.001 #[mm] y point of intersection of tick line with x axis
+x = 0.25   #[mm] x point of intersection of tick line with x axis
+y = 0.55  #[mm] y point of intersection of tick line with x axis
 d = 0.25 #[mm] line clearence from the axes
 l = 1   #[mm] marker size
 
@@ -53,6 +57,9 @@ text = "AD Length [mm] %f Recomended to be <1.2[mm]" % (AD)
 print(text)
 
 #Draw
+#print(WCommand_ScanXYRamp(Ax, Ay, Dx, Dy, 1))
+mult_lines(Ax, Ay, Dx, Dy, [-15,15])
+#print(WCommand_ScanXYRamp(Cx, Cy, Bx, By, 1))
 GCommand_BleachLine(microscopeCommand,Ax,Ay,Bx,By, exposure)
 GCommand_BleachLine(microscopeCommand,Cx,Cy,Dx,Dy, exposure)
 
