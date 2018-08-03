@@ -6,7 +6,7 @@
 #
 # Description:
 #   Executable script. Feel free to fill in whatever
-#   commands you want.
+#   commands you want. Mainly used as a demo.
 #
 
 #----------------------- Imported Libraries ------------------------------------
@@ -102,42 +102,7 @@ GCommand_TutorialVolumetricScan(-1, -1, 1, 1, 10)
 #GCommand_BleachFiducial(microscopeCommand, centerX, centerY, lineLength, markGapBaseWidth, columnRatios, rowRatios, duration):
 #
 
-GCommand_BleachFiducial(microscopeCommand, 0, 0, 5, 0.05, [-1, 0, 2], [-3, 0], 1)
-
-#This part below creates lines in different exposure times
-#lineHeight = 5.0 * unitRegistry.millimeters
-#exposures = [0.1, 0.2, 0.5, 1, 2, 5] * unitRegistry.second
-#for i in range(len(exposures)):
-#    lineXPosition = 2.0 + i*0.1 #[mm]
-#    exposure = exposures[i] #[sec] per line
-#    print('Current exposure :', exposure)
-#    GCommand_BleachLine(microscopeCommand, (lineXPosition, 5.0-lineHeight/2), (lineXPosition, 5.0+lineHeight/2), exposure)
-
-#This part draws tick marks on the sample
-x = 0.5 #[mm] x point of intersection of tick line with x axis
-y = 0.5 #[mm] y point of intersection of tick line with x axis
-d = 0.25 #[mm] line clearence from the axes
-l = 5   #[mm] marker size
-
-xysqrt = np.sqrt(x*x+y*y)
-
-Ax = x*(1+d/y)
-Ay = -d
-Bx = x*(1+d/y+l/xysqrt)
-By = -d -l*y/xysqrt
-Cx = By
-Cy = Bx*y/x
-Dx = Ay
-Dy = Ax*y/x
-exposure = l/5.0*1.0 #1 sec for 5 mm
-
-AD = xysqrt*(1+d*(1/x+1/y))
-text = "AD Length [mm] %f Recomended to be <1.2[mm]" % (AD)
-print(text)
-
-GCommand_BleachLine(microscopeCommand,Ax,Ay,Bx,By, exposure)
-GCommand_BleachLine(microscopeCommand,Cx,Cy,Dx,Dy, exposure)
-print(WCommand_ScanXYRamp(Cx, Cy, Bx, By, 1))
+GCommand_BleachFiducial(microscopeCommand, 0, 0, 5, 0.05, [-1, 0, 2], [-1, 1], 1)
 
 #--> Closes connection:
 microscopeCommand.close()

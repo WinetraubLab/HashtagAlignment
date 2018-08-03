@@ -85,13 +85,13 @@ def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duratio
 #                       used uses Wasatch units) Base gap between lines in the
 #                       mark. Set the actual values with the 'ratios' parameter.
 #
-#   'xRatios'           (tuple of float) Locations of lines perpendicular to x
+#   'verticalRatios'    (tuple of float) Locations of lines perpendicular to x
 #                       axis along x axis at multiples of 'markBaseGapWidth' away
 #                       from the origin. Negative ratios draw at negative values
 #                       relative to the center. Zero would draw along the origin
 #                       axis. Positive values draw beyond the origin.
 #
-#   'yRatios'           (tuple of float) Locations of lines perpendicular to y
+#   'horizontalRatios'  (tuple of float) Locations of lines perpendicular to y
 #                       axis along y axis at multiples of 'markBaseGapWidth' away
 #                       from the origin. Negative ratios draw at negative values
 #                       relative to the center. Zero would draw along the origin
@@ -106,15 +106,15 @@ def GCommand_BleachLine(microscopeCommand, startX, startY, stopX, stopY, duratio
 #                       -> 'showSerial'   Serial commands are displayed when sent
 #                       -> 'disableOutput' Serial commands are not sent to the microcontroller
 #
-def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, lineLength, markBaseGapWidth, xRatios, yRatios, duration, *flags):
+def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, lineLength, markBaseGapWidth, verticalRatios, horizontalRatios, duration, *flags):
     # Draws horizontal
-    for currentY in yRatios:
+    for currentY in horizontalRatios:
         boundXStart = centerX - (lineLength / 2)
         boundXStop = centerX + (lineLength / 2)
         yPosition = centerY + (currentY * markBaseGapWidth)
         GCommand_BleachLine(microscopeCommand, boundXStart, yPosition, boundXStop, yPosition, duration, *flags)
     # Draws vertical
-    for currentX in xRatios:
+    for currentX in verticalRatios:
         boundYStart = centerY - (lineLength / 2)
         boundYStop = centerY + (lineLength / 2)
         xPosition = centerX + (currentX * markBaseGapWidth)
@@ -152,7 +152,80 @@ def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, lineLength, mar
 #                       -> 'showSerial'    Serial commands are displayed when sent
 #                       -> 'disableOutput' Serial commands are not sent to the microcontroller
 #
-def GCommand_TutorialVolumetricScan(startX, startY, stopX, stopY, brepeats, *flags):
+def GCommand_PrintCMD_VolumetricScan(startX, startY, stopX, stopY, brepeats, *flags):
     print("After setting the desired A and B scan values, type this command into the setup window: ")
     print(WCommand_ScanXYRamp(startX, startY, stopX, stopY, brepeats, *flags))
     print("Then hit \"update\" and then \"Save Volume\" when you are ready to collect data.")
+    
+#
+# Description"
+#    Prints out the required commands to bleach multiple parralel lines
+#
+#
+# Parameters:
+#   'Ax'                (float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units). Start X value of reference line.
+#
+#   'Ay'                (float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units). Start Y value of reference line.
+#
+#   'Dx'                (float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units). End X value of reference line.
+#
+#   'Dy'                (float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units). End Y value of reference line.
+#              
+#   'change'            (Array) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units). Sequence of parralel distances
+#                       for more lines.
+#                       
+#    
+def mult_lines(Ax, Ay, Dx, Dy, change):
+    #x = 0.5 -2*(np.cos(45*(180/math.pi))**2)*5*0.001  #[mm] x point of intersection of tick line with x axis
+    #y = 0.5 -2*(np.cos(45*(180/math.pi))**2)*5*0.001 #[mm] y point of intersection of tick line with x axis
+    
+    change = np.array(change)
+    
+    ratio = abs((Dy-Dx)/(Ay-Ax))
+    theta =  -np.arctan(ratio)*180/math.pi
+    
+    coord =np.array([[Ax,Ay],[Dx,Dy]])
+    numpts = coord.shape[1]  # shoudl always be 2, as 2 pts define a line
+    
+    
+    
+    rot = cv2.getRotationMatrix2D((0,0), theta,1)
+    rot_ = rot[:2,:2]
+    coord_rot =np.dot(rot_,coord)
+    
+    newcord = np.zeros((2,numpts,len(change)))
+    
+    for ind,c in enumerate(change):
+        for pt in range(numpts):
+            newcord[0,pt,ind] = coord_rot[0,pt] 
+            newcord[1,pt,ind] = coord_rot[1,pt] + c
+    
+    
+    newcord_reshape = np.reshape(newcord,[2,-1])
+    
+    invrot = cv2.getRotationMatrix2D((0,0), -theta,1)
+    invrot_ = invrot[:2,:2]
+    coord_final_reshape = np.dot(invrot_,newcord_reshape)
+    coord_final = np.reshape(coord_final_reshape,[2,2,-1])
+    
+    for ind,c in enumerate(change):
+        Ax_ = coord_final[0,0,ind]
+        Ay_ = coord_final[1,0,ind]
+        Dx_ = coord_final[0,1,ind]
+        Dy_ = coord_final[1,1,ind]
+                
+        print(WCommand_ScanXYRamp(Ax_, Ay_, Dx_, Dy_, 1))
+#    
+    #plt.scatter(coord_final[0,:],coord_final[1,:])
+    #plt.scatter(coord[0,:],coord[1,:])
+    #plt.plot(coord[0,:],coord[1,:])
