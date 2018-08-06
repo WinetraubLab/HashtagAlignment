@@ -24,8 +24,8 @@ def main():
     
     #INPUTS:
     #Tick mark position
-    x = 0.5   #[mm] x point of intersection of tick line with x axis
-    y = 0.5  #[mm] y point of intersection of tick line with x axis
+    x = 0.4   #[mm] x point of intersection of tick line with x axis
+    y = 0.3  #[mm] y point of intersection of tick line with x axis
     
     #Other tick mark configuration (not to be edited)
     d = 0.25 #[mm] line clearence from the axes
@@ -49,12 +49,13 @@ def main():
     Dy = y*(1+d/x)
     exposure = l/5.0*1.0 #1 sec for 5 mm
     
-    #Intersection Cheks
+    #Intersection Checks
     AD = xysqrt*(1+d*(1/x+1/y)) - laserOvershoot*2
     text = "AD Length [mm] %f Recomended to be <1.2[mm]" % (AD)
     if AD > 1.2:
         print(text)
         return
+    #if (d<abs(min(fiducalVRatios)) or d<abs(max(fiducalHRatios))):
     if (y-y/x*(max(fiducialVRatios)*fiducialScale) < max(fiducialHRatios)*fiducialScale) :
         print("x,y intercepts are too close to the origin, might interfere with fiducial marker")
         return
