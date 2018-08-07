@@ -1,0 +1,166 @@
+classdef Manager_Tile
+    % This class composes a tiled image.% Uses image stitching described by: https://www.mathworks.com/help/vision/examples/feature-based-panoramic-image-stitching.html
+%
+    
+    properties(GetAccess = 'private', SetAccess = 'private')
+      windowNumber = 0; % Set to zero if none
+      images = []; % Array of structs with format [imageArray, bounds ([xMin, xMax, yMin, yMax] after rotation), tMatrix (image transformation matrix), surfBoard (SURF feature list after transformation)]. 
+      compositeImage = []; % Display updated and re-displayed when a new image is added.
+      compositeImageBounds = [0, 0, 0, 0]; % Format is [xMin, xMax, yMin, yMax], kept up to date as new images are added
+    end
+    
+    methods(Access = 'public')
+        % Class constructor, creates the GUI
+        function obj = Manager_Tile()
+            obj;
+        end
+        
+        % Boots up the GUI
+        function enableGUI(obj)
+            % Finds an unreserved window number
+            h = findobj('type', 'figure');
+            obj.windowNumber = length(h) + 1;
+            figure(obj.windowNumber);
+            % Configures the GUI
+        end
+        
+        % Turns off the GUI
+        function disableGUI(obj)
+            windowNumber = 0;
+        end
+        
+        % Preview of where the new image will be added to the tiled panorama, 
+        % optional parameter to force tiling location to first image [x, y]
+        function previewImage(obj, newImage, varargin)
+            if(obj.windowNumber) 
+                [imBounds, ~, ~, ~, newTiledBounds] = findBestFit(obj, newImage);
+                updateCompositeImage();
+                figure(windowNumber);
+                hold on;
+                imshow(compositeImage);
+                line([], []);
+                line([], []);
+                line([], []);
+                line([], []);
+                hold off;
+            end
+            
+        end
+        
+        % Adds the given image to the panorama, 
+        % optional parameter to force tiling location [x, y] TODO
+        function addImage(obj, newImage, varargin)
+            [imBounds, imTMatrix, imSURFPoints, imSURFFeatures, newTiledBounds] = findBestFit(obj, newImage);
+            newIndex = length(obj.images);
+            obj.images(newIndex).imageArray = newImage;
+            obj.images(newIndex).bounds = imBounds;
+            obj.images(newIndex).tMatrix = imTMatrix;
+            obj.images(newIndex).surfBoard = imSURFFeatures;
+            obj.images(newIndex).surfPoints = imSURFPoints;
+            obj.compositeImageBounds = newTiledBounds;
+            obj.updateCompositeImage(newTiledBounds);
+        end
+        
+        % 
+        % Description:
+        %   Saves the tiled image to disk.
+        %
+        % Parameters:
+        %   'varargin' Optional parameter, the name of the folder to save
+        %              under. Otherwise uses current date and time.
+        %
+        function saveTiledImage(obj, varargin)
+            obj.updateComposite(obj.compositeImageBounds);
+            time = clock;
+            folderName = sprintf('Acquisitions\Tiled');
+            subFolderName = [];
+            if(isempty(varargin) > 0)
+                subFolderName = varargin(1);
+            else
+                subFolderName = sprintf('Composite_Manual_%d\%d\%d_%d:$d:%d', time(2), time(3), time(1) , time(4), time(5), time(6));
+            end
+            tiledName  = sprintf('Tiled.png');
+            fullPath = sprintf('%s/%s/%s', folderName, subFolderName, tiledName);
+            imwrite(obj.compositeImage, fullPath);
+            for index = 1:size(obj.images, 2)
+                imageName = sprintf('Snapshot_%d',index);
+                fullPath = sprintf('%s/%s/%s', folderName, subFolderName, imageName);
+                imwrite(obj.images(index).imageArray, fullPath);
+            end
+        end
+    end
+    
+    methods(Access = 'private')
+        %
+        % Description:
+        %   Tries to find the best location for the image relative
+        %   to the existing window. Returns NAN if no location was
+        %   found with a satisfactory match level.
+        %
+        % Parameters:
+        %   newImage (image handle) The image to consider for the composite
+        %   
+        % Returns:
+        %   imBounds       ([[xMin, xMax], [yMin, yMax]]) Global coords of the bounding box after transformed
+        %   imTMatrix      ([3, 3])                       Similarity transformation matrix   
+        %   imSURFPoints   ([rows, cols])     Coordinates of surf features relative to tiled image
+        %   imSURFFeatures ([coords, features])    Surf features relative to the tiled image
+        %   newTiledBounds ([[xMin, xMax], [yMin, yMax]]) Required size of composite to fit newImage
+        %
+        function [imBounds, imTMatrix, imSURFPoints, imSURFFeatures, newTiledBounds] = findBestFit(obj, newImage)
+            % Identifies SURF features
+            newPoints = detectSURFFeatures(newImage);
+            [newFeatures, newPoints] = extractFeatures(newImage, newPoints);
+            % Finds the best matching image
+            numImages = size(obj.images, 1);
+            results = zeros(numImages, 1);
+            for index = 1:numImages
+                results(index) = length(nonzeros(matchFeatures(currentFeatures, obj.images(index).surfboard, 'Unique', true)));
+            end
+            [~, bestImageIndex] = max(results);
+            
+            % Finds image warp
+            featurePairs = matchFeatures(newFeatures, obj.currentImages(bestImageIndex, 5), 'Unique', true);
+            imTMatrix = estimateGeometricTransform(matchedPoints, matchedPointsPrev, 'similar', 'Confidence', 99.9, 'MaxNumTrials', 2000);
+            
+            % Finds output parameters
+            % -> Creates mask to find boundaries of the image % TODO may be incorrect
+            mask = imwarp(true(size(newImage,1),size(newImage,2)), imTMatrix);
+            [rows, cols] = find(mask);
+            imBounds = [[min(cols), max(cols)], [min(rows), max(rows)]];
+            % -> Transforms image to find new surf landmarks
+            transformedImage = imwarp(newImage, imTMatrix);
+            imSURFPoints = detectSURFFeatures(transformedImage);
+            [imSURFFeatures, imSURFPoints] = extractFeatures(newImage, imSURFPoints);
+            % -> Calculates new tiled bounds
+            newTiledBounds = [[min(obj.compositeImageBounds(1), imBounds(1)), max(obj.compositeImageBounds(2), imBounds(2))], [min(obj.compositeImageBounds(3), imBounds(3)), max(obj.compositeImageBounds(4), imBounds(4))]];
+        end
+        
+        %
+        % Description:
+        %   Draws the composite image with the given bounds. All images 
+        %   currently in the images list are assumed to have translations 
+        %   etc. relative to the old pre-shifted coordinate system. This 
+        %   function does not add the shift to the old images permanently.
+        %
+        % Parameters:
+        %   newBounds  ([[xMin, xMax], [yMin, yMax]]) The new boundaries of
+        %   the image to display with
+        %
+        function updateComposite(obj, newBounds)
+            obj.compositeImage = zeros(yMax, xMax);
+            compositeView = imref2d(abs(dif(newBounds(2))), newBounds(1), newBounds(2));
+            blender = vision.AlphaBlender('Operation', 'Binary mask', 'MaskSource', 'Input port');
+            for index = 1:size(obj.images, 1)
+                % Applies transform
+                warpedImage = imwarp(image(index).imageArray, obj.images(index).tMatrix, 'OutputView', compositeView); 
+                % Generate a binary mask.
+                mask = imwarp(true(size(image(index),1),size(image(index),2)), obj.images(index).tMatrix, 'OutputView', panoramaView);
+                % Overlays both, only acts in non-masked region by virtue
+                % of step function (see docs)
+                obj.compositeImage = step(blender, obj.compositeImage, warpedImage, mask);
+            end
+        end
+    end 
+end
+
