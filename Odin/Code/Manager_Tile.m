@@ -1,64 +1,74 @@
-classdef Manager_Tile
-    % This class composes a tiled image.% Uses image stitching described by: https://www.mathworks.com/help/vision/examples/feature-based-panoramic-image-stitching.html
 %
-    
+% File: Manager_Tile.m
+% -------------------
+% Author: Erick Blankenberg
+% Date 8/1/2018
+% 
+% Description:
+%   This class manages and compiles a tiled image.
+%
+
+classdef Manager_Tile   
+    % ---------------------------------- Properties -----------------------
     properties(GetAccess = 'private', SetAccess = 'private')
-      windowNumber = 0; % Set to zero if none
-      images = []; % Array of structs with format [imageArray, bounds ([xMin, xMax, yMin, yMax] after rotation), tMatrix (image transformation matrix), surfBoard (SURF feature list after transformation)]. 
+      images = struct('imageArray',{},'bounds',{}, 'tMatrix', {}, 'surfPoints', {}, 'surfBoard', {}); % Array of cachedImage structs.
+      cachedImage = struct('imageArray',{},'bounds',{}, 'tMatrix', {}, 'surfPoints', {}, 'surfBoard', {}); % Struct of the form [imageArray, bounds ([xMin, xMax, yMin, yMax] after rotation), tMatrix (image transformation matrix), surfPoints (Locations of surf features after transformation), surfBoard (SURF feature list after transformation)]
+      cachedImageBounds = [0, 0, 0, 0]; % Format is [xMin, xMax, yMin, yMax], composite image size with the new cached image added
       compositeImage = []; % Display updated and re-displayed when a new image is added.
       compositeImageBounds = [0, 0, 0, 0]; % Format is [xMin, xMax, yMin, yMax], kept up to date as new images are added
     end
     
+    
+    % ------------------------------ Functions ----------------------------
     methods(Access = 'public')
-        % Class constructor, creates the GUI
+        % Class constructor
         function obj = Manager_Tile()
             obj;
-        end
+        end 
         
-        % Boots up the GUI
-        function enableGUI(obj)
-            % Finds an unreserved window number
-            h = findobj('type', 'figure');
-            obj.windowNumber = length(h) + 1;
-            figure(obj.windowNumber);
-            % Configures the GUI
-        end
-        
-        % Turns off the GUI
-        function disableGUI(obj)
-            windowNumber = 0;
-        end
-        
-        % Preview of where the new image will be added to the tiled panorama, 
-        % optional parameter to force tiling location to first image [x, y]
-        function previewImage(obj, newImage, varargin)
-            if(obj.windowNumber) 
-                [imBounds, ~, ~, ~, newTiledBounds] = findBestFit(obj, newImage);
-                updateCompositeImage();
-                figure(windowNumber);
-                hold on;
-                imshow(compositeImage);
-                line([], []);
-                line([], []);
-                line([], []);
-                line([], []);
-                hold off;
-            end
-            
-        end
-        
-        % Adds the given image to the panorama, 
-        % optional parameter to force tiling location [x, y] TODO
-        function addImage(obj, newImage, varargin)
+        %
+        % Description:
+        %   Caches the given image so that it can be previewed before 
+        %   being added to the composite image.
+        %
+        % Parameters:
+        %   'newImage' The new image to be processed and cached
+        %
+        function cacheImage(obj, newImage)
             [imBounds, imTMatrix, imSURFPoints, imSURFFeatures, newTiledBounds] = findBestFit(obj, newImage);
-            newIndex = length(obj.images);
-            obj.images(newIndex).imageArray = newImage;
-            obj.images(newIndex).bounds = imBounds;
-            obj.images(newIndex).tMatrix = imTMatrix;
-            obj.images(newIndex).surfBoard = imSURFFeatures;
-            obj.images(newIndex).surfPoints = imSURFPoints;
-            obj.compositeImageBounds = newTiledBounds;
-            obj.updateCompositeImage(newTiledBounds);
+            obj.cachedImage.imageArray = newImage;
+            obj.cachedImage.bounds = imBounds;
+            obj.cachedImage.tMatrix = imTMatrix;
+            obj.cachedImage.surfBoard = imSURFFeatures;
+            obj.cachedImage.surfPoints = imSURFPoints;
+            obj.cachedImageBounds = newTiledBounds;
+        end
+        
+        %
+        % Description:
+        %   Preview of where the cached image will be added to the
+        %   tiled panorama.
+        %
+        % Parameters:
+        %   'drawColor' (float in form [r, g, b] (range 0-1)) A tint for
+        %               the overlayed image.
+        %
+        function preview = previewImage(obj, newImage, drawColor)
+            updateCompositeImage(newTiledBounds);
+            preview = cat(3, obj.compositeImage, obj.compositeImage, obj.compositeImage); % We want to see the new image highlighted
+            % Overlays a shaded preview image
+            newImage = cat(3, obj.cachedImage.imageArray.*(drawColor(1)), obj.cachedImage.imageArray.*(drawColor(2)), obj.cachedImage.imageArray.*(drawColor(3)));
+            warpedImage = imwarp(newImage, imTMatrix, 'OutputView', compositeView); 
+            mask = imwarp(true(size(image(index),1),size(image(index),2), 3), imTMatrix, 'OutputView', panoramaView);
+            preview = step(blender, preview, warpedImage, mask);
+        end
+        
+        %
+        % Description:
+        %   Moves the cached image into the 
+        %
+        function postImage(obj)
+            
         end
         
         % 
@@ -73,7 +83,6 @@ classdef Manager_Tile
             obj.updateComposite(obj.compositeImageBounds);
             time = clock;
             folderName = sprintf('Acquisitions\Tiled');
-            subFolderName = [];
             if(isempty(varargin) > 0)
                 subFolderName = varargin(1);
             else
@@ -147,9 +156,9 @@ classdef Manager_Tile
         %   newBounds  ([[xMin, xMax], [yMin, yMax]]) The new boundaries of
         %   the image to display with
         %
-        function updateComposite(obj, newBounds)
-            obj.compositeImage = zeros(yMax, xMax);
-            compositeView = imref2d(abs(dif(newBounds(2))), newBounds(1), newBounds(2));
+        function newImage = getCompositeImage(obj, newBounds)
+            newImage = zeros(newBounds(2) - newBounds(1), newBounds(4) - newBounds(3));
+            compositeView = imref2d(([newBounds(2) - newBounds(1), newBounds(4) - newBounds(3)], [newBounds(1), newBounds(2)], [newBounds(3), newBounds(4)]);
             blender = vision.AlphaBlender('Operation', 'Binary mask', 'MaskSource', 'Input port');
             for index = 1:size(obj.images, 1)
                 % Applies transform
@@ -158,7 +167,7 @@ classdef Manager_Tile
                 mask = imwarp(true(size(image(index),1),size(image(index),2)), obj.images(index).tMatrix, 'OutputView', panoramaView);
                 % Overlays both, only acts in non-masked region by virtue
                 % of step function (see docs)
-                obj.compositeImage = step(blender, obj.compositeImage, warpedImage, mask);
+                newImage = step(blender, newImage, warpedImage, mask);
             end
         end
     end 

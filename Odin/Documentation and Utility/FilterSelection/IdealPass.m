@@ -18,7 +18,7 @@ close all;
 % 4). Plots properties of dye
 % 5). Plots light source passing through all optical elements individually % TODO
 
-graphMode = 4;
+graphMode = 3;
     
 %pathProfile = [1, 6, 2, 2, 3]; % New IR800 Path
 %pathProfile = [2, 1, 1, 1, 2]; % Old Alexa680 path
@@ -32,7 +32,7 @@ if(~exist('pathProfile', 'var'))
     % 4). Red Laser ~ (Wasatch Source)
     % 5). IR ~ 780 (Thorlabs M780LP1)
 
-    pathProfile(1, 1)= 1;
+    pathProfile(1, 1)= 2;
 
     % Excitation Filter
     % 1). Thorlabs Short 650 (Thorlabs FES0650)
@@ -42,7 +42,7 @@ if(~exist('pathProfile', 'var'))
     % 5). Thorlabs Short 750 (Thorlabs FES0750)
     % 6). Edmund Short 775 (Edmund 64-607)
 
-    pathProfile(1, 2) = 6;
+    pathProfile(1, 2) = 1;
 
     % Mirror
     % 1). Thorlabs 650 Dichroic (Thorlabs DMLP650)
@@ -64,7 +64,7 @@ if(~exist('pathProfile', 'var'))
     % 5). Thorlabs Premium 750 Longpass (Thorlabs FELH0750)
     % 6). Edmund Longpass 775 (Edmund ED64-631)
 
-    pathProfile(1, 5) = 3;
+    pathProfile(1, 5) = 2;
 end
 
 %% Product Data
