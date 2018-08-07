@@ -10,7 +10,8 @@
 #
 
 #------------------------ Imported Libraries -----------------------------------
-
+import numpy as np
+import cv2
 from Wasatch_Serial_Commands import *
 from Wasatch_Serial_Interface_Abstract import Wasatch_Serial_Interface_Abstract
 from Wasatch_Units import *
@@ -185,7 +186,7 @@ def GCommand_PrintCMD_VolumetricScan(startX, startY, stopX, stopY, brepeats, *fl
 #                       for more lines.
 #                       
 #    
-def mult_lines(Ax, Ay, Dx, Dy, change):
+def GCommand_PrintCMD_MultiParallel(Ax, Ay, Dx, Dy, change):
     #x = 0.5 -2*(np.cos(45*(180/math.pi))**2)*5*0.001  #[mm] x point of intersection of tick line with x axis
     #y = 0.5 -2*(np.cos(45*(180/math.pi))**2)*5*0.001 #[mm] y point of intersection of tick line with x axis
     
