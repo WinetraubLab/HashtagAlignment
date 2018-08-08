@@ -11,11 +11,22 @@
 classdef Manager_Tile   
     % ---------------------------------- Properties -----------------------
     properties(GetAccess = 'private', SetAccess = 'private')
-      images = struct('imageArray',{},'bounds',{}, 'tMatrix', {}, 'surfPoints', {}, 'surfBoard', {}); % Array of cachedImage structs.
-      cachedImage = struct('imageArray',{},'bounds',{}, 'tMatrix', {}, 'surfPoints', {}, 'surfBoard', {}); % Struct of the form [imageArray, bounds ([xMin, xMax, yMin, yMax] after rotation), tMatrix (image transformation matrix), surfPoints (Locations of surf features after transformation), surfBoard (SURF feature list after transformation)]
-      cachedImageBounds = [0, 0, 0, 0]; % Format is [xMin, xMax, yMin, yMax], composite image size with the new cached image added
-      compositeImage = []; % Display updated and re-displayed when a new image is added.
-      compositeImageBounds = [0, 0, 0, 0]; % Format is [xMin, xMax, yMin, yMax], kept up to date as new images are added
+        images = struct('imageID', {}, 'imageArray',{}, 'tMatrix', {}, 'imageCornerPoints', {}, 'surfPoints', {}, 'surfBoard', {}, 'highlightColor', {}); % Array of cachedImage structs.
+        % 'imageID' is a unique number corresponding to the image. These
+        % are generated sequentially.
+        % 'imageArray' is an nxm array of greyscale data, 'tMatrix' is 
+        % the transformation matrix to align 
+        % the matrix to the global coordinates. 'imageCornerPoints' is a 
+        % matrix of the form [[xVal1; yVal1], [xVal2; yVal2], [xVal3; yVal3], [xVal4; yVal4]] 
+        % that stores the coordinates for the corners of the image once
+        % translated. 'surfPoints' stores global coordinates corresponding
+        % to feature descriptors in 'surfBoard'. 'highLightColor' sets the
+        % shading of the image when rendered, white by default.
+        %
+        % Composite images are rendered from the first image forward.
+        %
+        compositeBounds = []; % Form is [[xMin, yMin];[xMax, yMax]]
+        currentMaxID = 0;
     end
     
     
@@ -28,47 +39,96 @@ classdef Manager_Tile
         
         %
         % Description:
-        %   Caches the given image so that it can be previewed before 
-        %   being added to the composite image.
+        %   Adds the given image to the tiled image.
         %
         % Parameters:
         %   'newImage' The new image to be processed and cached
         %
-        function cacheImage(obj, newImage)
-            [imBounds, imTMatrix, imSURFPoints, imSURFFeatures, newTiledBounds] = findBestFit(obj, newImage);
-            obj.cachedImage.imageArray = newImage;
-            obj.cachedImage.bounds = imBounds;
-            obj.cachedImage.tMatrix = imTMatrix;
-            obj.cachedImage.surfBoard = imSURFFeatures;
-            obj.cachedImage.surfPoints = imSURFPoints;
-            obj.cachedImageBounds = newTiledBounds;
+        % Returns:
+        %   'newImageID' The ID of the recently added image.
+        %
+        function newImageID = addImage(obj, newImage)
+            newImageStruct = findBestFit(obj, newImage);
+            latestIndex = length(obj.images) + 1;
+            obj.images(latestIndex) = newImageStruct;
+            obj.updateImageBounds;
         end
         
         %
         % Description:
-        %   Preview of where the cached image will be added to the
-        %   tiled panorama.
+        %   Removes the image specified by imageID
+        %
+        % Paramters:
+        %   'imageID' The ID number of the image to remove.
+        %
+        function removeImage(obj, imageID)
+            targetIndex = obj.getImageIndexFromID(imageID);
+            obj.images = [obj.images(1:targetIndex - 1), obj.images(targetIndex + 1:end)];
+        end
+        
+        %
+        % Description:
+        %   Returns the ID of the topmost image at the mouse position.
+        %   
+        % Parameters:
+        %   'mouseCoordinates' Array of the form [xVal, yVal] assumed to
+        %                       correspond to coordinates from within the
+        %                       image from the upper left hand corner.
+        %
+        % Returns:
+        %   The image ID if there is an image, zero if there are no images
+        %   at that location.
+        %
+        function imageID = getImageIDAtLocation(obj, mouseCoordinates)
+            mouseCoordinates = [mouseCoordinates(1) - obj.compositeBounds(1, 1), mouseCoordinates(2) - obj.compositeBounds(1, 2)];
+            imageID = 0;
+            for index = 1:length(obj.images)
+                if(inpolygon(mouseCoordinates(1), mouseCoordinates(2), obj.images(index).imageCornerPoints(:, 1), obj.images(index).imageCornerPoints(:, 2)))
+                    imageID = obj.images(index).imageID;
+                    break;
+                end
+            end
+        end
+        
+        %
+        % Description:
+        %   Sets the color of the image specified by imageID.
         %
         % Parameters:
-        %   'drawColor' (float in form [r, g, b] (range 0-1)) A tint for
-        %               the overlayed image.
+        %   'imageID'     The image to modify
+        %   'colorMatrix' Specifies RGB in the form [R (0-1), G (0 - 1), B (0 - 1)].
         %
-        function preview = previewImage(obj, newImage, drawColor)
-            updateCompositeImage(newTiledBounds);
-            preview = cat(3, obj.compositeImage, obj.compositeImage, obj.compositeImage); % We want to see the new image highlighted
-            % Overlays a shaded preview image
-            newImage = cat(3, obj.cachedImage.imageArray.*(drawColor(1)), obj.cachedImage.imageArray.*(drawColor(2)), obj.cachedImage.imageArray.*(drawColor(3)));
-            warpedImage = imwarp(newImage, imTMatrix, 'OutputView', compositeView); 
-            mask = imwarp(true(size(image(index),1),size(image(index),2), 3), imTMatrix, 'OutputView', panoramaView);
-            preview = step(blender, preview, warpedImage, mask);
+        function setImageHighlightColor(obj, imageID, colorMatrix)
+            imageIndex = getImageIndexFromID(imageID);
+            if(imageIndex ~= 0)
+                obj.images(imageIndex).highlightColor = colorMatrix;
+            end
         end
-        
+             
         %
         % Description:
-        %   Moves the cached image into the 
+        %   Retrieves an RGB composite image generated from the images
+        %   currently cached.
         %
-        function postImage(obj)
-            
+        % Returns:
+        %   'newImage' A composite image made from all of the images
+        %              currently collected.
+        %
+        function newImage = getCompositeImage(obj)
+            newImage = zeros((obj.compositeBounds(2, 2) - obj.compositeBounds(1, 2)), (obj.compositeBounds(2, 1) - obj.compositeBounds(1, 1)), 3);
+            compositeView = imref2d(size(newImage), [obj.compositeBounds(1, 1), obj.compositeBounds(2, 1)], [obj.compositeBounds(1, 2), obj.compositeBounds(2, 2)]);
+            blender = vision.AlphaBlender('Operation', 'Binary mask', 'MaskSource', 'Input port');
+            for index = 1:size(obj.images, 1)
+                % Applies coloration
+                currentImage = cat(obj.images(index).imageArray(:, :, 1).*obj.images(index).highlightColor(1), obj.images(index).imageArray(:, :, 2).*obj.images(index).highlightColor(2), obj.images(index).imageArray(:, :, 3).*obj.images(index).highlightColor(3));
+                % Applies transform
+                warpedImage = imwarp(currentImage, obj.images(index).tMatrix, 'OutputView', compositeView); 
+                % Generate a binary mask.
+                mask = imwarp(true(size(currentImage, 1), size(currentImage, 2), 3), obj.images(index).tMatrix, 'OutputView', panoramaView);
+                % Overlays both, only acts in non-masked region by virtue
+                % of step function (see docs)
+                newImage = step(blender, newImage, warpedImage, mask);
+            end
         end
         
         % 
@@ -80,7 +140,7 @@ classdef Manager_Tile
         %              under. Otherwise uses current date and time.
         %
         function saveTiledImage(obj, varargin)
-            obj.updateComposite(obj.compositeImageBounds);
+            newCompositeImage = obj.getCompositeImage();
             time = clock;
             folderName = sprintf('Acquisitions\Tiled');
             if(isempty(varargin) > 0)
@@ -90,7 +150,7 @@ classdef Manager_Tile
             end
             tiledName  = sprintf('Tiled.png');
             fullPath = sprintf('%s/%s/%s', folderName, subFolderName, tiledName);
-            imwrite(obj.compositeImage, fullPath);
+            imwrite(newCompositeImage, fullPath);
             for index = 1:size(obj.images, 2)
                 imageName = sprintf('Snapshot_%d',index);
                 fullPath = sprintf('%s/%s/%s', folderName, subFolderName, imageName);
@@ -116,10 +176,11 @@ classdef Manager_Tile
         %   imSURFFeatures ([coords, features])    Surf features relative to the tiled image
         %   newTiledBounds ([[xMin, xMax], [yMin, yMax]]) Required size of composite to fit newImage
         %
-        function [imBounds, imTMatrix, imSURFPoints, imSURFFeatures, newTiledBounds] = findBestFit(obj, newImage)
+        function newImageStruct = findBestFit(obj, newImage)
+            newImageStruct = struct('imageID', {}, 'imageArray',{}, 'tMatrix', {}, 'imageCornerPoints', {}, 'surfPoints', {}, 'surfBoard', {}, 'highlightColor', {});
             % Identifies SURF features
-            newPoints = detectSURFFeatures(newImage);
-            [newFeatures, newPoints] = extractFeatures(newImage, newPoints);
+            points = detectSURFFeatures(newImage);
+            [currentFeatures, points] = extractFeatures(newImage, points);
             % Finds the best matching image
             numImages = size(obj.images, 1);
             results = zeros(numImages, 1);
@@ -127,48 +188,68 @@ classdef Manager_Tile
                 results(index) = length(nonzeros(matchFeatures(currentFeatures, obj.images(index).surfboard, 'Unique', true)));
             end
             [~, bestImageIndex] = max(results);
+            indexPairs = matchFeatures(currentFeatures, obj.images(index).surfBoard, 'Unique', true);
             
             % Finds image warp
-            featurePairs = matchFeatures(newFeatures, obj.currentImages(bestImageIndex, 5), 'Unique', true);
+            matchedPoints = points(indexPairs(:,1), :);
+            matchedPointsPrev = obj.images(bestImageIndex).surfPoints(indexPairs(:,2), :);
             imTMatrix = estimateGeometricTransform(matchedPoints, matchedPointsPrev, 'similar', 'Confidence', 99.9, 'MaxNumTrials', 2000);
             
             % Finds output parameters
-            % -> Creates mask to find boundaries of the image % TODO may be incorrect
-            mask = imwarp(true(size(newImage,1),size(newImage,2)), imTMatrix);
-            [rows, cols] = find(mask);
-            imBounds = [[min(cols), max(cols)], [min(rows), max(rows)]];
+            % -> Stores ID
+            newImageID = obj.currentMaxID;
+            obj.currentMaxID = obj.currentMaxID + 1;
+            newImageStruct.imageID = newImageID;
+            % -> Stores image array, transformation matrix, corners, and color
+            newImageStruct.imageArray = newImage;
+            newImageStruct.tMatrix = imTMatrix;
+            newImageStruct.imageCornerPoints = imTMatrix * [[0, 0], [size(newImage, 1), 0], [size(newImage, 1), size(newImage, 2)], [0, size(newImage, 2)]];
+            newImageStruct.highlightColor = [255, 255, 255];
             % -> Transforms image to find new surf landmarks
-            transformedImage = imwarp(newImage, imTMatrix);
-            imSURFPoints = detectSURFFeatures(transformedImage);
-            [imSURFFeatures, imSURFPoints] = extractFeatures(newImage, imSURFPoints);
-            % -> Calculates new tiled bounds
-            newTiledBounds = [[min(obj.compositeImageBounds(1), imBounds(1)), max(obj.compositeImageBounds(2), imBounds(2))], [min(obj.compositeImageBounds(3), imBounds(3)), max(obj.compositeImageBounds(4), imBounds(4))]];
+            transformedImage = imwarp(newImage, imTMatrix); % TODO may be incorrect
+            [imSURFFeatures, imSURFPoints] = extractFeatures(transformedImage, detectSURFFeatures(transformedImage));
+            newImageStruct.surfBoard = imSURFFeatures;
+            newImageStruct.surfPoints = imSURFPoints;
         end
         
         %
         % Description:
-        %   Draws the composite image with the given bounds. All images 
-        %   currently in the images list are assumed to have translations 
-        %   etc. relative to the old pre-shifted coordinate system. This 
-        %   function does not add the shift to the old images permanently.
+        %   Returns the index of the image associated with the given 
+        %   image ID. Returns 0 if no such image exists.
         %
         % Parameters:
-        %   newBounds  ([[xMin, xMax], [yMin, yMax]]) The new boundaries of
-        %   the image to display with
+        %   'imageID' The ID number of the target image.
         %
-        function newImage = getCompositeImage(obj, newBounds)
-            newImage = zeros(newBounds(2) - newBounds(1), newBounds(4) - newBounds(3));
-            compositeView = imref2d(([newBounds(2) - newBounds(1), newBounds(4) - newBounds(3)], [newBounds(1), newBounds(2)], [newBounds(3), newBounds(4)]);
-            blender = vision.AlphaBlender('Operation', 'Binary mask', 'MaskSource', 'Input port');
-            for index = 1:size(obj.images, 1)
-                % Applies transform
-                warpedImage = imwarp(image(index).imageArray, obj.images(index).tMatrix, 'OutputView', compositeView); 
-                % Generate a binary mask.
-                mask = imwarp(true(size(image(index),1),size(image(index),2)), obj.images(index).tMatrix, 'OutputView', panoramaView);
-                % Overlays both, only acts in non-masked region by virtue
-                % of step function (see docs)
-                newImage = step(blender, newImage, warpedImage, mask);
+        % Returns:
+        %   'imageNumber' The index corresponding to the image in question.
+        %
+        function imageNumber = getImageIndexFromID(obj, imageID)
+            imageNumber = 0;
+            for index = 1:length(obj.images)
+                if(obj.images(index).imageID == imageID)
+                    imageNumber = index;
+                    break;
+                end
             end
+        end
+        
+        %
+        % Description:
+        %   Finds the lowest and highest points 
+        %
+        function updateImageBounds(obj)
+            newBounds = [[0, 0]; [0, 0]];
+            for index = 1:length(obj.images)
+                % xMin
+                newBounds(1, 1) = min(newBounds(1, 1), obj.images(index).bounds(1, 1));
+                % xMax
+                newBounds(2, 1) = min(newBounds(2, 1), obj.images(index).bounds(2, 1));
+                % yMin
+                newBounds(1, 2) = min(newBounds(1, 2), obj.images(index).bounds(1, 2));
+                % yMax
+                newBounds(2, 2) = min(newBounds(2, 2), obj.images(index).bounds(2, 2));
+            end
+            obj.bounds = newBounds;
         end
     end 
 end
