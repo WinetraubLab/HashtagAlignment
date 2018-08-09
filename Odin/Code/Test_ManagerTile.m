@@ -9,19 +9,21 @@
 %   folder, but are not included in the git by default.
 %
 
+close all;
+clear all;
+
 tileManager = Manager_Tile;
 
-for index = 1:10
+for index = 1:5
     fileString = sprintf('TestImages/Stitch_%d.tif', index);
     if(exist(fileString, 'file'))
         newestImage = imread(fileString);
-        %{
         tileManager.addImage(newestImage);
-        %}
     end
 end
 
-figure(1);
+figure;
 hold on;
-imshow(tileManager.getCompositeImage());
+image = tileManager.getCompositeImage();
+imshow(image);
 hold off;
