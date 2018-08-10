@@ -8,16 +8,16 @@
 %   This class manages and compiles a tiled image.
 %
 
-classdef Manager_Tile   
+classdef Manager_Tile < handle 
     % ---------------------------------- Properties -----------------------
-    properties(GetAccess = 'private', SetAccess = 'private')
+    properties(GetAccess = 'public')
         images = struct('imageID', {}, 'imageArray',{}, 'tMatrix', {}, 'imageCornerPoints', {}, 'surfPoints', {}, 'surfBoard', {}, 'highlightColor', {}); % Array of cachedImage structs.
         % 'imageID' is a unique number corresponding to the image. These
         % are generated sequentially.
         % 'imageArray' is an nxm array of greyscale data, 'tMatrix' is 
         % the transformation matrix to align 
         % the matrix to the global coordinates. 'imageCornerPoints' is a 
-        % matrix of the form [[xVal1; yVal1], [xVal2; yVal2], [xVal3; yVal3], [xVal4; yVal4]] 
+        % matrix of the form [[xVal1, yVal1]; [xVal2, yVal2]; [xVal3, yVal3]; [xVal4, yVal4]] 
         % that stores the coordinates for the corners of the image once
         % translated. 'surfPoints' stores global coordinates corresponding
         % to feature descriptors in 'surfBoard'. 'highLightColor' sets the
@@ -49,9 +49,10 @@ classdef Manager_Tile
         %
         function newImageID = addImage(obj, newImage)
             newImageStruct = findBestFit(obj, newImage);
-            latestIndex = length(obj.images) + 1;
+            latestIndex = numel(obj.images) + 1;
             obj.images(latestIndex) = newImageStruct;
             obj.updateImageBounds;
+            newImageID = newImageStruct.imageID;
         end
         
         %
@@ -115,16 +116,19 @@ classdef Manager_Tile
         %              currently collected.
         %
         function newImage = getCompositeImage(obj)
+            obj.updateImageBounds();
             newImage = zeros((obj.compositeBounds(2, 2) - obj.compositeBounds(1, 2)), (obj.compositeBounds(2, 1) - obj.compositeBounds(1, 1)), 3);
             compositeView = imref2d(size(newImage), [obj.compositeBounds(1, 1), obj.compositeBounds(2, 1)], [obj.compositeBounds(1, 2), obj.compositeBounds(2, 2)]);
             blender = vision.AlphaBlender('Operation', 'Binary mask', 'MaskSource', 'Input port');
-            for index = 1:size(obj.images, 1)
+            for index = 1:numel(obj.images)
                 % Applies coloration
-                currentImage = cat(obj.images(index).imageArray(:, :, 1).*obj.images(index).highlightColor(1), obj.images(index).imageArray(:, :, 2).*obj.images(index).highlightColor(2), obj.images(index).imageArray(:, :, 3).*obj.images(index).highlightColor(3));
+                %currentImage = cat(obj.images(index).imageArray(:, :, 1).*obj.images(index).highlightColor(1), obj.images(index).imageArray(:, :, 2).*obj.images(index).highlightColor(2), obj.images(index).imageArray(:, :, 3).*obj.images(index).highlightColor(3));
+                currentImage = obj.images(index).imageArray;
                 % Applies transform
                 warpedImage = imwarp(currentImage, obj.images(index).tMatrix, 'OutputView', compositeView); 
+                warpedImage = cat(3, warpedImage, warpedImage, warpedImage);
                 % Generate a binary mask.
-                mask = imwarp(true(size(currentImage, 1), size(currentImage, 2), 3), obj.images(index).tMatrix, 'OutputView', panoramaView);
+                mask = imwarp(true(size(currentImage, 1), size(currentImage, 2)), obj.images(index).tMatrix, 'OutputView', compositeView);
                 % Overlays both, only acts in non-masked region by virtue
                 % of step function (see docs)
                 newImage = step(blender, newImage, warpedImage, mask);
@@ -167,33 +171,41 @@ classdef Manager_Tile
         %   found with a satisfactory match level.
         %
         % Parameters:
-        %   newImage (image handle) The image to consider for the composite
+        %   'newImage' (image handle) The image to consider for the composite
         %   
         % Returns:
-        %   imBounds       ([[xMin, xMax], [yMin, yMax]]) Global coords of the bounding box after transformed
-        %   imTMatrix      ([3, 3])                       Similarity transformation matrix   
-        %   imSURFPoints   ([rows, cols])     Coordinates of surf features relative to tiled image
-        %   imSURFFeatures ([coords, features])    Surf features relative to the tiled image
-        %   newTiledBounds ([[xMin, xMax], [yMin, yMax]]) Required size of composite to fit newImage
+        %   'newTiledBounds' New struct containing image datas
         %
         function newImageStruct = findBestFit(obj, newImage)
-            newImageStruct = struct('imageID', {}, 'imageArray',{}, 'tMatrix', {}, 'imageCornerPoints', {}, 'surfPoints', {}, 'surfBoard', {}, 'highlightColor', {});
+            newImage = mean(newImage, 3)./255; % Surf operates on black-white image.
+            newImageStruct = struct('imageID', 0, 'imageArray', 0, 'tMatrix', eye(3), 'imageCornerPoints', 0, 'surfPoints', 0, 'surfBoard', 0, 'highlightColor', [0, 0, 0]);
             % Identifies SURF features
             points = detectSURFFeatures(newImage);
             [currentFeatures, points] = extractFeatures(newImage, points);
-            % Finds the best matching image
-            numImages = size(obj.images, 1);
-            results = zeros(numImages, 1);
-            for index = 1:numImages
-                results(index) = length(nonzeros(matchFeatures(currentFeatures, obj.images(index).surfboard, 'Unique', true)));
+            imTMatrix = affine2d;
+            if(~isempty(obj.images))
+                % Finds the best matching image
+                numImages = numel(obj.images);
+                results = zeros(numImages, 1);
+                for index = 1:numImages
+                    results(index, 1) = size(nonzeros(matchFeatures(currentFeatures, obj.images(index).surfBoard, 'Unique', true)), 1);
+                end
+                [~, bestImageIndex] = max(results);
+                bestImageIndex
+                indexPairs = matchFeatures(currentFeatures, obj.images(bestImageIndex).surfBoard, 'Unique', true);
+
+                % Finds image warp
+                matchedPoints = points(indexPairs(:,1), :);
+                matchedPointsPrev = obj.images(bestImageIndex).surfPoints(indexPairs(:,2), :);
+                imTMatrix = estimateGeometricTransform(matchedPoints, matchedPointsPrev, 'similar', 'Confidence', 99.9, 'MaxNumTrials', 2000);
+                
+                % Debugging
+                figure; 
+                hold on;
+                ax = axes;
+                showMatchedFeatures(newImage,imwarp(obj.images(bestImageIndex).imageArray, obj.images(bestImageIndex).tMatrix),matchedPoints,matchedPointsPrev,'montage', 'Parent',ax);
+                hold off;
             end
-            [~, bestImageIndex] = max(results);
-            indexPairs = matchFeatures(currentFeatures, obj.images(index).surfBoard, 'Unique', true);
-            
-            % Finds image warp
-            matchedPoints = points(indexPairs(:,1), :);
-            matchedPointsPrev = obj.images(bestImageIndex).surfPoints(indexPairs(:,2), :);
-            imTMatrix = estimateGeometricTransform(matchedPoints, matchedPointsPrev, 'similar', 'Confidence', 99.9, 'MaxNumTrials', 2000);
             
             % Finds output parameters
             % -> Stores ID
@@ -202,14 +214,15 @@ classdef Manager_Tile
             newImageStruct.imageID = newImageID;
             % -> Stores image array, transformation matrix, corners, and color
             newImageStruct.imageArray = newImage;
-            newImageStruct.tMatrix = imTMatrix;
-            newImageStruct.imageCornerPoints = imTMatrix * [[0, 0], [size(newImage, 1), 0], [size(newImage, 1), size(newImage, 2)], [0, size(newImage, 2)]];
+            [X, Y] = transformPointsForward(imTMatrix, [0, 0, size(newImage, 1), size(newImage, 1)], [0, size(newImage, 2), 0 size(newImage, 2)]);
+            newImageStruct.imageCornerPoints = [X', Y'];
             newImageStruct.highlightColor = [255, 255, 255];
             % -> Transforms image to find new surf landmarks
             transformedImage = imwarp(newImage, imTMatrix); % TODO may be incorrect
             [imSURFFeatures, imSURFPoints] = extractFeatures(transformedImage, detectSURFFeatures(transformedImage));
             newImageStruct.surfBoard = imSURFFeatures;
             newImageStruct.surfPoints = imSURFPoints;
+            newImageStruct.tMatrix = imTMatrix;
         end
         
         %
@@ -235,21 +248,21 @@ classdef Manager_Tile
         
         %
         % Description:
-        %   Finds the lowest and highest points 
+        %   Updates the composite boundaries of the tiled image.
         %
         function updateImageBounds(obj)
             newBounds = [[0, 0]; [0, 0]];
             for index = 1:length(obj.images)
                 % xMin
-                newBounds(1, 1) = min(newBounds(1, 1), obj.images(index).bounds(1, 1));
+                newBounds(1, 1) = ceil(min(newBounds(1, 1), min(obj.images(index).imageCornerPoints(:, 1))));
                 % xMax
-                newBounds(2, 1) = min(newBounds(2, 1), obj.images(index).bounds(2, 1));
+                newBounds(2, 1) = ceil(max(newBounds(2, 1), max(obj.images(index).imageCornerPoints(:, 1))));
                 % yMin
-                newBounds(1, 2) = min(newBounds(1, 2), obj.images(index).bounds(1, 2));
+                newBounds(1, 2) = ceil(min(newBounds(1, 2), min(obj.images(index).imageCornerPoints(:, 2))));
                 % yMax
-                newBounds(2, 2) = min(newBounds(2, 2), obj.images(index).bounds(2, 2));
+                newBounds(2, 2) = ceil(max(newBounds(2, 2), max(obj.images(index).imageCornerPoints(:, 2))));
             end
-            obj.bounds = newBounds;
+            obj.compositeBounds = newBounds;
         end
     end 
 end
