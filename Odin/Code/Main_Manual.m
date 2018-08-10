@@ -29,7 +29,7 @@ hold off;
 % -> Streams the latest images from the camera, allows the user to take an
 %    image to save, append to the current panorama, etc.
 exitProgram = false;
-cameraManager = Manager_Camera(0);
+cameraManager = Manager_Camera_uEye(0);
 cameraManager.setMasterGain(NaN);
 cameraManager.setScaleRange(NaN);
 figure(1);

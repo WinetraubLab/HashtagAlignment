@@ -1,14 +1,15 @@
 %
-% File: Manager_Camera.m
+% File: Manager_Camera_uEye.m
 % -------------------
 % Author: Erick Blankenberg
 % Date 8/1/2018
 % 
 % Description:
-%   This class acts as an interface for one Thorcam camera.
+%   This class acts as an interface for one Thorcam camera. This class
+%   uses the framework associated with the uEye SDK.
 %
 
-classdef Manager_Camera
+classdef Manager_Camera_uEye
     % This class manages camera settings and the camera connection.
     
     properties(Access = 'private')
@@ -29,14 +30,14 @@ classdef Manager_Camera
         % Parameters:
         %   'cameraID' The ID of the camera.
         %
-        function obj = Manager_Camera(cameraID)
+        function obj = Manager_Camera_uEye(cameraID)
             % Attempts to open a camera
-            NET.addAssembly('C:\Program Files\Thorlabs\Scientific Imaging\DCx Camera Support\Develop\DotNet\uc480DotNet.dll');
-            obj.camera = uc480.Camera;
+            NET.addAssembly('C:\Program Files\IDS\uEye\Develop\DotNet\signed\uEyeDotNet.dll');
+            obj.camera = uEye.Camera;
             obj.camera.Init(cameraID);
-            obj.camera.Display.Mode.Set(uc480.Defines.DisplayMode.DiB); % Bitmap mode
-            obj.camera.PixelFormat.Set(uc480.Defines.ColorMode.RGBA8Packed); % 8 bit color
-            obj.camera.Trigger.Set(uc480.Defines.TriggerMode.Software); % Software trigger
+            obj.camera.Display.Mode.Set(uEye.Defines.DisplayMode.DiB); % Bitmap mode
+            obj.camera.PixelFormat.Set(uEye.Defines.ColorMode.RGBA8Packed); % 8 bit color
+            obj.camera.Trigger.Set(uEye.Defines.TriggerMode.Software); % Software trigger
             [~, memoryID] = obj.camera.Memory.Allocate(true);
             obj.cameraMemoryId = memoryID;
             [~, Width, Height, Bits, ~] = obj.camera.Memory.Inquire(obj.cameraMemoryId);
@@ -123,7 +124,7 @@ classdef Manager_Camera
         function newImage = acquireImage(obj, numFrameAverages)
             acquisitions = zeros(obj.cameraHeight, obj.cameraWidth, numFrameAverages);
             for index = 1:numFrameAverages
-                obj.camera.Acquisition.Freeze(uc480.Defines.DeviceParameter.Wait);
+                obj.camera.Acquisition.Freeze(uEye.Defines.DeviceParameter.Wait);
                 [~, tmp] = obj.camera.Memory.CopyToArray(obj.cameraMemoryId);
                 Data = reshape(uint8(tmp), [obj.cameraBits/8, obj.cameraWidth, obj.cameraHeight]);
                 Data = Data(1:3, 1:obj.cameraWidth, 1:obj.cameraHeight);
