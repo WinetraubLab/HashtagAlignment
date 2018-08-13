@@ -7,4 +7,4 @@ Contains photobleaching code for Wasatch OCT in folder **/Wasatch**
 Enter folder **/Code** and run file 
 
 
-![](./doc/simulation_1.png)
+![](./Docs/simulation_1.png)
