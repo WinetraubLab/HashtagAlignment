@@ -47,42 +47,53 @@ h = tmp(5:6); h = h(:);
 
 %% Solve z by solving non linear cuppled equation
 
-zvLim = [0 2]*max([norm(u(1:2)) norm(v(1:2))]); %Choose zv that points on image down
-for k=1:20
-    %All options for zv
-    zv = linspace(zvLim(1),zvLim(2),1e2);
+%zvLim = [0 2]*max([norm(u(1:2)) norm(v(1:2))]); %Choose zv that points on image down
+% for k=1:20
+%     %All options for zv
+%     zv = linspace(zvLim(1),zvLim(2),1e2);
+% 
+%     %Equal Norm Condtion
+%     zu_1 = (sqrt(zv.^2 + norm(v).^2 - norm(u).^2)); 
+%     %zu_1 = (sqrt(zu.^2 + norm(v).^2 - norm(u).^2)); 
+%     zu_1(imag(zu_1)>0) = Inf; %If imaginary, reject solution
+%     zu_2 = -zu_1;
+% 
+%     %Dot Product Condition
+%     ddot_1 = ((zu_1.*zv-dot(u,v)));
+%     ddot_2 = ((zu_2.*zv-dot(u,v)));
+% 
+%     if false
+%         %Debug plots
+%         plot(zv,(ddot_2),zv,(ddot_1),zv,zv*0);
+%         m = min(abs([ddot_2 ddot_1]));
+%         ylim(m*[-50 50]);
+%         pause(1)
+%     end
+% 
+%     %Find Best Fit
+%     zzv = [zv zv];
+%     zzu = [zu_1 zu_2];
+%     ddot = [ddot_1 ddot_2];
+%     i = find (abs(ddot)==min(abs(ddot)),1,'first');
+%     
+%     dzv = zv(2)-zv(1);
+%     zvLim = zzv(i) + 5*[-dzv dzv];
+%     
+%     if (abs(dot([u;zzu(i)],[v;zzv(i)])/(norm([u;zzu(i)]).*norm([v;zzv(i)]))*180/pi)<5)
+%         break;
+%     end
+% end
+% v(3)=double(zzv(i));
+% u(3)=double(zzu(i));
+% dot(u,v)./(norm(u)*norm(v))*180/pi
 
-    %Equal Norm Condtion
-    zu_1 = (sqrt(zv.^2 + norm(v).^2 - norm(u).^2)); 
-    zu_1(imag(zu_1)>0) = Inf; %If imaginary, reject solution
-    zu_2 = -zu_1;
+B_ =  norm(v).^2 - norm(u).^2; 
+A_ = - v(1)*u(1) - u(2)*v(2); 
+ 
+syms vz
+vz_ = vpasolve( vz^4 + B_ * vz^2 - A_^2, vz );
+uz_ = A_ ./ vz_ ;  
 
-    %Dot Product Condition
-    ddot_1 = ((zu_1.*zv-dot(u,v)));
-    ddot_2 = ((zu_2.*zv-dot(u,v)));
-
-    if false
-        %Debug plots
-        plot(zv,(ddot_2),zv,(ddot_1),zv,zv*0);
-        m = min(abs([ddot_2 ddot_1]));
-        ylim(m*[-50 50]);
-        pause(1)
-    end
-
-    %Find Best Fit
-    zzv = [zv zv];
-    zzu = [zu_1 zu_2];
-    ddot = [ddot_1 ddot_2];
-    i = find (abs(ddot)==min(abs(ddot)),1,'first');
-    
-    dzv = zv(2)-zv(1);
-    zvLim = zzv(i) + 5*[-dzv dzv];
-    
-    if (abs(dot([u;zzu(i)],[v;zzv(i)])/(norm([u;zzu(i)]).*norm([v;zzv(i)]))*180/pi)<5)
-        break;
-    end
-end
-v(3)=double(zzv(i));
-u(3)=double(zzu(i));
-%dot(u,v)./(norm(u)*norm(v))*180/pi
+v(3) = double(vz_(2));
+u(3) = double(uz_(2));
 
