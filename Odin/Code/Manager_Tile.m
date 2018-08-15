@@ -150,7 +150,7 @@ classdef Manager_Tile < handle
             if(isempty(varargin) > 0)
                 subFolderName = varargin(1);
             else
-                subFolderName = sprintf('Composite_Manual_%d\%d\%d_%d:$d:%d', time(2), time(3), time(1) , time(4), time(5), time(6));
+                subFolderName = sprintf('Composite_Manual_%d\%d\%d_%d:%d:%d', time(2), time(3), time(1) , time(4), time(5), time(6));
             end
             tiledName  = sprintf('Tiled.png');
             fullPath = sprintf('%s/%s/%s', folderName, subFolderName, tiledName);
@@ -177,7 +177,7 @@ classdef Manager_Tile < handle
         %   'newTiledBounds' New struct containing image datas
         %
         function newImageStruct = findBestFit(obj, newImage)
-            newImage = mean(newImage, 3)./255; % Surf operates on black-white image.
+            newImage = mean(newImage, 3); % Surf operates on black-white image.
             newImageStruct = struct('imageID', 0, 'imageArray', 0, 'tMatrix', eye(3), 'imageCornerPoints', 0, 'surfPoints', 0, 'surfBoard', 0, 'highlightColor', [0, 0, 0]);
             % Identifies SURF features
             points = detectSURFFeatures(newImage);
@@ -191,7 +191,6 @@ classdef Manager_Tile < handle
                     results(index, 1) = size(nonzeros(matchFeatures(currentFeatures, obj.images(index).surfBoard, 'Unique', true)), 1);
                 end
                 [~, bestImageIndex] = max(results);
-                bestImageIndex
                 indexPairs = matchFeatures(currentFeatures, obj.images(bestImageIndex).surfBoard, 'Unique', true);
 
                 % Finds image warp
@@ -200,11 +199,13 @@ classdef Manager_Tile < handle
                 imTMatrix = estimateGeometricTransform(matchedPoints, matchedPointsPrev, 'similar', 'Confidence', 99.9, 'MaxNumTrials', 2000);
                 
                 % Debugging
+                %{
                 figure; 
                 hold on;
                 ax = axes;
                 showMatchedFeatures(newImage,imwarp(obj.images(bestImageIndex).imageArray, obj.images(bestImageIndex).tMatrix),matchedPoints,matchedPointsPrev,'montage', 'Parent',ax);
                 hold off;
+                %}
             end
             
             % Finds output parameters
