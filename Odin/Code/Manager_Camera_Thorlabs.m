@@ -57,6 +57,28 @@ classdef Manager_Camera_Thorlabs
         
         %
         % Description:
+        %   Returns the current exposure time for the camera
+        % 
+        % Returns:
+        %   Single value.
+        %
+        function val = getExposure(obj)
+            [err, val] = obj.camera.Timing.Exposire.Get;
+        end
+        
+        %
+        % Description:
+        %   Sets the exposure time for the camera.
+        %
+        % Parameters:
+        %   'value' Exposure time
+        %
+        function setExposure(obj, value)
+            obj.camera.Timing.Exposure.Set(value);
+        end
+        
+        %
+        % Description:
         %   Returns the master gain setting of the camera.
         %
         % Returns:
@@ -77,9 +99,9 @@ classdef Manager_Camera_Thorlabs
         %
         function setMasterGain(obj, gainValue)
             if(isnan(gainValue))
-                obj.camera.AutoFeatures.Sensor.Gain.SetEnable(true)
+                obj.camera.AutoFeatures.Sensor.Gain.SetEnable(true); % TODO may not be supported?
             else
-                obj.camera.GainFactor.SetMaster(gainValue);
+                obj.camera.GainFactor.Factor(gainValue);
             end
         end
 
@@ -130,7 +152,6 @@ classdef Manager_Camera_Thorlabs
                 Data = reshape(uint8(tmp), [obj.cameraBits/8, obj.cameraWidth, obj.cameraHeight]);
                 Data = Data(1:3, 1:obj.cameraWidth, 1:obj.cameraHeight);
                 Data = permute(Data, [3, 2, 1]);
-                size(rgb2gray(Data))
                 acquisitions(:, :, index) = rgb2gray(Data);
             end
             newImage = mean(acquisitions, 3)./255;

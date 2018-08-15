@@ -10,9 +10,6 @@
 %   a composite image.
 %
 
-close all;
-clear all;
-
 % ---------------------------------- Settings -----------------------------
 
 
@@ -22,31 +19,48 @@ clear all;
 figure(1);
 hold on;
 %   -> Slider and label text for setting the number of frame averages
-UIAverageSlider = uicontrol('Style', 'slider', 'Min', 1, 'Max', 50, 'Value', 1, 'Position', [400, 20 120, 20], 'Callback', @adjustAverages);
+UIAverageSlider = uicontrol('Style', 'slider', 'Min', 1, 'Max', 50, 'Value', 10, 'Position', [400, 20 120, 20], 'Callback', @adjustAverages);
 UIAverageSliderText = uicontrol('Style', 'text', 'Position', [400, 45, 120, 20], 'String', 'Frame Averages');
+UITilingButton = uicontrol('Style', 'pushbutton', 'String', 'tile');
 hold off;
 
 % -> Streams the latest images from the camera, allows the user to take an
 %    image to save, append to the current panorama, etc.
 exitProgram = false;
-cameraManager = Manager_Camera_uEye(0);
-cameraManager.setMasterGain(NaN);
-cameraManager.setScaleRange(NaN);
+cameraManager = Manager_Camera_Thorlabs(0);
+%cameraManager.setMasterGain(13);
+cameraManager.setExposure(100);
+cameraManager.setScaleRange([0, 25]);
 figure(1);
 hold on;
 imageObject = imshow(zeros(cameraManager.getHeight, cameraManager.getWidth), []);
 hold off;
-%{
+
 tiledManager = Manager_Tile;
+oldImage = cameraManager.acquireImage(floor(UIAverageSlider.Value));
+tiledManager.addImage(oldImage);
 figure(2);
 hold on;
-stitchedObject = imshow();
+stitchedObject = imshow(tiledManager.getCompositeImage());
 hold off;
-%}
 while(~exitProgram) % Main loop just shows camera footage
+    newImage = cameraManager.acquireImage(floor(UIAverageSlider.Value));
     refresh(1);
-    set(imageObject, 'CData', cameraManager.acquireImage(floor(UIAverageSlider.Value)));
+    set(imageObject, 'CData', newImage);
     drawnow;
+    similarity = ssim(newImage, oldImage);
+    if(similarity < 0.85)
+        pause(5);
+        newImage = cameraManager.acquireImage(floor(UIAverageSlider.Value));
+        refresh(1);
+        set(imageObject, 'CData', newImage);
+        drawnow;
+        tiledManager.addImage(newImage);
+        refresh(2);
+        set(stitchedObject, 'CData', (tiledManager.getCompositeImage));
+        drawnow;
+    end
+    oldImage = newImage;
 end
 
 % -------------------------- Functions and Callbacks ----------------------
