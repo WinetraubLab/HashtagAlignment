@@ -58,10 +58,7 @@ def WConvert_XToWasatchUnits(inputX, *flags):
     if("wasatchUnits" in flags):
         return inputX
     else:
-        if not isinstance(inputX, pint.quantity._Quantity): # Default behavior is to assume millimeters if unspecified
-            inputX = float(inputX)
-            inputX *= unitRegistry.millimeter
-        return (inputX.to(unitRegistry.millimeter) * WUPERMM_X)
+        return (WConvert_ToMillimeters(inputX).to(unitRegistry.millimeter) * WUPERMM_X)
 
 #
 # Description:
@@ -80,10 +77,7 @@ def WConvert_YToWasatchUnits(inputY, *flags):
     if("wasatchUnits" in flags):
         return inputY
     else:
-        if not isinstance(inputY, pint.quantity._Quantity): # Default behavior is to assume millimeters if unspecified
-            inputY = float(inputY)
-            inputY *= unitRegistry.millimeter
-        return (inputY.to(unitRegistry.millimeter) * WUPERMM_Y)
+        return (WConvert_ToMillimeters(inputY).to(unitRegistry.millimeter) * WUPERMM_Y)
 
 #
 # Description:
@@ -94,7 +88,7 @@ def WConvert_YToWasatchUnits(inputY, *flags):
 #                    unspecified assumes seconds)
 #
 # Returns:
-#   The function returns a floating point quantity of Wasatch units.
+#   The function returns a float with pint units of seconds attatched.
 #
 def WConvert_ToSeconds(inputDuration):
     if not isinstance(inputDuration, pint.quantity._Quantity):
@@ -102,6 +96,22 @@ def WConvert_ToSeconds(inputDuration):
         inputDuration *= unitRegistry.seconds
     return inputDuration.to(unitRegistry.seconds)
 
+#
+# Description:
+#   Utility function that converts the given length to microns.
+#
+# Parameters:
+#   'inputDuration' (float) (If unitRegistry units specified [Length],
+#                    unspecified assumes millimeters)
+#
+# Returns:
+#   The function returns a float with pint units of microns attatched.
+#
+def WConvert_ToMillimeters(inputLength):
+    if not isinstance(inputLength, pint.quantity._Quantity):
+        inputLength = float(inputLength)
+        inputLength *= unitRegistry.millimeters
+    return inputLength.to(unitRegistry.millimeters)
 
 
 #
