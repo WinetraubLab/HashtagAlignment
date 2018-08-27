@@ -1,3 +1,7 @@
 [submodule "yOCT"]
 	path = yOCT
 	url = https://github.com/MyYo/yOCT.git
+[submodule "Code/myOCT"]
+	path = Code/myOCT
+	url = https://github.com/MyYo/yOCT.git
+	branch = master
