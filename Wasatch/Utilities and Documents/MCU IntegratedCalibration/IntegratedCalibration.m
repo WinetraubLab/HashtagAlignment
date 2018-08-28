@@ -8,7 +8,7 @@
 %   This program identifies the units per mm of the given OCT system,
 %   the slow axis determines the units/mm, the fast axis also has a scaling
 %   and offset to be determined. It is assumed that the slow axis is
-%   consistent.
+%   consistent. This is applied to both the X and Y axis of the system.
 %
 
 %
@@ -58,13 +58,8 @@ close all;
 
 %% Target Settings
 
-% This describes a pattern with 'linesUsed' lines seperated by a gap of
-% 'linesOmitted' lines and is a repeating pattern.
-
-% This may be able to be generalized by specifying the distances between
-% lines and using xcorr to fit the expected pattern into the data.
-
-lineSpacing  = [100, 100, 100, 100, 100, 100, 100, 100, 200]; % Distance between lines in microns, format is [1-2, 2-3, 3-4]
+% Distance between lines in microns, format is [1-2, 2-3, 3-4, ..., last-1]
+lineSpacing  = [100, 100, 100, 100, 100, 100, 100, 100, 200]; 
 
 %% Scanning Settings
 
@@ -106,18 +101,15 @@ horizontalFastSlice = mean(log(mean(abs(yOCTInterfToScanCpx(interfHorizontal, ho
 
 %% Identifies slow axis coordinate conversion
 
-[~, largestGapIndex] = max(lineSpacing); % Part of infrastructure to be replaced by xcorr
-
 % Identifies vertical 3d scan.
-% TODO come back with alignPoints(vectorA, vectorB, indexA, indexB)
 verticalLinesSlow = getLines(verticalBirdsEyeView, 2); % Retrieves line coordinates
 verticalLinesSlow = verticalLinesSlow * (machineUnitsWide / size(verticalBirdsEyeView, 2)); % Converts to machine units
 verticalLinesSlowDifs = diff(verticalLinesSlow);       % Differences to match up to pattern and convert
-[~, verticalSlowIndexBeforeLargestGap] = max(verticalLinesSlowDifs);
-verticalSlowIndexBeforeLargestGap = mod(verticalSlowIndexBeforeLargestGap, numel(lineSpacing));
-tempShiftedPattern = circshift(lineSpacing, verticalSlowIndexBeforeLargestGap-largestGapIndex);
-tempShiftPattern = repmat(tempShiftedPattern, ceil(numel(verticalLinesSlowDifs) / numel(lineSpacing)));
-verticalSlowFittedPattern = tempShiftPattern(1:numel(verticalLinesSlowDifs));
+verticalSlowPatternIndex = xcorr(verticalLinesSlowDifs, lineSpacing);
+verticalSlowPatternIndex = mod(verticalSlowPatternIndex, numel(lineSpacing));
+tempShiftedPattern = circshift(lineSpacing, verticalSlowPatternIndex);
+tempShiftedPattern = repmat(tempShiftedPattern, ceil(numel(verticalLinesSlowDifs) / numel(lineSpacing)));
+verticalSlowFittedPattern = tempShiftedPattern(1:numel(verticalLinesSlowDifs));
 verticalConvertedDifferences = verticalSlowFittedPattern./verticalLinesSlowDifs; % Units of system units / micron for all of the differences.
 verticalSysPerMicron = mean(verticalConvertedDifferences); % Units of system units / micron.
 if(displaySlowAxisStats) 
@@ -143,7 +135,7 @@ verticalLinesFastDifs = diff(verticalLinesFast);
 [~, verticalFastIndexBeforeLargestGap] = max(verticalLinesFastDifs);
 verticalFastIndexBeforeLargestGap = mod(verticalFastIndexBeforeLargestGap, numel(lineSpacing));
 
-[verticalLinesFastFitted, verticalLinesSlowFitted] = alignPoints(verticalLinesFast, verticalLinesSlow, verticalFastIndexBeforeLargestGap, verticalSlowIndexBeforeLargestGap);
+[verticalLinesFastFitted, verticalLinesSlowFitted] = alignPoints(verticalLinesFast, verticalLinesSlow, verticalFastIndexBeforeLargestGap, verticalSlowPatternIndex);
 verticalFastParameters = polyfit(verticalLinesFastFitted, verticalLinesSlowFitted, 1); % Polynomial maps fast coordinates to slow coordinates TODO
 if(displayFastAxisFit)
     figure;
@@ -185,26 +177,6 @@ end
 
 %
 % Description:
-%   Identifies major lines from the given line coordinates
-%
-% Parameters:
-%   'image'     A 2d image featuring the desired lines perpendicular to the
-%               given dimension.
-%   'dimension' The dimension to search for lines along.
-%
-% Returns:
-%   'majorLineCoordinates' Coordinates of lines that make up the bulk of the grid
-%   'landmarkCoordinates'  Coordinates of major lines assocated with landmarks
-%
-function [majorLineCoordinates, landmarkCoordinates] = getMajorLines(image, dimension)
-    allLines = getLines(image, dimension);
-    majorLines = [];
-    for index = 1:numel(lineCoordinates)
-    end
-end
-
-%
-% Description:
 %   Takes in an image and identifies high points along the given axis.
 %
 % Parameters:
@@ -216,11 +188,13 @@ end
 %
 function [lineCoordinates] = getLines(image, dimension)
     crossSection = mean(image, dimension);
-    [pks, locs, width, prominance] = findpeaks(crossSection, 'MinPeakDistance', expectedDistanceMinimum_Col, 'MaxPeakWidth', expectedWidthMaximum_Col, 'MinPeakProminence', expectedProminanceMinimum_Col);
-    newPks = zeros(numel(pks), 1);
+    [pks, locs, width, prominance] = findpeaks(crossSection);
+    lineCoordinates = zeros(numel(pks), 1);
     for index = 1:numel(pks) % Refines coordinate locations
         approximationRange = [floor(locs(index) + (width / 2)), ceil(locs(index) - (width / 2))];
+        initialGuess = []
         aImproved = fminsearch(@(a) sum((crossSection(approximationRange) - gaussian(a, approximationRange)).^2), initialGuess);
+        lineCoordinates(index) = aImproved(1);
     end
 end
 
