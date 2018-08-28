@@ -76,8 +76,14 @@ dispersionParameterA = 100; % Use Demo_DispersionCorrection to find the term
 
 %% Analysis Settings
 
+% Debugging
 displaySlowAxisStats = false; % Displays histograms for the spacing between major lines % TODO
 displayFastAxisFit   = false; % Displays polynomial fit of coordinates along the slow versus fast axis
+
+% Find Peaks
+findPks_searchRangeMultiplier = 1.5; % Multiplied by peak width for range of fitting analysis
+findPks_varianceMultiplier = 1.2; % Multiplied by peak width for initial guess for variance gaussian distribution
+findPks_magnitudeMultiplier = 1.5; % Multiplied by peak height to get initial guess for magnitude
 
 %% Loads Volume Data
 
@@ -105,12 +111,8 @@ horizontalFastSlice = mean(log(mean(abs(yOCTInterfToScanCpx(interfHorizontal, ho
 verticalLinesSlow = getLines(verticalBirdsEyeView, 2); % Retrieves line coordinates
 verticalLinesSlow = verticalLinesSlow * (machineUnitsWide / size(verticalBirdsEyeView, 2)); % Converts to machine units
 verticalLinesSlowDifs = diff(verticalLinesSlow);       % Differences to match up to pattern and convert
-verticalSlowPatternIndex = xcorr(verticalLinesSlowDifs, lineSpacing);
-verticalSlowPatternIndex = mod(verticalSlowPatternIndex, numel(lineSpacing));
-tempShiftedPattern = circshift(lineSpacing, verticalSlowPatternIndex);
-tempShiftedPattern = repmat(tempShiftedPattern, ceil(numel(verticalLinesSlowDifs) / numel(lineSpacing)));
-verticalSlowFittedPattern = tempShiftedPattern(1:numel(verticalLinesSlowDifs));
-verticalConvertedDifferences = verticalSlowFittedPattern./verticalLinesSlowDifs; % Units of system units / micron for all of the differences.
+[verticalLinesSlowPatternOffset, verticalLinesSlowPattern] = getPatternOffset(lineSpacing, verticalLinesSlowDifs);
+verticalConvertedDifferences = verticalLinesSlowDifs./verticalLinesSlowPattern; % Units of system units / micron for all of the differences.
 verticalSysPerMicron = mean(verticalConvertedDifferences); % Units of system units / micron.
 if(displaySlowAxisStats) 
     figure;
@@ -132,10 +134,8 @@ end
 verticalLinesFast = getLines(verticalFastSlice, 2);
 verticalLinesFast = verticalLinesFast * (machineUnitsWide / size(verticalBirdsEyeView, 2)); % Converts to machine units
 verticalLinesFastDifs = diff(verticalLinesFast);
-[~, verticalFastIndexBeforeLargestGap] = max(verticalLinesFastDifs);
-verticalFastIndexBeforeLargestGap = mod(verticalFastIndexBeforeLargestGap, numel(lineSpacing));
-
-[verticalLinesFastFitted, verticalLinesSlowFitted] = alignPoints(verticalLinesFast, verticalLinesSlow, verticalFastIndexBeforeLargestGap, verticalSlowPatternIndex);
+[verticalLinesFastOffset, ~] = getPatternOffset(lineSpacing, verticalLinesFastDifs);
+[verticalLinesFastFitted, verticalLinesSlowFitted] = alignPoints(verticalLinesFast, verticalLinesSlow, verticalLinesFastOffset, verticalLinesSlowOffset);
 verticalFastParameters = polyfit(verticalLinesFastFitted, verticalLinesSlowFitted, 1); % Polynomial maps fast coordinates to slow coordinates TODO
 if(displayFastAxisFit)
     figure;
@@ -153,6 +153,33 @@ end
 % TODO once vertical works
 
 %% Functions
+
+%
+% Description:
+%   Assuming that the targetVector is a periodic function
+%   whose underlying element is of the same length and 
+%   relative proportions of the vector pattern.
+%
+% Parameters:
+%   'pattern'        The pattern to match, needs to be the same length
+%                    as the period of targetVector. The returned offset is the
+%                    smallest positive offset to shift pattern up to match
+%                    the targetVector.
+%   'targetVector'   The sample to match the pattern to, assumed to be
+%                    perioidic with the same period as the length of the 
+%                    pattern.
+%
+% Returns:
+%   'offsetIndex'    How far the pattern is shifted forwards.
+%   'matchedPattern' Vector of pattern matched to the original.
+%
+function [offsetIndex, matchedPattern] = getPatternOffset(pattern, targetVector)
+    matchedPattern = repmat(pattern, ceil(numel(targetVector) / numel(pattern)));
+    offsetIndex = max(abs(xcorr(targetVector, matchedPattern)));
+    offsetIndex = mod(offsetIndex, numel(lineSpacing));
+    matchedPattern = circshift(matchedPattern, offsetIndex);
+    matchedPattern = matchedPattern(1:numel(targetVector));
+end
 
 %
 % Description:
@@ -188,13 +215,15 @@ end
 %
 function [lineCoordinates] = getLines(image, dimension)
     crossSection = mean(image, dimension);
-    [pks, locs, width, prominance] = findpeaks(crossSection);
+    [pks, locs, width, magnitude] = findpeaks(crossSection);
     lineCoordinates = zeros(numel(pks), 1);
     for index = 1:numel(pks) % Refines coordinate locations
-        approximationRange = [floor(locs(index) + (width / 2)), ceil(locs(index) - (width / 2))];
-        initialGuess = []
+        approximationRange = [floor(locs(index) + (width / 2) * findPks_searchRangeMultiplier), ceil(locs(index) - (width / 2) * findPks_searchRangeMultiplier)];
+        guessMagnitude = magnitude(index) * findPks_magnitudeMultiplier;
+        guessVariance = width(index) * findPks_varianceMultiplier;
+        initialGuess = [guessMagnitude, locs(index), guessVariance, pks(index)];
         aImproved = fminsearch(@(a) sum((crossSection(approximationRange) - gaussian(a, approximationRange)).^2), initialGuess);
-        lineCoordinates(index) = aImproved(1);
+        lineCoordinates(index) = aImproved(2);
     end
 end
 
