@@ -10,45 +10,8 @@
 %   and offset to be determined. It is assumed that the slow axis is
 %   consistent. This is applied to both the X and Y axis of the system.
 %
-
-%
-% Materials:
-%   You need to be using the silicon target fabricated by Yonatan that has
-%   a skipped line every 9 lines (equally spaced). Adjust the target parameters as
-%   necessary if this is not the case.
-%
-
-%
-% Steps:
-%   1). Determine desired scanning parameters using an oscilloscope
-%       to verify that there is no overlap and that triggering is
-%       consistent etc.
-%
-%   2). Line up the farthest left line with a vertical scan, run a quick
-%       3d volume to make sure that the scanning region is entirely
-%       contained within the target grid. Take and save the 3d volume
-%       with the slow axis parralel to the vertical edge of the grid. Also,
-%       take a single fast scan rotated 90 degrees with the same length as
-%       the width of the old scan.
-%
-%   3). Repeat 2 but with the highest horizontal line scanning downwards.
-%       You will need to rotate the target and possibly re-wire the system
-%       if it does not have the ability to scan the fast axis in an
-%       arbitrary direction.
-%
-%   4). Enter the scanning parameters into the constants at the top of this
-%       file, save both of the datasets to the same location as this file.
-%
-%   5). In this script, set scanning settings, analysis settings, and
-%       target settings.
-%
-%   6). Run the script.
-%
-
-%
-% Note:
-%   - This script assumes that the fast and slow axis will be within the
-%     same period of repeating line features.
+%   See the included tutorial presentation for how to use this file to
+%   calibrate the system.
 %
 
 clear all;
@@ -92,17 +55,16 @@ addPath('../../../Code/myOCT/myOCT'); % myOCT repository in main code folder
 
 % Loads 3d data, based off of Demo_3d
 
+
 verticalBirdsEyeView = zeros();   % TODO compress Z values so that the entire
                                   % file can fit in this program.
 horizontalBirdsEyeView = zeros(); % TODO same as above.
 
 % Loads 2d data, based off of Demo_2d
 
-[interfVertical, verticalDimensions] = yOCTLoadInterfFromFile(verticalFastDataPath, 'OCTSystem', OCTSystem);
-verticalFastSlice = mean(log(mean(abs(yOCTInterfToScanCpx(interfVertical, verticalDimensions, 'dispersionParameterA', dispersionParameterA), 3))), 2);
+verticalFastSlice = 0;
 
-[interfHorizontal, horizontalDimensions] = yOCTLoadInterfFromFile(horizontalFastDataPath, 'OCTSystem', OCTSystem);
-horizontalFastSlice = mean(log(mean(abs(yOCTInterfToScanCpx(interfHorizontal, horizontalDimensions, 'dispersionParameterA', dispersionParameterA), 3))), 2);
+horizontalFastSlice = 0;
 
 
 %% Identifies slow axis coordinate conversion
@@ -153,6 +115,40 @@ end
 % TODO once vertical works
 
 %% Functions
+
+%
+% Description:
+%
+function meanAbs = loadSlice(folderDirectory, octSystem)
+    dispersionParameterA = 100; %Use Demo_DispersionCorrection to find the term
+    [interf,dimensions] = yOCTLoadInterfFromFile(folderDirectory,'OCTSystem', octSystem);
+
+    %Generate BScans
+    scanCpx = yOCTInterfToScanCpx(interf,dimensions,'dispersionParameterA', dispersionParameterA);
+    meanAbs = mean(mean(abs(scanCpx, 3)), 1);
+end
+
+%
+% Description:
+%
+function meanAbs = loadTopDown(folderDirectory, octSystem)
+    dispersionParameterA = 100;
+    OCTVolumeFile = [folderDirectory '\scanAbs.tif'];
+    if ~exist(OCTVolumeFile,'file')
+        % Load OCT
+        meanAbs = yOCTProcessScan(folderDirectory, 'meanAbs', 'OCTSystem', octSystem, 'dispersionParameterA', dispersionParameterA);
+        % Saves for later
+        yOCT2Tif(meanAbs,OCTVolumeFile); 
+    else
+        info = imfinfo(OCTVolumeFile);
+        meanAbs = zeros(info.height, info.width, size(info,1));
+        for i= 1:1:size(info,1)
+            meanAbs(:, :, i) = imread(OCTVolumeFile,i);
+        end
+    end
+    meanAbs = mean(log(meanAbs), 1);
+end
+
 
 %
 % Description:
@@ -211,11 +207,12 @@ end
 %               given dimension.
 %   'dimension' The dimension to search for lines along.
 %
-%   TODO make robust for rotated images, maybe multiple sections?
+%   TODO make robust for rotated images, maybe divide into multiple sections?
 %
 function [lineCoordinates] = getLines(image, dimension)
     crossSection = mean(image, dimension);
-    [pks, locs, width, magnitude] = findpeaks(crossSection);
+    crossSection; % TODO 
+    [pks, locs, width, magnitude] = findpeaks(crossSection); % Add extra parameters to make more stable
     lineCoordinates = zeros(numel(pks), 1);
     for index = 1:numel(pks) % Refines coordinate locations
         approximationRange = [floor(locs(index) + (width / 2) * findPks_searchRangeMultiplier), ceil(locs(index) - (width / 2) * findPks_searchRangeMultiplier)];
