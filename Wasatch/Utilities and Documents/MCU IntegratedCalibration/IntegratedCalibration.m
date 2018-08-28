@@ -14,7 +14,7 @@
 %
 % Materials:
 %   You need to be using the silicon target fabricated by Yonatan that has
-%   a three line group every four lines. Adjust the target parameters as
+%   a skipped line every 9 lines (equally spaced). Adjust the target parameters as
 %   necessary if this is not the case.
 %
 
@@ -39,13 +39,16 @@
 %   4). Enter the scanning parameters into the constants at the top of this
 %       file, save both of the datasets to the same location as this file.
 %
-%   5). Run the script.
+%   5). In this script, set scanning settings, analysis settings, and
+%       target settings.
+%
+%   6). Run the script.
 %
 
 %
 % Note:
-%   - This script assumes that the fast and slow axis will be within one
-%     major landmark line when calculating offsets.
+%   - This script assumes that the fast and slow axis will be within the
+%     same period of repeating line features.
 %
 
 clear all;
@@ -55,15 +58,26 @@ close all;
 
 %% Target Settings
 
-majorLineSpacing = 0; % Spacing between major lines in microns TODO
-landmarkSpacing  = 0; % Spacing between landmark lines in microns TODO
-landmarkPeriod   = 5; % Number of major lines per landmarked major line (inclusive)
+% This describes a pattern with 'linesUsed' lines seperated by a gap of
+% 'linesOmitted' lines and is a repeating pattern.
+
+% This may be able to be generalized by specifying the distances between
+% lines and using xcorr to fit the expected pattern into the data.
+
+lineSpacing  = [100, 100, 100, 100, 100, 100, 100, 100, 200]; % Distance between lines in microns, format is [1-2, 2-3, 3-4]
 
 %% Scanning Settings
 
 machineUnitsWide = 0; % The width and length of the 3d volumes and the length 
                       % of the fast scan, it is assumed  that slow scan coordinates
                       % are evenly distributed along this range % TODO
+
+verticalSlowDataPath = ''; % TODO
+verticalFastDataPath = ''; % TODO
+horizontalSlowDataPath = ''; % TODO
+horizontalFastDataPath = ''; % TODO
+OCTSystem = 'Wasatch';
+dispersionParameterA = 100; % Use Demo_DispersionCorrection to find the term
 
 %% Analysis Settings
 
@@ -72,24 +86,44 @@ displayFastAxisFit   = false; % Displays polynomial fit of coordinates along the
 
 %% Loads Volume Data
 
+
+addPath('../../../Code/myOCT/myOCT'); % myOCT repository in main code folder
+
+% Loads 3d data, based off of Demo_3d
+
 verticalBirdsEyeView = zeros();   % TODO compress Z values so that the entire
                                   % file can fit in this program.
 horizontalBirdsEyeView = zeros(); % TODO same as above.
 
-verticalFastSlice = zeros();   % TODO
+% Loads 2d data, based off of Demo_2d
 
-horizontalFastSlice = zeros(); % TODO
+[interfVertical, verticalDimensions] = yOCTLoadInterfFromFile(verticalFastDataPath, 'OCTSystem', OCTSystem);
+verticalFastSlice = mean(log(mean(abs(yOCTInterfToScanCpx(interfVertical, verticalDimensions, 'dispersionParameterA', dispersionParameterA), 3))), 2);
+
+[interfHorizontal, horizontalDimensions] = yOCTLoadInterfFromFile(horizontalFastDataPath, 'OCTSystem', OCTSystem);
+horizontalFastSlice = mean(log(mean(abs(yOCTInterfToScanCpx(interfHorizontal, horizontalDimensions, 'dispersionParameterA', dispersionParameterA), 3))), 2);
+
 
 %% Identifies slow axis coordinate conversion
 
+[~, largestGapIndex] = max(lineSpacing); % Part of infrastructure to be replaced by xcorr
+
 % Identifies vertical 3d scan.
-[verticalMajorLinesSlow, verticalLandmarkLinesSlow] = getMajorLines(verticalBirdsEyeView, 1);
-verticalCoordinateConversions = diff(verticalMajorLinesSlow) / majorLineSpacing; % Results are  % TODO
-verticalSysPerMicron = mean(verticalCoordinateConversions);
+% TODO come back with alignPoints(vectorA, vectorB, indexA, indexB)
+verticalLinesSlow = getLines(verticalBirdsEyeView, 2); % Retrieves line coordinates
+verticalLinesSlow = verticalLinesSlow * (machineUnitsWide / size(verticalBirdsEyeView, 2)); % Converts to machine units
+verticalLinesSlowDifs = diff(verticalLinesSlow);       % Differences to match up to pattern and convert
+[~, verticalSlowIndexBeforeLargestGap] = max(verticalLinesSlowDifs);
+verticalSlowIndexBeforeLargestGap = mod(verticalSlowIndexBeforeLargestGap, numel(lineSpacing));
+tempShiftedPattern = circshift(lineSpacing, verticalSlowIndexBeforeLargestGap-largestGapIndex);
+tempShiftPattern = repmat(tempShiftedPattern, ceil(numel(verticalLinesSlowDifs) / numel(lineSpacing)));
+verticalSlowFittedPattern = tempShiftPattern(1:numel(verticalLinesSlowDifs));
+verticalConvertedDifferences = verticalSlowFittedPattern./verticalLinesSlowDifs; % Units of system units / micron for all of the differences.
+verticalSysPerMicron = mean(verticalConvertedDifferences); % Units of system units / micron.
 if(displaySlowAxisStats) 
     figure;
     hold on;
-    histogram(verticalCoordinateConversion);
+    histogram(verticalConvertedDifferences);
     title('Distribution of Calculated System Unit Conversion');
     xlable(sprintf('System Unit/\mum, Average is %f0.2', verticalSysPerMicron));
     ylable('Occurances');
@@ -97,43 +131,57 @@ if(displaySlowAxisStats)
 end
 
 % Identifies horizontal 3d scan.
-[horizontalMajorLinesSlow, horizontalLandmarkLinesSlow] = getMajorLines(horizontalBirdsEyeView, 1);
+% TODO once done with vertical
+
 
 %% Identifies fast axis offset and scaling
 
 % Finds scaling and offset for vertical scans
-[verticalMajorLinesFast, verticalLandmarkLinesFast] = getMajorLines(verticalFastSlice, 1);
-verticalMajorLinesFastFitted = 0; % TODO
-verticalMajorLinesSLowFitted = 0; % TODO
-verticalFastParameters = polyfit(verticalMajorLinesFastFitted, verticalMajorLinesSlowFitted, 1); % Polynomial maps fast coordinates to slow coordinates TODO
+verticalLinesFast = getLines(verticalFastSlice, 2);
+verticalLinesFast = verticalLinesFast * (machineUnitsWide / size(verticalBirdsEyeView, 2)); % Converts to machine units
+verticalLinesFastDifs = diff(verticalLinesFast);
+[~, verticalFastIndexBeforeLargestGap] = max(verticalLinesFastDifs);
+verticalFastIndexBeforeLargestGap = mod(verticalFastIndexBeforeLargestGap, numel(lineSpacing));
+
+[verticalLinesFastFitted, verticalLinesSlowFitted] = alignPoints(verticalLinesFast, verticalLinesSlow, verticalFastIndexBeforeLargestGap, verticalSlowIndexBeforeLargestGap);
+verticalFastParameters = polyfit(verticalLinesFastFitted, verticalLinesSlowFitted, 1); % Polynomial maps fast coordinates to slow coordinates TODO
 if(displayFastAxisFit)
     figure;
     hold on;
     title('Paired Coordinates Along Fast and Slow Vertical Axis');
     xlabel('Fast Axis Locations');
     ylabel('Slow Axis Locations');
-    scatter(verticalMajorLinesFastFitted, verticalMajorLinesSlowFitted, 'displayName', 'Raw Correspondance');
+    scatter(verticalLinesFastFitted, verticalLinesSlowFitted, 'displayName', 'Raw Correspondance');
     range = xlim;
     plot(polyval(verticalFastParameters, range(1):range(2), 'displayName', 'Fitted Curve, Slope = , Offset = ')); % TODO add um measurements
     hold off;
 end
 
 % Finds scaling and offset for horizontal scans
-[horizontalMajorLinesFast, horizontalLandmarkLinesFast] = getMajorLines(horizontalFastSlice, 1);
-horizontalFastParameters = polyfit(horizontalMajorLinesFastFitted, horizontalMajorLinesSlowFitted, 1); % Polynomial maps fast coordinates to slow coordinates TODO fitted points
-if(displayFastAxisFit)
-    figure;
-    hold on;
-    title('Paired Coordinates Along Fast and Slow Horizontal Axis');
-    xlabel('Fast Axis Locations');
-    ylabel('Slow Axis Locations');
-    scatter(horizontalMajorLinesFastFitted, horizontalMajorLinesSlowFitted, 'displayName', 'Raw Correspondance');
-    range = xlim;
-    plot(polyval(horizontalFastParameters, range(1):range(2), 'displayName', 'Fitted Curve, Slope = , Offset = ')); % TODO add um measurements
-    hold off;
-end
+% TODO once vertical works
 
 %% Functions
+
+%
+% Description:
+%   Fits two patterns together with associated landmarks
+%
+% Parameters:
+%   'vectorA' First array of values to match
+%   'vectorB' Second array of values to match
+%   'indexA'  Landmark location in A
+%   'indexB'  Corresponding landmark location in B
+%
+% Returns:
+%   'matchedA' Cropped array with corresponding points B
+%   'matchedB' Cropped array with corresponding points A
+%
+function [matchedA, matchedB] = alignPoints(vectorA, vectorB, indexA, indexB)
+    minOffset = min(indexA, indexB);
+    maxOffset = min(numel(indexA)- indexA, numel(indexB) - indexB);
+    matchedA = vectorA(indexA - minOffset: indexA + maxOffset);
+    matchedB = vectorB(indexB - minOffset: indexB + maxOffset);
+end
 
 %
 % Description:
