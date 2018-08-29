@@ -240,7 +240,7 @@ def GCommand_PrintCMD_VolumetricScan(startX, startY, stopX, stopY, brepeats, *fl
 def GCommand_PrintCMD_VolumetricScanAdjusted(startX, startY, stopX, stopY, brepeats, *flags):
     startX = 1.026409 * WConvert_ToMillimeters(startX) + 5.493 * unitRegistry.microns()
     stopX = 1.026409 * WConvert_ToMillimeters(stopX) + 5.493 * unitRegistry.microns()
-    startY = 1.0269 * WConvert_ToMillimeters(startY)tY + 4.939 * unitRegistry.microns()
+    startY = 1.0269 * WConvert_ToMillimeters(startY) + 4.939 * unitRegistry.microns()
     stopY = 1.02269 * WConvert_ToMillimeters(stopY) + 4.939 * unitRegistry.microns()
     GCommand_PrintCMD_VolumetricScan(startX, startY, stopX, stopY, brepeats, *flags)
 
