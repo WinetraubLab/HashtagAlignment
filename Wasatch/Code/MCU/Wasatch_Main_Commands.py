@@ -164,13 +164,13 @@ def GCommand_BleachFiducial(microscopeCommand, centerX, centerY, lineLength, mar
         boundXStart = centerX - (lineLength / 2)
         boundXStop = centerX + (lineLength / 2)
         yPosition = centerY + (currentY * markBaseGapWidth)
-        GCommand_BleachLineNTimes(microscopeCommand, boundXStart, yPosition, boundXStop, yPosition, duration, 2, *flags)
+        GCommand_BleachLineNTimes(microscopeCommand, boundXStart, yPosition, boundXStop, yPosition, duration, 1, *flags)
     # Draws vertical
     for currentX in verticalRatios:
         boundYStart = centerY - (lineLength / 2)
         boundYStop = centerY + (lineLength / 2)
         xPosition = centerX + (currentX * markBaseGapWidth)
-        GCommand_BleachLineNTimes(microscopeCommand, xPosition, boundYStart, xPosition, boundYStop, duration, 2, *flags)
+        GCommand_BleachLineNTimes(microscopeCommand, xPosition, boundYStart, xPosition, boundYStop, duration, 1, *flags)
 
 #
 # Description:

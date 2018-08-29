@@ -319,7 +319,7 @@ def WCommand_ScanPulseDuration(duration = "default_value"):
 #
 def WCommand_ScanReturnSetDuration(duration = "default_value"):
     if(duration != "default_value"):
-        microseconds = round(WConvert_Seconds(duration).to(unitRegistry.microsecond).magnitude)
+        microseconds = round(WConvert_ToSeconds(duration).to(unitRegistry.microsecond).magnitude)
         if (isinstance(microseconds, int) and (microseconds >= 0) and (microseconds <= 255)):
             return "t_ret %d" % (microseconds)
         else:
