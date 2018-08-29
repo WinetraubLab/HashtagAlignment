@@ -210,6 +210,41 @@ def GCommand_PrintCMD_VolumetricScan(startX, startY, stopX, stopY, brepeats, *fl
     print("Then hit \"update\" and then \"Save Volume\" when you are ready to collect data.")
 
 #
+# Description:
+#   Provides test to the user to type into the terminal to get the desired 3d
+#   volumetric scan. This version assumes that you have a trdelay of 40 and compensates
+#   for shifting and scaling distortion.
+#
+# Parameters:
+#   'startX'           (float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units). Start X coordinate of the scan.
+#
+#   'startY'           (float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units). Start Y coordinate of the scan.
+#
+#   'stopX'            (float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units). Stop X coordinate of the scan.
+#
+#   'stopY'            (float) (If specified unitRegistry units [Length], if
+#                       no units assumes millimeters, if flag 'wasatchUnits' is
+#                       used uses Wasatch units). Stop Y coordinate of the scan.
+#
+#   'flags'             (string) (variable number of args) (optional) Flags for the line.
+#                       -> 'wasatchUnits'  Arguments are interpreted directly as wasatch units
+#                       -> 'showSerial'    Serial commands are displayed when sent
+#                       -> 'disableOutput' Serial commands are not sent to the microcontroller
+#
+def GCommand_PrintCMD_VolumetricScanAdjusted(startX, startY, stopX, stopY, brepeats, *flags):
+    startX = 1.026409 * WConvert_ToMillimeters(startX) + 5.493 * unitRegistry.microns()
+    stopX = 1.026409 * WConvert_ToMillimeters(stopX) + 5.493 * unitRegistry.microns()
+    startY = 1.0269 * WConvert_ToMillimeters(startY)tY + 4.939 * unitRegistry.microns()
+    stopY = 1.02269 * WConvert_ToMillimeters(stopY) + 4.939 * unitRegistry.microns()
+    GCommand_PrintCMD_VolumetricScan(startX, startY, stopX, stopY, brepeats, *flags)
+
+#
 # Description"
 #    Prints out the required commands to bleach multiple parralel lines
 #
@@ -277,7 +312,3 @@ def GCommand_PrintCMD_MultiParallel(Ax, Ay, Dx, Dy, change):
         Dy_ = coord_final[1,1,ind]
 
         print(WCommand_ScanXYRamp(Ax_, Ay_, Dx_, Dy_, 1))
-#
-    #plt.scatter(coord_final[0,:],coord_final[1,:])
-    #plt.scatter(coord[0,:],coord[1,:])
-    #plt.plot(coord[0,:],coord[1,:])
