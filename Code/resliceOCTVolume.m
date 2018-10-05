@@ -43,7 +43,7 @@ Zi = interp1(zUnits,1:length(zUnits),Z,'linear',NaN);
 %% Load OCT volume in batches
 Yunique = unique(round(Yi(:)));
 Yunique(isnan(Yunique)) = [];
-YSlicesToLoadAtOnce = 50-1; %Use high number for good adapotization value
+YSlicesToLoadAtOnce = 19-1; %Use high number for good adapotization value
 
 pad = 4; %paddig of 2 is required for linear interpolation, more if you would like to add gaussian smoothing of 3D
 YiToLoadStart = (min(Yunique)-pad):(YSlicesToLoadAtOnce-pad):(max(Yunique)+pad);

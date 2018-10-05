@@ -34,8 +34,8 @@ isPlotStepResults = [ false true false];
                   
 %% Step #1: Find Feducial Marker in Fluorescence Image: ptsPixPosition, ptsId
 if (~exist('ptsPixPosition','var'))
-    
-    [ptsPixPosition, ptsId] = findLines (histologyFluorescenceIm,lnNames);
+    y=1;
+    [ptsPixPosition, ptsId] = findLines (histologyFluorescenceIm,lnNames,y);
     
     %Output points, in case we would want to use them
     s1 = sprintf('%.2f,%.2f;',ptsPixPosition');
@@ -58,7 +58,7 @@ ptsLnDir  = lnDir(ptsId);  ptsLnDir  = ptsLnDir(:);
 %   U=-(h(2)+V*v(2))/u(1)
 V = mean(ptsPixPosition(:,2)); %Take average image height
 UX=-(h(2)+V*v(2))/u(2);
-X=u(1)*UX+v(2)*V+h(1);
+X=u(1)*UX+v(1)*V+h(1);
 UY=-(h(1)+V*v(1))/u(1);
 Y=u(2)*UY+v(2)*V+h(2);
 
@@ -69,7 +69,7 @@ Y=u(2)*UY+v(2)*V+h(2);
 if isPlotStepResults(2)
     
     fprintf('Pixel Size: |u|=%.3f[microns], |v|=%.3f[microns]\n',norm(u)*1e6,norm(v)*1e6)
-    fprintf('Angle In X-Y Plane: %.2f[deg], Tilt: %.2f[deg]\n',atan2(u(2),u(1))*180/pi,acos(dot(v/norm(v),[0;0;1]))*180/pi);
+    fprintf('Angle In X-Y Plane: %.2f[deg], Z Tilt: %.2f[deg]\n',atan2(u(2),u(1))*180/pi,acos(dot(v/norm(v),[0;0;1]))*180/pi);
     fprintf('Intercept Points. x=%.3f[mm],y=%.3f[mm]\n',1e3*X,1e3*Y);
 
     %Plot
@@ -154,7 +154,7 @@ end
 
 %Reslice
 rOCT = resliceOCTVolume( ...
-    u,v,h,size(histologyImage), ...
+    u,v,h,[1 1].*size(histologyImage), ...
     OCTVolumeFile,OCTVolumePosition);
 
 %Plot

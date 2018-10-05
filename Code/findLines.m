@@ -25,16 +25,17 @@
 %     1: Cross Correlation with Gaussian Fit
 %     2: FMinSearch with Gaussian Fit
 
-function [ptsPixPosition, ptsId] = findLines (img,lnNames) 
+function [ptsPixPosition, ptsId] = findLines (img,lnNames,y) 
 
     %% GUI Hendling
 
-    %Draw image 
+    %Draw image
+   
     figure(21);
     subplot(1,1,1);
     imagesc(img);
     colormap gray;
-
+if y==1
     %Ask user to mark lines by there order
     linePts = zeros(2,2,length(lnNames)); %(xy,StartEnd,line)
     linePs = zeros(2,length(lnNames));
@@ -117,4 +118,21 @@ function [ptsPixPosition, ptsId] = findLines (img,lnNames)
         plot(ptsPixPosition(ptsId==i,1),ptsPixPosition(ptsId==i,2),'o');
     end
     hold off
+else
+    %Ask user to mark lines by there order
+   
+    for i=1:length(lnNames)
+        title(sprintf('Mark %s.\n Select 10 points on the center of the line. Double Click To Finish',lnNames{i}));
+        lns = getline();
+        ptsPixPosition((1+(i-1)*length(lns(:,1))):(i*length(lns(:,1))),1:2) = lns;
+        lineLf = polyval(polyfit(lns(:,1),lns(:,2),1),lns(:,1));   %Linear fit pf the poitns marked x as a function of (y)
+        %Update Image
+        hold on;
+        scatter(lns(:,1),lns(:,2))
+        plot(lns(:,1),lineLf);
+        hold off;
+        ptsId((1+(i-1)*length(lns(:,1))):(i*length(lns(:,1))),1) = i; 
+        clear lns;
+    end 
+end
 end
