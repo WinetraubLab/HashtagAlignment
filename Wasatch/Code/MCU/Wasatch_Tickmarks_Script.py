@@ -12,6 +12,7 @@
 #----------------------- Imported Libraries ------------------------------------
 
 import math
+import time
 import numpy as np
 
 from Wasatch_Main_Commands import *
@@ -71,8 +72,8 @@ def main():
     #--> Step #3 draw tick marks
     
     #Draw
-    GCommand_BleachLine(microscopeCommand,Ax,Ay,Bx,By, exposure)
-    GCommand_BleachLine(microscopeCommand,Cx,Cy,Dx,Dy, exposure)
+    GCommand_BleachLineNTimes(microscopeCommand,Ax,Ay,Bx,By, exposure, 1)
+    GCommand_BleachLineNTimes(microscopeCommand,Cx,Cy,Dx,Dy, exposure, 1)
     
     #--> Step # 4 Close
     microscopeCommand.close()
@@ -81,8 +82,12 @@ def main():
     #--> Setp #5 Print Scan Volume parameters
     print("Scan Volume Parameters")
     print("When opening wasatch write command 'stop' to stop the laser")
-    GCommand_PrintCMD_VolumetricScan(-1, -1, 1, 1, 10) #Statx,y Endx,y [mm], # of B Scans
-    
+    GCommand_PrintCMD_VolumetricScan(-1.0, -1.0, 1.0, 1.0, 10) #Statx,y Endx,y [mm], # of B Scans
+   
+    for i in range (0,10,2):
+         print ("micrometer %d" % (i))
+         GCommand_PrintCMD_VolumetricScan(0 + i*1e-3, -1, 0 +i*1e-03 , 1, 10) #Statx,y Endx,y [mm], # of B Scans
+   
     print("Parameters for scanning parallel to ticmarks")
     GCommand_PrintCMD_MultiParallel(Ax, Ay, Dx, Dy, [-15,15])
 

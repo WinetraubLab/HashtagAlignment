@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 
 Code/simulations/imgnoise.m
 Code/simulations/snr.m
 Code/simulations/snr_simulation.m
 Code/simulations/simulation_v3_manualloop.m
+=======
+*.tif
+*.m~
+>>>>>>> 89347859abcd0291f816d18d2868f7af27d96904

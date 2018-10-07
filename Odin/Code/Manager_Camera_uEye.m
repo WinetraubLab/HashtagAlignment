@@ -82,6 +82,8 @@ classdef Manager_Camera_uEye
             end
         end
 
+        
+        
         %
         % Description:
         %   Returns the highest and lowest values of the previous image.
@@ -129,7 +131,6 @@ classdef Manager_Camera_uEye
                 Data = reshape(uint8(tmp), [obj.cameraBits/8, obj.cameraWidth, obj.cameraHeight]);
                 Data = Data(1:3, 1:obj.cameraWidth, 1:obj.cameraHeight);
                 Data = permute(Data, [3, 2, 1]);
-                size(rgb2gray(Data))
                 acquisitions(:, :, index) = rgb2gray(Data);
             end
             newImage = mean(acquisitions, 3)./255;
