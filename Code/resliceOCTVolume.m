@@ -43,12 +43,12 @@ Zi = interp1(zUnits,1:length(zUnits),Z,'linear',NaN);
 %% Load OCT volume in batches
 Yunique = unique(round(Yi(:)));
 Yunique(isnan(Yunique)) = [];
-YSlicesToLoadAtOnce = 50-1; %Use high number for good adapotization value
+YSlicesToLoadAtOnce = 19-1; %Use high number for good adapotization value
 
 pad = 4; %paddig of 2 is required for linear interpolation, more if you would like to add gaussian smoothing of 3D
 YiToLoadStart = (min(Yunique)-pad):(YSlicesToLoadAtOnce-pad):(max(Yunique)+pad);
 YiToLoadEnd = YiToLoadStart+YSlicesToLoadAtOnce;
-YiToLoadEnd(YiToLoadEnd>max(Yunique)+pad) = max(Yunique)+pad;
+YiToLoadEnd(YiToLoadEnd>length(info)) = length(info);
 YiToLoadStart(YiToLoadStart<1) = 1;
 
 %Interpolate in parts
@@ -72,10 +72,10 @@ for i=1:length(YiToLoadStart)
     sectionTmp = (interp3(...
         xxi,yyi,zzi,(scanAbs), ...
         Xi,Yi,Zi,'linear', ...
-        0 ... %Extrapulation value
+        NaN ... %Extrapulation value
         )); 
 
-    msk = (sectionTmp>0) & (Yi>=YiToLoadStart(i)+pad/2) & (Yi<YiToLoadEnd(i)-pad/2);
+    msk = (~isnan(sectionTmp)) & (Yi>=YiToLoadStart(i)+pad/2) & (Yi<YiToLoadEnd(i)-pad/2);
     section(msk) = sectionTmp(msk);
     
     %% Plot Volume as it been rebuild

@@ -25,6 +25,8 @@ rmat = umesh*u(1) + vmesh*v(1) + h(1);
 zmat = umesh*u(3) + vmesh*v(3) + h(3) - z0;
 
 zr = pi*w0^2/lambda;
+%increase depth of field to about 200 microns
+zr = 2*pi*w0^2/lambda;
 wz = w0*sqrt(1+(zmat/zr).^2);
 
 % y-lines

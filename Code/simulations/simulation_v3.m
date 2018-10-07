@@ -17,9 +17,9 @@
 % - The user will be asked to mark the edges of the lines (will appear as red lines)
 % - The algorithm will compute the estimate of the location of the line (will appear as a green line)
 %
-
+addpath('..\')
 close all;
-clear;
+%clear;
 %% Inputs - hashtag lines
 OCTVolumePosition = [-1e-3 -1e-3     0; ... %x,y,z position [m] of the first A scan in the first B scan (1,1)
                      +1e-3 +1e-3  0.968e-6*2040]';     %x,y,z position [m] of the las A scan in the last B scan (end,end). z is deeper!
@@ -33,9 +33,9 @@ NPixV = 512;
 
 % u, v must be chosen to be orthogonal, and equal in norm
 imgPixU = 2e-6; imgPixV = 2e-6;
-u = [2; -1; 0.3]; u = u/norm(u)*imgPixU;
-v = [7e-2;  2e-2; 1]; v = v/norm(v)*imgPixV;
-h = [-0.2e-3 0.3e-3 0];
+u = [2; -4; 0]; u = u/norm(u)*imgPixU;
+v = [2e-2;  2e-2; 1]; v = v/norm(v)*imgPixV;
+h = [-0.2e-3 0.6e-3 0];
 
 % set limits to prevent /0 error
 u(u==0) = 1e-12;
@@ -77,7 +77,7 @@ pause(0.01);
 % Equation of plane is given by s1(x-p1) + s2(y-p2) + s3(z-p3) = 0,
 % where (s1,s2,s3) is the normal vector and (p1,p2,p3) is the origin
 % of the plane
-s = [0;0.2;1]; p = [0;0;0.5e-3]; 
+s = [0.3;0.05;1]; p = [0;0;0.5e-3]; 
 % equation of intersection of sample plane and uv plane in uv coordinates
 % m1 *c1 + m2*c2 = -b
 m2 = (s(1)*v(1) + s(2)*v(2) + s(3)*v(3)); 
@@ -87,19 +87,25 @@ b = -(s(1)*(p(1) - h(1)) + s(2)*(p(2) - h(2)) + s(3)*(p(3) - h(3)));
 % create mask to delineate sample surface
 sample_mask = zeros(NPixV,NPixU);
 sample_mask((C1_mesh*m1 + C2_mesh*m2 +b) <0) = 1;
+% create exponential fall-off
+falloff = 100e-6; %[um]
+sample_exp = exp(-1/falloff*sqrt((m1*m2*C1_mesh+m2*b+m2*m2*C2_mesh).^2+(m1*m2*C2_mesh+m1*b+m1*m1*C1_mesh).^2)/sqrt(m1^2+m2^2));
 
 %% Create photobleached lines
 % units of parameters in meters
 E0 =1;
 w0 =5e-6;
 lambda = 0.8e-6;
-z0 = 500e-6; %height of photobleach focus position
+z0 = 400e-6; %height of photobleach focus position
 t = 1;
 img = gaussian_pb(E0, w0, lambda, t, z0, u, v, h, lnDist, lnDir);
 
 %% Further Processing - add noise to image amd mask and flip image
-img_ = imnoise(img,'gaussian',0.1);
-slice_masked = flipud(img_ .* sample_mask); 
+%img_ = imnoise(img,'gaussian',0.1);
+%img_ = imnoise(uint8(img_*255*0.9),'poisson');
+slice_masked = flipud(double(img)/255 .* sample_mask .*sample_exp);
+slice_masked_ = noise(slice_masked);
+%slice_masked = flipud(img_ .* sample_mask); 
 %figure; imagesc(slice_masked); colormap(gray)
 
 %% Solve for intercepts in sample plane
@@ -121,14 +127,15 @@ fprintf('Actual Intercept Points. x=%.3f[mm],y=%.3f[mm]\n',1e3*x_int,1e3*y_int);
 fprintf('\n');
 
 %% Run Hashtage Alignment Algorithm
-[ptsPixPosition, ptsId] = findLines (slice_masked,lnNames);
+AutoFit = 1;
+[ptsPixPosition, ptsId, ptsRes, lnLen] = findLines (slice_masked_,lnNames,AutoFit);
 
 %Find position and direction by line identity
 ptsLnDist = lnDist(ptsId); ptsLnDist = ptsLnDist(:);
 ptsLnDir  = lnDir(ptsId);  ptsLnDir  = ptsLnDir(:);
 
 %Compute plane parameters
-[u_out,v_out,h_out] = identifiedPointsToUVH (ptsPixPosition,ptsLnDist, ptsLnDir);
+[u_out,v_out,h_out] = identifiedPointsToUVH (ptsPixPosition, ptsLnDist, ptsLnDir);
 
 % Compute intercepts
 V_out = mean(ptsPixPosition(:,2)); %Take average image height
@@ -140,3 +147,4 @@ Y_out=u_out(2)*UY_out+v_out(2)*V_out+h_out(2);
 fprintf('Algorithm Pixel Size: |u|=%.3f[microns], |v|=%.3f[microns]\n',norm(u_out)*1e6,norm(v_out)*1e6)
 fprintf('Algorithm Actual Angle In X-Y Plane: %.2f[deg], Tilt: %.2f[deg]\n',atan2(u_out(2),u_out(1))*180/pi,acos(dot(v_out/norm(v_out),[0;0;1]))*180/pi);
 fprintf('Algorithm Intercept Points. x=%.3f[mm],y=%.3f[mm]\n',1e3*X_out,1e3*Y_out);
+fprintf('Average Line: %.3f[um] with %.3f points\n',2*mean(lnLen),size(ptsId,1)/5);

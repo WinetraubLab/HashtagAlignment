@@ -1,4 +1,4 @@
-function [u,v,h] = identifiedPointsToUVH (pts,lnDist, lnDir)
+function [u,v,h] = identifiedPointsToUVH (pts, lnDist, lnDir)
 %Use the identified points hashtag lines to estimate what is the u,v,h
 %vectors. Solving a least square structure.
 %USAGE:
@@ -40,6 +40,10 @@ o = z+1;
 A = [pts(:,1) z pts(:,2) z o z].*(lnDir == 1) + [z pts(:,1) z pts(:,2) z o].*(lnDir == 0);
 
 %% Solve Least Square Problem for x-y plane
+%weight least suqares - disabled
+%W = ptsRes .^1;
+%tmp = (A'*diag(W)*A)^-1*A'*diag(W)*lnDist;
+
 tmp = A\lnDist;
 u = tmp(1:2); u = u(:);
 v = tmp(3:4); v = v(:);
