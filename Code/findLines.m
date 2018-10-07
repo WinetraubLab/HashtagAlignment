@@ -27,11 +27,7 @@
 %     1: Cross Correlation with Gaussian Fit
 %     2: FMinSearch with Gaussian Fit
 
-<<<<<<< HEAD
-function [ptsPixPosition, ptsId, ptsRes , lnLen] = findLines (img,lnNames,y) 
-=======
-function [ptsPixPosition, ptsId] = findLines (img,lnNames,y) 
->>>>>>> 89347859abcd0291f816d18d2868f7af27d96904
+function [ptsPixPosition, ptsId, ptsRes , lnLen] = findLines (img,lnNames,y)
 
     %% GUI Hendling
 
@@ -41,7 +37,6 @@ function [ptsPixPosition, ptsId] = findLines (img,lnNames,y)
     subplot(1,1,1);
     imagesc(img);
     colormap gray;
-<<<<<<< HEAD
     %set(gcf, 'Position', get(0, 'Screensize'));
     
     if y==1
@@ -54,15 +49,6 @@ function [ptsPixPosition, ptsId] = findLines (img,lnNames,y)
 
             linePts(:,:,i) = lns(1:2,:);
             linePs(:,i) = polyfit(lns(:,2),lns(:,1),1); %Linear fit between 2 lines x as a function of (y)
-=======
-if y==1
-    %Ask user to mark lines by there order
-    linePts = zeros(2,2,length(lnNames)); %(xy,StartEnd,line)
-    linePs = zeros(2,length(lnNames));
-    for i=1:length(lnNames)
-        title(sprintf('Mark %s.\n Select the Center of the Line. Double Click To Finish',lnNames{i}));
-        lns = getline();
->>>>>>> 89347859abcd0291f816d18d2868f7af27d96904
 
             %Update Image
             imagesc(img);
@@ -173,34 +159,6 @@ if y==1
             clear lns;
         end 
     end
-<<<<<<< HEAD
-=======
     ptsId = ptsId(:);
-    
-    %% Update With Final Lines
-    subplot(2,1,2);
-    imagesc(img);
-    hold on;
-    for i = 1:length(lnNames)
-        plot(ptsPixPosition(ptsId==i,1),ptsPixPosition(ptsId==i,2),'o');
-    end
-    hold off
-else
-    %Ask user to mark lines by there order
-   
-    for i=1:length(lnNames)
-        title(sprintf('Mark %s.\n Select 10 points on the center of the line. Double Click To Finish',lnNames{i}));
-        lns = getline();
-        ptsPixPosition((1+(i-1)*length(lns(:,1))):(i*length(lns(:,1))),1:2) = lns;
-        lineLf = polyval(polyfit(lns(:,1),lns(:,2),1),lns(:,1));   %Linear fit pf the poitns marked x as a function of (y)
-        %Update Image
-        hold on;
-        scatter(lns(:,1),lns(:,2))
-        plot(lns(:,1),lineLf);
-        hold off;
-        ptsId((1+(i-1)*length(lns(:,1))):(i*length(lns(:,1))),1) = i; 
-        clear lns;
-    end 
-end
->>>>>>> 89347859abcd0291f816d18d2868f7af27d96904
+ 
 end

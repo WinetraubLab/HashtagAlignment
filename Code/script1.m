@@ -74,16 +74,10 @@ isPlotStepResults = [ false true false];
                   
 %% Step #3: Find Feducial Marker in Fluorescence Image: ptsPixPosition, ptsId
 if (~exist('ptsPixPosition','var'))
-<<<<<<< HEAD
-    % Toggle whether lines are autofit my least squares algorithm
+    % Toggle whether lines are autofit by least squares algorithm
     AutoFit=1;
     [ptsPixPosition, ptsId, ptsLnDist, ptsLnDir] = findLines (histologyFluorescenceIm,lnNames,AutoFit);
-=======
-    y=1;
-    [ptsPixPosition, ptsId] = findLines (histologyFluorescenceIm,lnNames,y);
->>>>>>> 89347859abcd0291f816d18d2868f7af27d96904
     
-    %Output points, in case we would want to use them
     s1 = sprintf('%.2f,%.2f;',ptsPixPosition');
     s2 = sprintf('%d,',ptsId);
     fprintf('ptsPixPosition = [%s]; %%(pixX,pixY)\n',s1(1:(end-1)));
@@ -104,10 +98,7 @@ ptsLnDir  = lnDir(ptsId);  ptsLnDir  = ptsLnDir(:);
 %   U=-(h(2)+V*v(2))/u(1)
 V = mean(ptsPixPosition(:,2)); %Take average image height
 UX=-(h(2)+V*v(2))/u(2);
-<<<<<<< HEAD
 %X=u(1)*UX+v(2)*V+h(1); - which is correct?
-=======
->>>>>>> 89347859abcd0291f816d18d2868f7af27d96904
 X=u(1)*UX+v(1)*V+h(1);
 UY=-(h(1)+V*v(1))/u(1);
 Y=u(2)*UY+v(2)*V+h(2);
