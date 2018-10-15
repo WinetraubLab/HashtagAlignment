@@ -1,4 +1,4 @@
-function section = resliceOCTVolume(u,v,h,s,OCTVolumeFile,OCTVolumePosition)
+function section = resliceOCTVolume(u,v,h,s,thickness,OCTVolumeFile,OCTVolumePosition)
 %This function will Load OCT Vloume, and output the correspondent slice
 %INPUTS:
 %   octVolume - OCT data, dimensions should be (x,y,z)
@@ -21,22 +21,24 @@ if length(h)==2 || isnan(h(3))
 end
 
 %% Find what is the 'real' position of the points on the histology section
-upix = (1:s(2))-1;
-vpix = (1:s(1))-1;
-[uupix,vvpix] = meshgrid(upix,vpix);
+upix = (1:s(2))-1; %[0:511]
+vpix = (1:s(1))-1; %[0:511]
+wpix =  -floor(thickness/2)+1:ceil(thickness/2);
+[uupix,vvpix,wwpix] = meshgrid(upix,vpix,wpix); %0:511x0:511 meshgrid
 
-X = u(1)*uupix + v(1)*vvpix + h(1);
-Y = u(2)*uupix + v(2)*vvpix + h(2);
-Z = u(3)*uupix + v(3)*vvpix + h(3);
+uvcross = cross(u,v)/mean([norm(u),norm(v)]);
+X = u(1)*uupix + v(1)*vvpix + h(1) + uvcross(1) * (wwpix-1); %512x512
+Y = u(2)*uupix + v(2)*vvpix + h(2) + uvcross(2) * (wwpix-1);
+Z = u(3)*uupix + v(3)*vvpix + h(3) + uvcross(3) * (wwpix-1);
 
 %% Convert phisical X,Y,Z to OCT pixels coordinates
 info = imfinfo(OCTVolumeFile);
-xUnits = linspace(OCTVolumePosition(1),OCTVolumePosition(4),info(1).Width);
-zUnits = linspace(OCTVolumePosition(3),OCTVolumePosition(6),info(1).Height);
-yUnits = linspace(OCTVolumePosition(2),OCTVolumePosition(5),length(info));
+xUnits = linspace(OCTVolumePosition(1),OCTVolumePosition(4),info(1).Width); %[-.001 to 0.001]
+zUnits = linspace(OCTVolumePosition(3),OCTVolumePosition(6),info(1).Height); %[0 to 0.015]
+yUnits = linspace(OCTVolumePosition(2),OCTVolumePosition(5),length(info)); %[-.001 to 0.001]
 
 %For each point in the plane, determine what index should it have
-Xi = interp1(xUnits,1:length(xUnits),X,'linear',NaN);
+Xi = interp1(xUnits,1:length(xUnits),X,'linear',NaN);  %512x512
 Yi = interp1(yUnits,1:length(yUnits),Y,'linear',NaN);
 Zi = interp1(zUnits,1:length(zUnits),Z,'linear',NaN);
 
@@ -54,6 +56,13 @@ YiToLoadStart(YiToLoadStart<1) = 1;
 %Interpolate in parts
 section = zeros(size(Xi));
 for i=1:length(YiToLoadStart)
+    i
+    
+    % Skip if YiToLoadStart greater than image size
+    if YiToLoadStart(i) > length(info)
+        continue
+    end
+    
     %% Load subset of OCT
     scanAbs = yOCTFromTif(OCTVolumeFile,YiToLoadStart(i):YiToLoadEnd(i));
     
@@ -80,7 +89,7 @@ for i=1:length(YiToLoadStart)
     
     %% Plot Volume as it been rebuild
     figure(3);
-    imagesc(section);
+    imagesc(section(:,:,1));
     colormap gray;
     title(sprintf('Building OCT Slice... (%.1f%% Complete)',100*i/length(YiToLoadStart)));
     pause(0.01);

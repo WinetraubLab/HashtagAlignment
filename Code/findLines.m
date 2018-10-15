@@ -158,6 +158,9 @@ function [ptsPixPosition, ptsId, ptsRes , lnLen] = findLines (img,lnNames,y)
             ptsId((1+(i-1)*length(lns(:,1))):(i*length(lns(:,1))),1) = i; 
             clear lns;
         end 
+        
+        ptsRes = [];
+        lnLen = [];
     end
     ptsId = ptsId(:);
  

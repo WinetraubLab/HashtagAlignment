@@ -6,47 +6,52 @@
 % Step #5: Reslice OCT Volume to Find B-Scan That Fits Histology
 
 %% Step #1: Input Fluorescence Images
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%s
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %input 1st confocal x-z hashtag image
-vidFile_data= 'C:\MATLAB_Share\Itamar\OCT_Histology\10032018\Flouresnce beads (25 micron) volume\2018-10-4 PLGA gel\1\Experiment_Series014_y0_ch01.tif';
-[pathstr_data,vidName_data,ext_data] = fileparts(vidFile_data);
+vidFile_data= 'C:\Users\Edwin\Documents\Hashtag Images\2018-10-10\PLGA\-10\2\Experiment_Series011_z5_ch01.tif';
+[pathstr_data,vidName_data,ext_data] = fileparts(vidFile_data)
 
 filenamesplit = strsplit(vidName_data,'_');
-channelinfo = filenamesplit{4};
+channelinfo = filenamesplit{end};
 pathstr_data=[pathstr_data '\'];
-files = dir([pathstr_data '\*' channelinfo ext_data]);
+files = dir([pathstr_data '*' channelinfo ext_data]);
 
 for i=0:1:length(files)-1
     Data_ch1(:,:,i+1)=imrotate(imread([files(i+1).folder '\' files(i+1).name]),180);
 end
 
+Data_ch1 = fliplr(Data_ch1);
 clear vidFile_data;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %input 1st fluorescence x-z beads image
-vidFile_data= 'C:\MATLAB_Share\Itamar\OCT_Histology\10032018\Flouresnce beads (25 micron) volume\2018-10-4 PLGA gel\1\Experiment_Series014_y0_ch00.tif';
+vidFile_data= 'C:\Users\Edwin\Documents\Hashtag Images\2018-10-10\PLGA\-10\2\Experiment_Series011_z5_ch00.tif';
 [pathstr_data,vidName_data,ext_data] = fileparts(vidFile_data);
 
 filenamesplit = strsplit(vidName_data,'_');
-channelinfo = filenamesplit{4};
+channelinfo = filenamesplit{end};
 pathstr_data=[pathstr_data '\'];
-files = dir([pathstr_data '\*' channelinfo ext_data]);
+files = dir([pathstr_data '*' channelinfo ext_data]);
 
 for i=0:1:length(files)-1
     Data_ch0(:,:,i+1)=imrotate(imread([files(i+1).folder '\' files(i+1).name]),180);
 end
 
+Data_ch0 = fliplr(Data_ch0);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %indicated which slices of confocal dataset to use
-indices =[2:3];
+indices =[3:5];
 histologyFluorescenceIm=mean(Data_ch1(:,:,indices),3);
 histologyImage=squeeze(max(Data_ch0(:,:,indices),[],3));
 
-%figure; imagesc(A, [0 10]); figure; imagesc(B);
+histologyFluorescenceIm = flipud(histologyFluorescenceIm);
+histologyImage = flipud(histologyImage);
+
+figure; imagesc(histologyImage); figure; imagesc(histologyFluorescenceIm);
 %% Step #2: Input OCT Data Folder and Configure Hashtag
 
 % Input OCT datafolder 
+%dataFolder = 'C:\Users\Edwin\Documents\Hashtag Images\10-9-2018\Sample B Mouse Ear\Volume\2018_10_03_03-12-19';
 dataFolder = 'C:\MATLAB_Share\Itamar\OCT_Histology\10032018\Flouresnce beads (25 micron) volume\2018_10_04_21-29-05';
-
 %# Alignment Markers Specifications
 %                1    2    3    4    5
 lnDist = 1e-6*[-50  +50  -50    0  +100]; %Line distance from origin [m]
@@ -194,14 +199,19 @@ if ~exist(OCTVolumeFile,'file')
 end
 
 %Reslice
+% rOCT = resliceOCTVolume( ...
+%     u,v,h,[1 1].*1000, ...
+%     OCTVolumeFile,OCTVolumePosition);
+thickness = 11; %in units of pixels, with pixel size = average of u and v pix
+
 rOCT = resliceOCTVolume( ...
-    u,v,h,[1 1].*size(histologyImage), ...
+    u,v,h,[1 1].*size(histologyImage),thickness, ...
     OCTVolumeFile,OCTVolumePosition);
 
 
 %Plot
 figure;
-imagesc(rOCT);
+imagesc(mean(rOCT,3));
 colormap gray;
 axl(1) = gca;
 title('OCT Slice');
@@ -210,7 +220,8 @@ linkaxes(axl);
 pause(0.01);
 
 % Fuse Images
-figure; imagesc(imfuse(rOCT,imresize(imtranslate(histologyImage,[0, 0]),[512*1.2, 512])));
 
+figure; imagesc(imfuse(mean(rOCT,3),imadjust(imresize(imtranslate(histologyImage,[0, -140]),[512*1.2, 512]), [0,1])));
+figure; imagesc(imadjust(histologyImage, [0,0.05]))
 return;
 
