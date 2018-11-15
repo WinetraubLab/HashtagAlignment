@@ -1,10 +1,121 @@
-<<<<<<< HEAD
 
-Code/simulations/imgnoise.m
-Code/simulations/snr.m
-Code/simulations/snr_simulation.m
-Code/simulations/simulation_v3_manualloop.m
-=======
-*.tif
-*.m~
->>>>>>> 89347859abcd0291f816d18d2868f7af27d96904
+Code/PLGA volumes/pts_hist_6_1.mat
+Code/PLGA volumes/pts_hist_6_2.mat
+Code/PLGA volumes/pts_hist_8_1.mat
+Code/PLGA volumes/pts_hist_9_1.mat
+Code/PLGA volumes/pts_hist_9_2.mat
+Code/PLGA volumes/pts_OCT_10_1.mat
+Code/PLGA volumes/pts_OCT_10_2.mat
+Code/PLGA volumes/pts_OCT_1_1.mat
+Code/PLGA volumes/pts_OCT_6_1.mat
+Code/PLGA volumes/pts_OCT_6_2.mat
+Code/PLGA volumes/pts_OCT_8_1.mat
+Code/PLGA volumes/pts_OCT_9_2.mat
+Code/PLGA volumes/pts_hist_10_1.mat
+Code/PLGA volumes/pts_hist_10_2.mat
+Code/PLGA volumes/vol6_1.mat
+Code/PLGA volumes/vol10_1.mat
+Code/PLGA volumes/vol8_1.mat
+Code/PLGA volumes/vol6_2.mat
+Code/PLGA volumes/vol9_1.mat
+Code/PLGA volumes/vol9_2.mat
+Code/point_centers8_1.mat
+Code/pts8_1.mat
+Code/pts_hist_10_1.mat
+Code/pts_OCT_10_1.mat
+Code/SliVo-master/.Rhistory
+Code/SliVo-master/example.m
+Code/SliVo-master/Feature_detection/feature_load.m
+Code/SliVo-master/Feature_detection/find_features.m
+Code/SliVo-master/Feature_detection/match_features.m
+Code/SliVo-master/Feature_detection/OpenSurf.m
+Code/SliVo-master/Feature_detection/save_keys.m
+Code/SliVo-master/Feature_detection/SubFunctions/FastHessian_BuildDerivative.m
+Code/SliVo-master/Feature_detection/SubFunctions/FastHessian_buildResponseLayer.m
+Code/SliVo-master/Feature_detection/SubFunctions/FastHessian_buildResponseMap.m
+Code/SliVo-master/Feature_detection/SubFunctions/FastHessian_getIpoints.m
+Code/SliVo-master/Feature_detection/SubFunctions/FastHessian_getLaplacian.m
+Code/SliVo-master/Feature_detection/SubFunctions/FastHessian_getResponse.m
+Code/SliVo-master/Feature_detection/SubFunctions/FastHessian_interpolateExtremum.m
+Code/SliVo-master/Feature_detection/SubFunctions/FastHessian_isExtremum.m
+Code/SliVo-master/Feature_detection/SubFunctions/FastHessian_ResponseLayer.m
+Code/SliVo-master/Feature_detection/SubFunctions/IntegralImage_BoxIntegral.m
+Code/SliVo-master/Feature_detection/SubFunctions/IntegralImage_HaarX.m
+Code/SliVo-master/Feature_detection/SubFunctions/IntegralImage_HaarY.m
+Code/SliVo-master/Feature_detection/SubFunctions/IntegralImage_IntegralImage.m
+Code/SliVo-master/Feature_detection/SubFunctions/PaintSURF.m
+Code/SliVo-master/Feature_detection/SubFunctions/SurfDescriptor_DecribeInterestPoints.m
+Code/SliVo-master/Feature_detection/SubFunctions/SurfDescriptor_GetDescriptor.m
+Code/SliVo-master/Feature_detection/SubFunctions/SurfDescriptor_GetOrientation.m
+Code/SliVo-master/Feature_detection/WarpFunctions/affine_warp.m
+Code/SliVo-master/main/find_equi_number.m
+Code/SliVo-master/main/fit_plane.m
+Code/SliVo-master/main/gaus3D.m
+Code/SliVo-master/main/matching_plane.m
+Code/SliVo-master/main/SliVo_parseInputs.m
+Code/SliVo-master/MatlabFns/Robust/.directory
+Code/SliVo-master/MatlabFns/Robust/example/.DS_Store
+Code/SliVo-master/MatlabFns/Robust/example/boats.tif
+Code/SliVo-master/MatlabFns/Robust/example/boatsrot.tif
+Code/SliVo-master/MatlabFns/Robust/example/im01.jpg
+Code/SliVo-master/MatlabFns/Robust/example/im02.jpg
+Code/SliVo-master/MatlabFns/Robust/example/im03.jpg
+Code/SliVo-master/MatlabFns/Robust/example/im04.jpg
+Code/SliVo-master/MatlabFns/Robust/example/im1.jpg
+Code/SliVo-master/MatlabFns/Robust/example/im1c.jpg
+Code/SliVo-master/MatlabFns/Robust/example/im2.jpg
+Code/SliVo-master/MatlabFns/Robust/example/im2c.jpg
+Code/SliVo-master/MatlabFns/Robust/example/index.html
+Code/SliVo-master/MatlabFns/Robust/example/index.html~
+Code/SliVo-master/MatlabFns/Robust/example/inliers.jpg
+Code/SliVo-master/MatlabFns/Robust/example/inlierssm.jpg
+Code/SliVo-master/MatlabFns/Robust/example/match1.jpg
+Code/SliVo-master/MatlabFns/Robust/example/match1a.png
+Code/SliVo-master/MatlabFns/Robust/example/match2.jpg
+Code/SliVo-master/MatlabFns/Robust/example/match2a.png
+Code/SliVo-master/MatlabFns/Robust/example/matchdata.mat
+Code/SliVo-master/MatlabFns/Robust/example/putative.jpg
+Code/SliVo-master/MatlabFns/Robust/example/putativesm.jpg
+Code/SliVo-master/MatlabFns/Robust/example/testfitline.m
+Code/SliVo-master/MatlabFns/Robust/example/testfitline.m~
+Code/SliVo-master/MatlabFns/Robust/example/testfitplane.m
+Code/SliVo-master/MatlabFns/Robust/example/testfitplane.m~
+Code/SliVo-master/MatlabFns/Robust/example/testfund.m
+Code/SliVo-master/MatlabFns/Robust/example/testfund.m~
+Code/SliVo-master/MatlabFns/Robust/example/testfundOctave.m
+Code/SliVo-master/MatlabFns/Robust/example/testhomog.m
+Code/SliVo-master/MatlabFns/Robust/example/testvgghomog.m
+Code/SliVo-master/MatlabFns/Robust/fitline.m
+Code/SliVo-master/MatlabFns/Robust/fitline3d.m
+Code/SliVo-master/MatlabFns/Robust/fitplane.m
+Code/SliVo-master/MatlabFns/Robust/iscolinear.m
+Code/SliVo-master/MatlabFns/Robust/My_code.m
+Code/SliVo-master/MatlabFns/Robust/randomsample.m
+Code/SliVo-master/MatlabFns/Robust/ransac.m
+Code/SliVo-master/MatlabFns/Robust/ransac_density.m
+Code/SliVo-master/MatlabFns/Robust/ransacfitaffinefund.m
+Code/SliVo-master/MatlabFns/Robust/ransacfitfundmatrix.m
+Code/SliVo-master/MatlabFns/Robust/ransacfitfundmatrix7.m
+Code/SliVo-master/MatlabFns/Robust/ransacfithomography.m
+Code/SliVo-master/MatlabFns/Robust/ransacfitline.m
+Code/SliVo-master/MatlabFns/Robust/ransacfitplane.m
+Code/SliVo-master/MatlabFns/Robust/ransacfitplane_density.m
+Code/SliVo-master/output/2dslice.txt
+Code/SliVo-master/pdf/Histology_to_mCT_Data_Matching_using_Landmarks_and_a_Density_Biased_RANSAC.pdf
+Code/SliVo-master/README.md
+Code/SliVo-master/registerSliceToVolume.m
+Code/surffastdetection.m
+Code/vol10_1.mat
+Code/vol8_1.mat
+Code/rodrigues_rot/license.txt
+Code/replay_pid7912.log
+Code/replay_pid21244.log
+Code/outvolume.tif
+Code/oct_newimage8_1.mat
+Code/rodrigues_rot/rodrigues_rot.m
+Code/script1_5um.m
+Code/normalize.m
+Code/monomodal.m
+Code/MIreg.m
+Code/hs_err_pid21244.mdmp
+Code/hs_err_pid7912.mdmp

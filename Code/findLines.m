@@ -99,8 +99,8 @@ function [ptsPixPosition, ptsId, ptsRes , lnLen] = findLines (img,lnNames,y)
 
                 %options = optimset('TolFun',1e-5,'MaxIter',5e3,'TolX',1e-5);
                 a = [max(data),max(data)-min(data),xCenter,delta/2];
-                a = fminsearch(@(a)(sum(( data - gaussian(a,x) ).^2)),a);
-                %[a,ssq] = LMFnlsq(@(a) [data - gaussian(a,x) ]',a);
+                %a = fminsearch(@(a)(sum(( data - gaussian(a,x) ).^2)),a);
+                [a,ssq] = LMFnlsq(@(a) [data - gaussian(a,x) ]',a);
                 %figure; plot(x,data); hold on; plot(x,gaussian(a,x))
 
                 weight = 1.5.^(-(gaussian(a,x)-a(1)+a(2)));

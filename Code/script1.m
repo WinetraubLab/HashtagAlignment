@@ -8,7 +8,7 @@
 %% Step #1: Input Fluorescence Images
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %input 1st confocal x-z hashtag image
-vidFile_data= 'C:\Users\Edwin\Documents\Hashtag Images\2018-10-10\PLGA\-10\2\Experiment_Series011_z5_ch01.tif';
+vidFile_data= 'C:\Users\Edwin\Documents\Hashtag Images\PLGA bead collection\-10_2\Experiment_Series011_z0_ch01.tif';
 [pathstr_data,vidName_data,ext_data] = fileparts(vidFile_data)
 
 filenamesplit = strsplit(vidName_data,'_');
@@ -24,7 +24,7 @@ Data_ch1 = fliplr(Data_ch1);
 clear vidFile_data;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %input 1st fluorescence x-z beads image
-vidFile_data= 'C:\Users\Edwin\Documents\Hashtag Images\2018-10-10\PLGA\-10\2\Experiment_Series011_z5_ch00.tif';
+vidFile_data= 'C:\Users\Edwin\Documents\Hashtag Images\PLGA bead collection\-10_2\Experiment_Series011_z0_ch00.tif';
 [pathstr_data,vidName_data,ext_data] = fileparts(vidFile_data);
 
 filenamesplit = strsplit(vidName_data,'_');
@@ -39,7 +39,7 @@ end
 Data_ch0 = fliplr(Data_ch0);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %indicated which slices of confocal dataset to use
-indices =[3:5];
+indices =[1:5];
 histologyFluorescenceIm=mean(Data_ch1(:,:,indices),3);
 histologyImage=squeeze(max(Data_ch0(:,:,indices),[],3));
 
@@ -51,7 +51,7 @@ figure; imagesc(histologyImage); figure; imagesc(histologyFluorescenceIm);
 
 % Input OCT datafolder 
 %dataFolder = 'C:\Users\Edwin\Documents\Hashtag Images\10-9-2018\Sample B Mouse Ear\Volume\2018_10_03_03-12-19';
-dataFolder = 'C:\MATLAB_Share\Itamar\OCT_Histology\10032018\Flouresnce beads (25 micron) volume\2018_10_04_21-29-05';
+dataFolder = 'C:\MATLAB_Share\Itamar\OCT_Histology\10032018\Flouresnce beads (25 micron) volume\2018_10_04_21-29-05\';
 %# Alignment Markers Specifications
 %                1    2    3    4    5
 lnDist = 1e-6*[-50  +50  -50    0  +100]; %Line distance from origin [m]
@@ -202,12 +202,14 @@ end
 % rOCT = resliceOCTVolume( ...
 %     u,v,h,[1 1].*1000, ...
 %     OCTVolumeFile,OCTVolumePosition);
-thickness = 11; %in units of pixels, with pixel size = average of u and v pix
+thickness = 30; %in units of pixels, with pixel size = average of u and v pix
 
 rOCT = resliceOCTVolume( ...
     u,v,h,[1 1].*size(histologyImage),thickness, ...
     OCTVolumeFile,OCTVolumePosition);
 
+%vol10_1 = rOCT;
+%save('vol10_1.mat','vol10_1')
 
 %Plot
 figure;
@@ -221,7 +223,8 @@ pause(0.01);
 
 % Fuse Images
 
-figure; imagesc(imfuse(mean(rOCT,3),imadjust(imresize(imtranslate(histologyImage,[0, -140]),[512*1.2, 512]), [0,1])));
-figure; imagesc(imadjust(histologyImage, [0,0.05]))
+figure; imagesc(imfuse(mean(rOCT,3),imadjust(imresize(imtranslate(histologyImage,[20, -80]),[512*1.1, 512]), [0,1])));
+figure; imagesc(mean(rOCT,3)); colormap(gray)
+%figure; imagesc(imadjust(histologyImage, [0,0.05]))
 return;
 
