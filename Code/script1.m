@@ -115,7 +115,8 @@ Y=u(2)*UY+v(2)*V+h(2);
 if isPlotStepResults(2)
     
     fprintf('Pixel Size: |u|=%.3f[microns], |v|=%.3f[microns]\n',norm(u)*1e6,norm(v)*1e6)
-    fprintf('Angle In X-Y Plane: %.2f[deg], Z Tilt: %.2f[deg]\n',atan2(u(2),u(1))*180/pi,acos(dot(v/norm(v),[0;0;1]))*180/pi);
+    c = cross(u,v); c = c/norm(c);
+    fprintf('Angle In X-Y Plane: %.2f[deg], Z Tilt: %.2f[deg]\n',atan2(u(2),u(1))*180/pi,asin(dot(c,[0;0;1]))*180/pi);
     fprintf('Intercept Points. x=%.3f[mm],y=%.3f[mm]\n',1e3*X,1e3*Y);
 
     %Plot
