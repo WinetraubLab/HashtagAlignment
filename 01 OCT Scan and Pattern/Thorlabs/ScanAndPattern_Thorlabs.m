@@ -5,7 +5,7 @@ clear;
 currentFileFolder = [fileparts(mfilename('fullpath')) '\'];
 
 %% Inputs 
-outputFolder = '.'; %This will be override if running with Jenkins
+outputFolder = 'output'; %This will be override if running with Jenkins
 outputFolder = [outputFolder '\'];
 
 %OCT Scan Defenitions (scan size (scan is centered along (0,0))
@@ -21,8 +21,8 @@ BScanAvg = 1;
 
 %Photobleaching defenitions
     %Line placement (vertical - up/down, horizontal - left/right)
-    vLinePositions = [-50 0 100]; %[microns]
-    hLinePositions = [-50 0 150]; %[microns]
+    vLinePositions = [-50 0 100]/1000; %[mm]
+    hLinePositions = [-50 0 150]/1000; %[mm]
 
     exposurePerLine = 30; %[sec]
     passes = 1;
@@ -44,7 +44,7 @@ zToPhtobleach = -300; %[um] this parameter is ignored if running from jenkins - 
 zToScan = -100:15:500; %[um]
 
 %% Initialize
-fprintf('%s Initialzing\n',datetime);
+fprintf('%s Initialzing\n',datestr(datetime));
 disp('We assume laser is focused on the top of the tissue interface');
 disp('Otherwise abort now');
 ThorlabsImagerNETLoadLib(); %Init library
@@ -76,13 +76,14 @@ end
 %% Photobleach
 ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+zToPhtobleach/1000); %Movement [mm]
 
-fprintf('%s Put on safety glasses. photobleaching in ...',datetime);
+fprintf('%s Put on safety glasses. photobleaching in ...',datestr(datetime));
 for i=5:-1:1
     fprintf(' %d',i);
     pause(1);
 end
 fprintf('\n');
 
+ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(true); %Switch on
 for i=1:length(vLinePositions)
     ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
         vLinePositions(i),-lineLength/2, ... Start X,Y
@@ -96,20 +97,21 @@ for i=1:length(hLinePositions)
         +lineLength/2,hLinePositions(i), ... End X,Y
         exposurePerLine,passes); 
 end
+ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(false); %Switch off
 
 disp('Done');
 
 %% Scan Volume
 for i=1:length(zToScan)
-    fprintf('%s Scanning Volume %d of %d\n',datetime,i,length(zToScan));
+    fprintf('%s Scanning Volume %02d of %d\n',datestr(datetime),i,length(zToScan));
     
     %Move to position
     ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+zToScan(i)/1000); %Movement [mm]
     
     %Scan
-    s = sprintf('%spos %02d',outputFolder);
+    s = sprintf('%s\\Pos%02d\\',outputFolder,i);
     ThorlabsImagerNET.ThorlabsImager.yOCTScan3DVolume(...
-        -scan.rangeX/2*scaleX + offsetX, -scan.rangeY/2*scaleY + offsetY, ... startX, startY
+        offsetX,offsetY, ... centerX, centerY [mm]
         scan.rangeX*scaleX, scan.rangeX*scaleY, ... rangeX,rangeY [mm]
         0,       ... rotationAngle [deg]
         scan.nPixelsX,scan.nPixelsY, ... SizeX,sizeY [# of pixels]
@@ -120,8 +122,8 @@ for i=1:length(zToScan)
 end
 
 %% Scan Overview
-fprintf('%s Scanning Overview\n',datetime);
-ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition(z0); %Bring stage to 0
+fprintf('%s Scanning Overview\n',datestr(datetime));
+ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0); %Bring stage to 0
 
 for q = 1:length(overview.gridXcc)
     fprintf('Imaging at xc=%.1f,yc=%.1f (%d of %d)...\n',...
@@ -138,7 +140,7 @@ for q = 1:length(overview.gridXcc)
 	%Scan
 	folder = [outputFolder sprintf('Overview%02d',q)];
     ThorlabsImagerNET.ThorlabsImager.yOCTScan3DVolume(...
-        0,0,overview.range,overview.range, ...centerX,centerY,rangeX,rangeY [mm]
+        offsetX,offsetY,overview.range*scaleX,overview.range*scaleX, ...centerX,centerY,rangeX,rangeY [mm]
         0,       ... rotationAngle [deg]
         overview.nPixels,overview.nPixels,   ... SizeX,sizeY [# of pixels]
         1,       ... B Scan Average
@@ -147,7 +149,7 @@ for q = 1:length(overview.gridXcc)
 end
 
 %% Finalize
-fprintf('%s Finalizing\n',datetime);
+fprintf('%s Finalizing\n',datestr(datetime));
 ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose(); %Close scanner
     
 %Save scan configuration parameters
