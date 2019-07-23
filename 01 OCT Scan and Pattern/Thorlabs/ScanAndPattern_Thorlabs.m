@@ -3,7 +3,6 @@
 %of the tissue.
 clear;
 currentFileFolder = [fileparts(mfilename('fullpath')) '\'];
-%%TBD - ADD INPUT DEPTH OF PHOTBOLEACH ABOVE SURFACE
 
 %% Inputs 
 outputFolder = '.'; %This will be override if running with Jenkins
@@ -15,8 +14,9 @@ scan.rangeY = 1; %[mm]
 scan.nPixelsX = 1000; %How many pixels in x direction
 scan.nPixelsY = 1000; %How many pixels in y direction
 %Overview of the entire area
-overview.range = 4;%[mm] x=y
-overview.nPixels = 100; %same for x and y
+overview.rangeAll = 4;%[mm] x=y
+overview.range = scan.rangeX;%[mm] x=y
+overview.nPixels = scan.nPixelsX/10; %same for x and y
 BScanAvg = 1;
 
 %Photobleaching defenitions
@@ -29,7 +29,7 @@ BScanAvg = 1;
     lineLength = 2; %[mm]
     
 %Probe defenitions
-    octProbePath = [currentFileFolder 'Probe - Olympus 10x 2019_07_17.ini'];
+    octProbePath = [currentFileFolder 'Probe - Olympus 10x.ini'];
     %Define scale and offset for fast & slow axis calibration
     offsetX = 0; %[mm]
     offsetY = 0; %[mm]
@@ -39,7 +39,8 @@ BScanAvg = 1;
 %Depth Defenitions
 %We assume stage starting position is at the top of the tissue.
 %z defenitions below are compared to starting position
-zToPhtobleach = -300; %[um]
+%+z is deeper
+zToPhtobleach = -300; %[um] this parameter is ignored if running from jenkins - will assume provided by jenkins
 zToScan = -100:15:500; %[um]
 
 %% Initialize
@@ -48,12 +49,22 @@ disp('We assume laser is focused on the top of the tissue interface');
 disp('Otherwise abort now');
 ThorlabsImagerNETLoadLib(); %Init library
 ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(octProbePath); %Init OCT
-ThorlabsImagerNET.ThorlabsImager.yOCTStageInit(); %Init stage
+z0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('z'); %Init stage
+x0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('x'); %Init stage
+y0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('y'); %Init stage
 
 if (isRunningOnJenkins())
     outputFolder = [currentFileFolder 'output\'];
+    zToPhtobleach = zToPhtobleach_; %Set by Jenkins
 end
 mkdir(outputFolder);
+
+%Overview center positons
+overview.gridXc = (-overview.rangeAll/2+overview.range/2):overview.range:(overview.rangeAll/2-overview.range/2);
+overview.gridYc = (-overview.rangeAll/2+overview.range/2):overview.range:(overview.rangeAll/2-overview.range/2);
+[overview.gridXcc,overview.gridYcc] = meshgrid(overview.gridXc,overview.gridYc);
+overview.gridXcc = overview.gridXcc(:);
+overview.gridYcc = overview.gridYcc(:);
 
 %Create a config structure
 s = who;
@@ -63,7 +74,7 @@ for i=1:length(s)
 end
 
 %% Photobleach
-ThorlabsImagerNET.ThorlabsImager.yOCTStageSetZPosition(zToPhtobleach/1000); %Movement [mm]
+ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+zToPhtobleach/1000); %Movement [mm]
 
 fprintf('%s Put on safety glasses. photobleaching in ...',datetime);
 for i=5:-1:1
@@ -88,28 +99,15 @@ end
 
 disp('Done');
 
-%% Scan Overview
-fprintf('%s Scanning Overview\n',datetime);
-mkdir([outputFolder 'overview']);
-ThorlabsImagerNET.ThorlabsImager.yOCTScan3DVolume(...
-    -overview.range/2,-overview.range/2, ... startX, startY
-    overview.range,overview.range, ... rangeX,rangeY [mm]
-	0,       ... rotationAngle [deg]
-    overview.nPixels,overview.nPixels, ... SizeX,sizeY [# of pixels]
-    BScanAvg,       ... B Scan Average
-    [outputFolder 'overview'] ... Output directory, make sure it exists before running this function
-    );
-
 %% Scan Volume
 for i=1:length(zToScan)
     fprintf('%s Scanning Volume %d of %d\n',datetime,i,length(zToScan));
     
     %Move to position
-    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetZPosition(zToScan(i)/1000); %Movement [mm]
+    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+zToScan(i)/1000); %Movement [mm]
     
     %Scan
     s = sprintf('%spos %02d',outputFolder);
-    mkdir(s);
     ThorlabsImagerNET.ThorlabsImager.yOCTScan3DVolume(...
         -scan.rangeX/2*scaleX + offsetX, -scan.rangeY/2*scaleY + offsetY, ... startX, startY
         scan.rangeX*scaleX, scan.rangeX*scaleY, ... rangeX,rangeY [mm]
@@ -121,9 +119,35 @@ for i=1:length(zToScan)
 
 end
 
+%% Scan Overview
+fprintf('%s Scanning Overview\n',datetime);
+ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition(z0); %Bring stage to 0
+
+for q = 1:length(overview.gridXcc)
+    fprintf('Imaging at xc=%.1f,yc=%.1f (%d of %d)...\n',...
+        overview.gridXcc(q),overview.gridYcc(q),q,length(overview.gridXcc));
+
+	%Move
+    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',...
+         x0 + overview.gridXcc(q)... Movement [mm]
+		);
+    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',...
+         y0 + overview.gridYcc(q)... Movement [mm]
+		);
+    
+	%Scan
+	folder = [outputFolder sprintf('Overview%02d',q)];
+    ThorlabsImagerNET.ThorlabsImager.yOCTScan3DVolume(...
+        0,0,overview.range,overview.range, ...centerX,centerY,rangeX,rangeY [mm]
+        0,       ... rotationAngle [deg]
+        overview.nPixels,overview.nPixels,   ... SizeX,sizeY [# of pixels]
+        1,       ... B Scan Average
+        folder   ... Output directory, make sure it exists before running this functio
+        );
+end
+
 %% Finalize
 fprintf('%s Finalizing\n',datetime);
-ThorlabsImagerNET.ThorlabsImager.yOCTStageSetZPosition(0); %Bring stage to 0
 ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose(); %Close scanner
     
 %Save scan configuration parameters
