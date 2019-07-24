@@ -3,7 +3,7 @@
 %of the tissue.
 
 %Pre
-if (~isRunningOnJenkins()
+if (~isRunningOnJenkins())
 	clear;
 end
 currentFileFolder = [fileparts(mfilename('fullpath')) '\'];
