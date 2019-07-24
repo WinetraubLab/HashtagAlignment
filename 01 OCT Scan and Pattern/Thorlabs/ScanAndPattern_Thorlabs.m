@@ -11,8 +11,8 @@ outputFolder = [outputFolder '\'];
 %OCT Scan Defenitions (scan size (scan is centered along (0,0))
 scan.rangeX = 1; %[mm]
 scan.rangeY = 1; %[mm]
-scan.nPixelsX = 1000; %How many pixels in x direction
-scan.nPixelsY = 1000; %How many pixels in y direction
+scan.nPixelsX = 1000/2; %How many pixels in x direction
+scan.nPixelsY = 1000/2; %How many pixels in y direction
 %Overview of the entire area
 overview.rangeAll = 4;%[mm] x=y
 overview.range = scan.rangeX;%[mm] x=y
@@ -118,7 +118,18 @@ for i=1:length(zToScan)
         1,       ... B Scan Average
         s ... Output directory, make sure it exists before running this function
         );
-
+		
+	if (i==1)
+		%Figure out which OCT System are we scanning in
+		a =dir(s);
+		names = {a.name}; names([a.isdir]) = [];
+		nm = names{round(end/2)};
+		if (~isempty(strfind(lower(nm),'ganymede')))
+			config.OCTSystem = 'Ganymede';
+		else
+			config.OCTSystem = 'NA'
+		end
+	end
 end
 
 %% Scan Overview
