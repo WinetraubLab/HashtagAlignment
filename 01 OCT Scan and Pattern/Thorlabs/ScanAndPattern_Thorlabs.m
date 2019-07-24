@@ -109,7 +109,7 @@ for i=1:length(zToScan)
     ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+zToScan(i)/1000); %Movement [mm]
     
     %Scan
-    s = sprintf('%s\\Pos%02d\\',outputFolder,i);
+    s = sprintf('%s\\Volume\\Pos%02d\\',outputFolder,i);
     ThorlabsImagerNET.ThorlabsImager.yOCTScan3DVolume(...
         offsetX,offsetY, ... centerX, centerY [mm]
         scan.rangeX*scaleX, scan.rangeX*scaleY, ... rangeX,rangeY [mm]
@@ -138,7 +138,7 @@ for q = 1:length(overview.gridXcc)
 		);
     
 	%Scan
-	folder = [outputFolder sprintf('Overview%02d',q)];
+	folder = [outputFolder sprintf('Overview\\Overview%02d',q)];
     ThorlabsImagerNET.ThorlabsImager.yOCTScan3DVolume(...
         offsetX,offsetY,overview.range*scaleX,overview.range*scaleX, ...centerX,centerY,rangeX,rangeY [mm]
         0,       ... rotationAngle [deg]
