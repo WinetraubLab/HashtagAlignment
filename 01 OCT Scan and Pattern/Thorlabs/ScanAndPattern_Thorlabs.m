@@ -41,7 +41,7 @@ BScanAvg = 1;
 %z defenitions below are compared to starting position
 %+z is deeper
 zToPhtobleach = -300; %[um] this parameter is ignored if running from jenkins - will assume provided by jenkins
-zToScan = -100:15:500; %[um]
+zToScan = (-100:15:500)-5; %[um]
 
 %% Initialize
 fprintf('%s Initialzing\n',datestr(datetime));
