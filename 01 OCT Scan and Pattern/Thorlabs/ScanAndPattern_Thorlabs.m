@@ -1,7 +1,11 @@
 %This script scans an patterns OCT Volume. Uses multiple depths to extend depth of focus
 %I assume that prior to running this script, user placed focuse at the top
 %of the tissue.
-clear;
+
+%Pre
+if (~isRunningOnJenkins()
+	clear;
+end
 currentFileFolder = [fileparts(mfilename('fullpath')) '\'];
 
 %% Inputs 
@@ -12,7 +16,7 @@ outputFolder = [outputFolder '\'];
 scan.rangeX = 1; %[mm]
 scan.rangeY = 1; %[mm]
 scan.nPixelsX = 1000/2; %How many pixels in x direction
-scan.nPixelsY = 1000/2; %How many pixels in y direction
+scan.nPixelsY = 1000/4; %How many pixels in y direction
 %Overview of the entire area
 overview.rangeAll = 4;%[mm] x=y
 overview.range = scan.rangeX;%[mm] x=y
