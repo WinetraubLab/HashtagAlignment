@@ -58,7 +58,7 @@ x0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('x'); %Init stage
 y0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('y'); %Init stage
 
 if (isRunningOnJenkins())
-    outputFolder = [currentFileFolder 'output\'];
+    outputFolder = ['output\'];
     zToPhtobleach = zToPhtobleach_; %Set by Jenkins
 end
 mkdir(outputFolder);
@@ -106,6 +106,7 @@ ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(false); %Switch off
 disp('Done');
 
 %% Scan Volume
+mkdir([outputFolder '\Volume\']);
 for i=1:length(zToScan)
     fprintf('%s Scanning Volume %02d of %d\n',datestr(datetime),i,length(zToScan));
     
@@ -140,6 +141,7 @@ end
 fprintf('%s Scanning Overview\n',datestr(datetime));
 ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0); %Bring stage to 0
 
+mkdir([outputFolder '\Overview\']);
 for q = 1:length(overview.gridXcc)
     fprintf('Imaging at xc=%.1f,yc=%.1f (%d of %d)...\n',...
         overview.gridXcc(q),overview.gridYcc(q),q,length(overview.gridXcc));
