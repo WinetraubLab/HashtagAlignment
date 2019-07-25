@@ -166,6 +166,10 @@ for q = 1:length(overview.gridXcc)
         );
 end
 
+%Return home
+ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',x0);
+ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0);
+
 %% Finalize
 fprintf('%s Finalizing\n',datestr(datetime));
 ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose(); %Close scanner
