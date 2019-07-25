@@ -129,10 +129,10 @@ for i=1:length(zToScan)
 		a =dir(s);
 		names = {a.name}; names([a.isdir]) = [];
 		nm = names{round(end/2)};
-		if (~isempty(strfind(lower(nm),'ganymede')))
+		if (contains(lower(nm),ganymede))
 			config.OCTSystem = 'Ganymede';
 		else
-			config.OCTSystem = 'NA'
+			config.OCTSystem = 'NA';
 		end
 	end
 end
