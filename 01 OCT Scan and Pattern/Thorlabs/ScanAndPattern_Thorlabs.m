@@ -15,18 +15,18 @@ outputFolder = [outputFolder '\'];
 %OCT Scan Defenitions (scan size (scan is centered along (0,0))
 scan.rangeX = 1; %[mm]
 scan.rangeY = 1; %[mm]
-scan.nPixelsX = 1000/2; %How many pixels in x direction %<--
-scan.nPixelsY = 1000/4; %How many pixels in y direction %<--
+scan.nPixelsX = 1000; %How many pixels in x direction 
+scan.nPixelsY = 1000; %How many pixels in y direction
 %Overview of the entire area
-overview.rangeAll = 2;%4;%[mm] x=y %<--
+overview.rangeAll = 4;%[mm] x=y
 overview.range = scan.rangeX;%[mm] x=y
 overview.nPixels = scan.nPixelsX/10; %same for x and y
 BScanAvg = 1;
 
 %Photobleaching defenitions
     %Line placement (vertical - up/down, horizontal - left/right)
-    vLinePositions = []; [-50 0 100]/1000; %[mm] %<--
-    hLinePositions = []; [-50 0 150]/1000; %[mm] %<--
+    vLinePositions = [-50 0 100]/1000; %[mm] 
+    hLinePositions = [-50 0 150]/1000; %[mm] 
 
     exposurePerLine = 30; %[sec]
     passes = 1;
@@ -46,7 +46,6 @@ BScanAvg = 1;
 %+z is deeper
 zToPhtobleach = -300; %[um] this parameter is ignored if running from jenkins - will assume provided by jenkins
 zToScan = (-100:15:500)-5; %[um]
-zToScan = [0 50]; %<-- delete
 
 %% Initialize
 fprintf('%s Initialzing\n',datestr(datetime));
