@@ -59,7 +59,7 @@ x0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('x'); %Init stage
 y0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('y'); %Init stage
 
 if (isRunningOnJenkins())
-    outputFolder = ['output\'];
+    outputFolder = outputFolder_;
     zToPhtobleach = zToPhtobleach_; %Set by Jenkins
 end
 mkdir(outputFolder);
