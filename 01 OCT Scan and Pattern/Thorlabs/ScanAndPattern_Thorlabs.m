@@ -48,6 +48,9 @@ BScanAvg = 1;
 zToPhtobleach = -300; %[um] this parameter is ignored if running from jenkins - will assume provided by jenkins
 zToScan = (-100:15:500)-5; %[um]
 
+%Tissue Defenitions
+tissueNumericalAperture = 1.4;
+
 %% Initialize
 fprintf('%s Initialzing\n',datestr(datetime));
 disp('We assume laser is focused on the top of the tissue interface');
