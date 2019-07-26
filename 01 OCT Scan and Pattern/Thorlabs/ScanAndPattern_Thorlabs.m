@@ -58,10 +58,13 @@ z0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('z'); %Init stage
 x0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('x'); %Init stage
 y0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('y'); %Init stage
 
+isExecutingOnJenkins = isRunningOnJenkins();
+ExecutionStartTime = datestr(now());
+
 if (isRunningOnJenkins())
     outputFolder = outputFolder_; %Set by Jenkins
     zToPhtobleach = zToPhtobleach_; %Set by Jenkins
-	isRunOverview = true;
+	isRunOverview = true;	
 end
 mkdir(outputFolder);
 
