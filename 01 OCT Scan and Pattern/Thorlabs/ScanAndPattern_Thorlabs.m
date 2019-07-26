@@ -18,9 +18,10 @@ scan.rangeY = 1; %[mm]
 scan.nPixelsX = 1000; %How many pixels in x direction 
 scan.nPixelsY = 1000; %How many pixels in y direction
 %Overview of the entire area
-overview.rangeAll = 4;%[mm] x=y
+overview.rangeAll = 6;%[mm] x=y
 overview.range = scan.rangeX;%[mm] x=y
 overview.nPixels = scan.nPixelsX/10; %same for x and y
+isRunOverview = false; %Do you want to scan overview volume? When running on Jenkins, will allways run overview 
 BScanAvg = 1;
 
 %Photobleaching defenitions
@@ -58,8 +59,9 @@ x0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('x'); %Init stage
 y0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('y'); %Init stage
 
 if (isRunningOnJenkins())
-    outputFolder = outputFolder_;
+    outputFolder = outputFolder_; %Set by Jenkins
     zToPhtobleach = zToPhtobleach_; %Set by Jenkins
+	isRunOverview = true;
 end
 mkdir(outputFolder);
 
@@ -136,38 +138,39 @@ for i=1:length(zToScan)
 		end
 	end
 end
-
-%% Scan Overview
-fprintf('%s Scanning Overview\n',datestr(datetime));
 ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0); %Bring stage to 0
 
-mkdir([outputFolder '\Overview\']);
-for q = 1:length(overview.gridXcc)
-    fprintf('Imaging at xc=%.1f,yc=%.1f (%d of %d)...\n',...
-        overview.gridXcc(q),overview.gridYcc(q),q,length(overview.gridXcc));
+%% Scan Overview
+if (isRunOverview)
+	fprintf('%s Scanning Overview\n',datestr(datetime));
+	mkdir([outputFolder '\Overview\']);
+	for q = 1:length(overview.gridXcc)
+		fprintf('Imaging at xc=%.1f,yc=%.1f (%d of %d)...\n',...
+			overview.gridXcc(q),overview.gridYcc(q),q,length(overview.gridXcc));
 
-	%Move
-    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',...
-         x0 + overview.gridXcc(q)... Movement [mm]
-		);
-    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',...
-         y0 + overview.gridYcc(q)... Movement [mm]
-		);
-    
-	%Scan
-	folder = [outputFolder sprintf('Overview\\Overview%02d',q)];
-    ThorlabsImagerNET.ThorlabsImager.yOCTScan3DVolume(...
-        offsetX,offsetY,overview.range*scaleX,overview.range*scaleX, ...centerX,centerY,rangeX,rangeY [mm]
-        0,       ... rotationAngle [deg]
-        overview.nPixels,overview.nPixels,   ... SizeX,sizeY [# of pixels]
-        1,       ... B Scan Average
-        folder   ... Output directory, make sure it exists before running this functio
-        );
+		%Move
+		ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',...
+			 x0 + overview.gridXcc(q)... Movement [mm]
+			);
+		ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',...
+			 y0 + overview.gridYcc(q)... Movement [mm]
+			);
+		
+		%Scan
+		folder = [outputFolder sprintf('Overview\\Overview%02d',q)];
+		ThorlabsImagerNET.ThorlabsImager.yOCTScan3DVolume(...
+			offsetX,offsetY,overview.range*scaleX,overview.range*scaleX, ...centerX,centerY,rangeX,rangeY [mm]
+			0,       ... rotationAngle [deg]
+			overview.nPixels,overview.nPixels,   ... SizeX,sizeY [# of pixels]
+			1,       ... B Scan Average
+			folder   ... Output directory, make sure it exists before running this functio
+			);
+	end
+
+	%Return home
+	ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',x0);
+	ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0);
 end
-
-%Return home
-ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',x0);
-ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0);
 
 %% Finalize
 fprintf('%s Finalizing\n',datestr(datetime));
