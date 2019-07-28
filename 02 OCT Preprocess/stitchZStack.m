@@ -47,9 +47,10 @@ for yI=yIndexes %Loop over y frames
     for zzI=1:length(zToScan)
         
         %Load Frame
+        fpTxt = feval(fp,zzI);
         [int1,dim1] = ...
-            yOCTLoadInterfFromFile([{fp(zzI)}, reconstructConfig, {'YFramesToProcess',yIndexes(yI)}]);
-        [scan1,dim1] = yOCTInterfToScanCpx ([{int1 dim1} fp]);
+            yOCTLoadInterfFromFile([{fpTxt}, reconstructConfig, {'YFramesToProcess',yIndexes(yI)}]);
+        [scan1,dim1] = yOCTInterfToScanCpx ([{int1 dim1} reconstructConfig]);
         scan1 = abs(scan1);
         for i=length(size(scan1)):-1:3 %Average BScan Averages, A Scan etc
             scan1 = squeeze(mean(scan1,i));
