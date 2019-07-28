@@ -183,11 +183,4 @@ fprintf('%s Finalizing\n',datestr(datetime));
 ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose(); %Close scanner
     
 %Save scan configuration parameters
-txt = jsonencode(config);
-txt = strrep(txt,'"',[newline '"']);
-txt = strrep(txt,[newline '":'],'":');
-txt = strrep(txt,[':' newline '"'],':"');
-txt = strrep(txt,[newline '",'],'",');
-fid = fopen([outputFolder 'ScanConfig.json'],'w');
-fprintf(fid,'%s',txt);
-fclose(fid);
+awsWriteJSON(config, [outputFolder 'ScanConfig.json']);
