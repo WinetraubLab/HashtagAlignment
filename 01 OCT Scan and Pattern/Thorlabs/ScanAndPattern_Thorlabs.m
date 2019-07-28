@@ -71,6 +71,9 @@ if (isRunningOnJenkins())
 end
 mkdir(outputFolder);
 
+%Scan one silce where we photobleaching
+zToScan = [zToPhtobleach zToScan];
+
 %Overview center positons
 overview.gridXc = (-overview.rangeAll/2+overview.range/2):overview.range:(overview.rangeAll/2-overview.range/2);
 overview.gridYc = (-overview.rangeAll/2+overview.range/2):overview.range:(overview.rangeAll/2-overview.range/2);
