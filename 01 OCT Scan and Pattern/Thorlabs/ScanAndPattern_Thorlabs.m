@@ -26,8 +26,9 @@ BScanAvg = 1;
 
 %Photobleaching defenitions
     %Line placement (vertical - up/down, horizontal - left/right)
-    vLinePositions = [-50 0 100]/1000; %[mm] 
-    hLinePositions = [-50 0 150]/1000; %[mm] 
+	base = 100/1000; %base seperation [mm]
+    vLinePositions = base*[-1 0 2]; %[mm] 
+    hLinePositions = base*[-1 0 3]; %[mm] 
 
     exposurePerLine = 30; %[sec]
     passes = 1;
