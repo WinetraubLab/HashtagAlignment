@@ -47,7 +47,7 @@ BScanAvg = 1;
 %z defenitions below are compared to starting position
 %+z is deeper
 zToPhtobleach = -300; %[um] this parameter is ignored if running from jenkins - will assume provided by jenkins
-zToScan = (-100:15:500)-5; %[um]
+zToScan = (-190:15:500)-5; %[um]
 
 %Tissue Defenitions
 tissueRefractiveIndex = 1.4;
