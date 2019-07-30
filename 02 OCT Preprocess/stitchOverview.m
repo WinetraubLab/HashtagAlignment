@@ -26,7 +26,7 @@ fp = @(frameI)(sprintf('%s/Overview/Overview%02d/',OCTVolumesFolder,frameI));
 
 %Get dimensions
 pixSizeX = json.overview.range * 1000/ json.overview.nPixels; % in microns
-pixSizeY = pixSizeX*1;%5; %<--TMP
+pixSizeY = pixSizeX;
 gridXcc = json.overview.gridXcc;
 
 scanRangeX = json.scan.rangeX;
@@ -60,7 +60,6 @@ enface = squeeze(mean(overviewScan(zStart:end,:,:),1));
 x = pixSizeX*( (-size(enface,2)/2):(+size(enface,2)/2) );
 y = pixSizeY*( (-size(enface,1)/2):(+size(enface,1)/2) );
 
-%enface = enface(1:5:end,:); %<--TMP
 thershold = mean(mean(mean(overviewScan(zStart+(1:10),:,:))))*1.1;
 
 imagesc(enface > thershold)
