@@ -31,7 +31,7 @@ BScanAvg = 1;
     hLinePositions = base*[-1 0 3]; %[mm] 
 
     exposurePerLine = 30; %[sec]
-    passes = 1;
+    passes = 2;
     lineLength = 2; %[mm]
     
 %Probe defenitions
