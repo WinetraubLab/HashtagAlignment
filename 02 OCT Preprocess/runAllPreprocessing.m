@@ -26,6 +26,7 @@ runninAll = true;
 OCTVolumesFolder_ = OCTVolumesFolderIn;
 
 %% Running
+stitchOverview;
 findFocusInBScan;
 stitchZStack
 

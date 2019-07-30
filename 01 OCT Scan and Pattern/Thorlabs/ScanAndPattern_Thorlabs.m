@@ -20,7 +20,7 @@ scan.nPixelsY = 1000; %How many pixels in y direction
 %Overview of the entire area
 overview.rangeAll = 6;%[mm] x=y
 overview.range = scan.rangeX;%[mm] x=y
-overview.nPixels = scan.nPixelsX/10; %same for x and y
+overview.nPixels = scan.nPixelsX/20; %same for x and y
 isRunOverview = false; %Do you want to scan overview volume? When running on Jenkins, will allways run overview 
 BScanAvg = 1;
 
