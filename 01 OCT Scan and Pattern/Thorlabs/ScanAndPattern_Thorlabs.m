@@ -37,7 +37,7 @@ BScanAvg = 1;
 %Probe defenitions
     octProbePath = [currentFileFolder 'Probe - Olympus 10x.ini'];
     %Define scale and offset for fast & slow axis calibration
-    offsetX = -3.5605/1000; %[mm]
+    offsetX = 0/1000; %[mm]
     offsetY = 0; %[mm]
     scaleX =  0.99421;
     scaleY =  1;
