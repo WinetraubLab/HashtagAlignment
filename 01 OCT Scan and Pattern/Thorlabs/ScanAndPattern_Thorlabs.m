@@ -56,6 +56,9 @@ tissueRefractiveIndex = 1.4;
 fprintf('%s Initialzing\n',datestr(datetime));
 disp('We assume laser is focused on the top of the tissue interface');
 disp('Otherwise abort now');
+if ~exist(octProbePath,'file')
+	error(['Cannot find probe file: ' octProbePath]);
+end
 ThorlabsImagerNETLoadLib(); %Init library
 ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(octProbePath); %Init OCT
 z0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('z'); %Init stage
@@ -141,7 +144,7 @@ for i=1:length(zToScan)
 		a =dir(s);
 		names = {a.name}; names([a.isdir]) = [];
 		nm = names{round(end/2)};
-		if (contains(lower(nm),ganymede))
+		if (contains(lower(nm),'ganymede'))
 			config.OCTSystem = 'Ganymede';
 		else
 			config.OCTSystem = 'NA';
