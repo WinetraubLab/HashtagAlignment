@@ -1,29 +1,29 @@
 %This script runs all preprocessing sequentially
 
 %% Inputs
-OCTVolumesFolderIn = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-00/OCT Volumes/';
-OCTVolumesFolderOut = OCTVolumesFolderIn; %Where to save folder to
+SubjectFolderIn = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-00/';
+SubjectFolderOut = SubjectFolderIn; %Where to save folder to
 
 %% Setup environment
 if (isRunningOnJenkins()) %Get inputs from Jenkins
-    OCTVolumesFolderIn = OCTVolumesFolderIn_;
-    OCTVolumesFolderOut = OCTVolumesFolderOut_;
+    SubjectFolderIn = SubjectFolderIn_;
+    SubjectFolderOut = SubjectFolderOut_;
 end
 
-if (strcmpi(OCTVolumesFolderIn(1:3),'s3:'))
+if (awsIsAWSPath(SubjectFolderIn))
     inputFolderAWS = true;
 else
     inputFolderAWS = false;
 end
 
-if (strcmpi(OCTVolumesFolderOut(1:3),'s3:'))
+if (awsIsAWSPath(SubjectFolderOut))
     outputFolderAWS = true;
 else
     outputFolderAWS = false;
 end
 
 runninAll = true;
-OCTVolumesFolder_ = OCTVolumesFolderIn;
+OCTVolumesFolder_ = [SubjectFolderIn '\OCT Volumes\'];
 
 %% Running
 stitchOverview;
@@ -33,6 +33,8 @@ stitchZStack
 %% See if upload is needed
 if (~inputFolderAWS && outputFolderAWS)
     disp('Uploading files to AWS');
-    awsCopyFileFolder(OCTVolumesFolderIn,OCTVolumesFolderOut);
+    
+    %Copy to the cloud
+    awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
 end
 
