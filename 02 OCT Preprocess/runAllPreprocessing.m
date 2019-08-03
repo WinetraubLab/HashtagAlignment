@@ -36,5 +36,8 @@ if (~inputFolderAWS && outputFolderAWS)
     
     %Copy to the cloud
     awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
+    
+    %Delete local folder
+    rmdir(SubjectFolderIn,'s');
 end
 
