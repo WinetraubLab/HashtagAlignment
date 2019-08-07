@@ -26,10 +26,22 @@ runninAll = true;
 OCTVolumesFolder_ = [SubjectFolderIn '\OCT Volumes\'];
 
 %% Running
-findFocusInBScan;
-stitchOverview;
-stitchZStack
-
+try
+    findFocusInBScan;
+    stitchOverview;
+    stitchZStack
+catch ME 
+    %% Error Hendle. If error happend during processing we still want to upload the data
+	disp(' '); 
+	disp('Error Happened'); 
+	for i=1:length(ME.stack) 
+		ME.stack(i) 
+	end 
+	disp(ME.message); 
+    
+    disp('We shall still continue with the upload');
+end 
+    
 %% See if upload is needed
 if (~inputFolderAWS && outputFolderAWS)
     disp('Uploading files to AWS');
