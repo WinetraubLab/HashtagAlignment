@@ -142,7 +142,7 @@ ylabel(['z [' dim.z.units ']'])
 title('Choose focus');
 legend('First Guess','Updated Guess');
 
-if (~isRunningOnJenkins())
+if (~isRunningOnJenkins() && ~exist('runninAll','var')))
     [~,focusDepth3] = ginput(1); %Get z index of the focus
     fprintf('Distance between my guess and user: %.1f[um]\n',abs(focusDepth3-focusDepth2));
     
@@ -156,7 +156,7 @@ end
 
 fprintf('Initial guess: %.1f[um]\n',focusDepth1);
 fprintf('Updated guess: %.1f[um]\n',focusDepth2);
-if (~isRunningOnJenkins())
+if (~isRunningOnJenkins() && ~exist('runninAll','var')))
     fprintf('User input: %.1f[um]\n',focusDepth3);
 end
 
