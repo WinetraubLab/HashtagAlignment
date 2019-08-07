@@ -77,7 +77,8 @@ end
 focusDepth1 = mean(dim.z.values(tissueZi)); %[um] - first guess
 
 %% Refine initial guess by going to the point where focus is highest
-frameI = 1;
+disp('Refining Focus Position...');
+frameI = 2; %frame = 1 is at the top of the gel, number 2 should be better
 
 [int1,dim1] = ...
     yOCTLoadInterfFromFile([{fp(frameI)}, reconstructConfig, {'YFramesToProcess',yToLoad}]);
@@ -88,7 +89,7 @@ for i=length(size(scan1)):-1:4 %Average BScan, AScan avg but no z,x,y
 end
 
 %Define search space
-zsToUse = dim.z.values > focusDepth1 - focusSigma & dim.z.values < focusDepth1 + focusSigma;
+zsToUse = dim.z.values > focusDepth1 - focusSigma*2 & dim.z.values < focusDepth1 + focusSigma*2;
 
 %% For each y, compute how close it is (in intensity) to other ys. 
 %In theory only the gel with the focus should be visible so some y sections
@@ -98,6 +99,7 @@ m1 = squeeze(median(scan1,2)); %Median over x
 %Distance matrix
 d = pdist(m1'); %Distance matrix, for easy visualization do squareform(d)
 Z = linkage(d); %Cluster
+dendrogram(Z)
 nClusters = round(size(m1,2)*0.6); %Number of clusters output
 c = cluster(Z,'maxclust',nClusters); %Split into clusters
 
