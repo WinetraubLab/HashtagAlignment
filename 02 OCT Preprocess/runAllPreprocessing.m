@@ -1,7 +1,7 @@
 %This script runs all preprocessing sequentially
 
 %% Inputs
-SubjectFolderIn = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-00/';
+SubjectFolderIn = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01';
 SubjectFolderOut = SubjectFolderIn; %Where to save folder to
 
 %% Setup environment
