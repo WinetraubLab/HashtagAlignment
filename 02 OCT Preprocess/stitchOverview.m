@@ -21,10 +21,6 @@ end
 %% Read Configuration file
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
 
-%Define file path
-fp = @(frameI)(sprintf('%s/Overview/Overview%02d/',OCTVolumesFolder,frameI));
-fp = cellfun(fp,num2cell(1:length(gridXcc)),'UniformOutput',false)';
-
 %Get dimensions
 pixSizeX = json.overview.range * 1000/ json.overview.nPixels; % in microns
 pixSizeY = pixSizeX;
@@ -35,6 +31,10 @@ gridYc = json.overview.gridYc;
 
 scanRangeX = json.scan.rangeX;
 scanRangeY = json.scan.rangeY;
+
+%Define file path
+fp = @(frameI)(sprintf('%s/Overview/Overview%02d/',OCTVolumesFolder,frameI));
+fp = cellfun(fp,num2cell(1:length(gridXcc)),'UniformOutput',false)';
 
 if ~isfield(json,'focusPositionInImageZpix')
     error('Please run findFocusInBScan before running this script');
