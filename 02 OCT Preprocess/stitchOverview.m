@@ -103,8 +103,8 @@ clear enface; %Prevent confusion down the line
 %it with the natural view
 
 %Create grid
-x = pixSizeX*( (-size(enface,2)/2):(+size(enface,2)/2) );
-y = pixSizeY*( (-size(enface,1)/2):(+size(enface,1)/2) );
+x = pixSizeX*( (-size(enface1,2)/2):(+size(enface1,2)/2) );
+y = pixSizeY*( (-size(enface1,1)/2):(+size(enface1,1)/2) );
 
 med = median(enface1(:));
 thershold =med*1.5;
