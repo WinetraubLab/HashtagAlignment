@@ -162,9 +162,6 @@ if (~isRunningOnJenkins() && ~exist('runninAll','var'))
 end
 
 %% Output & Save
-%Output Tiff 
-saveas(ax,'FindFocusInBScan.png');
-awsCopyFileFolder('FindFocusInBScan.png',[OCTVolumesFolder 'FindFocusInBScan.png']);
 
 %Update JSON
 %json.focusPositionInImageZum = focusDepth3;
@@ -172,3 +169,15 @@ dz = abs(focusDepth3-dim.z.values);
 json.focusPositionInImageZpix = find(dz == min(dz),1,'first');
 json.VolumeOCTDimensions = dim;
 awsWriteJSON(json,[OCTVolumesFolder 'ScanConfig.json']);
+
+%Output Tiff 
+saveas(ax,'FindFocusInBScan.png');
+if (awsIsAWSPath(OCTVolumesFolder))
+    %Upload to AWS
+    awsCopyFileFolder('FindFocusInBScan.png',[OCTVolumesFolder '02 OCT Preprocess Log/FindFocusInBScan.png']);
+else
+    if ~exist([OCTVolumesFolder '02 OCT Preprocess Log'],'dir')
+        mkdir([OCTVolumesFolder '02 OCT Preprocess Log'])
+    end
+    copyfile('FindFocusInBScan.png',[OCTVolumesFolder '02 OCT Preprocess Log\FindFocusInBScan.png']);
+end   

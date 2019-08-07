@@ -208,13 +208,15 @@ end
 hold off;
 
 %% Save figure
-if (strcmpi(OCTVolumesFolder(1:3),'s3:'))
+if (awsIsAWSPath(OCTVolumesFolder))
     %Upload to AWS
-    OCTVolumesFolder = awsModifyPathForCompetability(OCTVolumesFolder,false);
     saveas(gcf,'Overview.png');
-    awsCopyFileFolder('Overview.png',[OCTVolumesFolder '/Overview.png']);
+    awsCopyFileFolder('Overview.png',[OCTVolumesFolder '02 OCT Preprocess Log/Overview.png']);
 else
     %Save locally
-    saveas(gcf,[OCTVolumesFolder '/Overview.png']);
-end
+    if ~exist([OCTVolumesFolder '02 OCT Preprocess Log'],'dir')
+        mkdir([OCTVolumesFolder '02 OCT Preprocess Log'])
+    end
+    saveas(gcf,[OCTVolumesFolder '02 OCT Preprocess Log\Overview.png']);
+end   
 
