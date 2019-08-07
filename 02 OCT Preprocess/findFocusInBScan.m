@@ -163,6 +163,7 @@ end
 %% Output & Save
 %Output Tiff 
 saveas(ax,'FindFocusInBScan.png');
+awsCopyFileFolder('FindFocusInBScan.png',[OCTVolumesFolder 'FindFocusInBScan.png']);
 
 %Update JSON
 %json.focusPositionInImageZum = focusDepth3;
