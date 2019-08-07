@@ -48,7 +48,7 @@ catch ME
         disp('We shall still continue with the upload');
     else
         %No upload, so declare this as a real error
-        error('Critical Error');
+        error('');
     end
 end 
     
