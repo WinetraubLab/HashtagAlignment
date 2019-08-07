@@ -24,6 +24,7 @@ json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
 
 %Define file path
 fp = @(frameI)(sprintf('%s/Overview/Overview%02d/',OCTVolumesFolder,frameI));
+fp = cellfun(fp,num2cell(1:length(gridXcc)),'UniformOutput',false)';
 
 %Get dimensions
 pixSizeX = json.overview.range * 1000/ json.overview.nPixels; % in microns
@@ -53,7 +54,7 @@ end
 parfor i=1:length(gridXcc) %Because of the way the scan went we can easily stitch
     fprintf('%s Processing volume %d of %d.\n',datestr(datetime),i,length(gridYcc));
     
-    fpTxt = feval(fp,i);
+    fpTxt = fp{i};
     [int1,dim1] = ...
         yOCTLoadInterfFromFile([{fpTxt}, reconstructConfig]);
     [scan1,dim1] = yOCTInterfToScanCpx ([{int1 dim1},reconstructConfig]);

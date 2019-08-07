@@ -27,6 +27,7 @@ focusPositionInImageZpix = json.focusPositionInImageZpix;
 
 %Define file path
 fp = @(frameI)(sprintf('%s/Volume/Pos%02d/',OCTVolumesFolder,frameI));
+fp = cellfun(fp,num2cell(1:length(zToScan)),'UniformOutput',false)';
 
 %Get dimensions
 dim = json.VolumeOCTDimensions;
@@ -52,7 +53,7 @@ parfor yI=1:length(yIndexes) %Loop over y frames
     for zzI=1:length(zToScan)
         
         %Load Frame
-        fpTxt = feval(fp,zzI);
+        fpTxt = fp{zzI};
         [int1,dim1] = ...
             yOCTLoadInterfFromFile([{fpTxt}, reconstructConfig, {'YFramesToProcess',yIndexes(yI)}]);
         [scan1,dim1] = yOCTInterfToScanCpx ([{int1 dim1} reconstructConfig]);
