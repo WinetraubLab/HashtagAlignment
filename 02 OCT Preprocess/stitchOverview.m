@@ -97,6 +97,7 @@ for k=1:numel(vv)
 end
 
 enface1 = cell2mat(vv); %Corrected version
+clear enface; %Prevent confusion down the line
 
 %% Create enfece, find principal axis of tissue
 %Since image was scanned in ~45 degrees, find the angle that will re align
@@ -110,7 +111,7 @@ med = median(enface1(:));
 thershold =med*1.5;
 
 %Find Principal Axis
-[i,j] = find(enface > thershold); %x,y, positions of points which are 'tissue'
+[i,j] = find(enface1 > thershold); %x,y, positions of points which are 'tissue'
 V = pca([j,i]); %Main axis
 
 %Plot
