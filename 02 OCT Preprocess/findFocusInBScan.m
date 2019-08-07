@@ -14,6 +14,7 @@ focusSigma = 20; %Sigma size of focus [pixel]
 %% Jenkins
 if (isRunningOnJenkins() || exist('runninAll','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
+    close all;
 end
 
 %% Read Configuration file

@@ -13,6 +13,7 @@ saveYs = 3; %How many Bscans to save (for future reference)
 %% Jenkins
 if (isRunningOnJenkins() || exist('runninAll','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
+    close all;
 end
 
 %% Read Configuration file

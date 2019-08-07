@@ -16,6 +16,7 @@ lowRAMMode = true; %When set to true, doesn't load all stitched volume to RAM, i
 %% Jenkins
 if (isRunningOnJenkins() || exist('runninAll','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
+    close all;
 end
 
 %% Read Configuration file
