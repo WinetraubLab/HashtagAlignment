@@ -1,17 +1,17 @@
 %This script stitches overview file
 
 %% Inputs
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-00/OCT Volumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/OCT Volumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07};%,'YFramesToProcess',1:5:100}; %Configuration for processing OCT Volume
 
 %Probe Data
 focusSigma = 20; %Sigma size of focus [pixel]
 
-%topskip
-zStart = 200;%Skip first pixels as they have artifact in them
-
 %Total width covered by histological sectioning 
 histologyVolumeThickness = 15*5*(5+1); %[um]
+
+%Low RAM mode
+lowRAMMode = true; %When set to true, doesn't load all stitched volume to RAM, instead calculate enface in each worker
 
 %% Jenkins
 if (isRunningOnJenkins() || exist('runninAll','var'))
@@ -28,14 +28,29 @@ fp = @(frameI)(sprintf('%s/Overview/Overview%02d/',OCTVolumesFolder,frameI));
 pixSizeX = json.overview.range * 1000/ json.overview.nPixels; % in microns
 pixSizeY = pixSizeX;
 gridXcc = json.overview.gridXcc;
+gridYcc = json.overview.gridYcc;
+gridXc = json.overview.gridXc;
+gridYc = json.overview.gridYc;
 
 scanRangeX = json.scan.rangeX;
 scanRangeY = json.scan.rangeY;
 
+if ~isfield(json,'focusPositionInImageZpix')
+    error('Please run findFocusInBScan before running this script');
+else
+    focusPositionInImageZpix = json.focusPositionInImageZpix;
+end
+%% Set start & Finish positions
+zStart = max(focusPositionInImageZpix - focusSigma*5,1);
+zEnd = min(focusPositionInImageZpix + focusSigma*7,1000);
 %% Load overview images 
-overviewScan = cell(length(json.overview.gridXc),length(json.overview.gridYc));
+if lowRAMMode
+    enface = cell(length(gridYc),length(gridXc));
+else
+    overviewScan = cell(length(gridYc),length(gridXc));
+end
 parfor i=1:length(gridXcc) %Because of the way the scan went we can easily stitch
-    fprintf('%s Processing volume %d of %d.\n',datestr(datetime),i,length(gridXcc));
+    fprintf('%s Processing volume %d of %d.\n',datestr(datetime),i,length(gridYcc));
     
     fpTxt = feval(fp,i);
     [int1,dim1] = ...
@@ -46,47 +61,105 @@ parfor i=1:length(gridXcc) %Because of the way the scan went we can easily stitc
         scan1 = squeeze(mean(scan1,j));
     end
     
-    overviewScan{i} = shiftdim(scan1,1); %Dimensions are (x,y,z)
+    if lowRAMMode
+        enface{i} = squeeze(mean(scan1(zStart:zEnd,:,:),1));
+    else
+        overviewScan{i} = shiftdim(scan1,1); %Dimensions are (x,y,z)
+    end
 end
-overviewScan = cell2mat(overviewScan); %Convert to a big volume. (x,y,z)
-overviewScan = shiftdim(overviewScan,2); %Convert dimensions to (z,x,y)
+
+if lowRAMMode
+    enface = cell2mat(enface);
+else
+    overviewScan = cell2mat(overviewScan); %Convert to a big volume. (x,y,z)
+    overviewScan = shiftdim(overviewScan,2); %Convert dimensions to (z,x,y)
+    enface = squeeze(mean(overviewScan(zStart:zEnd,:,:),1));
+end
+
+%% Correct for any vineeting done by the lens
+%Our assumption s most of the scanning area is empty gel with no tissue
+vv = mat2cell(enface,...
+     json.overview.nPixels*ones(length(gridYc),1),...
+      json.overview.nPixels*ones(length(gridXc),1));
+vm = zeros([size(vv{1}) numel(vv)]);
+
+%Calculate distortion
+for k=1:size(vm,3)
+    vm(:,:,k) = vv{k};
+end
+vm = median(vm,3);
+
+%Correct for distortion
+for k=1:numel(vv)
+    vv{k} = vv{k}./vm;
+end
+
+enface1 = cell2mat(vv); %Corrected version
 
 %% Create enfece, find principal axis of tissue
 %Since image was scanned in ~45 degrees, find the angle that will re align
 %it with the natural view
 
-%Create enface
-enface = squeeze(mean(overviewScan(zStart:end,:,:),1));
+%Create grid
 x = pixSizeX*( (-size(enface,2)/2):(+size(enface,2)/2) );
 y = pixSizeY*( (-size(enface,1)/2):(+size(enface,1)/2) );
 
-thershold = mean(mean(mean(overviewScan(zStart+(1:10),:,:))))*1.1;
-
-imagesc(enface > thershold)
+med = median(enface1(:));
+thershold =med*1.5;
 
 %Find Principal Axis
 [i,j] = find(enface > thershold); %x,y, positions of points which are 'tissue'
 V = pca([j,i]); %Main axis
-ang = -acos(V(1)); %Angle to rotate
+
+%Plot
+imagesc(x,y,enface1 > thershold)
+imagesc(x,y,enface1)
+hold on;
+cx = x(round(mean(j)));
+cy = y(round(mean(i)));
+plot(cx+V(1)*1000*[-1,1],cy+V(2)*1000*[-1,1],'w');
+hold off
+
+%% Move Enface and rotate
+enface2 = imtranslate(enface1,-[mean(j) mean(i)]+size(enface1)/2,'FillValues',med);
+
+%Compute what should be the inverse rotation such that V(:,1) will be
+%facing X axis
+V_1 = V^-1;
+ang = acos(V_1(1));
+
+%Rotate
+enface3 = imrotate(enface2,ang*180/pi,'crop');
+enface3(enface3 == 0) = med;
+
+subplot(2,1,1);
+imagesc(enface2)
+subplot(2,1,2);
+imagesc(enface3)
 
 %% Make the figure
 M = [cos(ang) sin(ang); -sin(ang) cos(ang)]; %Rotation matrix
-enfacerot = imrotate(enface,ang*180/pi,'crop');
-enfacerot(enfacerot == 0) = thershold;
 
-imagesc(x,y,log(enfacerot))
+figure(1); subplot(1,1,1);
+imagesc(x,y,enface3)
 xlabel('microns');
 ylabel('microns');
 colormap bone;
 grid on;
 hold on;
 
+%Plot the dot
+theDot = [1;-1];
+theDot = theDot/norm(theDot)*1500;
+theDot = M*(theDot-[cx;cy]); %Rotate, [um]
+plot(theDot(1),theDot(2),'ro','MarkerSize',10,'MarkerFaceColor','r');
+
 % Draw volume scan
 volPos = [ ...
     +scanRangeX, -scanRangeX, -scanRangeX, +scanRangeX, +scanRangeX ; ... x
     +scanRangeY, +scanRangeY, -scanRangeY, -scanRangeY, +scanRangeY ; ... y
     ]/2; %mm
-volPos = M*volPos*1000; %Rotate, [um]
+volPos = M*(volPos*1000-[cx;cy]); %Rotate, [um]
 plot(volPos(1,:),volPos(2,:),'g--','LineWidth',2);
 
 %Draw Lines V lines
@@ -95,7 +168,7 @@ for k=1:length(json.vLinePositions)
         json.vLinePositions(k) json.vLinePositions(k); ... x
         -json.lineLength/2 +json.lineLength/2; ... y
         ];
-    vPos = M*vPos*1000; %Rotate, [um]
+    vPos = M*(vPos*1000-[cx;cy]); %Rotate, [um]
     
     plot(vPos(1,:), vPos(2,:),'Color','r','LineWidth',2); %[x1,x2], [y1,y2]
 end
@@ -106,23 +179,26 @@ for k=1:length(json.hLinePositions)
         -json.lineLength/2 +json.lineLength/2; ... x
         json.hLinePositions(k) json.hLinePositions(k); ... y
         ];
-    vPos = M*vPos*1000; %Rotate, [um]
+    vPos = M*(vPos*1000-[cx;cy]); %Rotate, [um]
     
     plot(vPos(1,:), vPos(2,:),'Color','r','LineWidth',1); %[x1,x2], [y1,y2]
 end
 
+Mc = M*[cx;cy];
+Mcx = Mc(1);
+Mcy = Mc(2);
 %Draw Sweet Spot, and where sectioning should start
 st = histologyVolumeThickness/2;
 dst = [0.5 1 1.5 2];
 for i=1:2
     st = -st;
     dst = -dst;
-    plot([-1000 1000],[st st],'--w');
-    text(1000,st,'Optimal','color','w')
+    plot([-1000 1000]-Mcx,[st st]-Mcy,'--w');
+    text(1000-Mcx,st-Mcy,'Optimal','color','w')
     for j=1:length(dst)
-        plot([-1000 1000],[st st]+dst(j)*1000,'--w');
+        plot([-1000 1000]-Mcx,[st st]+dst(j)*1000-Mcy,'--w');
         if mod(j,2)==0
-            text(1000,st+dst(j)*1000,sprintf('+%.1fmm',abs(dst(j))),'color','w');
+            text(1000-Mcx,st+dst(j)*1000-Mcy,sprintf('+%.1fmm',abs(dst(j))),'color','w');
         end
     end
 end

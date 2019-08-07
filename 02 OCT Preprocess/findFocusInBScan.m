@@ -5,7 +5,7 @@ disp('Looking For Focus Position...');
 %% Inputs
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-00/OCT Volumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/OCT Volumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -107,7 +107,7 @@ cSize = zeros(size(cNumbers));
 for i=1:length(cNumbers)
     cSize(i) = sum(c==i);
 end
-cLargest = cNumbers(cSize==max(cSize));
+cLargest = cNumbers(find(cSize==max(cSize),1,'first'));
 ysToUse = c==cLargest;
 
 %Average

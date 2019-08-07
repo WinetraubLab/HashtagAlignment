@@ -26,8 +26,8 @@ runninAll = true;
 OCTVolumesFolder_ = [SubjectFolderIn '\OCT Volumes\'];
 
 %% Running
-stitchOverview;
 findFocusInBScan;
+stitchOverview;
 stitchZStack
 
 %% See if upload is needed
