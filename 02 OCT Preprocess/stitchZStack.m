@@ -46,6 +46,7 @@ imOut = zeros([length(dim.z.values) length(dim.x.values) length(yIndexes)]); %[z
 thresholds = zeros(1,length(yIndexes));
 imOutSize = size(imOut);
 parfor yI=1:length(yIndexes) %Loop over y frames
+    try
     fprintf('%s Processing yI=%d of %d.\n',datestr(datetime),yI,length(yIndexes));
     
     %Loop over depths
@@ -84,6 +85,15 @@ parfor yI=1:length(yIndexes) %Loop over y frames
     %Let us trim the image using the signal at the gel (top of the image)
     tmp = nanmedian(squeeze(stack(:,:,1)),2);
     thresholds(yI) = max(tmp(:))/size(stack,3)/2; %Devided by the amount of averages
+    
+    catch ME
+        fprintf('Error happened in parfor, iteration %d',yI); 
+        for j=1:length(ME.stack) 
+            ME.stack(j) 
+        end 
+        disp(ME.message); 
+        error('Error in parfor');
+    end
 end
 fprintf('Done stitching, toatl time: %.0f[min]\n',toc(tt)/60);
 
