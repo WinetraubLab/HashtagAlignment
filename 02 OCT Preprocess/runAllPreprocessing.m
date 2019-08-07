@@ -28,8 +28,13 @@ OCTVolumesFolder_ = [SubjectFolderIn '\OCT Volumes\'];
 %% Running
 try
     findFocusInBScan;
+    close all;
+    
     stitchOverview;
+    close all;
+    
     stitchZStack
+    close all;
 catch ME 
     %% Error Hendle. If error happend during processing we still want to upload the data
 	disp(' '); 

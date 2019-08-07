@@ -14,11 +14,16 @@ focusSigma = 20; %Sigma size of focus [pixel]
 %% Jenkins
 if (isRunningOnJenkins() || exist('runninAll','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
-    close all;
 end
 
 %% Read Configuration file
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
+
+if (isfield(json,'focusPositionInImageZpix') && isRunningOnJenkins())
+    disp('Focus was found already, will not atempt finding focus again');
+    return; %Don't try to focus again, only in manual mode
+end
+
 zToScan = json.zToScan;
 n = json.tissueRefractiveIndex; 
 
@@ -168,7 +173,7 @@ end
 dz = abs(focusDepth3-dim.z.values);
 json.focusPositionInImageZpix = find(dz == min(dz),1,'first');
 json.VolumeOCTDimensions = dim;
-awsWriteJSON(json,[OCTVolumesFolder 'ScanConfig.json']);
+awsWriteJSON(json,[OCTVolumesFolder 'ScanConfig.json']); %Can save locally or to AWS
 
 %Output Tiff 
 saveas(ax,'FindFocusInBScan.png');
