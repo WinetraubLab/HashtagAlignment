@@ -44,7 +44,12 @@ catch ME
 	end 
 	disp(ME.message); 
     
-    disp('We shall still continue with the upload');
+    if (~inputFolderAWS && outputFolderAWS)
+        disp('We shall still continue with the upload');
+    else
+        %No upload, so declare this as a real error
+        error('Critical Error');
+    end
 end 
     
 %% See if upload is needed
