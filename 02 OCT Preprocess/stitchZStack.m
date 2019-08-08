@@ -80,7 +80,7 @@ end
 
 parfor yI=1:length(yIndexes) %Loop over y frames
     try
-    fprintf('%s Processing yI=%d of %d.\n',datestr(datetime),yIndexes(yI),length(yIndexes)); %#ok<PFBNS>
+    fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>
     
     %Loop over depths
     stack = zeros([imOutSize(1:2), length(zToScan)])*NaN; %#ok<PFBNS> %z,x,zStach
