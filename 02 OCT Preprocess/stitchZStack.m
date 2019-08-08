@@ -109,7 +109,7 @@ parfor yI=1:length(yIndexes) %Loop over y frames
             
         %Save for overview Purpose
         if (sum(yIndexes(yI) == yToSave)>0)
-			disp('OVERVIEW');
+            fprintf('Saving Slice to file, yI=%d, yIndex=%d, zVolume=%02d\n',yI,yIndexes(yI),zzI);
             yOCT2Tif(log(scan1),sprintf('%s/BScan_Y%03d.tif',fpTxt,yIndexes(yI)));
         end
     end
@@ -121,7 +121,7 @@ parfor yI=1:length(yIndexes) %Loop over y frames
 		try
 			yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
 		catch
-			which yOCT2Tif
+			e = exist('yOCT2Tif')
 			a = nanmean(stack,3); size(a)
 			sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI))
 			yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
