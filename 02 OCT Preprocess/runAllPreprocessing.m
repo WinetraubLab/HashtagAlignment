@@ -34,6 +34,7 @@ if(isUploadToCloud)
     %Copy to the cloud
     awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
     
+    disp('Uploading Completed');
     disp('Preprocessing Using local copy...');
 end
 
