@@ -78,6 +78,10 @@ else
     imOut = zeros(imOutSize); %[z,x,y] 
 end    
 
+%Attach files to parallel pool
+mypool=gcp;
+addAttachedFiles(mypool,{'yOCT2Tif.m'});
+
 parfor yI=1:length(yIndexes) %Loop over y frames
     try
     fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>
