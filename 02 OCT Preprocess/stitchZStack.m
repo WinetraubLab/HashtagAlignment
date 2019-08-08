@@ -120,10 +120,13 @@ parfor yI=1:length(yIndexes) %Loop over y frames
         %Memory saving mode
 		try
 			yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
-		catch
-			e = exist('yOCT2Tif.m','file')
-			a = nanmean(stack,3); size(a)
-			sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI))
+        catch
+            fprintf('yI=%d,yIndex=%d, is yOCT2Tif.m exist? %d\n',yI,yIndexes(yI),exist('yOCT2Tif.m','file'));
+            a = nanmean(stack,3); a=size(a);
+            fprintf('yI=%d,yIndex=%d, size(nanmean(stack,3): [%d, %d]\n',yI,yIndexes(yI),a(1),a(1));
+            fprintf('yI=%d,yIndex=%d, tmpOutputPath: %s\n',yI,yIndexes(yI),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
+            fprintf('yI=%d,yIndex=%d, running yOCT2Tif: [%d, %d]\n');
+
 			yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
 		end
     end
