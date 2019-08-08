@@ -200,4 +200,5 @@ fprintf('%s Finalizing\n',datestr(datetime));
 ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose(); %Close scanner
     
 %Save scan configuration parameters
+config
 awsWriteJSON(config, [outputFolder 'ScanConfig.json']);
