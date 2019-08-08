@@ -121,7 +121,7 @@ parfor yI=1:length(yIndexes) %Loop over y frames
 		try
 			yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
 		catch
-			e = exist('yOCT2Tif')
+			e = exist('yOCT2Tif.m','file')
 			a = nanmean(stack,3); size(a)
 			sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI))
 			yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
