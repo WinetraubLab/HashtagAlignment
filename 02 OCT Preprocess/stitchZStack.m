@@ -109,6 +109,7 @@ parfor yI=1:length(yIndexes) %Loop over y frames
             
         %Save for overview Purpose
         if (sum(yIndexes(yI) == yToSave)>0)
+			disp('OVERVIEW');
             yOCT2Tif(log(scan1),sprintf('%s/BScan_Y%03d.tif',fpTxt,yIndexes(yI)));
         end
     end
@@ -117,7 +118,14 @@ parfor yI=1:length(yIndexes) %Loop over y frames
         imOut(:,:,yI) = nanmean(stack,3);
     else
         %Memory saving mode
-        yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
+		try
+			yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
+		catch
+			which yOCT2Tif
+			a = nanmean(stack,3); size(a)
+			sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI))
+			yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
+		end
     end
     
     %Since we are dealing with a log scale, its important to trim the image
