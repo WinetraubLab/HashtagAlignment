@@ -126,12 +126,12 @@ for i=1:length(config.hLinePositions)
         +config.lineLength/2,config.hLinePositions(i), ... End X,Y
         config.exposurePerLine,config.passes); 
 end
-ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(false); %Switch off
 
 if (config.isDrawTickmarks)
     PhotobleachTickmarks_Thorlabs(config.tickmarksX0,config.tickmarksY0,config.vLinePositions,config.hLinePositions,logFolder);
 end
 
+ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(false); %Switch off
 disp('Done');
 
 %% Scan Volume
