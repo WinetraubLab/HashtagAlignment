@@ -52,6 +52,11 @@ zToScan = (-190:15:500)-5; %[um]
 %Tissue Defenitions
 tissueRefractiveIndex = 1.4;
 
+%Tickmarks (if required)
+isDrawTickmarks = false;
+tickmarksX0 = [-0.3, 0.25];
+tickmarksY0 = [-0.25,0.25];
+
 %% Initialize
 fprintf('%s Initialzing\n',datestr(datetime));
 disp('We assume laser is focused on the top of the tissue interface');
@@ -71,6 +76,7 @@ ExecutionStartTime = datestr(now());
 if (isRunningOnJenkins())
     outputFolder = outputFolder_; %Set by Jenkins
     zToPhtobleach = zToPhtobleach_; %Set by Jenkins
+    isDrawTickmarks = isDrawTickmarks_; %Set by Jenkins
 	isRunOverview = true;	
 end
 mkdir(outputFolder);
@@ -117,6 +123,10 @@ for i=1:length(hLinePositions)
         exposurePerLine,passes); 
 end
 ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(false); %Switch off
+
+if (isDrawTickmarks)
+    PhotobleachTickmarks_Thorlabs(tickmarksX0,tickmarksY0,vLinePositions,hLinePositions,[outputFolder '\01 OCT Scan and Pattern Log\']);
+end
 
 disp('Done');
 
