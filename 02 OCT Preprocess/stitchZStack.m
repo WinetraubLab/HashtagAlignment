@@ -126,7 +126,7 @@ parfor yI=1:length(yIndexes) %Loop over y frames
     thresholds(yI) = max(tmp(:))/size(stack,3)/2; %Devided by the amount of averages
     
     catch ME
-        fprintf('Error happened in parfor, iteration %d',yI); 
+        fprintf('Error happened in parfor, iteration %d, yIndex: %d',yI,yIndexes(yI)); 
         for j=1:length(ME.stack) 
             ME.stack(j) 
         end 
