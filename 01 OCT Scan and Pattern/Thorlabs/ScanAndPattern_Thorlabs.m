@@ -74,7 +74,7 @@ isExecutingOnJenkins = isRunningOnJenkins();
 ExecutionStartTime = datestr(now());
 
 if (isRunningOnJenkins())
-    config.outputFolder = outputFolder_; %Set by Jenkins
+    outputFolder = outputFolder_; %Set by Jenkins
     config.zToPhtobleach = zToPhtobleach_; %Set by Jenkins
     config.isDrawTickmarks = isDrawTickmarks_; %Set by Jenkins
 	config.isRunOverview = true;	
