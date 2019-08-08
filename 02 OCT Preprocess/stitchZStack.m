@@ -1,7 +1,7 @@
 %This script stitches images aquired at different z depths 2gezer
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-00/OCT Volumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/OCT Volumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -47,22 +47,35 @@ disp('Stitching ... '); tt=tic();
 
 %Set up for paralel processing
 yIndexes=dim.y.index;
-imOut = zeros([length(dim.z.values) length(dim.x.values) length(yIndexes)]); %[z,x,y] 
 thresholds = zeros(1,length(yIndexes));
-imOutSize = size(imOut);
+imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
 
 %Memory Saving mode handeling
 if isMemSaveMode
     if ~awsIsAWSPath(OCTVolumesFolder)
         tmpOutputPath = [OCTVolumesFolder '\tmpOutput\'];
         mkdir(tmpOutputPath);
+        tmpOutputPathDs = tmpOutputPath; %Path for Datastore
     else
         awsSetCredentials(1); %We need CLI
         tmpOutputPath = awsModifyPathForCompetability([OCTVolumesFolder '/tmpOutput'],true);
+        tmpOutputPathDs = awsModifyPathForCompetability(tmpOutputPath,false); %Path for Datastore
     end
     
-    imOut = zeros(size(yIndexes)); %No need for big data structure, just memory saving mode
-end
+    %In memory saving mode, if we already have some of the files for some
+    %ys, no need to recalculate
+    ds = fileDatastore(tmpOutputPathDs,'ReadFcn',@load,'FileExtensions','.tif');
+    
+    yIExists = zeros(size(ds.Files));
+    for i=1:length(ds.Files)
+        x = ds.Files{i};
+        [~,fname] = fileparts(x);
+        yIExists(i) = str2double(fname);
+    end
+    yIndexes(yIExists) = []; %Don't process same files twice.
+else
+    imOut = zeros(imOutSize); %[z,x,y] 
+end    
 
 parfor yI=1:length(yIndexes) %Loop over y frames
     try
@@ -124,6 +137,7 @@ fprintf('Done stitching, toatl time: %.0f[min]\n',toc(tt)/60);
 
 %% Load Individual tiffs and concatinate
 if isMemSaveMode
+    imOut = zeros(imOutSize,'single'); %z,x,y
     disp('Loading Data from individual files');
     for yI = 1:size(imOut,3)
         imOut(:,:,yI) = yOCTFromTif(sprintf('%s/%04d.tif',tmpOutputPath,yI));
