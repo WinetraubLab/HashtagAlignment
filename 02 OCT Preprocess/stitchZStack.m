@@ -10,6 +10,10 @@ focusSigma = 20; %Sigma size of focus [pixel]
 %Save Some Intermediate Y Scans
 saveYs = 3; %How many Bscans to save (for future reference)
 
+%Low memory mode, save results to a Tiff remotely than gather them all at
+%the very end
+isMemSaveMode = true; 
+
 %% Jenkins
 if (isRunningOnJenkins() || exist('runninAll','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
@@ -40,16 +44,32 @@ pixSizeZ = diff(dim.z.values([1 2])); %um
 
 %% Preform stitching
 disp('Stitching ... '); tt=tic();
+
+%Set up for paralel processing
 yIndexes=dim.y.index;
 imOut = zeros([length(dim.z.values) length(dim.x.values) length(yIndexes)]); %[z,x,y] 
 thresholds = zeros(1,length(yIndexes));
 imOutSize = size(imOut);
+
+%Memory Saving mode handeling
+if isMemSaveMode
+    if ~awsIsAWSPath(OCTVolumesFolder)
+        tmpOutputPath = [OCTVolumesFolder '\tmpOutput\'];
+        mkdir(tmpOutputPath);
+    else
+        awsSetCredentials(1); %We need CLI
+        tmpOutputPath = awsModifyPathForCompetability([OCTVolumesFolder '/tmpOutput'],true);
+    end
+    
+    imOut = zeros(size(yIndexes)); %No need for big data structure, just memory saving mode
+end
+
 parfor yI=1:length(yIndexes) %Loop over y frames
     try
     fprintf('%s Processing yI=%d of %d.\n',datestr(datetime),yI,length(yIndexes));
     
     %Loop over depths
-    stack = zeros([imOutSize(1:2), length(zToScan)])*NaN; %z,x,zStach
+    stack = zeros([imOutSize(1:2), length(zToScan)])*NaN; %#ok<PFBNS> %z,x,zStach
     for zzI=1:length(zToScan)
         
         %Load Frame
@@ -57,6 +77,7 @@ parfor yI=1:length(yIndexes) %Loop over y frames
         [int1,dim1] = ...
             yOCTLoadInterfFromFile([{fpTxt}, reconstructConfig, {'YFramesToProcess',yIndexes(yI)}]);
         [scan1,dim1] = yOCTInterfToScanCpx ([{int1 dim1} reconstructConfig]);
+        int1 = []; %Freeup some memory
         scan1 = abs(scan1);
         for i=length(size(scan1)):-1:3 %Average BScan Averages, A Scan etc
             scan1 = squeeze(mean(scan1,i));
@@ -78,7 +99,12 @@ parfor yI=1:length(yIndexes) %Loop over y frames
         end
     end
     
-    imOut(:,:,yI) = nanmean(stack,3);
+    if ~isMemSaveMode
+        imOut(:,:,yI) = nanmean(stack,3);
+    else
+        %Memory saving mode
+        yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yI));
+    end
     
     %Since we are dealing with a log scale, its important to trim the image
     %Let us trim the image using the signal at the gel (top of the image)
@@ -96,6 +122,14 @@ parfor yI=1:length(yIndexes) %Loop over y frames
 end
 fprintf('Done stitching, toatl time: %.0f[min]\n',toc(tt)/60);
 
+%% Load Individual tiffs and concatinate
+if isMemSaveMode
+    disp('Loading Data from individual files');
+    for yI = 1:size(imOut,3)
+        imOut(:,:,yI) = yOCTFromTif(sprintf('%s/%04d.tif',tmpOutputPath,yI));
+    end
+end
+
 %% Average
 th = mean(thresholds);
 imOut1 = imOut;
@@ -109,3 +143,13 @@ disp('Done');
 figure(1);
 imagesc(squeeze(log(imOut1(:,:,round(size(imOut1,3)/2)))));
 colormap bone;
+
+%% Cleanup
+if isMemSaveMode
+    %Make a directory for all output files 
+    if ~awsIsAWSPath(OCTVolumesFolder)
+        rmdir(tmpOutputPath,'s');
+    else
+        [status,err] = system(['aws s3 rm ' tmpOutputPath ' --recursive']);
+    end
+end
