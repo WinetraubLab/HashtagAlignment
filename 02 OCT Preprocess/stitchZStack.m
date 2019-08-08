@@ -73,13 +73,14 @@ if isMemSaveMode
         yIExists(i) = str2double(fname);
     end
     yIndexes(yIExists) = []; %Don't process same files twice.
+    thresholds(yIExists) = []; %Don't process same files twice.
 else
     imOut = zeros(imOutSize); %[z,x,y] 
 end    
 
 parfor yI=1:length(yIndexes) %Loop over y frames
     try
-    fprintf('%s Processing yI=%d of %d.\n',datestr(datetime),yI,length(yIndexes));
+    fprintf('%s Processing yI=%d of %d.\n',datestr(datetime),yIndexes(yI),length(yIndexes)); %#ok<PFBNS>
     
     %Loop over depths
     stack = zeros([imOutSize(1:2), length(zToScan)])*NaN; %#ok<PFBNS> %z,x,zStach
@@ -116,7 +117,7 @@ parfor yI=1:length(yIndexes) %Loop over y frames
         imOut(:,:,yI) = nanmean(stack,3);
     else
         %Memory saving mode
-        yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yI));
+        yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
     end
     
     %Since we are dealing with a log scale, its important to trim the image
