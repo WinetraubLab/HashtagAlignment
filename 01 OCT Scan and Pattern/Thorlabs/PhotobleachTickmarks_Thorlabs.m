@@ -126,5 +126,8 @@ if makefig == true
         scatter(innerpts2(1),innerpts2(2),50,'filled')
     end    
     
+    if ~exist(folderToSaveFigure,'dir')
+        mkdir(folderToSaveFigure);
+    end
     saveas(gcf,[folderToSaveFigure 'PhotobleachedLinesOverview.png']);
 end
