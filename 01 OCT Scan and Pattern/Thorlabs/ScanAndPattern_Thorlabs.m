@@ -15,8 +15,8 @@ outputFolder = [outputFolder '\'];
 %OCT Scan Defenitions (scan size (scan is centered along (0,0))
 config.scan.rangeX = 1; %[mm]
 config.scan.rangeY = 1; %[mm]
-config.scan.nPixelsX = 100; %How many pixels in x direction
-config.scan.nPixelsY = 100; %How many pixels in y direction
+config.scan.nPixelsX = 1000; %How many pixels in x direction
+config.scan.nPixelsY = 1000; %How many pixels in y direction
 %Overview of the entire area
 config.overview.rangeAll = 6;%[mm] x=y
 config.overview.range = config.scan.rangeX;%[mm] x=y
