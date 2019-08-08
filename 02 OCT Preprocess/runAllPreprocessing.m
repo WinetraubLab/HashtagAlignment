@@ -25,6 +25,18 @@ end
 runninAll = true;
 OCTVolumesFolder_ = [SubjectFolderIn '\OCT Volumes\'];
 
+%% Start by uploading to the cloud
+isUploadToCloud = ~inputFolderAWS && outputFolderAWS;
+
+if(isUploadToCloud)
+    disp('Uploading files to AWS');
+    
+    %Copy to the cloud
+    awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
+    
+    disp('Preprocessing Using local copy...');
+end
+
 %% Running
 try
     findFocusInBScan;
@@ -44,22 +56,25 @@ catch ME
 	end 
 	disp(ME.message); 
     
-    if (~inputFolderAWS && outputFolderAWS)
-        disp('We shall still continue with the upload');
-    else
-        %No upload, so declare this as a real error
-        error('');
+    if (isUploadToCloud)
+        disp('Cleaning up local folder (as we alrady uploaded to the cloud');
+        %Delete local folder
+        rmdir(SubjectFolderIn,'s');
     end
-end 
     
-%% See if upload is needed
-if (~inputFolderAWS && outputFolderAWS)
-    disp('Uploading files to AWS');
+    error('Aborting');
+end 
+
+%% Upload new files to the cloud
+if(isUploadToCloud)
+    disp('Uploading difference to the cloud');
+    
+    %Delete files that were uploaded before
+    delete([SubjectFolderIn '\*.srr']);
     
     %Copy to the cloud
     awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
     
-    %Delete local folder
+    %Delete local folder, its done
     rmdir(SubjectFolderIn,'s');
 end
-
