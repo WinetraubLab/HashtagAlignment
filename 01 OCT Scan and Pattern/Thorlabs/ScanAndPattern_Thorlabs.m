@@ -79,7 +79,11 @@ if (isRunningOnJenkins())
     config.isDrawTickmarks = isDrawTickmarks_; %Set by Jenkins
 	config.isRunOverview = true;	
 end
+
+%Make dirs for output and log
 mkdir(outputFolder);
+logFolder = [outputFolder '\01 OCT Scan and Pattern Log\'];
+mkdir(logFolder);
 
 %Scan one silce where we photobleaching
 config.zToScan = [config.zToPhtobleach config.zToScan];
@@ -125,7 +129,7 @@ end
 ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(false); %Switch off
 
 if (config.isDrawTickmarks)
-    PhotobleachTickmarks_Thorlabs(config.tickmarksX0,config.tickmarksY0,config.vLinePositions,config.hLinePositions,[outputFolder '\01 OCT Scan and Pattern Log\']);
+    PhotobleachTickmarks_Thorlabs(config.tickmarksX0,config.tickmarksY0,config.vLinePositions,config.hLinePositions,logFolder);
 end
 
 disp('Done');
