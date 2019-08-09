@@ -111,19 +111,28 @@ thershold =med*1.5;
 
 %Find Principal Axis
 [i,j] = find(enface1 > thershold); %x,y, positions of points which are 'tissue'
-V = pca([j,i]); %Main axis
+if ~isempty(i)
+    V = pca([j,i]); %Main axis
+    cxj = round(mean(j));
+    cyi = round(mean(i));    
+else
+    disp('Warning: Could not determine orientation, using default')
+    V = diag([1 1]);
+    cxj = round(size(enface1,2)/2);
+    cyi = round(size(enface1,1)/2);
+end
+cx = x(cxj);
+cy = y(cyi);
 
 %Plot
 imagesc(x,y,enface1 > thershold)
 imagesc(x,y,enface1)
 hold on;
-cx = x(round(mean(j)));
-cy = y(round(mean(i)));
 plot(cx+V(1)*1000*[-1,1],cy+V(2)*1000*[-1,1],'w');
 hold off
 
 %% Move Enface and rotate
-enface2 = imtranslate(enface1,-[mean(j) mean(i)]+size(enface1)/2,'FillValues',med);
+enface2 = imtranslate(enface1,-[cxj cyi]+size(enface1)/2,'FillValues',med);
 
 %Compute what should be the inverse rotation such that V(:,1) will be
 %facing X axis
