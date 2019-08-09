@@ -80,7 +80,9 @@ end
 
 %Attach files to parallel pool
 mypool=gcp;
-addAttachedFiles(mypool,{'yOCT2Tif.m','awsCopyFileFolder.m'});
+addAttachedFiles(mypool,{...
+    'yOCT2Tif.m','awsCopyFileFolder.m',...
+    'awsSetCredentials.m','awsSetCredentials_Private.m'});
 
 parfor yI=1:length(yIndexes) %Loop over y frames
     try
