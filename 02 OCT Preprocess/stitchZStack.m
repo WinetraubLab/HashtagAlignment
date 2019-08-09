@@ -12,7 +12,6 @@ saveYs = 3; %How many Bscans to save (for future reference)
 
 %Low memory mode, save results to a Tiff remotely than gather them all at
 %the very end
-isMemSaveMode = true; 
 
 %% Jenkins
 if (isRunningOnJenkins() || exist('runninAll','var'))
@@ -49,40 +48,8 @@ disp('Stitching ... '); tt=tic();
 yIndexes=dim.y.index;
 thresholds = zeros(1,length(yIndexes));
 imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
-
-%Memory Saving mode handeling
-if isMemSaveMode
-    if ~awsIsAWSPath(OCTVolumesFolder)
-        tmpOutputPath = [OCTVolumesFolder '\tmpOutput\'];
-        mkdir(tmpOutputPath);
-        tmpOutputPathDs = tmpOutputPath; %Path for Datastore
-    else
-        awsSetCredentials(1); %We need CLI
-        tmpOutputPath = awsModifyPathForCompetability([OCTVolumesFolder '/tmpOutput'],true);
-        tmpOutputPathDs = awsModifyPathForCompetability(tmpOutputPath,false); %Path for Datastore
-    end
-    
-    %In memory saving mode, if we already have some of the files for some
-    %ys, no need to recalculate
-    ds = fileDatastore(tmpOutputPathDs,'ReadFcn',@load,'FileExtensions','.tif');
-    
-    yIExists = zeros(size(ds.Files));
-    for i=1:length(ds.Files)
-        x = ds.Files{i};
-        [~,fname] = fileparts(x);
-        yIExists(i) = str2double(fname);
-    end
-    yIndexes(yIExists) = []; %Don't process same files twice.
-    thresholds(yIExists) = []; %Don't process same files twice.
-else
-    imOut = zeros(imOutSize); %[z,x,y] 
-end    
-
-%Attach files to parallel pool
-mypool=gcp;
-addAttachedFiles(mypool,{...
-    'yOCT2Tif.m','awsCopyFileFolder.m',...
-    'awsSetCredentials.m','awsSetCredentials_Private.m'});
+imOut = zeros(imOutSize,'single'); %[z,x,y] 
+imToSave = cell(size(thresholds)); %For examples files
 
 parfor yI=1:length(yIndexes) %Loop over y frames
     try
@@ -112,36 +79,30 @@ parfor yI=1:length(yIndexes) %Loop over y frames
         stack(:,:,zzI) = imtranslate((scan1.*factor),[0,zToScan(zzI)/pixSizeZ],'FillValues',NaN); 
             %In translation, compensate for water/tissue numerical
             %apperature
-            
-        %Save for overview Purpose
-        if (sum(yIndexes(yI) == yToSave)>0)
-            fprintf('Saving Slice to file, yI=%d, yIndex=%d, zVolume=%02d\n',yI,yIndexes(yI),zzI);
-            yOCT2Tif(log(scan1),sprintf('%s/BScan_Y%03d.tif',fpTxt,yIndexes(yI)));
-        end
-    end
-    
-    if ~isMemSaveMode
-        imOut(:,:,yI) = nanmean(stack,3);
-    else
-        %Memory saving mode
-		try
-			yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
-        catch
-            fprintf('yI=%d,yIndex=%d, is yOCT2Tif.m exist? %d\n',yI,yIndexes(yI),exist('yOCT2Tif.m','file'));
-            a = nanmean(stack,3); a=size(a);
-            fprintf('yI=%d,yIndex=%d, size(nanmean(stack,3): [%d, %d]\n',yI,yIndexes(yI),a(1),a(1));
-            fprintf('yI=%d,yIndex=%d, tmpOutputPath: %s\n',yI,yIndexes(yI),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
-            fprintf('yI=%d,yIndex=%d, running yOCT2Tif: [%d, %d]\n');
-
-			yOCT2Tif(nanmean(stack,3),sprintf('%s/%04d.tif',tmpOutputPath,yIndexes(yI)));
-		end
     end
     
     %Since we are dealing with a log scale, its important to trim the image
     %Let us trim the image using the signal at the gel (top of the image)
     tmp = nanmedian(squeeze(stack(:,:,1)),2);
-    thresholds(yI) = max(tmp(:))/size(stack,3)/2; %Devided by the amount of averages
+    th = max(tmp(:))/size(stack,3)/2; %Devided by the amount of averages
     
+    %Save to structure
+    imOut(:,:,yI) = single(nanmean(stack,3));
+    thresholds(yI) = th;
+    
+    %Since we can't save directly to drive as AWS CLI, we will generate the
+    %image and save it to a cell, upload later
+    imToSave{yI} = [];
+    if (sum(yIndexes(yI) == yToSave)>0)
+        stack(isnan(stack)) = th;
+        stack(stack<th) = th;
+        stack = log(stack);
+        c = [prctile(stack(:),20), prctile(stack(:),99.999)];
+        
+        %Compress to image format
+        imToSave{yI} = uint8( (stack-c(1))/(c(2)-c(1))*255 );
+    end
+         
     catch ME
         fprintf('Error happened in parfor, iteration %d, yIndex: %d',yI,yIndexes(yI)); 
         for j=1:length(ME.stack) 
@@ -153,35 +114,23 @@ parfor yI=1:length(yIndexes) %Loop over y frames
 end
 fprintf('Done stitching, toatl time: %.0f[min]\n',toc(tt)/60);
 
-%% Load Individual tiffs and concatinate
-if isMemSaveMode
-    imOut = zeros(imOutSize,'single'); %z,x,y
-    disp('Loading Data from individual files');
-    for yI = 1:size(imOut,3)
-        imOut(:,:,yI) = yOCTFromTif(sprintf('%s/%04d.tif',tmpOutputPath,yI));
-    end
-end
-
-%% Average
-th = mean(thresholds);
-imOut1 = imOut;
-imOut1(imOut1<th) = th;
+%% Threshlod
+th = single(mean(thresholds));
+imOut(imOut<th) = th;
 
 %% Output Tiff
 disp('Saving to Tiff ...');
-yOCT2Tif(log(imOut1),[OCTVolumesFolder '/VolumeScanAbs.tif']);
+yOCT2Tif(log(imOut),[OCTVolumesFolder '/VolumeScanAbs.tif']);
 disp('Done');
 
-figure(1);
-imagesc(squeeze(log(imOut1(:,:,round(size(imOut1,3)/2)))));
-colormap bone;
-
-%% Cleanup
-if isMemSaveMode
-    %Make a directory for all output files 
-    if ~awsIsAWSPath(OCTVolumesFolder)
-        rmdir(tmpOutputPath,'s');
-    else
-        [status,err] = system(['aws s3 rm ' tmpOutputPath ' --recursive']);
-    end
+logDir = [OCTVolumesFolder '02 OCT Preprocess Log'];
+if ~awsIsAWSPath(logDir) && ~exist(logDir,'dir')
+    mkdir(logDir);
 end
+for i=1:length(yToSave)
+    yOCT2Tif(imToSave{i},sprintf('%s/y%03dZStack.tif',logDir,yToSave{i}));
+end
+
+figure(1);
+imagesc(squeeze(log(imOut(:,:,round(size(imOut,3)/2)))));
+colormap bone;

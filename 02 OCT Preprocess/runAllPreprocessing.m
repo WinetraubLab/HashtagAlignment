@@ -58,7 +58,7 @@ catch ME
 	disp(ME.message); 
     
     if (isUploadToCloud)
-        disp('Cleaning up local folder (as we alrady uploaded to the cloud');
+        disp('Cleaning up local folder (as we alrady uploaded to the cloud)');
         %Delete local folder
         rmdir(SubjectFolderIn,'s');
     end
