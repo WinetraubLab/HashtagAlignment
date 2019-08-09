@@ -4,17 +4,29 @@
 SubjectFolderIn = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01';
 SubjectFolderOut = SubjectFolderIn; %Where to save folder to
 
+%For debug purpose, skip the uploading part
+isProcessOnly = false;
+
 %% Setup environment
 if (isRunningOnJenkins()) %Get inputs from Jenkins
     disp(['Processing input: ' SubjectFolderIn_ ]);
     SubjectFolderIn = SubjectFolderIn_;
     SubjectFolderOut = SubjectFolderOut_;
     
+    if exist('isProcessOnly_','var') 
+        isProcessOnly = isProcessOnly_;
+    end
+    
     if ~awsIsAWSPath(SubjectFolderIn_ ) && ~exist(SubjectFolderIn_,'dir')
         disp(['Input folder non existing: ' SubjectFolderIn_ '. Probably already upload to the cloud']);
         disp('Skipping that one');
         return;
     end
+end
+
+if (isProcessOnly)
+    %If only processing, no need to upload to the cloud
+    SubjectFolderOut = SubjectFolderIn;
 end
 
 if (awsIsAWSPath(SubjectFolderIn))
@@ -34,6 +46,9 @@ OCTVolumesFolder_ = [SubjectFolderIn '\OCT Volumes\'];
 
 %% Start by uploading to the cloud
 isUploadToCloud = ~inputFolderAWS && outputFolderAWS;
+if (isProcessOnly)
+    isUploadToCloud = false;
+end
 
 if(isUploadToCloud)
     disp('Uploading files to AWS');
