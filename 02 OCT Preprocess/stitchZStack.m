@@ -73,7 +73,6 @@ parfor yI=1:length(yIndexes) %Loop over y frames
         %Filter
         zI = 1:length(scan1); zI = zI(:);
         factor = repmat(exp(-(zI-focusPositionInImageZpix).^2/(2*focusSigma)^2), [1 size(scan1,2)]);
-        %factor(factor<exp(-1/2*3^2)) = 0; %Values too low / out of focus
           
         %Add to stack
         stack(:,:,zzI) = imtranslate((scan1.*factor),[0,zToScan(zzI)/pixSizeZ],'FillValues',NaN); 
