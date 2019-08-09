@@ -40,14 +40,19 @@ end
 
 %% Running
 try
+    fprintf('%s Running findFocusInBScan.\n',datestr(datetime));
     findFocusInBScan;
     close all;
     
+    fprintf('%s Running stitchOverview.\n',datestr(datetime));
     stitchOverview;
     close all;
     
+    fprintf('%s Running stitchZStack.\n',datestr(datetime));
     stitchZStack
     close all;
+    
+    fprintf('%s Done Running.\n',datestr(datetime));
 catch ME 
     %% Error Hendle. If error happend during processing we still want to upload the data
 	disp(' '); 
@@ -68,7 +73,7 @@ end
 
 %% Upload new files to the cloud
 if(isUploadToCloud)
-    disp('Uploading difference to the cloud');
+    fprintf('%s Uploading difference to the cloud.\n',datestr(datetime));
     
     %Delete files that were uploaded before
     delete([SubjectFolderIn '\*.srr']);
@@ -79,3 +84,5 @@ if(isUploadToCloud)
     %Delete local folder, its done
     rmdir(SubjectFolderIn,'s');
 end
+
+fprintf('%s Finish.\n',datestr(datetime));
