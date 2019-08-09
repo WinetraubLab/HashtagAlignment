@@ -120,6 +120,7 @@ imOut(imOut<th) = th;
 %% Output Tiff
 disp('Saving to Tiff ...');
 yOCT2Tif(log(imOut),[OCTVolumesFolder '/VolumeScanAbs.tif']);
+awsWriteJSON(dim,[OCTVolumesFolder '/VolumeScanAbs.json']);
 disp('Done');
 
 logDir = [OCTVolumesFolder '02 OCT Preprocess Log'];
@@ -127,7 +128,7 @@ if ~awsIsAWSPath(logDir) && ~exist(logDir,'dir')
     mkdir(logDir);
 end
 for i=1:length(yToSave)
-    yOCT2Tif(imToSave{i},sprintf('%s/y%03dZStack.tif',logDir,yToSave{i}));
+    yOCT2Tif(imToSave{yToSave(i)},sprintf('%s/y%03dZStack.tif',logDir,yToSave{i}));
 end
 
 figure(1);
