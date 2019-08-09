@@ -6,11 +6,13 @@ SubjectFolderOut = SubjectFolderIn; %Where to save folder to
 
 %% Setup environment
 if (isRunningOnJenkins()) %Get inputs from Jenkins
+    disp(['Processing input: ' SubjectFolderIn_ ]);
     SubjectFolderIn = SubjectFolderIn_;
     SubjectFolderOut = SubjectFolderOut_;
     
     if ~awsIsAWSPath(SubjectFolderIn_ ) && ~exist(SubjectFolderIn_,'dir')
         disp(['Input folder non existing: ' SubjectFolderIn_ '. Probably already upload to the cloud']);
+        disp('Skipping that one');
         return;
     end
 end
