@@ -128,7 +128,11 @@ if ~awsIsAWSPath(logDir) && ~exist(logDir,'dir')
     mkdir(logDir);
 end
 for i=1:length(yToSave)
-    yOCT2Tif(imToSave{yToSave(i)},sprintf('%s/y%03dZStack.tif',logDir,yToSave{i}));
+    if isempty(imToSave{yToSave(i)})
+        fprintf('yI=%d is empty, was expecting to have an example volume to save\n',yToSave(i));
+    else
+        yOCT2Tif(imToSave{yToSave(i)},sprintf('%s/y%03dZStack.tif',logDir,yToSave(i)));
+    end
 end
 
 figure(1);
