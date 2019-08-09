@@ -48,16 +48,19 @@ disp('Stitching ... '); tt=tic();
 yIndexes=dim.y.index;
 thresholds = zeros(1,length(yIndexes));
 imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
-imOut = zeros(imOutSize,'single'); %[z,x,y] 
 imToSave = cell(size(thresholds)); %For examples files
 
-parfor yI=1:length(yIndexes) %Loop over y frames
+%Make sure a temporary folder to save the data is empty
+tmpDir = [OCTVolumesFolder '/tmp/'];
+awsRmDir(tmpDir);
+
+parfor (yI=1:length(yIndexes)) %Loop over y frames
     try
     fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>
     
     %Loop over depths
     stack = zeros([imOutSize(1:2), length(zToScan)])*NaN; %#ok<PFBNS> %z,x,zStach
-    for zzI=1:length(zToScan)
+    for zzI=1:length(zToScan) 
         
         %Load Frame
         fpTxt = fp{zzI};
@@ -85,12 +88,19 @@ parfor yI=1:length(yIndexes) %Loop over y frames
     tmp = nanmedian(squeeze(stack(:,:,1)),2);
     th = max(tmp(:))/size(stack,3)/2; %Devided by the amount of averages
     
-    %Save to structure
-    imOut(:,:,yI) = single(nanmean(stack,3));
+    %Save results to temporary files
+    %Since this data is big, its better to upload it to destination than
+    %return it to Matlab
+    T = tall({single(nanmean(stack,3))})
+    location = sprintf('%s/y%04d/m*.mat',tmpDir,yIndexes(yI));
+    write(location,T,'WriteFcn',@tallWriter); %Not a trivial implementation but it works
+    
+    %Save thresholds, this data is small so we can send it back
     thresholds(yI) = th;
     
     %Since we can't save directly to drive as AWS CLI, we will generate the
-    %image and save it to a cell, upload later
+    %image and save it to a cell, upload later. This is a small dataset so
+    %we can return it to matlab no need to use tall
     imToSave{yI} = [];
     if (sum(yIndexes(yI) == yToSave)>0)
         stack(isnan(stack)) = th;
@@ -114,15 +124,27 @@ end
 fprintf('Done stitching, toatl time: %.0f[min]\n',toc(tt)/60);
 
 %% Threshlod
+%Compute a single threshold for all files
 th = single(mean(thresholds));
-imOut(imOut<th) = th;
 
-%% Output Tiff
+%% Collect all mat files from datastore to create a single output
 disp('Saving to Tiff ...');
-yOCT2Tif(log(imOut),[OCTVolumesFolder '/VolumeScanAbs.tif']);
-awsWriteJSON(dim,[OCTVolumesFolder '/VolumeScanAbs.json']);
-disp('Done');
 
+%Read (using parpool)
+bv = yOCTReadBigVolume(tmpDir,'mat');
+
+%Apply threshold
+bv(bv<th) = th;
+bv = log(bv);
+
+%Write (using parpool)
+location = [OCTVolumesFolder '/VolumeScanAbs/'];
+yOCTWriteBigVolume(bv,dim, location,'tif');
+
+%% Cleanup the temporary dir
+awsRmDir(tmpDir);
+
+%% Write to log dir
 logDir = [OCTVolumesFolder '02 OCT Preprocess Log'];
 if ~awsIsAWSPath(logDir) && ~exist(logDir,'dir')
     mkdir(logDir);
@@ -138,3 +160,9 @@ end
 figure(1);
 imagesc(squeeze(log(imOut(:,:,round(size(imOut,3)/2)))));
 colormap bone;
+
+function tallWriter (info, data)
+filename = [info.RequiredLocation '\' strrep(info.RequiredFilePattern,'*','')];%Remove required pattern, its easier that way
+%filename = info.SuggestedFilename;
+yOCT2Mat(data{:}, filename);
+end
