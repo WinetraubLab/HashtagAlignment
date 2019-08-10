@@ -53,7 +53,7 @@ imToSave = cell(size(thresholds)); %For examples files
 %Make sure a temporary folder to save the data is empty
 tmpDir = [OCTVolumesFolder '/tmp/'];
 awsRmDir(tmpDir);
-
+parallel.defaultClusterProfile
 p=gcp('nocreate');
 if ~isempty(p)
     %kill prev parpool before starting this one

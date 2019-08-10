@@ -50,6 +50,7 @@ if lowRAMMode
 else
     overviewScan = cell(length(gridYc),length(gridXc));
 end
+parallel.defaultClusterProfile
 parfor i=1:length(gridXcc) %Because of the way the scan went we can easily stitch
     fprintf('%s Processing volume %d of %d.\n',datestr(datetime),i,length(gridYcc));
     
