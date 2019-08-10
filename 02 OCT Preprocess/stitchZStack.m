@@ -55,7 +55,7 @@ tmpDir = [OCTVolumesFolder '/tmp/'];
 awsRmDir(tmpDir);
 
 p=gcp;
-addAttachedFiles(p,'tallWriter.m','yOCT2Mat.m')
+addAttachedFiles(p,{'tallWriter.m','yOCT2Mat.m'})
 parfor (yI=1:length(yIndexes)) %Loop over y frames
     try
     fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>
