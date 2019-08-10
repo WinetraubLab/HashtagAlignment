@@ -105,7 +105,7 @@ parfor (yI=1:length(yIndexes))
     %Since this data is big, its better to upload it to destination than
     %return it to Matlab
     T = tall({single(nanmean(stack,3))})
-    location = sprintf('%s/y%04d/m*.mat',tmpDir,yIndexes(yI));
+    location = awsModifyPathForCompetability(sprintf('%s/y%04d/m*.mat',tmpDir,yIndexes(yI)),false);
     write(location,T,'WriteFcn',@tallWriter); %Not a trivial implementation but it works
     
     %Save thresholds, this data is small so we can send it back
