@@ -159,6 +159,6 @@ for i=1:length(yToSave)
     end
 end
 
-figure(1);
-imagesc(squeeze(log(imOut(:,:,round(size(imOut,3)/2)))));
-colormap bone;
+%figure(1);
+%imagesc(squeeze(log(imOut(:,:,round(size(imOut,3)/2)))));
+%colormap bone;
