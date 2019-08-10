@@ -54,7 +54,7 @@ imToSave = cell(size(thresholds)); %For examples files
 tmpDir = [OCTVolumesFolder '/tmp/'];
 awsRmDir(tmpDir);
 
-p=gcp;
+p=parpool('SpmdEnabled',false);
 addAttachedFiles(p,{'tallWriter.m','yOCT2Mat.m'})
 parfor (yI=1:length(yIndexes)) %Loop over y frames
     try
@@ -144,7 +144,7 @@ location = [OCTVolumesFolder '/VolumeScanAbs/'];
 yOCTWriteBigVolume(bv,dim, location,'tif');
 
 %% Cleanup the temporary dir
-awsRmDir(tmpDir);
+%awsRmDir(tmpDir); <-- don't remove directory as we might need it later
 
 %% Write to log dir
 logDir = [OCTVolumesFolder '02 OCT Preprocess Log'];
