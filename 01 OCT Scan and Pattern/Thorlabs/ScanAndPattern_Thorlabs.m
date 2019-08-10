@@ -80,6 +80,7 @@ if (isRunningOnJenkins())
 	config.isRunOverview = true;	
 	
 	if (exist('isDebugFastMode_','var') && isDebugFastMode_ == true) %Debug mode, make a faster scan
+		disp('Entering debug mode!');
 		config.scan.nPixelsX = 100; 
 		config.scan.nPixelsY = 100; 
 		config.overview.rangeAll = 2;
