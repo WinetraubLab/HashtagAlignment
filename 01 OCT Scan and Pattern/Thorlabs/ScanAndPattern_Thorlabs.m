@@ -78,6 +78,12 @@ if (isRunningOnJenkins())
     config.zToPhtobleach = zToPhtobleach_; %Set by Jenkins
     config.isDrawTickmarks = isDrawTickmarks_; %Set by Jenkins
 	config.isRunOverview = true;	
+	
+	if (isDebugFastMode_ == true) %Debug mode, make a faster scan
+		config.scan.nPixelsX = 100; 
+		config.scan.nPixelsY = 100; 
+		config.overview.rangeAll = 2;
+	end
 end
 
 %Make dirs for output and log
