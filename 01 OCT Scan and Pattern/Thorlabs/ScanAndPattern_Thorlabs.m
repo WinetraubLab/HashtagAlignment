@@ -79,7 +79,7 @@ if (isRunningOnJenkins())
     config.isDrawTickmarks = isDrawTickmarks_; %Set by Jenkins
 	config.isRunOverview = true;	
 	
-	if (isDebugFastMode_ == true) %Debug mode, make a faster scan
+	if (exist('isDebugFastMode_','var') && isDebugFastMode_ == true) %Debug mode, make a faster scan
 		config.scan.nPixelsX = 100; 
 		config.scan.nPixelsY = 100; 
 		config.overview.rangeAll = 2;
