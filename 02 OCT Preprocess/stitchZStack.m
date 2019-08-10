@@ -54,6 +54,11 @@ imToSave = cell(size(thresholds)); %For examples files
 tmpDir = [OCTVolumesFolder '/tmp/'];
 awsRmDir(tmpDir);
 
+p=gcp('nocreate');
+if ~isempty(p)
+    %kill prev parpool before starting this one
+    delete(p);
+end
 p=parpool('SpmdEnabled',false);
 addAttachedFiles(p,{'tallWriter.m','yOCT2Mat.m'})
 parfor (yI=1:length(yIndexes)) %Loop over y frames
