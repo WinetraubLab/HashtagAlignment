@@ -53,6 +53,8 @@ imToSave = cell(size(thresholds)); %For examples files
 %Make sure a temporary folder to save the data is empty
 tmpDir = [OCTVolumesFolder '/tmp/'];
 awsRmDir(tmpDir);
+
+%Setup parallel pool, attach everything we need
 parallel.defaultClusterProfile
 p=gcp('nocreate');
 if ~isempty(p)
@@ -60,8 +62,12 @@ if ~isempty(p)
     delete(p);
 end
 p=parpool('SpmdEnabled',false);
-addAttachedFiles(p,{'tallWriter.m','yOCT2Mat.m'})
-parfor (yI=1:length(yIndexes)) %Loop over y frames
+pds = fileDatastore('../','ReadFcn',@load,'FileExtensions','.m','IncludeSubfolders',true);  
+addAttachedFiles(p,pds.Files);
+%addAttachedFiles(p,{'tallWriter.m','yOCT2Mat.m','yOCTLoadInterfFromFile.m','yOCTInterfToScanCpx.m',})
+
+%Loop over y frames
+parfor (yI=1:length(yIndexes)) 
     try
     fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>
     
