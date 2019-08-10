@@ -83,6 +83,9 @@ if (isRunningOnJenkins())
 		config.scan.nPixelsX = 100; 
 		config.scan.nPixelsY = 100; 
 		config.overview.rangeAll = 2;
+		config.vLinePositions = config.base*[0]; %[mm] 
+		config.hLinePositions = config.base*[0]; %[mm] 
+		config.exposurePerLine = 10; %sec
 	end
 end
 
