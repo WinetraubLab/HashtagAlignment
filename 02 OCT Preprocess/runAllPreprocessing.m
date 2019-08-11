@@ -6,6 +6,7 @@ SubjectFolderOut = SubjectFolderIn; %Where to save folder to
 
 %For debug purpose, skip the uploading part
 isProcessOnly = false;
+deleteFolderAfterUpload = false; %Would you like to delete data after uploading to the cloud or ask for manual delete?
 
 %% Setup environment
 if (isRunningOnJenkins()) %Get inputs from Jenkins
@@ -78,14 +79,22 @@ try
 	if(isUploadToCloud)
 		fprintf('%s Uploading difference to the cloud.\n',datestr(datetime));
 		
-		%Delete files that were uploaded before
-		delete([SubjectFolderIn '\*.srr']);
+		d = dir(OCTVolumesFolder_); 
+		for i=1:length(d)
+			switch (d(i).name)
+				case {'.','..','Overview','Volume'}
+					%Do nothing, these were already uploaded
+				otherwise
+					%Copy to the cloud
+					awsCopyFileFolder([d(i).folder '\' d(i).name], ...
+						[SubjectFolderOut '/' d(i).name]);
+			end
+		end
 		
-		%Copy to the cloud
-		awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
-		
-		%Delete local folder, its done
-		rmdir(SubjectFolderIn,'s');
+		if deleteFolderAfterUpload
+			%Delete local folder, its done
+			rmdir(SubjectFolderIn,'s');
+		end
 	end
     
     fprintf('%s Done Running.\n',datestr(datetime));
@@ -98,7 +107,7 @@ catch ME
 	end 
 	disp(ME.message); 
     
-    if (isUploadToCloud)
+    if (isUploadToCloud && deleteFolderAfterUpload) %Only manual cleaning
         disp('Cleaning up local folder (as we alrady uploaded to the cloud)');
         %Delete local folder
         rmdir(SubjectFolderIn,'s');
