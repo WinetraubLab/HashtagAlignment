@@ -11,7 +11,7 @@ pipeline {
 		string(
 			name: "SUBJECT_ID",
 			defaultValue:"LB-00",
-			description:"Subject Id.<br>Example: LB-01")
+			description:"Subject Id.\nExample: LB-01")
 		string(
 			name: "Z_TO_PHTOBLEACH",
 			defaultValue:"-300",
