@@ -1,0 +1,48 @@
+//This Jenkinsfile will preform a scan and save the results to a common storage
+//It will also create a .m file explaining how to preprocess this scan
+pipeline {
+    agent any
+	parameters 
+	{
+		string(
+			name: "S3_DIR",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/",
+			description:"Subject Directory.<br>Example: s3://delazerdamatlab/Users/OCTHistologyLibrary/LA/")
+		string(
+			name: "SUBJECT_ID",
+			defaultValue:"LB-00",
+			description:"Subject Id.<br>Example: LB-01")
+		string(
+			name: "Z_TO_PHTOBLEACH",
+			defaultValue:"-300",
+			description:"We assume top of the sample is in focus right now.<br>Set this value to the position of the top of the gel as photobleaching will occur at this specified z.<br>Units are um | +z is deeper")
+		string(
+			name: "WHO_TO_EMAIL_WHEN_DONE",
+			defaultValue:"@stanford.edu",
+			description:"Who should get an email with the results? Including you!<br>Use comma to specify multiple emails.<br>Example: me@stanford.edu, you@stanford.edu")
+		
+		//Debug purpose 
+		booleanParam(
+			name: 'IS_PHOTOBLEACH_TICKMARKS',
+			defaultValue:false,
+			description:"Set to true if you would like to photobleach tickmarks")
+		booleanParam(
+			name: 'IS_DEBUG_MODE',
+			defaultValue:false,
+			description:"Set to true if you would like to do a fast debug scan")
+    }
+    stages {
+        stage("ParameterChecks") 
+		{
+            steps {
+                script {
+					def indexOfAt = params.indexOf('@',0) 
+                    if (indexOfAt == 0) {
+                        currentBuild.result = 'ABORTED'
+                        error('Please specify email address to send a note when run is completed')
+                    }
+                }
+            }
+		}
+    }
+}
