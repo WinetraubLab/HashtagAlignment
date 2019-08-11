@@ -151,7 +151,7 @@ bv(bv<th) = th;
 bv = log(bv);
 
 %Write (using parpool)
-location = [OCTVolumesFolder '/VolumeScanAbs/'];
+location = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/'],false);
 yOCTWriteBigVolume(bv,dim, location,'tif');
 
 %% Cleanup the temporary dir
