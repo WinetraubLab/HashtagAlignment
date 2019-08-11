@@ -14,7 +14,7 @@ focusSigma = 20; %Sigma size of focus [pixel]
 isAutomaticMode =  isRunningOnJenkins() || exist('runninAll','var');
 
 %% Jenkins
-if (isAutomaticMode)
+if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
 end
 
