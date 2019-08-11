@@ -32,7 +32,7 @@ pipeline {
 			description:"Set to true if you would like to do a fast debug scan")
     }
     stages {
-        stage("ParameterChecks") 
+        stage("ParametersCheckAndEnvSetup") 
 		{
             steps {
                 script {
@@ -43,5 +43,11 @@ pipeline {
                 }
             }
 		}
-    }
+		stage("Checkout")
+		{
+			deleteDir()
+			checkout([$class: 'GitSCM', branches: [[name: 'origin/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/MyYo/HashtagAlignment']]]) 
+			checkout([$class: 'GitSCM', branches: [[name: 'origin/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/MyYo/myOCT']]]) 
+		}
+	}
 }
