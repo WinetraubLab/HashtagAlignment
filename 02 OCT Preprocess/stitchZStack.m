@@ -55,7 +55,6 @@ tmpDir = [OCTVolumesFolder '/tmp/'];
 awsRmDir(tmpDir);
 
 %Setup parallel pool, attach everything we need
-parallel.defaultClusterProfile
 p=gcp('nocreate');
 if ~isempty(p)
     %kill prev parpool before starting this one
