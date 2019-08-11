@@ -36,8 +36,7 @@ pipeline {
 		{
             steps {
                 script {
-					def indexOfAt = params.WHO_TO_EMAIL_WHEN_DONE.indexOf('@',0) 
-                    if (indexOfAt == 0) {
+                    if (params.WHO_TO_EMAIL_WHEN_DONE == "@stanford.edu") {
                         currentBuild.result = 'ABORTED'
                         error('Please specify email address to send a note when run is completed')
                     }
