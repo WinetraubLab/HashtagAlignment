@@ -73,6 +73,20 @@ try
     fprintf('%s Running stitchZStack.\n',datestr(datetime));
     stitchZStack
     close all;
+	
+	%Upload new files to the cloud, but only if processing was finished correctly
+	if(isUploadToCloud)
+		fprintf('%s Uploading difference to the cloud.\n',datestr(datetime));
+		
+		%Delete files that were uploaded before
+		delete([SubjectFolderIn '\*.srr']);
+		
+		%Copy to the cloud
+		awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
+		
+		%Delete local folder, its done
+		rmdir(SubjectFolderIn,'s');
+	end
     
     fprintf('%s Done Running.\n',datestr(datetime));
 catch ME 
@@ -92,19 +106,5 @@ catch ME
     
     error('Aborting');
 end 
-
-%% Upload new files to the cloud
-if(isUploadToCloud)
-    fprintf('%s Uploading difference to the cloud.\n',datestr(datetime));
-    
-    %Delete files that were uploaded before
-    delete([SubjectFolderIn '\*.srr']);
-    
-    %Copy to the cloud
-    awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
-    
-    %Delete local folder, its done
-    rmdir(SubjectFolderIn,'s');
-end
 
 fprintf('%s Finish.\n',datestr(datetime));

@@ -154,9 +154,9 @@ location = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/'],fa
 yOCTWriteBigVolume(bv,dim, location,'tif');
 
 %% Cleanup the temporary dir
-%awsRmDir(tmpDir); <-- don't remove directory as we might need it later
+awsRmDir(tmpDir); 
 
-%% Write to log dir
+%% Save overviews of a few Y sections to log
 logDir = [OCTVolumesFolder '02 OCT Preprocess Log'];
 if ~awsIsAWSPath(logDir) && ~exist(logDir,'dir')
     mkdir(logDir);
@@ -168,7 +168,3 @@ for i=1:length(yToSave)
         yOCT2Tif(imToSave{yToSave(i)},sprintf('%s/y%03dZStack.tif',logDir,yToSave(i)));
     end
 end
-
-%figure(1);
-%imagesc(squeeze(log(imOut(:,:,round(size(imOut,3)/2)))));
-%colormap bone;
