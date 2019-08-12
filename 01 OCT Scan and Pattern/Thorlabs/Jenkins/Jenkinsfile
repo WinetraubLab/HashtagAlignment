@@ -136,7 +136,7 @@ pipeline {
 					
 					archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 				}
-				catch
+				catch()
 				{
 					//Do nothing, its ok if a file is missing from the archive
 				}
