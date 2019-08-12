@@ -41,17 +41,17 @@ for i=1:length(x0s)
 
     elseif (x0>0 && y0<0)
         innerpts1 = [hLinePositions(1) tickline_y(hLinePositions(1))];
-        innerpts2 = [tickline_x(vLinePositions(3)) vLinePositions(3)];
+        innerpts2 = [tickline_x(vLinePositions(end)) vLinePositions(end)];
         s = [-1, -1]; % sign of shift in (x,y) of 1st line due to gap
 
     elseif (x0<0 && y0>0)
         innerpts1 = [tickline_x(vLinePositions(1)) vLinePositions(1)];
-        innerpts2 = [hLinePositions(3) tickline_y(hLinePositions(3))];
+        innerpts2 = [hLinePositions(end) tickline_y(hLinePositions(end))];
         s = [-1, -1]; % sign of shift in (x,y) of 1st line due to gap
 
     elseif (x0<0 && y0<0)
-        innerpts1 = [tickline_x(vLinePositions(3)) vLinePositions(3)];
-        innerpts2 = [hLinePositions(3) tickline_y(hLinePositions(3))];
+        innerpts1 = [tickline_x(vLinePositions(end)) vLinePositions(end)];
+        innerpts2 = [hLinePositions(end) tickline_y(hLinePositions(end))];
         s = [-1, 1]; % sign of shift in (x,y) of 1st line due to gap
 
     end
