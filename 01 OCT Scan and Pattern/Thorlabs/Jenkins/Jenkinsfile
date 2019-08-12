@@ -104,9 +104,9 @@ pipeline {
 		{steps{script{
 			try
 			{
-				def jobURL = env.BUILD_URL
+				def jobURL = env.BUILD_URL - (env.BUILD_ID+"/")
 				echo jobURL
-				echo (env.BUILD_ID+"\\")
+				echo (env.BUILD_ID+"/")
 			bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
 			}
 			catch(Exception e)
@@ -122,6 +122,7 @@ pipeline {
 				bat('type Testers\\matlablog.txt')
 				echo "MATLAB LOG END -------------------------"
 				echo "----------------------------------------"
+				
 				bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
 				bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
 				
