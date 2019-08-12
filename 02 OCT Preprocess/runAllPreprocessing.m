@@ -32,8 +32,6 @@ if ~exist('isRunInAutomatedMode_','var')
 	isRunInAutomatedMode = isRunInAutomatedMode_;
 end
 if ~isRunInAutomatedMode
-	currentFileFolder = fileparts(mfilename('fullpath'));
-	cd(currentFileFolder);
 	input('Once we click on enter script will run, would you like to edit files? Click enter when ready');
 end
 
