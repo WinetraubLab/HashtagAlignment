@@ -146,7 +146,7 @@ pipeline {
 
 			//Move files to the right folder
 			bat("type tmp.m >> %TEMP_STORAGE%\\runme_preprocess.m")
-			bat("move runme_findFocus %TEMP_STORAGE%\\")
+			bat("move runme_findFocus.bat %TEMP_STORAGE%\\")
 			
 			//println gitFolder
 		}}}
