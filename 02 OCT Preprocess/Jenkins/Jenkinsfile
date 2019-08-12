@@ -60,7 +60,17 @@ pipeline {
 		stage("Build Runme File")
 		{steps{script{
 			bat('echo  isRunInAutomatedMode_ = true >> runme.m"
-			bat('type "%TEMP_STORAGE%\\runme_preprocess.m" >> runme.m') //Copy main file to run locally
+			
+			def runmePreprocessFP = '%TEMP_STORAGE%\\runme_preprocess.m'
+			def f = new File( runmePreprocessFP )
+			if( f.exists() ) 
+			{
+				bat('type "' + runmePreprocessFP + '" >> runme.m') //Copy main file to run locally
+			} else {
+				currentBuild.result = 'ABORTED'
+				echo("No files to process, runme_preprocess.m does not exist")
+				error("No files to process, runme_preprocess.m does not exist")
+			}
 			
 			// Move the m file to Testers
 			bat("move runme.m Testers\\")
