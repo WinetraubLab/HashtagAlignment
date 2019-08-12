@@ -134,19 +134,18 @@ pipeline {
 		}}}
 		stage("Leave a Hook for Preprocessing")
 		{steps{script{
-			//Manual finding of focus position
-			
-			//Add to matlab file
-			bat("echo OCTVolumesFolder_ = '%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\'; >> tmp.m")
-			bat("echo findFocusInBScan; >> tmp.m")
-			
-			//Bat file
-			def currentDir = new File(".").getAbsolutePath() - "."
-			bat("""echo "%MATLAB_PATH%" -r "addpath(genpath('""" + currentDir + """'));runme_findFocus; delete('runme_findFocus.m'); exit(0);" > runme_findFocus.bat""")
+			//How to preprocess this file
+			def foldersDef = 
+				"SubjectFolderIn_  = '%TEMP_STORAGE%\\%SUBJECT_ID%\\';" + 
+				"SubjectFolderOut_ = '%S3_DIR%/%SUBJECT_ID%/';"	
+		
+			//Manualy
+			def currentDir = pwd()
+			bat("""echo "%MATLAB_PATH%" -r "addpath(genpath('""" + currentDir + "'));" + foldersDef +
+				"isRunInAutomatedMode = false; cd('" + currentDir + """\\02 OCT Preprocess\\'); runAllPreprocessing; disp('MAKE SURE YOU QUIT MATLAB BEFORE RUNNING JENKINS!');" > "%TEMP_STORAGE%\\%SUBJECT_ID%\\runAllPreprocessing_Manualy.bat" """)
 
-			//Move files to the right folder
-			bat("type tmp.m >> %TEMP_STORAGE%\\runme_preprocess.m")
-			bat("move runme_findFocus.bat %TEMP_STORAGE%\\")
+			//Automated
+			bat("echo " + foldersDef + """runAllPreprocessing; >> "%TEMP_STORAGE%\\runme_preprocess.m" """)
 			
 			//println gitFolder
 		}}}
