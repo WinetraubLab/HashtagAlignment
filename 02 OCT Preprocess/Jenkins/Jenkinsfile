@@ -62,6 +62,7 @@ pipeline {
 			bat("echo  isRunInAutomatedMode_ = true >> runme.m")
 			
 			def runmePreprocessFP = '%TEMP_STORAGE%\\runme_preprocess.m'
+			println runmePreprocessFP
 			def f = new File( runmePreprocessFP )
 			if( f.exists() ) 
 			{
