@@ -1,7 +1,7 @@
 %This script stitches images aquired at different z depths 2gezer
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/OCT Volumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-001/OCT Volumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -46,7 +46,8 @@ disp('Stitching ... '); tt=tic();
 
 %Set up for paralel processing
 yIndexes=dim.y.index;
-thresholds = zeros(1,length(yIndexes));
+thresholds = zeros(length(yIndexes),1);
+cValues = zeros(length(yIndexes),2);
 imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
 imToSave = cell(size(thresholds)); %For examples files
 
@@ -57,10 +58,12 @@ awsRmDir(tmpDir);
 %Setup parallel pool, attach everything we need
 p=gcp('nocreate');
 if ~isempty(p)
-    %kill prev parpool before starting this one
-    delete(p);
+    %kill prev parpool before starting this one if it has SpmdEnabled flag
+    if (p.SpmdEnabled)
+        delete(p);
+        p=parpool('SpmdEnabled',false);
+    end
 end
-p=parpool('SpmdEnabled',false);
 pds = fileDatastore('../','ReadFcn',@load,'FileExtensions','.m','IncludeSubfolders',true);  
 addAttachedFiles(p,pds.Files);
 %addAttachedFiles(p,{'tallWriter.m','yOCT2Mat.m','yOCTLoadInterfFromFile.m','yOCTInterfToScanCpx.m',})
@@ -72,7 +75,7 @@ parfor (yI=1:length(yIndexes))
     
     %Loop over depths
     stack = zeros([imOutSize(1:2), length(zToScan)])*NaN; %#ok<PFBNS> %z,x,zStach
-    for zzI=1:length(zToScan) 
+    for zzI=1:length(zToScan)
         
         %Load Frame
         fpTxt = fp{zzI};
@@ -99,16 +102,18 @@ parfor (yI=1:length(yIndexes))
     %Let us trim the image using the signal at the gel (top of the image)
     tmp = nanmedian(squeeze(stack(:,:,1)),2);
     th = max(tmp(:))/size(stack,3)/2; %Devided by the amount of averages
+    c = [prctile(tmp(:),20), prctile(tmp(:),99.9)];
     
     %Save results to temporary files
     %Since this data is big, its better to upload it to destination than
     %return it to Matlab
-    T = tall({single(nanmean(stack,3))})
+    T = tall({single(nanmean(stack,3))});
     location = awsModifyPathForCompetability(sprintf('%s/y%04d/m*.mat',tmpDir,yIndexes(yI)),false);
     write(location,T,'WriteFcn',@tallWriter); %Not a trivial implementation but it works
     
     %Save thresholds, this data is small so we can send it back
     thresholds(yI) = th;
+    cValues(yI,:) = c;
     
     %Since we can't save directly to drive as AWS CLI, we will generate the
     %image and save it to a cell, upload later. This is a small dataset so
@@ -118,10 +123,9 @@ parfor (yI=1:length(yIndexes))
         stack(isnan(stack)) = th;
         stack(stack<th) = th;
         stack = log(stack);
-        c = [prctile(stack(:),20), prctile(stack(:),99.999)];
         
         %Compress to image format
-        imToSave{yI} = uint8( (stack-c(1))/(c(2)-c(1))*255 );
+        imToSave{yI} = single( (stack-c(1))/(c(2)-c(1))*255 );
     end
          
     catch ME
@@ -151,7 +155,7 @@ bv = log(bv);
 
 %Write (using parpool)
 location = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/'],false);
-yOCTWriteBigVolume(bv,dim, location,'tif');
+yOCTWriteBigVolume(bv,dim, location,'tif',log(mean(cValues)));
 
 %% Cleanup the temporary dir
 awsRmDir(tmpDir); 
@@ -165,6 +169,8 @@ for i=1:length(yToSave)
     if isempty(imToSave{yToSave(i)})
         fprintf('yI=%d is empty, was expecting to have an example volume to save\n',yToSave(i));
     else
-        yOCT2Tif(imToSave{yToSave(i)},sprintf('%s/y%03dZStack.tif',logDir,yToSave(i)));
+        im = imToSave{yToSave(i)};
+        im(im<th) = th;
+        yOCT2Tif(log(im),sprintf('%s/y%03dZStack.tif',logDir,yToSave(i)),log(cValues(i,:)));
     end
 end

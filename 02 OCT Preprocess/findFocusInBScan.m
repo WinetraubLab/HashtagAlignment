@@ -5,13 +5,13 @@ disp('Looking For Focus Position...');
 %% Inputs
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/OCT Volumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-001/OCT Volumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
 focusSigma = 20; %Sigma size of focus [pixel]
 
-isRunInAutomatedMode =  true;
+isRunInAutomatedMode =  false;
 
 %% Jenkins
 if (exist('OCTVolumesFolder_','var'))
