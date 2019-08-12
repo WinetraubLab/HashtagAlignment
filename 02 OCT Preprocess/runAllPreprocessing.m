@@ -11,7 +11,7 @@ isProcessOnly = false; %No uploading to the cloud
 deleteFolderAfterUpload = false; %Would you like to delete data after uploading to the cloud or ask for manual delete?
 
 %% Setup environment
-if (exists('SubjectFolderIn_','var'))
+if (exist('SubjectFolderIn_','var'))
 	disp(['Processing input: ' SubjectFolderIn_ ]);
     SubjectFolderIn = SubjectFolderIn_;
     SubjectFolderOut = SubjectFolderOut_;
