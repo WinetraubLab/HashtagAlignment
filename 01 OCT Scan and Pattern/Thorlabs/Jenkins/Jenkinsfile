@@ -104,8 +104,9 @@ pipeline {
 		{steps{script{
 			try
 			{
-				def jobURL = env.BUILD_URL - "env.BUILD_ID\\"
+				def jobURL = env.BUILD_URL
 				echo jobURL
+				echo (env.BUILD_ID+"\\")
 			bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
 			}
 			catch(Exception e)
@@ -116,7 +117,11 @@ pipeline {
 			finally
 			{
 				//In any case, copy what we did to log folder
+				echo "MATLAB LOG -----------------------------"
+				echo "----------------------------------------"
 				bat('type Testers\\matlablog.txt')
+				echo "MATLAB LOG END -------------------------"
+				echo "----------------------------------------"
 				bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
 				bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
 				
@@ -164,7 +169,7 @@ pipeline {
 			emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
-				body: "See log <br>Yonatan",
+				body: "See log<br>Be sure to kill Matlab (run by System) if its still running<br>Yonatan",
 				attachLog: true,
 				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
