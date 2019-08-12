@@ -28,7 +28,7 @@ if (isProcessOnly)
 end
 
 %Automated only
-if ~exist('isRunInAutomatedMode_','var')
+if exist('isRunInAutomatedMode_','var')
 	isRunInAutomatedMode = isRunInAutomatedMode_;
 end
 if ~isRunInAutomatedMode
