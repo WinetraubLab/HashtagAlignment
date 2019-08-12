@@ -93,6 +93,7 @@ pipeline {
 				if (file.exists()){
 					file.delete();
 				}  
+				currentBuild.result = "SUCCESS"
 			}
 			catch(Exception e)
 			{
