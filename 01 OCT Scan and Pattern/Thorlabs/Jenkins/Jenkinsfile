@@ -119,8 +119,8 @@ node {
 		//Manual finding of focus position
 		
 		//Add to matlab file
-		bat("echo OCTVolumesFolder_ = '%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\'; >> tmp.m)
-		bat("echo findFocusInBScan; >> tmp.m)
+		bat("echo OCTVolumesFolder_ = '%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\'; >> tmp.m")
+		bat("echo findFocusInBScan; >> tmp.m")
 		
 		//Bat file
 		def currentDir = new File(".").getAbsolutePath() - "."
