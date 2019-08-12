@@ -108,9 +108,9 @@ pipeline {
 			try
 			{
 				//Usefull links
-				echo "- Running Matlab log can be found here: " + env.BUILD_URL + "execution/node/3/ws/Testers/matlablog.txt/*view*/" + "\n" +
-					 "- Runme file: " + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/" + "\n" +
-					 "- Workspace: " + env.BUILD_URL + "execution/node/3/ws/"
+				echo "- Running Matlab log can be found here:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/matlablog.txt/*view*/" + "\n" +
+					 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/" + "\n" +
+					 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/"
 				
 				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
 			}
@@ -122,9 +122,9 @@ pipeline {
 			finally
 			{
 				//In any case, copy what we did to log folder
-				echo "MATLAB LOG -----------------------------\n----------------------------------------"
+				echo "MATLAB LOG ---------------------------------------------\n--------------------------------------------------------"
 				bat('type Testers\\matlablog.txt')
-				echo "MATLAB LOG END -------------------------\n----------------------------------------"
+				echo "MATLAB LOG END -----------------------------------------\n--------------------------------------------------------"
 				
 				bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
 				bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
