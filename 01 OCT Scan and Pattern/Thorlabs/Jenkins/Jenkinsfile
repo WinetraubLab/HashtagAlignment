@@ -142,7 +142,8 @@ pipeline {
 			//println gitFolder
 		}}}
 	}
-	post{ success {
+	post{ 
+		success {
 			emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
@@ -150,7 +151,8 @@ pipeline {
 				attachLog: true,
 				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
-		} unsuccessful {
+		} 
+		failure {
 			emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
@@ -158,6 +160,15 @@ pipeline {
 				attachLog: true,
 				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
+		aborted {
+			emailext (
+				subject: "[OCTHist] Scan ${currentBuild.result}",
+				from : "Yonatan",
+				body: "See log <br>Yonatan",
+				attachLog: true,
+				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png",
+				to: "$WHO_TO_EMAIL_WHEN_DONE" )
+			}
 		}
 	}
 }
