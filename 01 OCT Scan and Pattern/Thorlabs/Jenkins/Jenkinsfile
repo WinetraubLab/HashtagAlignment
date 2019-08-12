@@ -117,7 +117,7 @@ pipeline {
 				//In any case, copy what we did to log folder
 				bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
 				bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
-				bat('type Testers\\matlablog.txt"
+				bat('type Testers\\matlablog.txt')
 				
 				archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 			}
