@@ -115,9 +115,9 @@ pipeline {
 			finally
 			{
 				//In any case, copy what we did to log folder
+				bat('type Testers\\matlablog.txt')
 				bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
 				bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
-				bat('type Testers\\matlablog.txt')
 				
 				archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 			}
@@ -143,14 +143,36 @@ pipeline {
 	}
 	post 
 	{
-        always 
+        success 
 		{
 			emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
 				body: "Scan is completed.<br>Go to $TEMP_STORAGE and run bat file next! You can upload files using <a href='http://localhost:9090/job/Upload%20to%20Cloud%20and%20Preprocess/'> Link </a>. <br> See log for more details <br>Yonatan",
+				attachLog: true
+				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png"
+				to: "$WHO_TO_EMAIL_WHEN_DONE"
+				)
+		}
+		unsuccessful
+		{
+			emailext (
+				subject: "[OCTHist] Scan ${currentBuild.result}",
+				from : "Yonatan",
+				body: "See log <br>Yonatan",
+				attachLog: true
+				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png"
 				to: "$WHO_TO_EMAIL_WHEN_DONE"
 				)
 		}
 	}
 }
+
+success
+Only run the steps in post if the current Pipeline’s or stage’s run has a "success" status, typically denoted by blue or green in the web UI.
+
+unstable
+Only run the steps in post if the current Pipeline’s or stage’s run has an "unstable" status, usually caused by test failures, code violations, etc. This is typically denoted by yellow in the web UI.
+
+unsuccessful
+Only run the steps in post if the current Pipeline’s or stage’s run has not a "success" status. This is typically denoted in the web UI depending on the status previously mentioned
