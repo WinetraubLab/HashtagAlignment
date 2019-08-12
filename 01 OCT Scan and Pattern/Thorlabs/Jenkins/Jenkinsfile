@@ -144,8 +144,7 @@ pipeline {
 	}
 	post 
 	{
-        success 
-		{
+        success {
 			emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
@@ -154,9 +153,7 @@ pipeline {
 				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png",
 				to: "$WHO_TO_EMAIL_WHEN_DONE"
 				)
-		}
-		unsuccessful
-		{
+		} unsuccessful {
 			emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
