@@ -151,6 +151,6 @@ pipeline {
 				body: "Scan is completed.<br>Go to $TEMP_STORAGE and run bat file next! You can upload files using <a href='http://localhost:9090/job/Upload%20to%20Cloud%20and%20Preprocess/'> Link </a>. <br> See log for more details <br>Yonatan",
 				to: "$WHO_TO_EMAIL_WHEN_DONE"
 				)
-		}}
+		}
 	}
 }
