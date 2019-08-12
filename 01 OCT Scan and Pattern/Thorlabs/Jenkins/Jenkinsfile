@@ -46,7 +46,7 @@ pipeline {
 			{
 						currentBuild.result = 'ABORTED'
 						echo('Please specify email address to send a note when run is completed')
-						return
+						error('Please specify email address to send a note when run is completed')
 			}
 		}}}
 		stage("Checkout")
