@@ -6,6 +6,7 @@ pipeline {
         MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
     	CREDENTIALS_PATH = "F:\\Jenkins\\"
+		GIT_TAG = "LB" //Can be "master" or any of the branches 
 	}
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
@@ -52,7 +53,7 @@ pipeline {
 		stage("Checkout")
 		{steps{script{
 			//Branch to checkout
-			def branch = "master"
+			def branch = env.GIT_TAG
 			
 			//Identify where github is installed
 			def gitFolderOption1 = new File("C:\\Program Files (x86)\\Git\\cmd\\")
