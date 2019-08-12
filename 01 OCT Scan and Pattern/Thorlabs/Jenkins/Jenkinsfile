@@ -41,7 +41,8 @@ pipeline {
 			if (params.WHO_TO_EMAIL_WHEN_DONE == "@stanford.edu") 
 			{
 						currentBuild.result = 'ABORTED'
-						error('Please specify email address to send a note when run is completed')
+						echo('Please specify email address to send a note when run is completed')
+						error("Faild")
 			}
 		}}}
 		stage("Checkout")
