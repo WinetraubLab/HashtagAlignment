@@ -142,7 +142,7 @@ pipeline {
 			//Manualy
 			def currentDir = pwd()
 			bat("""echo "%MATLAB_PATH%" -r "addpath(genpath('""" + currentDir + "'));" + foldersDef +
-				"isRunInAutomatedMode = false; cd('" + currentDir + """\\02 OCT Preprocess\\'); runAllPreprocessing; disp('MAKE SURE YOU QUIT MATLAB BEFORE RUNNING JENKINS!');" > "%TEMP_STORAGE%\\%SUBJECT_ID%\\runAllPreprocessing_Manualy.bat" """)
+				"isRunInAutomatedMode_ = false; cd('" + currentDir + """\\02 OCT Preprocess\\'); runAllPreprocessing; disp('MAKE SURE YOU QUIT MATLAB BEFORE RUNNING JENKINS!');" > "%TEMP_STORAGE%\\%SUBJECT_ID%\\runAllPreprocessing_Manualy.bat" """)
 
 			//Automated
 			bat("echo " + foldersDef + """runAllPreprocessing; >> "%TEMP_STORAGE%\\runme_preprocess.m" """)
