@@ -95,12 +95,12 @@ node {
 		bat("echo run ScanAndPattern_Thorlabs.m  >> runme.m")
 		
 		// Move the m file to Testers
-		bat("move runme.m Testers\")
+		bat("move runme.m Testers\\")
 	}
 	stage("Run Matlab")
 	{
 		bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt && echo %ERRORLEVEL% > commandResult.txt""")
-		bat("type Testers\matlablog.txt") //Type matlab results
+		bat("type Testers\\matlablog.txt") //Type matlab results
 		
 		//Copy what we did to log folder
 		bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
