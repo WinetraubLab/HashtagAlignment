@@ -112,16 +112,21 @@ pipeline {
 				archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 			}
 		}}}
-	}
-	post{ 
-		success {
-			//If success remove directory
-			if (env.IS_REMOVE_TEMP_STORAGE_WHEN_DONE)
+		stage("Delete Temp Storage?")
+		{steps{script{
+			if (currentBuild.result == "SUCCESS")
 			{
-				echo "Removing everything in temp storage directory"
-				bat('rmdir "%TEMP_STORAGE%" /S /Q')
-				bat('mkdir "%TEMP_STORAGE%"')
+				if (env.IS_REMOVE_TEMP_STORAGE_WHEN_DONE)
+				{
+					echo "Removing everything in temp storage directory"
+					bat('rmdir "%TEMP_STORAGE%" /S /Q')
+					bat('mkdir "%TEMP_STORAGE%"')
+				}
+				else
+				{
+					echo "IS_REMOVE_TEMP_STORAGE_WHEN_DONE requests that we don't delete Temp Storage, skipping"
+				}
 			}
-		} 
+		}}}
 	}
 }
