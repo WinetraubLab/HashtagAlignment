@@ -7,7 +7,7 @@ pipeline {
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
     	CREDENTIALS_PATH = "F:\\Jenkins\\"
 		IS_REMOVE_TEMP_STORAGE_WHEN_DONE = "false"
-		GIT_TAG = "LB" //Can be "master" or any of the branches 
+		GIT_TAG = "LB" //Can be "master" or any of the tags 
 	}
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
