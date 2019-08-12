@@ -80,6 +80,7 @@ pipeline {
 			//Move files to main folder
 			bat('xcopy /E HashtagAlignment . /Y')
 			bat('xcopy /E myOCT . /Y')
+			bat('copy "%CREDENTIALS_PATH%\\*.m" .')
 			
 			//Delete folder used for checkout
 			bat('rmdir HashtagAlignment /S /Q')
@@ -92,7 +93,7 @@ pipeline {
 			bat("echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
 			bat("echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
 		}}}
-		stage("Build M File")
+		stage("Build Runme File")
 		{steps{script{
 			bat("echo isDebugFastMode_ = %IS_DEBUG_MODE%; >> runme.m")
 			bat("echo zToPhtobleach_=%Z_TO_PHTOBLEACH%; >> runme.m")
@@ -105,7 +106,6 @@ pipeline {
 		}}}
 		stage("Run Matlab")
 		{steps{script{
-			bat('copy "%CREDENTIALS_PATH%\\*.m" .')
 			try
 			{
 				//Usefull links
@@ -129,6 +129,7 @@ pipeline {
 				
 				bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
 				bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
+				bat('copy Testers\\*.png "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
 				
 				archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 			}

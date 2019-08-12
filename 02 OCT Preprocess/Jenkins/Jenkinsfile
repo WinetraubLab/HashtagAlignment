@@ -1,0 +1,111 @@
+//This Jenkinsfile will preform a scan and save the results to a common storage
+//It will also create a .m file explaining how to preprocess this scan
+pipeline {
+	agent any
+	environment {
+        MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
+        TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
+    	CREDENTIALS_PATH = "F:\\Jenkins\\TempDataStorage\\"
+		IS_REMOVE_TEMP_STORAGE_WHEN_DONE = false
+	}
+	options {
+		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
+  	}
+	stages{
+		stage("Checkout")
+		{steps{script{
+			//Branch to checkout
+			def branch = "master"
+			
+			//Identify where github is installed
+			def gitFolderOption1 = new File("C:\\Program Files (x86)\\Git\\cmd\\")
+			def gitFolderOption2 = new File("C:\\Program Files\\Git\\cmd\\")
+			def gitFolder = ""
+			if (gitFolderOption1.exists()) {
+				gitFolder = gitFolderOption1.absolutePath
+			} else if (gitFolderOption2.exists()) {
+				gitFolder = gitFolderOption2.absolutePath
+			} else {
+				error "Clould not find git in the known possible possitions"
+			}
+			gitFolder = gitFolder + "\\"
+			
+			//Checkout a fresh copy 
+			cleanWs()
+			bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/HashtagAlignment.git"') //Checkout HashtagAlignment
+			bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/myOCT.git"') //Checkout myOCT
+			
+			//Make note of the repository version
+			bat('cd HashtagAlignment && "' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			def hashtagAlignmentVer = readFile('commandResult.txt').trim()
+			bat('cd myOCT && "' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			def myOCTVer = readFile('commandResult.txt').trim()
+			
+			//Move files to main folder
+			bat('xcopy /E HashtagAlignment . /Y')
+			bat('xcopy /E myOCT . /Y')
+			bat('copy "%CREDENTIALS_PATH%\\*.m" .')
+			
+			//Delete folder used for checkout
+			bat('rmdir HashtagAlignment /S /Q')
+			bat('rmdir myOCT /S /Q')
+			
+			//Start buidling the runme file
+			bat("echo disp('HashtagAlignment Git Hash: " + hashtagAlignmentVer + "');  >> runme.m")
+			bat("echo disp('myOCT Git Hash: " + myOCTVer + "');  >> runme.m")
+			bat("echo disp('To see repository go to');  >> runme.m")
+			bat("echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
+			bat("echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
+		}}}
+		stage("Build Runme File")
+		{steps{script{
+			bat('echo  isRunInAutomatedMode_ = true >> runme.m"
+			bat('type "%TEMP_STORAGE%\\runme_preprocess.m" >> runme.m') //Copy main file to run locally
+			
+			// Move the m file to Testers
+			bat("move runme.m Testers\\")
+		}}}
+		stage("Run Matlab")
+		{steps{script{
+			bat('copy "%TEMP_STORAGE%\\runme_preprocess.m" .') //Copy main file to run locally
+			//Copy the main folder to run to matlab
+			try
+			{
+				//Usefull links
+				echo "- Running Matlab log can be found here:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/matlablog.txt/*view*/" + "\n" +
+					 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/" + "\n" +
+					 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/"
+				
+				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
+			}
+			catch(Exception e)
+			{
+				currentBuild.result = 'FAILURE'
+				throw("Matlab Failed")
+			}
+			finally
+			{
+				//In any case, copy what we did to log folder
+				echo "MATLAB LOG --------------------------------------------------------------------------\n-------------------------------------------------------------------------------------"
+				bat('type Testers\\matlablog.txt')
+				echo "MATLAB LOG END ----------------------------------------------------------------------\n-------------------------------------------------------------------------------------"
+				
+				//bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
+				//bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
+				
+				archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
+			}
+		}}}
+	}
+	post{ 
+		success {
+			//If success remove directory
+			if (env.IS_REMOVE_TEMP_STORAGE_WHEN_DONE)
+			{
+				echo "Removing everything in temp storage directory"
+				bat('rmdir("%TEMP_STORAGE%")')
+				bat('mkdir("%TEMP_STORAGE%")')
+			}
+		} 
+	}
+}
