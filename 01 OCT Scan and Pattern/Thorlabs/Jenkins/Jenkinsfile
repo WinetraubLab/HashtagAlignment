@@ -142,8 +142,7 @@ pipeline {
 			//println gitFolder
 		}}}
 	}
-	post {   
-		success {
+	post{ success {
 			emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
