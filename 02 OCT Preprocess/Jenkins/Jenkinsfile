@@ -5,7 +5,7 @@ pipeline {
 	environment {
         MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
-    	CREDENTIALS_PATH = "F:\\Jenkins\\TempDataStorage\\"
+    	CREDENTIALS_PATH = "F:\\Jenkins\\"
 		IS_REMOVE_TEMP_STORAGE_WHEN_DONE = false
 	}
 	options {
