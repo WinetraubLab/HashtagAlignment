@@ -42,7 +42,7 @@ pipeline {
 			{
 						currentBuild.result = 'ABORTED'
 						echo('Please specify email address to send a note when run is completed')
-						error("Faild")
+						error("Please specify email address to send a note when run is completed")
 			}
 		}}}
 		stage("Checkout")
@@ -102,19 +102,22 @@ pipeline {
 		}}}
 		stage("Run Matlab")
 		{steps{script{
-			bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt && echo %ERRORLEVEL% > commandResult.txt""")
-			bat("type Testers\\matlablog.txt") //Type matlab results
-			
-			//Copy what we did to log folder
-			bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
-			bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
-			
-			archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
-			
-			def matlabErrorCode = readFile('Testers\\commandResult.txt').trim()
-			if(matlabErrorCode!=0)
+			try
 			{
-				error("Matlab Failed")
+			bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
+			}
+			catch(Exception e)
+			{
+				currentBuild.result = 'FAILURE'
+				throw("Matlab Failed")
+			}
+			finally
+			{
+				//In any case, copy what we did to log folder
+				bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
+				bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
+			
+				archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 			}
 		}}}
 		stage("Leave a Hook for Preprocessing")
@@ -139,13 +142,14 @@ pipeline {
 	post 
 	{
         always 
-		{
+		{script{
+			def sub = "[OCTHist] Scan " + currentBuild.result
 			emailext (
-				subject: "[OCTHist] Scan Completed ($BUILD_STATUS)",
+				subject: sub,
 				from : "Yonatan",
 				body: "Scan is completed.<br>Go to $TEMP_STORAGE and run bat file next! You can upload files using <a href='http://localhost:9090/job/Upload%20to%20Cloud%20and%20Preprocess/'> Link </a>. <br> See log for more details <br>Yonatan",
 				to: "$WHO_TO_EMAIL_WHEN_DONE"
 				)
-		}
+		}}
 	}
 }
