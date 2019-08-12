@@ -40,7 +40,7 @@ pipeline {
 			description:"Set to true if you would like to do a fast debug scan")
     }
 	stages{
-		stage("ParametersCheckAndEnvSetup") 
+		stage("Parameters Check and Env Setup") 
 		{steps{script{
 			if (params.WHO_TO_EMAIL_WHEN_DONE == "@stanford.edu") 
 			{
