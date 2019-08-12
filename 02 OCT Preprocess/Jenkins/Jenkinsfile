@@ -59,10 +59,9 @@ pipeline {
 		}}}
 		stage("Build Runme File")
 		{steps{script{
-			bat("echo  isRunInAutomatedMode_ = true >> runme.m")
+			bat("echo isRunInAutomatedMode_ = true; >> runme.m")
 			
 			def runmePreprocessFP = env.TEMP_STORAGE + '\\runme_preprocess.m'
-			println(runmePreprocessFP)
 			def f = new File( runmePreprocessFP )
 			if( f.exists() ) 
 			{
