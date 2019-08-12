@@ -142,17 +142,15 @@ pipeline {
 			//println gitFolder
 		}}}
 	}
-	post 
-	{
-        success {
+	post {   
+		success {
 			emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
 				body: "Scan is completed.<br>Go to $TEMP_STORAGE and run bat file next! You can upload files using <a href='http://localhost:9090/job/Upload%20to%20Cloud%20and%20Preprocess/'> Link </a>. <br> See log for more details <br>Yonatan",
 				attachLog: true,
 				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png",
-				to: "$WHO_TO_EMAIL_WHEN_DONE"
-				)
+				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 		} unsuccessful {
 			emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
@@ -160,8 +158,7 @@ pipeline {
 				body: "See log <br>Yonatan",
 				attachLog: true,
 				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png",
-				to: "$WHO_TO_EMAIL_WHEN_DONE"
-				)
+				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 		}
 	}
 }
