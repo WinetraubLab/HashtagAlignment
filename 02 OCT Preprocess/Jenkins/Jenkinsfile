@@ -89,7 +89,7 @@ pipeline {
 				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
 				
 				//Delete preprocess file
-				File file = new File("%TEMP_STORAGE%\\runme_preprocess.m")
+				File file = new File(env.TEMP_STORAGE + "\\runme_preprocess.m")
 				if (file.exists()){
 					file.delete();
 				}  
