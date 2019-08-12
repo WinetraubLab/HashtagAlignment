@@ -11,17 +11,21 @@ reconstructConfig = {'dispersionParameterA',6.539e07}; %Configuration for proces
 %Probe Data
 focusSigma = 20; %Sigma size of focus [pixel]
 
-isAutomaticMode =  isRunningOnJenkins() || exist('runninAll','var');
+isRunInAutomatedMode =  true;
 
 %% Jenkins
 if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
 end
 
+if (exist('isRunInAutomatedMode_','var'))
+    isRunInAutomatedMode = isRunInAutomatedMode_;
+end
+
 %% Read Configuration file
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
 
-if (isfield(json,'focusPositionInImageZpix') && isAutomaticMode)
+if (isfield(json,'focusPositionInImageZpix') && isRunInAutomatedMode)
     disp('Focus was found already, will not atempt finding focus again in Automatic Mode');
     return; %Don't try to focus again, only in manual mode
 end
@@ -150,7 +154,7 @@ ylabel(['z [' dim.z.units ']'])
 title('Choose focus');
 legend('First Guess','Updated Guess');
 
-if (~isAutomaticMode)
+if (~isRunInAutomatedMode)
     %Manual mode, ask user to refine
     [~,focusDepth3] = ginput(1); %Get z index of the focus
     fprintf('Distance between my guess and user: %.1f[um]\n',abs(focusDepth3-focusDepth2));
@@ -165,7 +169,7 @@ end
 
 fprintf('Initial guess: %.1f[um]\n',focusDepth1);
 fprintf('Updated guess: %.1f[um]\n',focusDepth2);
-if (~isAutomaticMode)
+if (~isRunInAutomatedMode)
     fprintf('User input: %.1f[um]\n',focusDepth3);
 end
 

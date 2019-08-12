@@ -14,7 +14,7 @@ saveYs = 3; %How many Bscans to save (for future reference)
 %the very end
 
 %% Jenkins
-if (isRunningOnJenkins() || exist('runninAll','var'))
+if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
 end
 

@@ -4,32 +4,48 @@
 SubjectFolderIn = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01';
 SubjectFolderOut = SubjectFolderIn; %Where to save folder to
 
+isRunInAutomatedMode = true; %When set to false, will allow human more control to select info
+
 %For debug purpose, skip the uploading part
-isProcessOnly = false;
+isProcessOnly = false; %No uploading to the cloud
 deleteFolderAfterUpload = false; %Would you like to delete data after uploading to the cloud or ask for manual delete?
 
 %% Setup environment
-if (isRunningOnJenkins()) %Get inputs from Jenkins
-    disp(['Processing input: ' SubjectFolderIn_ ]);
+if (exists('SubjectFolderIn_','var'))
+	disp(['Processing input: ' SubjectFolderIn_ ]);
     SubjectFolderIn = SubjectFolderIn_;
     SubjectFolderOut = SubjectFolderOut_;
-    
-    if exist('isProcessOnly_','var') 
-        isProcessOnly = isProcessOnly_;
-    end
-    
-    if ~awsIsAWSPath(SubjectFolderIn_ ) && ~exist(SubjectFolderIn_,'dir')
-        disp(['Input folder non existing: ' SubjectFolderIn_ '. Probably already upload to the cloud']);
-        disp('Skipping that one');
-        return;
-    end
 end
 
+%Processing
+if exist('isProcessOnly_','var') 
+	disp('Processing only mode, will not upload to cloud');
+	isProcessOnly = isProcessOnly_;
+end
 if (isProcessOnly)
     %If only processing, no need to upload to the cloud
     SubjectFolderOut = SubjectFolderIn;
 end
 
+%Automated only
+if ~exist('isRunInAutomatedMode_','var')
+	isRunInAutomatedMode = isRunInAutomatedMode_;
+end
+if ~isRunInAutomatedMode
+	currentFileFolder = fileparts(mfilename('fullpath'));
+	cd(currentFileFolder);
+	input('Once we click on enter script will run, would you like to edit files? Click enter when ready');
+end
+
+if ~awsIsAWSPath(SubjectFolderIn_ ) && ~exist(SubjectFolderIn_,'dir')
+	disp(['Input folder non existing: ' SubjectFolderIn_ '. Probably already upload to the cloud']);
+	disp('Skipping that one');
+	return;
+end
+
+OCTVolumesFolder_ = [SubjectFolderIn '\OCT Volumes\'];
+
+%% Do we need to upload to the cloud?
 if (awsIsAWSPath(SubjectFolderIn))
     inputFolderAWS = true;
 else
@@ -41,17 +57,14 @@ if (awsIsAWSPath(SubjectFolderOut))
 else
     outputFolderAWS = false;
 end
-
-runninAll = true;
-OCTVolumesFolder_ = [SubjectFolderIn '\OCT Volumes\'];
-
-%% Start by uploading to the cloud
 isUploadToCloud = ~inputFolderAWS && outputFolderAWS;
 if (isProcessOnly)
     isUploadToCloud = false;
 end
 
-if(isUploadToCloud)
+%% Start by uploading to the cloud
+if(isUploadToCloud && ...
+	isRunInAutomatedMode) %In manual mode run code first than upload to the cloud
     disp('Uploading files to AWS');
     
     %Copy to the cloud
@@ -77,18 +90,23 @@ try
 	
 	%Upload new files to the cloud, but only if processing was finished correctly
 	if(isUploadToCloud)
-		fprintf('%s Uploading difference to the cloud.\n',datestr(datetime));
-		
-		d = dir(OCTVolumesFolder_); 
-		for i=1:length(d)
-			switch (d(i).name)
-				case {'.','..','Overview','Volume'}
-					%Do nothing, these were already uploaded
-				otherwise
-					%Copy to the cloud
-					awsCopyFileFolder([d(i).folder '\' d(i).name], ...
-						[SubjectFolderOut '/' d(i).name]);
+		if isRunInAutomatedMode
+			fprintf('%s Uploading difference to the cloud.\n',datestr(datetime));
+			
+			d = dir(OCTVolumesFolder_); 
+			for i=1:length(d)
+				switch (d(i).name)
+					case {'.','..','Overview','Volume'}
+						%Do nothing, these were already uploaded
+					otherwise
+						%Copy to the cloud
+						awsCopyFileFolder([d(i).folder '\' d(i).name], ...
+							[SubjectFolderOut '/' d(i).name]);
+				end
 			end
+		else %ran manually need to upload everything
+			disp('Uploading files to AWS');
+			awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
 		end
 		
 		if deleteFolderAfterUpload

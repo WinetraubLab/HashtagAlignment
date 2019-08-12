@@ -14,7 +14,7 @@ histologyVolumeThickness = 15*5*(5+1); %[um]
 lowRAMMode = true; %When set to true, doesn't load all stitched volume to RAM, instead calculate enface in each worker
 
 %% Jenkins
-if (isRunningOnJenkins() || exist('runninAll','var'))
+if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
 end
 
