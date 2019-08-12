@@ -6,7 +6,7 @@ pipeline {
         MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
     	CREDENTIALS_PATH = "F:\\Jenkins\\"
-		IS_REMOVE_TEMP_STORAGE_WHEN_DONE = false
+		IS_REMOVE_TEMP_STORAGE_WHEN_DONE = "false"
 		GIT_TAG = "LB" //Can be "master" or any of the branches 
 	}
 	options {
@@ -118,7 +118,7 @@ pipeline {
 		{steps{script{
 			if (currentBuild.result == "SUCCESS")
 			{
-				if (env.IS_REMOVE_TEMP_STORAGE_WHEN_DONE)
+				if (env.IS_REMOVE_TEMP_STORAGE_WHEN_DONE == "true")
 				{
 					echo "Removing everything in temp storage directory"
 					bat('rmdir "%TEMP_STORAGE%" /S /Q')
