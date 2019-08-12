@@ -6,6 +6,9 @@ pipeline {
         MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
     }
+	options {
+		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
+  	}
 	parameters 
 	{
 		string(
@@ -105,9 +108,9 @@ pipeline {
 			try
 			{
 				//Usefull links
-				echo "Running Matlab log can be found here: " + env.BUILD_URL + "execution/node/3/ws/Testers/matlablog.txt/*view*/"
-				echo "Runme file: " + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/"
-				echo "Workspace: " + env.BUILD_URL + "execution/node/3/ws/"
+				echo "- Running Matlab log can be found here: " + env.BUILD_URL + "execution/node/3/ws/Testers/matlablog.txt/*view*/" + "\n" +
+					 "- Runme file: " + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/" + "\n" +
+					 "- Workspace: " + env.BUILD_URL + "execution/node/3/ws/"
 				
 				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
 			}
@@ -121,8 +124,7 @@ pipeline {
 				//In any case, copy what we did to log folder
 				echo "MATLAB LOG -----------------------------\n----------------------------------------"
 				bat('type Testers\\matlablog.txt')
-				echo "MATLAB LOG END -------------------------"
-				echo "----------------------------------------"
+				echo "MATLAB LOG END -------------------------\n----------------------------------------"
 				
 				bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
 				bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
