@@ -1,7 +1,7 @@
 //This Jenkinsfile will preform a scan and save the results to a common storage
 //It will also create a .m file explaining how to preprocess this scan
 pipeline {
-	agent{any}
+	agent any
 	environment {
         MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
