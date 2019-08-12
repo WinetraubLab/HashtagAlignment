@@ -1,6 +1,6 @@
 //This Jenkinsfile will preform a scan and save the results to a common storage
 //It will also create a .m file explaining how to preprocess this scan
-node {
+pipeline {
 	environment {
         MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
@@ -34,103 +34,105 @@ node {
 			defaultValue:false,
 			description:"Set to true if you would like to do a fast debug scan")
     }
-	stage("ParametersCheckAndEnvSetup") 
-	{
-		if (params.WHO_TO_EMAIL_WHEN_DONE == "@stanford.edu") 
-		{
-					currentBuild.result = 'ABORTED'
-					error('Please specify email address to send a note when run is completed')
-		}
-	}
-	stage("Checkout")
-	{
-		//Branch to checkout
-		def branch = "master"
-		
-		//Identify where github is installed
-		def gitFolderOption1 = new File("C:\\Program Files (x86)\\Git\\cmd\\")
-		def gitFolderOption2 = new File("C:\\Program Files\\Git\\cmd\\")
-		def gitFolder = ""
-		if (gitFolderOption1.exists()) {
-			gitFolder = gitFolderOption1.absolutePath
-		} else if (gitFolderOption2.exists()) {
-			gitFolder = gitFolderOption2.absolutePath
-		} else {
-			error "Clould not find git in the known possible possitions"
-		}
-		gitFolder = gitFolder + "\\"
-		
-		//Checkout a fresh copy 
-		cleanWs()
-		bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/HashtagAlignment.git"') //Checkout HashtagAlignment
-		bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/myOCT.git"') //Checkout myOCT
-		
-		//Make note of the repository version
-		bat('cd HashtagAlignment && "' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
-		def hashtagAlignmentVer = readFile('commandResult.txt').trim()
-		bat('cd myOCT && "' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
-		def myOCTVer = readFile('commandResult.txt').trim()
-		
-		//Move files to main folder
-		bat('xcopy /E HashtagAlignment . /Y')
-		bat('xcopy /E myOCT . /Y')
-		
-		//Delete folder used for checkout
-		bat('rmdir HashtagAlignment /S /Q')
-		bat('rmdir myOCT /S /Q')
-		
-		//Start buidling the runme file
-		bat("echo disp('HashtagAlignment Git Hash: " + hashtagAlignmentVer + "');  >> runme.m")
-		bat("echo disp('myOCT Git Hash: " + myOCTVer + "');  >> runme.m")
-		bat("echo disp('To see repository go to');  >> runme.m")
-		bat("echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
-		bat("echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
-	}
-	stage("Build M File")
-	{
-		bat("echo isDebugFastMode_ = %IS_DEBUG_MODE%; >> runme.m")
-		bat("echo zToPhtobleach_=%Z_TO_PHTOBLEACH%; >> runme.m")
-		bat("echo outputFolder_='%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\'; >> runme.m")
-		bat("echo isDrawTickmarks_=%IS_PHOTOBLEACH_TICKMARKS%; >> runme.m")
-		bat("echo run ScanAndPattern_Thorlabs.m  >> runme.m")
-		
-		// Move the m file to Testers
-		bat("move runme.m Testers\\")
-	}
-	stage("Run Matlab")
-	{
-		bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt && echo %ERRORLEVEL% > commandResult.txt""")
-		bat("type Testers\\matlablog.txt") //Type matlab results
-		
-		//Copy what we did to log folder
-		bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
-		bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
-		
-		archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
-		
-		def matlabErrorCode = readFile('Testers\\commandResult.txt').trim()
-		if(matlabErrorCode!=0)
-		{
-			error("Matlab Failed")
-		}
-	}
-	stage("Leave a Hook for Preprocessing")
-	{
-		//Manual finding of focus position
-		
-		//Add to matlab file
-		bat("echo OCTVolumesFolder_ = '%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\'; >> tmp.m")
-		bat("echo findFocusInBScan; >> tmp.m")
-		
-		//Bat file
-		def currentDir = new File(".").getAbsolutePath() - "."
-		bat("""echo "%MATLAB_PATH%" -r "addpath(genpath('""" + currentDir + """'));runme_findFocus; delete('runme_findFocus.m'); exit(0);" > runme_findFocus.bat""")
+	stages{
+		stage("ParametersCheckAndEnvSetup") 
+		{steps{script{
+			if (params.WHO_TO_EMAIL_WHEN_DONE == "@stanford.edu") 
+			{
+						currentBuild.result = 'ABORTED'
+						error('Please specify email address to send a note when run is completed')
+			}
+		}}}
+		stage("Checkout")
+		{steps{script{
+			//Branch to checkout
+			def branch = "master"
+			
+			//Identify where github is installed
+			def gitFolderOption1 = new File("C:\\Program Files (x86)\\Git\\cmd\\")
+			def gitFolderOption2 = new File("C:\\Program Files\\Git\\cmd\\")
+			def gitFolder = ""
+			if (gitFolderOption1.exists()) {
+				gitFolder = gitFolderOption1.absolutePath
+			} else if (gitFolderOption2.exists()) {
+				gitFolder = gitFolderOption2.absolutePath
+			} else {
+				error "Clould not find git in the known possible possitions"
+			}
+			gitFolder = gitFolder + "\\"
+			
+			//Checkout a fresh copy 
+			cleanWs()
+			bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/HashtagAlignment.git"') //Checkout HashtagAlignment
+			bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/myOCT.git"') //Checkout myOCT
+			
+			//Make note of the repository version
+			bat('cd HashtagAlignment && "' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			def hashtagAlignmentVer = readFile('commandResult.txt').trim()
+			bat('cd myOCT && "' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			def myOCTVer = readFile('commandResult.txt').trim()
+			
+			//Move files to main folder
+			bat('xcopy /E HashtagAlignment . /Y')
+			bat('xcopy /E myOCT . /Y')
+			
+			//Delete folder used for checkout
+			bat('rmdir HashtagAlignment /S /Q')
+			bat('rmdir myOCT /S /Q')
+			
+			//Start buidling the runme file
+			bat("echo disp('HashtagAlignment Git Hash: " + hashtagAlignmentVer + "');  >> runme.m")
+			bat("echo disp('myOCT Git Hash: " + myOCTVer + "');  >> runme.m")
+			bat("echo disp('To see repository go to');  >> runme.m")
+			bat("echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
+			bat("echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
+		}}}
+		stage("Build M File")
+		{steps{script{
+			bat("echo isDebugFastMode_ = %IS_DEBUG_MODE%; >> runme.m")
+			bat("echo zToPhtobleach_=%Z_TO_PHTOBLEACH%; >> runme.m")
+			bat("echo outputFolder_='%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\'; >> runme.m")
+			bat("echo isDrawTickmarks_=%IS_PHOTOBLEACH_TICKMARKS%; >> runme.m")
+			bat("echo run ScanAndPattern_Thorlabs.m  >> runme.m")
+			
+			// Move the m file to Testers
+			bat("move runme.m Testers\\")
+		}}}
+		stage("Run Matlab")
+		{steps{script{
+			bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt && echo %ERRORLEVEL% > commandResult.txt""")
+			bat("type Testers\\matlablog.txt") //Type matlab results
+			
+			//Copy what we did to log folder
+			bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
+			bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
+			
+			archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
+			
+			def matlabErrorCode = readFile('Testers\\commandResult.txt').trim()
+			if(matlabErrorCode!=0)
+			{
+				error("Matlab Failed")
+			}
+		}}}
+		stage("Leave a Hook for Preprocessing")
+		{steps{script{
+			//Manual finding of focus position
+			
+			//Add to matlab file
+			bat("echo OCTVolumesFolder_ = '%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\'; >> tmp.m")
+			bat("echo findFocusInBScan; >> tmp.m")
+			
+			//Bat file
+			def currentDir = new File(".").getAbsolutePath() - "."
+			bat("""echo "%MATLAB_PATH%" -r "addpath(genpath('""" + currentDir + """'));runme_findFocus; delete('runme_findFocus.m'); exit(0);" > runme_findFocus.bat""")
 
-		//Move files to the right folder
-		bat("type tmp.m >> %TEMP_STORAGE%\\runme_preprocess.m")
-		bat("move runme_findFocus %TEMP_STORAGE%\\")
-		
-		//println gitFolder
+			//Move files to the right folder
+			bat("type tmp.m >> %TEMP_STORAGE%\\runme_preprocess.m")
+			bat("move runme_findFocus %TEMP_STORAGE%\\")
+			
+			//println gitFolder
+		}}}
 	}
 	post 
 	{
