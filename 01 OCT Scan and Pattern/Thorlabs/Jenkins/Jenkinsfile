@@ -104,6 +104,7 @@ pipeline {
 		{steps{script{
 			try
 			{
+			echo env.BUILD_URL
 			bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
 			}
 			catch(Exception e)
@@ -116,7 +117,8 @@ pipeline {
 				//In any case, copy what we did to log folder
 				bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
 				bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
-			
+				bat('type Testers\\matlablog.txt"
+				
 				archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 			}
 		}}}
@@ -142,10 +144,9 @@ pipeline {
 	post 
 	{
         always 
-		{script{
-			def sub = "[OCTHist] Scan " + currentBuild.result
+		{
 			emailext (
-				subject: sub,
+				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
 				body: "Scan is completed.<br>Go to $TEMP_STORAGE and run bat file next! You can upload files using <a href='http://localhost:9090/job/Upload%20to%20Cloud%20and%20Preprocess/'> Link </a>. <br> See log for more details <br>Yonatan",
 				to: "$WHO_TO_EMAIL_WHEN_DONE"
