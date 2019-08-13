@@ -14,7 +14,7 @@ pipeline {
 	{
 		string(
 			name: "SUBJECT_FOLDER_PATH",
-			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-NA/",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-001/",
 			description:"Subject Directory\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LA/LA-01/",
 			trim: true)
 		string(
@@ -24,7 +24,7 @@ pipeline {
 			trim: true)
 		booleanParam(
 			name: 'AWS_PARALLEL_COMPUTING',
-			defaultValue:true,
+			defaultValue:false,
 			description:"1. Check this box if you would like to use cloud computing (AWS).\n2. Make sure your files are uploaded to Amazon cloud (s3) to be able to use this function.\n3. Please note: 1hr cloud computing is about 1USD.")
     }
 	stages{
@@ -117,38 +117,36 @@ pipeline {
 				//bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\02 OCT Preprocess Log\\"')
 				
 				archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
+				
+				//EMAIL
+				//Get the email of the user who started the build
+				def userId = currentBuild.getRawBuild().getCauses()[0].getUserId()
+				hudson.model.User user = hudson.model.User.get(userId)
+				email = user.getProperty(hudson.tasks.Mailer.UserProperty).getAddress()
+				
+				emailext ( //Using ext-email plugin
+					subject: "[OCTHist] Processing Completed ${currentBuild.result} #$BUILD_NUMBER",
+					from : "Yonatan",
+					body: 
+					"Hi,<br>" +
+					"Your files are processed (Build # $BUILD_NUMBER, $BUILD_STATUS).<br>" +
+					"All the files are saved at:<br>" +
+					"$SUBJECT_FOLDER_PATH<br>" +
+					"See attached files for result summary.<br><br>" + 
+					"""To access files on AWS S3, follow <a href="https://s3.console.aws.amazon.com/s3/buckets/delazerdamatlab/Users/?region=us-east-1&tab=overview">Link</a><br>""" +
+					"To log in to AWS use:<br>" + 
+					"Email address of your AWS account // account ID : 313934313216<br>" +
+					"IAM User name: student<br>" +
+					"Password: same as your server's password<br><br><br>" +
+					"<b> Jenkins Parameters: </b><br>" +
+					"SUBJECT_FOLDER_PATH:     $SUBJECT_FOLDER_PATH<br>" +
+					"WHO_TO_EMAIL_WHEN_DONE:  $WHO_TO_EMAIL_WHEN_DONE<br>" +
+					"AWS_PARALLEL_COMPUTING:  $AWS_PARALLEL_COMPUTING<br>" 
+					,
+					attachLog: true,
+					attachmentsPattern: "Testers//matlablog.txt, Testers//runme.m, //**//*.png",
+					to: "$WHO_TO_EMAIL_WHEN_DONE," + email )
 			}
 		}}}
-	}
-	post{ 
-		always {script{
-			//Get the email of the user who started the build
-			def userId = currentBuild.getRawBuild().getCauses()[0].getUserId()
-            hudson.model.User user = hudson.model.User.get(userId)
-            email = user.getProperty(hudson.tasks.Mailer.UserProperty).getAddress()
-			
-			emailext ( //Using ext-email plugin
-				subject: "[OCTHist] Processing Completed ${currentBuild.result} #$BUILD_NUMBER",
-				from : "Yonatan",
-				body: 
-				"Hi,<br>" +
-				"Your files are processed (Build # $BUILD_NUMBER, $BUILD_STATUS).<br>" +
-				"All the files are saved at:<br>" +
-				"$SUBJECT_FOLDER_PATH<br>" +
-				"See attached files for result summary.<br><br>" + 
-				"""To access files on AWS S3, follow <a href="https://s3.console.aws.amazon.com/s3/buckets/delazerdamatlab/Users/?region=us-east-1&tab=overview">Link</a><br>""" +
-				"To log in to AWS use:<br>" + 
-				"Email address of your AWS account // account ID : 313934313216<br>" +
-				"IAM User name: student<br>" +
-				"Password: same as your server's password<br><br><br>" +
-				"<b> Jenkins Parameters: </b><br>" +
-				"SUBJECT_FOLDER_PATH:     $SUBJECT_FOLDER_PATH<br>" +
-				"WHO_TO_EMAIL_WHEN_DONE:  $WHO_TO_EMAIL_WHEN_DONE<br>" +
-				"AWS_PARALLEL_COMPUTING:  $AWS_PARALLEL_COMPUTING<br>" 
-				,
-				attachLog: true,
-				attachmentsPattern: "Testers//matlablog.txt, Testers//runme.m, //**//*.png",
-				to: "$WHO_TO_EMAIL_WHEN_DONE," + email )
-		}} 
 	}
 }
