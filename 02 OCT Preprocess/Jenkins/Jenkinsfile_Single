@@ -148,7 +148,6 @@ pipeline {
 				attachLog: true,
 				attachmentsPattern: "Testers//matlablog.txt, Testers//runme.m, //**//*.png",
 				to: "$WHO_TO_EMAIL_WHEN_DONE," + email )
-			}} 
-		}
+		}} 
 	}
 }
