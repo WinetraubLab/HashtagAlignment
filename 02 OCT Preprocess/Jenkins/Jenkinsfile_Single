@@ -52,9 +52,9 @@ pipeline {
 			bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/myOCT.git"') //Checkout myOCT
 			
 			//Make note of the repository version
-			bat('cd HashtagAlignment && "' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			bat('@cd HashtagAlignment && @"' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
 			def hashtagAlignmentVer = readFile('commandResult.txt').trim()
-			bat('cd myOCT && "' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			bat('@cd myOCT && @"' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
 			def myOCTVer = readFile('commandResult.txt').trim()
 			
 			//Move files to main folder
