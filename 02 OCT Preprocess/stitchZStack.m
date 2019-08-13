@@ -107,7 +107,6 @@ parfor (yI=1:length(yIndexes))
     %Save results to temporary files
     %Since this data is big, its better to upload it to destination than
     %return it to Matlab
-    getenv('AWS_ACCESS_KEY_ID')
     T = tall({single(nanmean(stack,3))});
     location = awsModifyPathForCompetability(sprintf('%s/y%04d/m*.mat',tmpDir,yIndexes(yI)),false);
     write(location,T,'WriteFcn',@tallWriter); %Not a trivial implementation but it works
