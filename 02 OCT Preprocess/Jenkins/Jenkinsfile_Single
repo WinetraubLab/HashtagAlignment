@@ -24,7 +24,7 @@ pipeline {
 		booleanParam(
 			name: 'AWS_PARALLEL_COMPUTING',
 			defaultValue:true,
-			description:"1. Check this box if you would like to use cloud computing (AWS).\n2. Make sure your files are uploaded to Amazon cloud (s3) to be able to use this function.\n3. Please note: 1hr cloud computing is ~ $1.")
+			description:"1. Check this box if you would like to use cloud computing (AWS).\n2. Make sure your files are uploaded to Amazon cloud (s3) to be able to use this function.\n3. Please note: 1hr cloud computing is about 1USD.")
     }
 	stages{
 		stage("Checkout")
@@ -127,7 +127,7 @@ pipeline {
             email = user.getProperty(hudson.tasks.Mailer.UserProperty).getAddress()
 			
 			emailext ( //Using ext-email plugin
-				subject: "[OCTHist] Processing Completed ${currentBuild.result}  #$BUILD_NUMBER",
+				subject: "[OCTHist] Processing Completed ${currentBuild.result} #$BUILD_NUMBER",
 				from : "Yonatan",
 				body: 
 				"Hi,<br>" +
