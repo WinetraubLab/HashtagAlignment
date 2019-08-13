@@ -171,7 +171,14 @@ pipeline {
 			emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
-				body: "Scan is completed.<br>You can process the volume manualy to $TEMP_STORAGE\\$SUBJECT_ID and run bat file.<br> Or run automatically use <a href='http://localhost:9090/job/Upload%20to%20Cloud%20and%20Preprocess/'> Link </a>. <br> See log for more details <br>Yonatan",
+				body: "Scan is completed.<br>You can process the volume manualy to $TEMP_STORAGE\\$SUBJECT_ID and run bat file.<br> Or run automatically use <a href='http://localhost:9090/job/Upload%20to%20Cloud%20and%20Preprocess/'> Link </a>. <br> See log for more details <br>Yonatan<br><br>" + 
+					"<b>Instructions for Pauline:</b><br>" + 
+					"After clearing paraffin (until seeing full face of sample) from the side opposite to the dot<br>" +
+					"Cut XX mm in and then:<br>" +
+					"- Take 1 section, lose 5 sections of 5um each<br>" +
+					"- 3 Sections in each slide<br>" +
+					"- 5 slides total<br>"
+					,
 				attachLog: true,
 				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
