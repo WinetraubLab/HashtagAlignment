@@ -58,30 +58,37 @@ pipeline {
 			def myOCTVer = readFile('commandResult.txt').trim()
 			
 			//Move files to main folder
-			bat('xcopy /E HashtagAlignment . /Y /Q')
-			bat('xcopy /E myOCT . /Y /Q')
-			bat('copy "%CREDENTIALS_PATH%\\*.m" .')
+			bat('@xcopy /E HashtagAlignment . /Y /Q')
+			bat('@xcopy /E myOCT . /Y /Q')
+			bat('@copy "%CREDENTIALS_PATH%\\*.m" .')
 			
 			//Delete folder used for checkout
-			bat('rmdir HashtagAlignment /S /Q')
-			bat('rmdir myOCT /S /Q')
+			bat('@rmdir HashtagAlignment /S /Q')
+			bat('@rmdir myOCT /S /Q')
 			
 			//Start buidling the runme file
-			bat("echo disp('HashtagAlignment Git Hash: " + hashtagAlignmentVer + "');  >> runme.m")
-			bat("echo disp('myOCT Git Hash: " + myOCTVer + "');  >> runme.m")
-			bat("echo disp('To see repository go to');  >> runme.m")
-			bat("echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
-			bat("echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
+			bat("@echo disp('HashtagAlignment Git Hash: " + hashtagAlignmentVer + "');  >> runme.m")
+			bat("@echo disp('myOCT Git Hash: " + myOCTVer + "');  >> runme.m")
+			bat("@echo disp('To see repository go to');  >> runme.m")
+			bat("@echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
+			bat("@echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
 		}}}
 		stage("Build Runme File")
 		{steps{script{
-			bat("echo isRunInAutomatedMode_ = true; >> runme.m")
-			bat("echo SubjectFolderIn_ = '%SUBJECT_FOLDER_PATH%'; >> runme.m")
-			bat("echo SubjectFolderOut_ = '%SUBJECT_FOLDER_PATH%'; >> runme.m")
-			bat("echo runAllPreprocessing; >> runme.m")
+			bat("@echo isRunInAutomatedMode_ = true; >> runme.m")
+			bat("@echo SubjectFolderIn_ = '%SUBJECT_FOLDER_PATH%'; >> runme.m")
+			bat("@echo SubjectFolderOut_ = '%SUBJECT_FOLDER_PATH%'; >> runme.m")
+			bat("@echo runAllPreprocessing; >> runme.m")
 			
 			// Move the m file to Testers
-			bat("move runme.m Testers\\")
+			bat("@move runme.m Testers\\ > nooutput")
+			
+			//Type the result
+			bat("""
+				@echo off
+				echo Testers\\runme.m
+				echo ----------------
+				type Testers\\runme.m """)
 		}}}
 		stage("Run Matlab")
 		{steps{script{

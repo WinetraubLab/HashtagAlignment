@@ -78,37 +78,44 @@ pipeline {
 			bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/myOCT.git"') //Checkout myOCT
 			
 			//Make note of the repository version
-			bat('cd HashtagAlignment && "' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			bat('@cd HashtagAlignment && @"' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
 			def hashtagAlignmentVer = readFile('commandResult.txt').trim()
-			bat('cd myOCT && "' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			bat('@cd myOCT && @"' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
 			def myOCTVer = readFile('commandResult.txt').trim()
 			
 			//Move files to main folder
-			bat('xcopy /E HashtagAlignment . /Y /Q')
-			bat('xcopy /E myOCT . /Y /Q')
-			bat('copy "%CREDENTIALS_PATH%\\*.m" .')
+			bat('@xcopy /E HashtagAlignment . /Y /Q')
+			bat('@xcopy /E myOCT . /Y /Q')
+			bat('@copy "%CREDENTIALS_PATH%\\*.m" .')
 			
 			//Delete folder used for checkout
-			bat('rmdir HashtagAlignment /S /Q')
-			bat('rmdir myOCT /S /Q')
+			bat('@rmdir HashtagAlignment /S /Q')
+			bat('@rmdir myOCT /S /Q')
 			
 			//Start buidling the runme file
-			bat("echo disp('HashtagAlignment Git Hash: " + hashtagAlignmentVer + "');  >> runme.m")
-			bat("echo disp('myOCT Git Hash: " + myOCTVer + "');  >> runme.m")
-			bat("echo disp('To see repository go to');  >> runme.m")
-			bat("echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
-			bat("echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
+			bat("@echo disp('HashtagAlignment Git Hash: " + hashtagAlignmentVer + "');  >> runme.m")
+			bat("@echo disp('myOCT Git Hash: " + myOCTVer + "');  >> runme.m")
+			bat("@echo disp('To see repository go to');  >> runme.m")
+			bat("@echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
+			bat("@echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
 		}}}
 		stage("Build Runme File")
 		{steps{script{
-			bat("echo isDebugFastMode_ = %IS_DEBUG_MODE%; >> runme.m")
-			bat("echo zToPhtobleach_=%Z_TO_PHTOBLEACH%; >> runme.m")
-			bat("echo outputFolder_='%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\'; >> runme.m")
-			bat("echo isDrawTickmarks_=%IS_PHOTOBLEACH_TICKMARKS%; >> runme.m")
-			bat("echo run ScanAndPattern_Thorlabs.m  >> runme.m")
+			bat("@echo isDebugFastMode_ = %IS_DEBUG_MODE%; >> runme.m")
+			bat("@echo zToPhtobleach_=%Z_TO_PHTOBLEACH%; >> runme.m")
+			bat("@echo outputFolder_='%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\'; >> runme.m")
+			bat("@echo isDrawTickmarks_=%IS_PHOTOBLEACH_TICKMARKS%; >> runme.m")
+			bat("@echo run ScanAndPattern_Thorlabs.m  >> runme.m")
 			
 			// Move the m file to Testers
-			bat("move runme.m Testers\\")
+			bat("@move runme.m Testers\\ > nooutput")
+			
+			//Type the result
+			bat("""
+				@echo off
+				echo Testers\\runme.m
+				echo ----------------
+				type Testers\\runme.m """)
 		}}}
 		stage("Run Matlab")
 		{steps{script{
@@ -156,11 +163,11 @@ pipeline {
 		
 			//Manualy
 			def currentDir = pwd()
-			bat("""echo "%MATLAB_PATH%" -r "addpath(genpath('""" + currentDir + "'));" + foldersDef +
+			bat("""@echo "%MATLAB_PATH%" -r "addpath(genpath('""" + currentDir + "'));" + foldersDef +
 				"isRunInAutomatedMode_ = false; cd('" + currentDir + """\\02 OCT Preprocess\\'); runAllPreprocessing; disp('MAKE SURE YOU QUIT MATLAB BEFORE RUNNING JENKINS!');" > "%TEMP_STORAGE%\\%SUBJECT_ID%_runAllPreprocessing_Manualy.bat" """)
 
 			//Automated
-			bat("echo " + foldersDef + """runAllPreprocessing; >> "%TEMP_STORAGE%\\runme_preprocess.m" """)
+			bat("@echo " + foldersDef + """runAllPreprocessing; >> "%TEMP_STORAGE%\\runme_preprocess.m" """)
 			
 			//println gitFolder
 		}}}
