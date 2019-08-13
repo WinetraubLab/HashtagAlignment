@@ -43,8 +43,8 @@ pipeline {
 			def myOCTVer = readFile('commandResult.txt').trim()
 			
 			//Move files to main folder
-			bat('xcopy /E HashtagAlignment . /Y')
-			bat('xcopy /E myOCT . /Y')
+			bat('xcopy /E HashtagAlignment . /Y /Q')
+			bat('xcopy /E myOCT . /Y /Q')
 			bat('copy "%CREDENTIALS_PATH%\\*.m" .')
 			
 			//Delete folder used for checkout
