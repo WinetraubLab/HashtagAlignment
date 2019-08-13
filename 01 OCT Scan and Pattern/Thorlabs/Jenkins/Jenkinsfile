@@ -6,7 +6,7 @@ pipeline {
         MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
     	CREDENTIALS_PATH = "F:\\Jenkins\\"
-		GIT_TAG = "LB" //Can be "master" or any of the branches 
+		GIT_TAG = "master" //Can be "master" or any of the branches 
 	}
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
@@ -103,7 +103,7 @@ pipeline {
 		{steps{script{
 			bat("echo isDebugFastMode_ = %IS_DEBUG_MODE%; >> runme.m")
 			bat("echo zToPhtobleach_=%Z_TO_PHTOBLEACH%; >> runme.m")
-			bat("echo outputFolder_='%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\'; >> runme.m")
+			bat("echo outputFolder_='%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\'; >> runme.m")
 			bat("echo isDrawTickmarks_=%IS_PHOTOBLEACH_TICKMARKS%; >> runme.m")
 			bat("echo run ScanAndPattern_Thorlabs.m  >> runme.m")
 			
@@ -135,9 +135,9 @@ pipeline {
 				
 				try
 				{
-					bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
-					bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
-					bat('copy Testers\\*.png "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCT Volumes\\01 OCT Scan and Pattern Log\\"')
+					bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\01 OCT Scan and Pattern Log\\"')
+					bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\01 OCT Scan and Pattern Log\\"')
+					bat('copy Testers\\*.png "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\01 OCT Scan and Pattern Log\\"')
 					
 					archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 				}

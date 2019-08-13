@@ -41,7 +41,7 @@ if ~awsIsAWSPath(SubjectFolderIn_ ) && ~exist(SubjectFolderIn_,'dir')
 	return;
 end
 
-OCTVolumesFolder_ = [SubjectFolderIn '\OCT Volumes\'];
+OCTVolumesFolder_ = [SubjectFolderIn '\OCTVolumes\'];
 
 %% Do we need to upload to the cloud?
 if (awsIsAWSPath(SubjectFolderIn))
@@ -99,7 +99,7 @@ try
 					otherwise
 						%Copy to the cloud
 						awsCopyFileFolder([d(i).folder '\' d(i).name], ...
-							[SubjectFolderOut '/OCT Volumes/' d(i).name]);
+							[SubjectFolderOut '/OCTVolumes/' d(i).name]);
 				end
 			end
 		else %ran manually need to upload everything
