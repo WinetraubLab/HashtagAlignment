@@ -3,15 +3,29 @@
 pipeline {
 	agent any
 	environment {
-        MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
-        TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
-    	CREDENTIALS_PATH = "F:\\Jenkins\\"
-		IS_REMOVE_TEMP_STORAGE_WHEN_DONE = "false"
-		GIT_TAG = "LB" //Can be "master" or any of the tags 
+        MATLAB_PATH = "matlab"
+    	CREDENTIALS_PATH = "..\\..\\"
 	}
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
   	}
+	parameters 
+	{
+		string(
+			name: "SUBJECT_FOLDER_PATH",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-NA/",
+			description:"Subject Directory\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LA/LA-01/",
+			trim: true)
+		string(
+			name: "WHO_TO_EMAIL_WHEN_DONE",
+			defaultValue:"",
+			description:"Who should get an email with the results?  (Apart from you! - you will get an email anyways)\n\nUse comma to specify multiple emails\nExample: me@stanford.edu, you@stanford.edu",
+			trim: true)
+		booleanParam(
+			name: 'AWS_PARALLEL_COMPUTING',
+			defaultValue:true,
+			description:"1. Check this box if you would like to use cloud computing (AWS).\n2. Make sure your files are uploaded to Amazon cloud (s3) to be able to use this function.\n3. Please note: 1hr cloud computing is ~ $1.")
+    }
 	stages{
 		stage("Checkout")
 		{steps{script{
@@ -61,17 +75,9 @@ pipeline {
 		stage("Build Runme File")
 		{steps{script{
 			bat("echo isRunInAutomatedMode_ = true; >> runme.m")
-			
-			def runmePreprocessFP = env.TEMP_STORAGE + '\\runme_preprocess.m'
-			def f = new File( runmePreprocessFP )
-			if( f.exists() ) 
-			{
-				bat('type "' + runmePreprocessFP + '" >> runme.m') //Copy main file to run locally
-			} else {
-				currentBuild.result = 'ABORTED'
-				echo("No files to process, runme_preprocess.m does not exist")
-				error("No files to process, runme_preprocess.m does not exist")
-			}
+			bat("echo SubjectFolderIn_ = '%SUBJECT_FOLDER_PATH%'; >> runme.m")
+			bat("echo SubjectFolderOut_ = '%SUBJECT_FOLDER_PATH%'; >> runme.m")
+			bat("echo runAllPreprocessing; >> runme.m")
 			
 			// Move the m file to Testers
 			bat("move runme.m Testers\\")
@@ -85,7 +91,7 @@ pipeline {
 					 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/" + "\n" +
 					 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/"
 				
-				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
+				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme',%AWS_PARALLEL_COMPUTING%)" -logfile matlablog.txt""")
 				
 				//Delete preprocess file
 				File file = new File(env.TEMP_STORAGE + "\\runme_preprocess.m")
@@ -112,21 +118,37 @@ pipeline {
 				archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 			}
 		}}}
-		stage("Delete Temp Storage?")
-		{steps{script{
-			if (currentBuild.result == "SUCCESS")
-			{
-				if (env.IS_REMOVE_TEMP_STORAGE_WHEN_DONE == "true")
-				{
-					echo "Removing everything in temp storage directory"
-					bat('rmdir "%TEMP_STORAGE%" /S /Q')
-					bat('mkdir "%TEMP_STORAGE%"')
-				}
-				else
-				{
-					echo "IS_REMOVE_TEMP_STORAGE_WHEN_DONE requests that we don't delete Temp Storage, skipping"
-				}
-			}
-		}}}
+	}
+	post{ 
+		always {script{
+			//Get the email of the user who started the build
+			def userId = currentBuild.getRawBuild().getCauses()[0].getUserId()
+            hudson.model.User user = hudson.model.User.get(userId)
+            email = user.getProperty(hudson.tasks.Mailer.UserProperty).getAddress()
+			
+			emailext ( //Using ext-email plugin
+				subject: "[OCTHist] Processing Completed ${currentBuild.result}  #$BUILD_NUMBER",
+				from : "Yonatan",
+				body: 
+				"Hi,<br>" +
+				"Your files are processed (Build # $BUILD_NUMBER, $BUILD_STATUS).<br>" +
+				"All the files are saved at:<br>" +
+				"$SUBJECT_FOLDER_PATH<br>" +
+				"See attached files for result summary.<br><br>" + 
+				"To access files on AWS S3, follow <a href="https://s3.console.aws.amazon.com/s3/buckets/delazerdamatlab/Users/?region=us-east-1&tab=overview">Link</a><br>" +
+				"To log in to AWS use:<br>" + 
+				"Email address of your AWS account // account ID : 313934313216<br>" +
+				"IAM User name: student<br>" +
+				"Password: same as your server's password<br><br><br>" +
+				"<b> Jenkins Parameters: </b><br>" +
+				"SUBJECT_FOLDER_PATH:     $SUBJECT_FOLDER_PATH<br>" +
+				"WHO_TO_EMAIL_WHEN_DONE:  $WHO_TO_EMAIL_WHEN_DONE<br>" +
+				"AWS_PARALLEL_COMPUTING:  $AWS_PARALLEL_COMPUTING<br>" 
+				,
+				attachLog: true,
+				attachmentsPattern: "Testers//matlablog.txt, Testers//runme.m, //**//*.png",
+				to: "$WHO_TO_EMAIL_WHEN_DONE," + email )
+			}} 
+		}
 	}
 }

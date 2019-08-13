@@ -162,6 +162,7 @@ pipeline {
 		}}}
 	}
 	post{ 
+		//Using ext-email plugin
 		success {
 			emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
