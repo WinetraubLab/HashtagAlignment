@@ -136,9 +136,14 @@ pipeline {
 			finally
 			{
 				//In any case, copy what we did to log folder
-				echo "MATLAB LOG --------------------------------------------------------------------------\n-------------------------------------------------------------------------------------"
-				bat('type Testers\\matlablog.txt')
-				echo "MATLAB LOG END ----------------------------------------------------------------------\n-------------------------------------------------------------------------------------"
+				bat """
+					@echo off
+					echo ---------------------------- MATLAB LOG ----------------------------
+					echo --------------------------------------------------------------------
+					type Testers\\matlablog.txt
+					echo ------------------------------ LOG END -----------------------------
+					echo --------------------------------------------------------------------
+					"""
 				
 				try
 				{
@@ -187,7 +192,7 @@ pipeline {
 					"- 5 slides total<br>"
 					,
 				attachLog: true,
-				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png",
+				attachmentsPattern: "Testers/*.png",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 		} 
 		failure {
@@ -196,7 +201,7 @@ pipeline {
 				from : "Yonatan",
 				body: "See log <br>Yonatan",
 				attachLog: true,
-				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png",
+				attachmentsPattern: "Testers/*.png",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 		aborted {
 			emailext (
@@ -204,7 +209,7 @@ pipeline {
 				from : "Yonatan",
 				body: "See log<br>Be sure to kill Matlab (run by System) if its still running<br>Yonatan",
 				attachLog: true,
-				attachmentsPattern: "Testers/matlablog.txt, Testers/runme.m, Testers/*.png",
+				attachmentsPattern: "Testers/*.png",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 			}
 		}

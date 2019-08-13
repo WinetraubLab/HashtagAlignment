@@ -116,10 +116,15 @@ pipeline {
 			finally
 			{
 				//In any case, copy what we did to log folder
-				echo "MATLAB LOG --------------------------------------------------------------------------\n-------------------------------------------------------------------------------------"
-				bat('type Testers\\matlablog.txt')
-				echo "MATLAB LOG END ----------------------------------------------------------------------\n-------------------------------------------------------------------------------------"
-				
+				bat """
+					@echo off
+					echo ---------------------------- MATLAB LOG ----------------------------
+					echo --------------------------------------------------------------------
+					type Testers\\matlablog.txt
+					echo ------------------------------ LOG END -----------------------------
+					echo --------------------------------------------------------------------
+					"""
+					
 				//bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\02 OCT Preprocess Log\\"')
 				//bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\02 OCT Preprocess Log\\"')
 				
@@ -151,7 +156,7 @@ pipeline {
 					"AWS_PARALLEL_COMPUTING:  $AWS_PARALLEL_COMPUTING<br>" 
 					,
 					attachLog: true,
-					attachmentsPattern: "Testers//matlablog.txt, Testers//runme.m, //**//*.png",
+					attachmentsPattern: "//**//*.png",
 					to: "$WHO_TO_EMAIL_WHEN_DONE," + email )
 			}
 		}}}
