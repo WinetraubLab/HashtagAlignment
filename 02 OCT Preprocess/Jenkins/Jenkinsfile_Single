@@ -5,6 +5,7 @@ pipeline {
 	environment {
         MATLAB_PATH = "matlab"
     	CREDENTIALS_PATH = "..\\..\\"
+		GIT_TAG = "master" //Can be "master" or any of the branches 
 	}
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds

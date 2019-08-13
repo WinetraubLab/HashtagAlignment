@@ -16,19 +16,23 @@ pipeline {
 		string(
 			name: "S3_DIR",
 			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/",
-			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LA/")
+			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LA/",
+			trim: true)
 		string(
 			name: "SUBJECT_ID",
 			defaultValue:"LB-00",
-			description:"Subject Id.\nExample: LB-01")
+			description:"Subject Id.\nExample: LB-01",
+			trim: true)
 		string(
 			name: "Z_TO_PHTOBLEACH",
 			defaultValue:"-300",
-			description:"We assume top of the sample is in focus right now.\nSet this value to the position of the top of the gel as photobleaching will occur at this specified z.\nUnits are um | +z is deeper")
+			description:"We assume top of the sample is in focus right now.\nSet this value to the position of the top of the gel as photobleaching will occur at this specified z.\nUnits are um | +z is deeper",
+			trim: true)
 		string(
 			name: "WHO_TO_EMAIL_WHEN_DONE",
 			defaultValue:"@stanford.edu",
-			description:"Who should get an email with the results? Including you!\nUse comma to specify multiple emails.\nExample: me@stanford.edu, you@stanford.edu")
+			description:"Who should get an email with the results? Including you!\nUse comma to specify multiple emails.\nExample: me@stanford.edu, you@stanford.edu",
+			trim: true)
 		
 		//Debug purpose 
 		booleanParam(
