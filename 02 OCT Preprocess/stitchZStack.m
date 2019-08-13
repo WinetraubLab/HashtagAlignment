@@ -104,29 +104,29 @@ parfor (yI=1:length(yIndexes))
     th = max(tmp(:))/size(stack,3)/2; %Devided by the amount of averages
     c = [prctile(tmp(:),20), prctile(tmp(:),99.9)];
     
+    %Save Stack
+    %Since we can't save directly to drive as AWS CLI, we will generate the
+    %image and save it to a cell, upload later. This is a small dataset so
+    %we can return it to matlab no need to use tall
+    imToSave{yI} = [];
+    if (sum(yIndexes(yI) == yToSave)>0)
+        imToSave{yI} = single(stack);
+    end
+    
+    %Compute stacked frame
+    stackmean = squeeze(single(nanmean(stack,3))); 
+    stack = []; %Clear memory
+    
     %Save results to temporary files
     %Since this data is big, its better to upload it to destination than
     %return it to Matlab
-    T = tall({single(nanmean(stack,3))});
+    T = tall({stackmean});
     location = awsModifyPathForCompetability(sprintf('%s/y%04d/m*.mat',tmpDir,yIndexes(yI)),false);
     write(location,T,'WriteFcn',@tallWriter); %Not a trivial implementation but it works
     
     %Save thresholds, this data is small so we can send it back
     thresholds(yI) = th;
     cValues(yI,:) = c;
-    
-    %Since we can't save directly to drive as AWS CLI, we will generate the
-    %image and save it to a cell, upload later. This is a small dataset so
-    %we can return it to matlab no need to use tall
-    imToSave{yI} = [];
-    if (sum(yIndexes(yI) == yToSave)>0)
-        stack(isnan(stack)) = th;
-        stack(stack<th) = th;
-        stack = log(stack);
-        
-        %Compress to image format
-        imToSave{yI} = single( (stack-c(1))/(c(2)-c(1))*255 );
-    end
          
     catch ME
         fprintf('Error happened in parfor, iteration %d, yIndex: %d',yI,yIndexes(yI)); 
