@@ -18,7 +18,7 @@ pipeline {
 			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/",
 			trim: true)
 		string(
-			name: "SUBJECT_ID",
+			name: "SAMPLE_ID",
 			defaultValue:"LB-00",
 			description:"Subject Id.\nExample: LB-01",
 			trim: true)
@@ -205,6 +205,7 @@ pipeline {
 			//Make not of the parameters we learned from input - Regarding the subject (TBD)
 			def file2 = new File(VOLUME_OUTPUT_FOLDER() + "\\..\\Subject.json")
 			file2.write('\u007B ' + 
+				'"sampleId" : "'                + params.SAMPLE_ID + '", ' + 
 				'"age" : "'                     + params.AGE + '", ' + 
 				'"gender": "'                   + params.GENDER + '", ' + 
 				'"sampleLocation": "'           + params.SAMPLE_LOCATION + '", ' + 
@@ -266,13 +267,13 @@ pipeline {
 		{steps{script{
 			//How to preprocess this file
 			def foldersDef = 
-				"SubjectFolderIn_  = '%TEMP_STORAGE%\\%SUBJECT_ID%\\';" + 
-				"SubjectFolderOut_ = '%S3_DIR%/%SUBJECT_ID%/';"	
+				"SubjectFolderIn_  = '%TEMP_STORAGE%\\%SAMPLE_ID%\\';" + 
+				"SubjectFolderOut_ = '%S3_DIR%/%SAMPLE_ID%/';"	
 		
 			//Manualy
 			def currentDir = pwd()
 			bat("""@echo "%MATLAB_PATH%" -r "addpath(genpath('""" + currentDir + "'));" + foldersDef +
-				"isRunInAutomatedMode_ = false; cd('" + currentDir + """\\02 OCT Preprocess\\'); runAllPreprocessing; disp('MAKE SURE YOU QUIT MATLAB BEFORE RUNNING JENKINS!');" > "%TEMP_STORAGE%\\%SUBJECT_ID%_runAllPreprocessing_Manualy.bat" """)
+				"isRunInAutomatedMode_ = false; cd('" + currentDir + """\\02 OCT Preprocess\\'); runAllPreprocessing; disp('MAKE SURE YOU QUIT MATLAB BEFORE RUNNING JENKINS!');" > "%TEMP_STORAGE%\\%SAMPLE_ID%_runAllPreprocessing_Manualy.bat" """)
 
 			//Automated
 			bat("@echo " + foldersDef + """runAllPreprocessing; >> "%TEMP_STORAGE%\\runme_preprocess.m" """)
@@ -377,31 +378,53 @@ pipeline {
 				message: 'Please Provide Parameters', ok: 'Next',
                 parameters: [
 					string(defaultValue: '1.0',
-                    name: 'HowDeepMM', description: 'How deep from tissue surface should we start cutting? [mm]'),
-                    choice(name: 'Side', choices: ['black dot side','side opposite to the black dot'], description: 'Which side should we cut from?')
+						name: 'HowDeepMM', 
+						description: 'How deep from tissue surface should we start cutting? [mm]\nShortest distance is better'
+						),
+                    choice(
+						name: 'WhichSideToStartCutting', 
+						choices: ['same side as black dot','side opposite to the black dot'], 
+						description: 'Which side is the thinnest, black dot side or opposite to black dot?')
                     ])
 			def howDeepMM = Double.valueOf(userInput.HowDeepMM)
+			def sideToPlaceRedDot = ""
+			if (userInput.WhichSideToStartCutting = "same side as black dot")
+			{
+				sideToPlaceRedDot = "side opposite to the black dot"
+			}
+			else
+			{
+				sideToPlaceRedDot = "same side as black dot"
+			}
 
 			//Generate Instructions to Histologist
 			bat """
 				@echo off
-				echo - Mark a red dot on the """ + userInput.Side + """. >> HistoInstructionsFull.txt
-				echo - Start cutting from the side opposite to the red dot. >> HistoInstructions.txt
-				echo - Start sections after clearing paraffin, when seeing a full face. >> HistoInstructions.txt
-				echo - Then go in """ + howDeepMM.toString() + "mm / " +  String.format ("%.0f", howDeepMM*1000) + """um >> HistoInstructions.txt
-				echo - Then take slides >> HistoInstructions.txt
-				echo - 5 slides with 3 sections per slide, sections interval 25um >> HistoInstructions.txt
-				echo - Slide thickness of 5um >> HistoInstructions.txt
-				
-				type HistoInstructions.txt >> HistoInstructionsFull.txt
+				echo Sample ID:  %SAMPLE_ID%  > HistoInstructions.txt
+				echo. >> HistoInstructions.txt
+				echo. >> HistoInstructions.txt
+				echo ---------------- Instructions for Us ---------------------------- >> HistoInstructions.txt
+				echo ----------------------------------------------------------------- >> HistoInstructions.txt
+				echo - Mark a red dot on the """ + sideToPlaceRedDot + """. >> HistoInstructions.txt
+				echo. >> HistoInstructions.txt
+				echo. >> HistoInstructions.txt
+				echo ---------------- Instructions for Pauleen ----------------------- >> HistoInstructions.txt
+				echo ----------------------------------------------------------------- >> HistoInstructions.txt
+				echo -> Start cutting from the side opposite to the red dot. >> HistoInstructions.txt
+				echo -> Clear paraffin, when seeing a full face >> HistoInstructions.txt
+				echo -> Then go in """ + howDeepMM.toString() + " mm / " +  String.format ("%.0f", howDeepMM*1000) + """ um >> HistoInstructions.txt
+				echo -> Then take 5 slides with 3 sections per slide >> HistoInstructions.txt
+				echo    - Section interval of 25 um >> HistoInstructions.txt
+				echo    - Slide thickness of 5 um >> HistoInstructions.txt
+				echo ----------------------------------------------------------------- >> HistoInstructions.txt
 				
 				echo HISTOLOGIST Instructions
 				echo ------------------------
-				type HistoInstructionsFull.txt
+				type HistoInstructions.txt
 				echo ------------------------
 				"""
 			
-			bat('copy HistoInstructionsFull.txt "' + LOG_OUTPUT_FOLDER() + '"')
+			bat('copy HistoInstructions.txt "' + LOG_OUTPUT_FOLDER() + '"')
 		}}}
 		stage("Save Log File")
 		{steps{script{
@@ -414,11 +437,11 @@ pipeline {
 			emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
-				body: "Scan is completed.<br>You can process the volume manualy to $TEMP_STORAGE\\$SUBJECT_ID and run bat file.<br> Or run automatically use <a href='http://localhost:9090/job/Upload%20to%20Cloud%20and%20Preprocess/'> Link </a>. <br> See log for more details <br>Yonatan<br><br>" + 
+				body: "Scan is completed.<br>You can process the volume manualy to $TEMP_STORAGE\\$SAMPLE_ID and run bat file.<br> Or run automatically use <a href='http://localhost:9090/job/Upload%20to%20Cloud%20and%20Preprocess/'> Link </a>. <br> See log for more details <br>Yonatan<br><br>" + 
 					"<b>Print instructions for Pauline from attachement</b><br>"
 					,
 				attachLog: true,
-				attachmentsPattern: "HistoInstructionsFull.txt",
+				attachmentsPattern: "HistoInstructions.txt",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 		} 
 		failure {
@@ -444,12 +467,12 @@ pipeline {
 
 def LOG_OUTPUT_FOLDER()
 {
-	return  "${TEMP_STORAGE}\\${SUBJECT_ID}\\Log\\01 OCT Scan and Pattern\\"
+	return  "${TEMP_STORAGE}\\${SAMPLE_ID}\\Log\\01 OCT Scan and Pattern\\"
 }
 
 def VOLUME_OUTPUT_FOLDER()
 {
-	return "${TEMP_STORAGE}\\${SUBJECT_ID}\\OCTVolumes\\"
+	return "${TEMP_STORAGE}\\${SAMPLE_ID}\\OCTVolumes\\"
 }
 
 def BackupLogFile()
