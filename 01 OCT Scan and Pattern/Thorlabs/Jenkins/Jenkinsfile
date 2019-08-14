@@ -35,7 +35,45 @@ pipeline {
 			description:"Who should get an email with the results? Including you!\nUse comma to specify multiple emails.\nExample: me@stanford.edu, you@stanford.edu",
 			trim: true)
 			
-		<--- ADD PARAMETERS ABOUT THE SAMPLE --->
+		//<--- ADD PARAMETERS ABOUT THE SAMPLE --->
+		string(
+			name: "PATIENT_AGE",
+			defaultValue:"",
+			description:"",
+			trim: true)
+		choice(
+			name: "GENDER",
+			choices "Male\nFemale\nUnknown"
+			defaultValue:"Unknown",
+			description:"",
+			trim: true)
+		string(
+			name: "LOCATION",
+			defaultValue:"Unknown",
+			description:"Forearm, Shin etc",
+			trim: true)
+		string(
+			name: "SIDE",
+			defaultValue:"Unknown",
+			description:"Left, Right, Dorsal etc",
+			trim: true)
+		string(
+			name: "POSSIBLE_PATIENT_DIAGNOSIS",
+			defaultValue:"Unknown",
+			description:"BCC, SCC etc",
+			trim: true)
+		choice(
+			name: "HEALTHY_OR_TUMOR",
+			choices "Healthy\nTumor\nMargin\nUnknown"
+			defaultValue:"Healthy",
+			description:"If this sample is 'dog ear' choose healthy. If inside the core of the tumor choose 'Tumor'",
+			trim: true)
+		choice(
+			name: "SKIN_TYPE",
+			choices "1\n2\n3\n4\n5\n6\nUnknown"
+			defaultValue:"Unknown",
+			description:"Fitzpatrick Skin Type",
+			trim: true)		
 		
 		//Debug purpose 
 		booleanParam(
@@ -52,9 +90,16 @@ pipeline {
 		{steps{script{
 			if (params.WHO_TO_EMAIL_WHEN_DONE == "@stanford.edu") 
 			{
-						currentBuild.result = 'ABORTED'
-						echo('Please specify email address to send a note when run is completed')
-						error('Please specify email address to send a note when run is completed')
+				currentBuild.result = 'ABORTED'
+				echo('Please specify email address to send a note when run is completed')
+				error('Please specify email address to send a note when run is completed')
+			}
+			
+			if (params.PATIENT_AGE == "")
+			{
+				currentBuild.result = 'ABORTED'
+				echo('Please specify patient data')
+				error('Please specify patient data')
 			}
 		}}}
 		stage("Checkout")
