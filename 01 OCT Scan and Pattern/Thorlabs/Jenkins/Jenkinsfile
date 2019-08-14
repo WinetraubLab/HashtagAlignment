@@ -178,6 +178,8 @@ pipeline {
 			
 			//Make not of the parameters we learned from input - Regarding the volume
 			def str = params.WHO_TO_EMAIL_WHEN_DONE
+			def cb1 = "{";
+			def cb2 = "}";
 			echo "here"
 			str = str.replace("@stanford.edu","");
 			bat('echo ' + str);
