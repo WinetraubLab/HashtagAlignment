@@ -91,9 +91,11 @@ if (isRunningOnJenkins())
 end
 
 %Make dirs for output and log
-mkdir(outputFolder);
+if ~exist(outputFolder,'dir')
+	mkdir(outputFolder);
+end
 logFolder = [outputFolder '..\Log\01 OCT Scan and Pattern\'];
-if ~eixst(logFolder,'dir')
+if ~exist(logFolder,'dir')
 	mkdir(logFolder);
 end
 

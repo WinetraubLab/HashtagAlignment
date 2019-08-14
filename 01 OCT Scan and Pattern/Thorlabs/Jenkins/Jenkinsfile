@@ -193,7 +193,15 @@ pipeline {
 		
 			//Make not of the parameters we learned from input - Regarding the subject (TBD)
 			def file2 = new File(VOLUME_OUTPUT_FOLDER() + "\\..\\Subject.json")
-			file2.write('\u007B "age" : "${AGE}", "gender": "${GENDER}", "sampleLocation": "%SAMPLE_LOCATION%", "side": "%SIDE%", "patientDiagnosis": "%POSSIBLE_PATIENT_DIAGNOSIS%", "sampleType": "%HEALTHY_OR_TUMOR%", "fitzpatrickSkinType" : "%SKIN_TYPE%" \u007D')
+			file2.write('\u007B ' + 
+				'"age" : "'                     + params.AGE + '", ' + 
+				'"gender": "'                   + params.GENDER + '", ' + 
+				'"sampleLocation": "'           + params.SAMPLE_LOCATION + '", ' + 
+				'"side": "'                     + params.SIDE + '", ' + 
+				'"possiblePatientDiagnosis": "' + params.POSSIBLE_PATIENT_DIAGNOSIS + '", ' + 
+				'"sampleType": "'               + params.HEALTHY_OR_TUMOR + '", ' + 
+				'"fitzpatrickSkinType" : "'     + params.SKIN_TYPE + '" ' + 
+				'\u007D')
 		}}}
 		stage("Scan And Photobleach")
 		{steps{script{
