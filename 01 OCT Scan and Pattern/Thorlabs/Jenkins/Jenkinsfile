@@ -175,10 +175,10 @@ pipeline {
 			//Make not of the parameters we learned from input - Regarding the volume
 			def str = params.WHO_TO_EMAIL_WHEN_DONE;
 			str = str.replace("@stanford.edu","");
-			bat('@echo { > ScanConfig.json');
-			bar('@echo "VolumeScannedBy" : "' + str + '" >> ScanConfig.json');
-			bat('@echo } >> ScanConfig.json');
-			bat('@move ScanConfig.json %TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\');
+			bat('echo { > ScanConfig.json');
+			bar('echo "VolumeScannedBy" : "' + str + '" >> ScanConfig.json');
+			bat('echo } >> ScanConfig.json');
+			bat('move ScanConfig.json %TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\');
 				
 			//Make not of the parameters we learned from input - Regarding the subject (TBD) <--
 		}}}
