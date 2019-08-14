@@ -88,7 +88,7 @@ pipeline {
 			ht = ht.replaceAll("Then go in","Then <span style='font-weight: bold;background-color: yellow'>go in")
 			ht = ht.replaceAll(" um."," um</span>.")
 			ht = "<html><body>" + ht + "</body></html>"
-			def file = new File('histoInstructions.html')
+			def file = new File('.\\histoInstructions.html')
 			file.write(ht)
 			echo("HERE")
 
