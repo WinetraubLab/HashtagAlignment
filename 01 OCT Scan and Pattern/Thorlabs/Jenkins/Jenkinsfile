@@ -100,7 +100,7 @@ emailext (
 					,
 				attachLog: true,
 				attachmentsPattern: "histoInstructions.html",
-				to: "yonatanw$WHO_TO_EMAIL_WHEN_DONE" )
+				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 
 error("HERE")
 		
