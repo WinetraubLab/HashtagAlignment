@@ -34,14 +34,14 @@ pipeline {
 			trim: true)
 		
 		string(
-			name: "PATIENT_AGE",
+			name: "AGE",
 			defaultValue:"",
-			description:"",
+			description:"Subject's Age",
 			trim: true)
 		choice(
 			name: "GENDER",
 			choices: ['Unknown', 'Male', 'Female'],
-			description:""
+			description:"Subject's Gender"
 			)
 		string(
 			name: "SAMPLE_LOCATION",
@@ -178,7 +178,7 @@ pipeline {
 			
 			//Make not of the parameters we learned from input - Regarding the volume
 			def str = params.WHO_TO_EMAIL_WHEN_DONE
-			echo "hi"
+			echo "here"
 			str = str.replace("@stanford.edu","");
 			bat('echo ' + str);
 			bar('echo {"VolumeScannedBy" : "' + str + '"} > ScanConfig.json');
@@ -191,7 +191,7 @@ pipeline {
 			if (!gitFolderOption4.exists()) {
 				bat('mkdir "' + VOLUME_OUTPUT_FOLDER() + '"');
 			}
-			bat('move ScanConfig.json "' + VOLUME_OUTPUT_FOLDER() + '");
+			bat('move ScanConfig.json "' + VOLUME_OUTPUT_FOLDER() + '"');
 				
 			//Make not of the parameters we learned from input - Regarding the subject (TBD) <--
 		}}}
