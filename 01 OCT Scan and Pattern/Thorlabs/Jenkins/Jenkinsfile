@@ -187,7 +187,7 @@ pipeline {
 			str = str.replace("@stanford.edu","");
 			echo "here"
 			def file = new File(VOLUME_OUTPUT_FOLDER() + "\\ScanConfig.json")
-			file.write ('\u007B "VolumeScannedBy" 
+			file.write ('\u007B "VolumeScannedBy" : "' + str + '"\u007D')
 			
 			echo "here"
 		
