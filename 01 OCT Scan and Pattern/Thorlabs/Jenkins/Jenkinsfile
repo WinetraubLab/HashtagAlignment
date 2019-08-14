@@ -174,14 +174,14 @@ pipeline {
 				type Testers\\runme.m """)
 				
 			//Make a folder for the log
-			def gitFolderOption3 = new File(LOG_OUTPUT_FOLDER())
-			if (!gitFolderOption3.exists()) {
+			def folder3 = new File(LOG_OUTPUT_FOLDER())
+			if (!folder3.exists()) {
 				bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
 			}
 			
 			//Make volume dir if it doesnt exist yet and copy JSON file there
-			def gitFolderOption4 = new File(VOLUME_OUTPUT_FOLDER())
-			if (!gitFolderOption4.exists()) {
+			def folder4 = new File(VOLUME_OUTPUT_FOLDER())
+			if (!folder4.exists()) {
 				bat('mkdir "' + VOLUME_OUTPUT_FOLDER() + '"');
 			}
 						
@@ -440,22 +440,14 @@ def VOLUME_OUTPUT_FOLDER()
 def BackupLogFile()
 {
 	//Make sure folder exists
-	def gitFolder = new File(LOG_OUTPUT_FOLDER())
-	if (!gitFolde.exists()) {
+	def logFolder = new File(LOG_OUTPUT_FOLDER())
+	if (!logFolder.exists()) {
 		bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
 	}
 	
-	//Get log
+	//Save log file
 	def lg =currentBuild.rawBuild.getLog(10000);
 	lg = lg.join("\n");
-	
-	//Save log file
 	def file = new File(LOG_OUTPUT_FOLDER() + "\\build.log")
-	if (file.exist()
-	{
-		//Delete file
-		bat('del \F "' + file.path + '"');
-		def file = new File(LOG_OUTPUT_FOLDER() + "\\build.log")
-	}
 	file.write (lg)
 }
