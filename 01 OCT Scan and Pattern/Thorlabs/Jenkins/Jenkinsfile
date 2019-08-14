@@ -88,7 +88,7 @@ pipeline {
 			ht = ht.replaceAll("\n","<br>")
 			echo ht
 			//ht = ht.replaceAll("+ Then go in","+ Then go in <p style='font-weight: bold;background-color: yellow'>")
-			ht = ht.replaceAll("+ Then go in","+ Then go in <p>")
+			ht = ht.replaceAll("Then go in","Then go in <p>")
 			echo "DEBUG"
 			ht = ht.replaceAll(" um.","</p>")
 			ht = "<html><body>" + ht + "</body></html>"
