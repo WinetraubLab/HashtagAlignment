@@ -104,10 +104,9 @@ pipeline {
 		stage("Checkout")
 		{steps{script{
 			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
-			println("here");
 			bat "@git branch > commandResult.txt" 
 			def gitTxt = readFile('commandResult.txt').trim()
-			if (st.contains("* (HEAD"))
+			if (gitTxt.contains("* (HEAD"))
 			{
 				gitTxt = "origin/master"
 			}
