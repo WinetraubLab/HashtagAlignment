@@ -155,7 +155,7 @@ pipeline {
 		{steps{script{
 			bat("@echo isDebugFastMode_ = %IS_DEBUG_MODE%; >> runme.m")
 			bat("@echo zToPhtobleach_=%Z_TO_PHTOBLEACH%; >> runme.m")
-			bat("@echo outputFolder_='%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\'; >> runme.m")
+			bat("@echo outputFolder_='" + VOLUME_OUTPUT_FOLDER() + "'; >> runme.m")
 			bat("@echo isDrawTickmarks_=%IS_PHOTOBLEACH_TICKMARKS%; >> runme.m")
 			bat("@echo run ScanAndPattern_Thorlabs.m  >> runme.m")
 			
@@ -170,7 +170,11 @@ pipeline {
 				type Testers\\runme.m """)
 				
 			//Make a folder for the log
-			bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
+			def gitFolderOption3 = new File(LOG_OUTPUT_FOLDER())
+			if (!gitFolderOption3.exists()) {
+				bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
+			}
+			
 			
 			//Make not of the parameters we learned from input - Regarding the volume
 			def str = params.WHO_TO_EMAIL_WHEN_DONE
@@ -181,7 +185,13 @@ pipeline {
 			bat('echo { > ScanConfig.json');
 			bar('echo "VolumeScannedBy" : "' + str + '" >> ScanConfig.json');
 			bat('echo } >> ScanConfig.json');
-			bat('move ScanConfig.json %TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\');
+			
+			//Make volume dir if it doesnt exist yet and copy JSON file there
+			def gitFolderOption4 = new File(VOLUME_OUTPUT_FOLDER())
+			if (!gitFolderOption4.exists()) {
+				bat('mkdir "' + VOLUME_OUTPUT_FOLDER() + '"');
+			}
+			bat('move ScanConfig.json "' + VOLUME_OUTPUT_FOLDER() + '");
 				
 			//Make not of the parameters we learned from input - Regarding the subject (TBD) <--
 		}}}
@@ -249,7 +259,7 @@ pipeline {
 			//Cereate an m file to process the overview
 			bat ("""
 				@echo off
-				echo OCTVolumesFolder_ = '%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\'; >> runme.m
+				echo OCTVolumesFolder_ = '""" + VOLUME_OUTPUT_FOLDER() + """'; >> runme.m
 				echo isRunInAutomatedMode_ = true; >> runme.m
 				echo findFocusInBScan; >> runme.m
 				echo stitchOverview; >> runme.m
@@ -406,4 +416,9 @@ pipeline {
 def LOG_OUTPUT_FOLDER()
 {
 	return  "${TEMP_STORAGE}\\${SUBJECT_ID}\\Log\\01 OCT Scan and Pattern\\"
+}
+
+def VOLUME_OUTPUT_FOLDER()
+{
+	return ${TEMP_STORAGE}\\${SUBJECT_ID}\\OCTVolumes\\
 }
