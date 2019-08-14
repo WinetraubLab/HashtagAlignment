@@ -85,9 +85,11 @@ pipeline {
 		//Make an HTML Version 
 			def ht = readFile(LOG_OUTPUT_FOLDER() + '\\histoInstructions.txt').trim()
 			ht = ht.replaceAll("\n","<br>")
-			ht = ht.replaceAll("Then go in","Then <span style='font-weight: bold;background-color: yellow'>go in")
+			ht = ht.replaceAll("Then go in","Then <span style='font-weight: bold;background-color: yellow !important;font-size: big'>go in")
 			ht = ht.replaceAll(" um."," um</span>.")
-			ht = "<html><body>" + ht + "</body></html>"
+			ht = "<html><head><style>\n" +
+				"@media print {\nbody {-webkit-print-color-adjust: exact;}\n}</style></head><body>" + 
+				ht + "</body></html>"
 			def file = new File(pwd() + '\\histoInstructions.html')
 			file.write(ht)
 			echo(pwd())
