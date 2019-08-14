@@ -98,8 +98,6 @@ pipeline {
 					error('Please specify patient data')
 				}
 			}
-			
-			// <-------------------------------SET PARAMETERS TO LOG
 		}}}
 		stage("Checkout")
 		{steps{script{
@@ -172,7 +170,20 @@ pipeline {
 				type Testers\\runme.m """)
 				
 			//Make a folder for the log
-			bat ("mkdir " + LOG_OUTPUT_FOLDER());
+			bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
+			
+			//Make not of the parameters we learned from input - Regarding the volume
+			def str = params.WHO_TO_EMAIL_WHEN_DONE;
+			str = str.replace("@stanford.edu","");
+			bat("""
+				@echo off
+				echo { > ScanConfig.json
+				echo "VolumeScannedBy" : """" + str """" >> ScanConfig.json
+				echo } >> ScanConfig.json
+				move ScanConfig.json %TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\
+				""")
+				
+			//Make not of the parameters we learned from input - Regarding the subject (TBD)
 		}}}
 		stage("Scan And Photobleach")
 		{steps{script{
@@ -238,8 +249,8 @@ pipeline {
 			//Cereate an m file to process the overview
 			bat ("""
 				@echo off
-				echo OCTVolumesFolder_ = '%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\' >> runme.m
-				echo isRunInAutomatedMode_ = true >> runme.m
+				echo OCTVolumesFolder_ = '%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\'; >> runme.m
+				echo isRunInAutomatedMode_ = true; >> runme.m
 				echo findFocusInBScan; >> runme.m
 				echo stitchOverview; >> runme.m
 				""")
@@ -309,12 +320,9 @@ pipeline {
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 				
 			//Give instructions
-			bat """ 
-				@echo off
-				echo Please review overview image and provide your input:
-				echo - Runme file:\n\t""" + env.BUILD_URL + """execution/node/3/ws/Testers/Overview.png
-				"""
-			
+			echo "- Please review overview image and provide your input: + "\n" +
+				 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/Overview.png + "\n" +
+
 			//Ask for input
 			def userInput = input( 
 				message: 'Please Provide Parameters', ok: 'Next',

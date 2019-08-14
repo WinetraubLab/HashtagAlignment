@@ -92,8 +92,10 @@ end
 
 %Make dirs for output and log
 mkdir(outputFolder);
-logFolder = [outputFolder '\01 OCT Scan and Pattern Log\'];
-mkdir(logFolder);
+logFolder = [outputFolder '..\Log\01 OCT Scan and Pattern\'];
+if ~eixst(logFolder,'dir')
+	mkdir(logFolder);
+end
 
 %Scan one silce where we photobleaching
 config.zToScan = [config.zToPhtobleach config.zToScan];
@@ -214,5 +216,13 @@ fprintf('%s Finalizing\n',datestr(datetime));
 ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose(); %Close scanner
     
 %Save scan configuration parameters
+if exist([outputFolder 'ScanConfig.json'],'file')
+	%Load Config first, dont override it
+	cfg = awsReadJSON([outputFolder 'ScanConfig.json']);
+	fns = fieldnames(cfg);
+	for i=1:length(fns)
+		eval(['config.' fns{i} ' = cfg.' fns{i} ';']);
+	end
+end
 config
 awsWriteJSON(config, [outputFolder 'ScanConfig.json']);
