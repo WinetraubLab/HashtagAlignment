@@ -98,8 +98,11 @@ pipeline {
 			def chromeExe = new File(chromePath);
 			if(chromeExe.exists())
 			{
-				bat('"' + chromePath + 'chrome.exe" --headless --print-to-pdf="histoInstructions.pdf" histoInstructions.html');
-				bat("del /f histoInstructions.html") //Delete HTML we don't need it anymore
+				bat('"' + chromePath + 'chrome.exe" --headless --print-to-pdf="' + pwd() + 'histoInstructions.pdf" histoInstructions.html');
+				//bat("del /f histoInstructions.html") //Delete HTML we don't need it anymore
+			}
+			else
+				echo("Cannot make a pdf file, install chrome for that. Will send you html instead")
 			}
 			echo(pwd())
 
