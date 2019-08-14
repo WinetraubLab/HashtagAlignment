@@ -82,6 +82,10 @@ pipeline {
 	stages{
 		stage("Parameters Check and Env Setup") 
 		{steps{script{
+			echo "Tmp Save of Log File"
+			BackupLogFile(); //Save the log file here just because this tends to fail the firt time you run it due to permissions. So put it at the begining as safety measure
+			
+			echo "Input checks"
 			if (IS_DEBUG_MODE == "false") // Checks apply only for operational mode
 			{
 				if (params.WHO_TO_EMAIL_WHEN_DONE == "@stanford.edu") 
@@ -98,9 +102,6 @@ pipeline {
 					error('Please specify patient data')
 				}
 			}
-			
-			echo "Tmp Save of Log File"
-			BackupLogFile(); //Save the log file here just because this tends to fail the firt time you run it due to permissions. So put it at the begining as safety measure
 		}}}
 		stage("Checkout")
 		{steps{script{
@@ -485,11 +486,9 @@ def BackupLogFile()
 	
 	//Save log file
 	def lg =currentBuild.rawBuild.getLog(10000);
-	echo "HERE"
 	lg = lg.join("\n");
 	lg = lg.replaceAll(env.JOB_URL,"http://localhost:NANA/job/");
-	lg = lg.replaceAll(env.JOB_URL,"@stanford.edu","");
-	echo "HERE"
+	lg = lg.replaceAll("@stanford.edu","");
 	def file = new File(LOG_OUTPUT_FOLDER() + "\\build.log")
 	file.write (lg)
 }
