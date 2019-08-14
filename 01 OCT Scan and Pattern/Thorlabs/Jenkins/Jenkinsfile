@@ -184,7 +184,7 @@ pipeline {
 			str = str.replace("@stanford.edu","");
 			echo "here"
 			bat('echo ' + str);
-			bar 'echo ' + cbl
+			bar 'echo \u007D,\u007B' 
 			bar 'echo ok'
 			bar('echo ' + cbl + ' "VolumeScannedBy" : "' + str + '"' + cbr + ' > ScanConfig.json');
 			
