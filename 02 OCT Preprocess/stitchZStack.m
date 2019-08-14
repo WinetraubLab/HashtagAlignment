@@ -65,7 +65,9 @@ if ~isempty(p)
         p=parpool('SpmdEnabled',false);
     end
 end
-pds = fileDatastore('../','ReadFcn',@load,'FileExtensions','.m','IncludeSubfolders',true);  
+currentFileFolder = fileparts(mfilename('fullpath'));
+yOCTMainFolder = [currentFileFolder '..\..\'];
+pds = fileDatastore(yOCTMainFolder,'ReadFcn',@load,'FileExtensions','.m','IncludeSubfolders',true);  
 addAttachedFiles(p,pds.Files);
 %addAttachedFiles(p,{'tallWriter.m','yOCT2Mat.m','yOCTLoadInterfFromFile.m','yOCTInterfToScanCpx.m',})
 
