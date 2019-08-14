@@ -95,7 +95,7 @@ pipeline {
 			
 			//Try print to PDF if chrome is installed
 			def chromePath = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\";
-			def chromeExe = new File(chromeExe);
+			def chromeExe = new File(chromePath);
 			if(chromeExe.exists())
 			{
 				bat('"' + chromePath + 'chrome.exe" --headless --print-to-pdf="histoInstructions.pdf" histoInstructions.html');
