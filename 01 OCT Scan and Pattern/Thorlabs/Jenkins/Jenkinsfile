@@ -98,7 +98,7 @@ pipeline {
 			def chromeExe = new File(chromePath);
 			if(chromeExe.exists())
 			{
-				bat('"' + chromePath + 'chrome.exe" --headless --print-to-pdf="' + pwd() + 'histoInstructions.pdf" histoInstructions.html');
+				bat('"' + chromePath + 'chrome.exe" --headless --print-to-pdf="' + pwd() + '\\histoInstructions.pdf" histoInstructions.html');
 				//bat("del /f histoInstructions.html") //Delete HTML we don't need it anymore
 			}
 			else
