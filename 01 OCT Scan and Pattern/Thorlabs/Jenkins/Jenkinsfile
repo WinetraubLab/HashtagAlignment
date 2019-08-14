@@ -173,8 +173,10 @@ pipeline {
 			bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
 			
 			//Make not of the parameters we learned from input - Regarding the volume
-			def str = params.WHO_TO_EMAIL_WHEN_DONE;
+			def str = params.WHO_TO_EMAIL_WHEN_DONE
+			echo "hi"
 			str = str.replace("@stanford.edu","");
+			bat('echo ' + str);
 			bat('echo { > ScanConfig.json');
 			bar('echo "VolumeScannedBy" : "' + str + '" >> ScanConfig.json');
 			bat('echo } >> ScanConfig.json');
