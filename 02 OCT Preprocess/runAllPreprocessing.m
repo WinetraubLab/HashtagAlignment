@@ -91,6 +91,7 @@ try
 		if isRunInAutomatedMode
 			fprintf('%s Uploading difference to the cloud.\n',datestr(datetime));
 			
+			%Upload Volumes
 			d = dir(OCTVolumesFolder_); 
 			for i=1:length(d)
 				switch (d(i).name)
@@ -100,6 +101,18 @@ try
 						%Copy to the cloud
 						awsCopyFileFolder([d(i).folder '\' d(i).name], ...
 							[SubjectFolderOut '/OCTVolumes/' d(i).name]);
+				end
+			end
+			%Upload Logs
+			d = dir(SubjectFolderIn); 
+			for i=1:length(d)
+				switch (d(i).name)
+					case {'.','..','OCTVolumes'}
+						%Do nothing, these were already uploaded
+					otherwise
+						%Copy to the cloud
+						awsCopyFileFolder([d(i).folder '\' d(i).name], ...
+							[SubjectFolderOut '/' d(i).name]);
 				end
 			end
 		else %ran manually need to upload everything
