@@ -42,7 +42,7 @@ pipeline {
 			trim: true)
 		choice(
 			name: "GENDER",
-			choices: "Male\nFemale\nUnknown"
+			choices: "Male\nFemale\nUnknown",
 			defaultValue:"Unknown",
 			description:"",
 			trim: true)
@@ -63,13 +63,13 @@ pipeline {
 			trim: true)
 		choice(
 			name: "HEALTHY_OR_TUMOR",
-			choices: "Healthy\nTumor\nMargin\nUnknown"
+			choices: "Healthy\nTumor\nMargin\nUnknown",
 			defaultValue:"Healthy",
 			description:"If this sample is 'dog ear' choose healthy. If inside the core of the tumor choose 'Tumor'",
 			trim: true)
 		choice(
 			name: "SKIN_TYPE",
-			choices: "1\n2\n3\n4\n5\n6\nUnknown"
+			choices: "1\n2\n3\n4\n5\n6\nUnknown",
 			defaultValue:"Unknown",
 			description:"Fitzpatrick Skin Type",
 			trim: true)		
