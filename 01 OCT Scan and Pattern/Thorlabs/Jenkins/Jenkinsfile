@@ -201,7 +201,7 @@ pipeline {
 			
 			//Print text 
 			def file3 = new File(VOLUME_OUTPUT_FOLDER() + "\\..\\Subject.json")
-			text = fh1.getText('UTF-8')
+			text = file3.getText('UTF-8')
 			echo ("Subject.json\n------------\n" + text);
 				   
 		}}}
