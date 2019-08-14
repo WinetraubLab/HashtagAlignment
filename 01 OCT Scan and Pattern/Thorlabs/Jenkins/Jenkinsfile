@@ -108,7 +108,7 @@ pipeline {
 			bat "git branch"
 			println(sh(script: "git branch", returnStdout: true))
 			def branch = sh(script: "git branch | grep \\* | cut -d ' ' -f2-", returnStdout: true)
-			println("Fetching: " + branch)
+			echo("Fetching: " + branch)
 			
 			//Identify where github is installed
 			def gitFolderOption1 = new File("C:\\Program Files (x86)\\Git\\cmd\\")
@@ -198,9 +198,9 @@ pipeline {
 				
 				try
 				{
-					bat('copy Testers\\matlablog.txt "%LOG_OUTPUT_FOLDER%"')
-					bat('copy Testers\\runme.m "%LOG_OUTPUT_FOLDER%"')
-					bat('copy Testers\\*.png "%LOG_OUTPUT_FOLDER%"')
+					bat('copy Testers\\matlablog.txt "' + LOG_OUTPUT_FOLDER() + '"')
+					bat('copy Testers\\runme.m "' + LOG_OUTPUT_FOLDER() + '"')
+					bat('copy Testers\\*.png "' + LOG_OUTPUT_FOLDER() + '"')
 					
 					archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 				}
@@ -337,7 +337,7 @@ pipeline {
 				type HistoInstructionsFull.txt
 				echo ------------------------
 				
-				copy HistoInstructionsFull.txt %LOG_OUTPUT_FOLDER%
+				copy HistoInstructionsFull.txt '""" + LOG_OUTPUT_FOLDER() + """'
 				"""
 		}}}
 		stage("Save Log File")
@@ -345,7 +345,7 @@ pipeline {
 			//<-- SAVE PATIENT DATA TO LOG
 			//Save log file
 			def lg =currentBuild.rawBuild.getLog(10000);
-			bat "@echo " + lg.join("\n") + " > '%LOG_OUTPUT_FOLDER%\\build.log'"
+			bat "@echo " + lg.join("\n") + " > '" + LOG_OUTPUT_FOLDER() + "\\build.log'"
 		}}}
 	}
 	post{ 
