@@ -151,7 +151,7 @@ pipeline {
 			bat("@echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
 			bat("@echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
 		}}}
-		stage("Build Runme File")
+		stage("Build Files")
 		{steps{script{
 			bat("@echo isDebugFastMode_ = %IS_DEBUG_MODE%; >> runme.m")
 			bat("@echo zToPhtobleach_=%Z_TO_PHTOBLEACH%; >> runme.m")
@@ -175,27 +175,25 @@ pipeline {
 				bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
 			}
 			
-			
-			//Make not of the parameters we learned from input - Regarding the volume
-			def str = params.WHO_TO_EMAIL_WHEN_DONE
-			def cbl = "{";
-			def cbr = "}";
-			echo "here"
-			str = str.replace("@stanford.edu","");
-			echo "here"
-			bat('echo ' + str);
-			bar 'echo \u007D,\u007B' 
-			bar 'echo ok'
-			bar('echo ' + cbl + ' "VolumeScannedBy" : "' + str + '"' + cbr + ' > ScanConfig.json');
-			
 			//Make volume dir if it doesnt exist yet and copy JSON file there
 			def gitFolderOption4 = new File(VOLUME_OUTPUT_FOLDER())
 			if (!gitFolderOption4.exists()) {
 				bat('mkdir "' + VOLUME_OUTPUT_FOLDER() + '"');
 			}
+			
+			//Make not of the parameters we learned from input - Regarding the volume
+			str = str.replace("@stanford.edu","");
+			echo "here"
+			
+			//Make not of the parameters we learned from input - Regarding the volume
+			File file = new File("ScanConfig.json")
+			file.write '\u007D "VolumeScannedBy" : "' + str + '"' \u007B'
+			
 			bat('move ScanConfig.json "' + VOLUME_OUTPUT_FOLDER() + '"');
 				
-			//Make not of the parameters we learned from input - Regarding the subject (TBD) <--
+			//Make not of the parameters we learned from input - Regarding the subject (TBD)
+			bat ('@echo "age" : "%AGE%", "gender": "%GENDER%", "sampleLocation": "%SAMPLE_LOCATION%", "side": "%SIDE%", "patientDiagnosis": "%POSSIBLE_PATIENT_DIAGNOSIS%", "sampleType": "%HEALTHY_OR_TUMOR%", "fitzpatrickSkinType" : "%SKIN_TYPE%" > Subject.json')
+			bat('move Subject.json "' + VOLUME_OUTPUT_FOLDER() + '..\"');
 		}}}
 		stage("Scan And Photobleach")
 		{steps{script{
