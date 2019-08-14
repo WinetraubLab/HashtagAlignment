@@ -120,12 +120,6 @@ pipeline {
 				
 				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme',%AWS_PARALLEL_COMPUTING%)" -logfile matlablog.txt""")
 				
-				//Delete preprocess file
-				File file = new File(env.TEMP_STORAGE + "\\runme_preprocess.m")
-				if (file.exists()){
-					file.delete();
-				}  
-				currentBuild.result = "SUCCESS"
 			}
 			catch(Exception e)
 			{
