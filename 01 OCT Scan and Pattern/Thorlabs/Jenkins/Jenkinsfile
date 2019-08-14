@@ -182,7 +182,10 @@ pipeline {
 			def cbr = "}";
 			echo "here"
 			str = str.replace("@stanford.edu","");
+			echo "here"
 			bat('echo ' + str);
+			bar 'echo ' + cbl
+			bar 'echo ok'
 			bar('echo ' + cbl + ' "VolumeScannedBy" : "' + str + '"' + cbr + ' > ScanConfig.json');
 			
 			//Make volume dir if it doesnt exist yet and copy JSON file there
