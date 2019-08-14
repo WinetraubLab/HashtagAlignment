@@ -112,7 +112,7 @@ try
 					otherwise
 						%Copy to the cloud
 						awsCopyFileFolder([d(i).folder '\' d(i).name], ...
-							[SubjectFolderOut '/' d(i).name]);
+							[SubjectFolderOut '/' d(i).name],false); %Verboose mode off
 				end
 			end
 		else %ran manually need to upload everything
