@@ -181,19 +181,19 @@ pipeline {
 				bat('mkdir "' + VOLUME_OUTPUT_FOLDER() + '"');
 			}
 			
-			//Make not of the parameters we learned from input - Regarding the volume
-			str = str.replace("@stanford.edu","");
-			echo "here"
 			
 			//Make not of the parameters we learned from input - Regarding the volume
-			File file = new File("ScanConfig.json")
-			file.write ('\u007D "VolumeScannedBy" : "' + str + '"\u007B')
-			bat('move ScanConfig.json "' + VOLUME_OUTPUT_FOLDER() + '"');
-				
+			def str = params.WHO_TO_EMAIL_WHEN_DONE;
+			str = str.replace("@stanford.edu","");
+			echo "here"
+			def file = new File(VOLUME_OUTPUT_FOLDER() + "\\ScanConfig.json")
+			file.write ('\u007B "VolumeScannedBy" 
+			
+			echo "here"
+		
 			//Make not of the parameters we learned from input - Regarding the subject (TBD)
-			File file = new File("Subject.json")
-			bat ('@echo "age" : "%AGE%", "gender": "%GENDER%", "sampleLocation": "%SAMPLE_LOCATION%", "side": "%SIDE%", "patientDiagnosis": "%POSSIBLE_PATIENT_DIAGNOSIS%", "sampleType": "%HEALTHY_OR_TUMOR%", "fitzpatrickSkinType" : "%SKIN_TYPE%" > Subject.json')
-			bat('move Subject.json "' + VOLUME_OUTPUT_FOLDER() + '..\"');
+			def file2 = new File(VOLUME_OUTPUT_FOLDER() + "\\..\\Subject.json")
+			file2.write('\u007B "age" : "${AGE}", "gender": "${GENDER}", "sampleLocation": "%SAMPLE_LOCATION%", "side": "%SIDE%", "patientDiagnosis": "%POSSIBLE_PATIENT_DIAGNOSIS%", "sampleType": "%HEALTHY_OR_TUMOR%", "fitzpatrickSkinType" : "%SKIN_TYPE%" \u007D')
 		}}}
 		stage("Scan And Photobleach")
 		{steps{script{
