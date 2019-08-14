@@ -31,13 +31,25 @@ pipeline {
 		stage("Checkout")
 		{steps{script{
 			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
-			bat "@git branch > commandResult.txt" 
-			def gitTxt = readFile('commandResult.txt').trim()
-			if (gitTxt.contains("* (HEAD"))
+			def gitTxt
+			try
 			{
+				bat "git describe --tags --exact-match > commandResult.txt" 
+				gitTxt = readFile('commandResult.txt').trim()
+				echo gitTxt
+				if (gitTxt.contains("fatal: No tags can describe"))
+				{
+					gitTxt = "master"
+				}
+			}
+			catch(Exception e)
+			{ 
+				// Couldn't find exact match, its actually we look at the master
 				gitTxt = "master"
 			}
+			
 			branch = gitTxt
+			echo("Jenkins Build #: " + env.BUILD_NUMBER)
 			echo("Fetching: " + branch)
 			
 			//Identify where github is installed
