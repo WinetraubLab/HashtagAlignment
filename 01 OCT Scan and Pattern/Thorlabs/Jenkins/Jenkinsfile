@@ -339,7 +339,10 @@ pipeline {
 			emailext (
 				subject: "[OCTHist] Scan - Input Requested",
 				from : "Yonatan",
-				body: "Please go to Jenkins, it requests some inputs before completing<br>"
+				body: 
+					"Please go to Jenkins, it requests some inputs before completing<br>"+
+					'Follow Line: <a href="' + env.BUILD_URL + '/console>"' + env.BUILD_URL + '/console</a><br>' + 
+					"Yonatan"
 					,
 				attachLog: true,
 				//attachmentsPattern: "Testers/*.png",
@@ -437,13 +440,22 @@ def VOLUME_OUTPUT_FOLDER()
 def BackupLogFile()
 {
 	//Make sure folder exists
-	def gitFolderOption3 = new File(LOG_OUTPUT_FOLDER())
-	if (!gitFolderOption3.exists()) {
+	def gitFolder = new File(LOG_OUTPUT_FOLDER())
+	if (!gitFolde.exists()) {
 		bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
 	}
-	//Save log file
+	
+	//Get log
 	def lg =currentBuild.rawBuild.getLog(10000);
 	lg = lg.join("\n");
+	
+	//Save log file
 	def file = new File(LOG_OUTPUT_FOLDER() + "\\build.log")
+	if (file.exist()
+	{
+		//Delete file
+		bat('del \F "' + file.path + '"');
+		def file = new File(LOG_OUTPUT_FOLDER() + "\\build.log")
+	}
 	file.write (lg)
 }
