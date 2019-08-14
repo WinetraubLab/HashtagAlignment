@@ -84,7 +84,7 @@ pipeline {
 		{steps{script{
 		echo "DEBUG"
 			//Make an HTML Version 
-			def ht = readFile(LOG_OUTPUT_FOLDER() + '\\histoInstructions.txt').trim()
+			def ht = readFile('F:\\Jenkins\\TempDataStorage\\LB-01\\Log\\01 OCT Scan and Pattern\\histoInstructions.txt').trim()
 			echo "DEBUG"
 			ht = ht.replaceAll("\n","<br>")
 			echo "DEBUG"
