@@ -43,7 +43,6 @@ pipeline {
 		choice(
 			name: "GENDER",
 			choices: ['Unknown', 'Male', 'Female'],
-			defaultValue:"Unknown",
 			description:""
 			)
 		string(
