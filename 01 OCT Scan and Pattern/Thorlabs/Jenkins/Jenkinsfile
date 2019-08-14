@@ -84,13 +84,18 @@ pipeline {
 		{steps{script{
 		echo "DEBUG"
 			//Make an HTML Version 
-			def ht = readFile(LOG_OUTPUT_FOLDER() + 'histoInstructions.txt').trim()
+			def ht = readFile(LOG_OUTPUT_FOLDER() + '\\histoInstructions.txt').trim()
+			echo "DEBUG"
 			ht = ht.replaceAll("\n","<br>")
+			echo "DEBUG"
 			ht = ht.replaceAll("+ Then go in","+ Then go in <p style='font-weight: bold;background-color: yellow'>")
+			echo "DEBUG"
 			ht = ht.replaceAll(" um.","</p>")
 			ht = "<html><body>" + ht + "</body></html>"
+			echo "DEBUG"
 			def file = new File(LOG_OUTPUT_FOLDER()+ '\\histoInstructions.html')
-			file.write (ht)
+			echo "DEBUG"
+			file.write(ht)
 		
 			echo "Tmp Save of Log File"
 			BackupLogFile(); //Save the log file here just because this tends to fail the firt time you run it due to permissions. So put it at the begining as safety measure
