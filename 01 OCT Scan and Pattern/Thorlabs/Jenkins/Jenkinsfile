@@ -6,7 +6,8 @@ pipeline {
         MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
     	CREDENTIALS_PATH = "F:\\Jenkins\\"
-		GIT_TAG = "LB0.1" //Can be "master" or any of the branches 
+		DEFAULT_SUBJECT_SERIES = "LB"
+		LOG_OUTPUT_FOLDER = logOutputFolder()
 	}
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
@@ -15,13 +16,13 @@ pipeline {
 	{
 		string(
 			name: "S3_DIR",
-			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/",
-			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LA/",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/${DEFAULT_SUBJECT_SERIES}/",
+			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/${DEFAULT_SUBJECT_SERIES}/",
 			trim: true)
 		string(
 			name: "SUBJECT_ID",
-			defaultValue:"LB-00",
-			description:"Subject Id.\nExample: LB-01",
+			defaultValue:"${DEFAULT_SUBJECT_SERIES}-00",
+			description:"Subject Id.\nExample: ${DEFAULT_SUBJECT_SERIES}-01",
 			trim: true)
 		string(
 			name: "Z_TO_PHTOBLEACH",
@@ -33,6 +34,8 @@ pipeline {
 			defaultValue:"@stanford.edu",
 			description:"Who should get an email with the results? Including you!\nUse comma to specify multiple emails.\nExample: me@stanford.edu, you@stanford.edu",
 			trim: true)
+			
+		<--- ADD PARAMETERS ABOUT THE SAMPLE --->
 		
 		//Debug purpose 
 		booleanParam(
@@ -56,8 +59,9 @@ pipeline {
 		}}}
 		stage("Checkout")
 		{steps{script{
-			//Branch to checkout
-			def branch = env.GIT_TAG
+			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
+			def branch = sh(script: "git branch | grep \* | cut -d ' ' -f2-", returnStdout: true)
+			println("Fetching: " + branch)
 			
 			//Identify where github is installed
 			def gitFolderOption1 = new File("C:\\Program Files (x86)\\Git\\cmd\\")
@@ -117,7 +121,7 @@ pipeline {
 				echo ----------------
 				type Testers\\runme.m """)
 		}}}
-		stage("Run Matlab")
+		stage("Scan And Photobleach")
 		{steps{script{
 			try
 			{
@@ -147,9 +151,9 @@ pipeline {
 				
 				try
 				{
-					bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\01 OCT Scan and Pattern Log\\"')
-					bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\01 OCT Scan and Pattern Log\\"')
-					bat('copy Testers\\*.png "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\01 OCT Scan and Pattern Log\\"')
+					bat('copy Testers\\matlablog.txt "%LOG_OUTPUT_FOLDER%"')
+					bat('copy Testers\\runme.m "%LOG_OUTPUT_FOLDER%"')
+					bat('copy Testers\\*.png "%LOG_OUTPUT_FOLDER%"')
 					
 					archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 				}
@@ -176,6 +180,124 @@ pipeline {
 			
 			//println gitFolder
 		}}}
+		stage("Build M file to Process Overview")
+		{steps{script{
+			//Cereate an m file to process the overview
+			bat ("""
+				@echo off
+				echo OCTVolumesFolder_ = '%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\' >> runme.m
+				echo isRunInAutomatedMode_ = true >> runme.m
+				findFocusInBScan; >> runme.m
+				stitchOverview; >> runme.m
+				"""
+			// Move the m file to Testers
+			bat("@move runme.m Testers\\ > nooutput")
+			
+			//Type the result
+			bat("""
+				@echo off
+				echo m file to process overview 
+				echo Testers\\runme.m
+				echo ----------------
+				type Testers\\runme.m """)
+		}}}
+		stage("Process Overview")
+		{steps{script{
+			
+			try
+			{
+				//Usefull links
+				echo "- Running Matlab log can be found here:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/matlablog.txt/*view*/" + "\n" +
+					 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/" + "\n" +
+					 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/"
+				
+				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
+			}
+			catch(Exception e)
+			{
+				currentBuild.result = 'FAILURE'
+				throw("Matlab Failed")
+			}
+			finally
+			{
+				//In any case, copy what we did to log folder
+				bat """
+					@echo off
+					echo ------------------------ Process Overview --------------------------
+					echo ---------------------------- MATLAB LOG ----------------------------
+					echo --------------------------------------------------------------------
+					type Testers\\matlablog.txt
+					echo ------------------------------ LOG END -----------------------------
+					echo --------------------------------------------------------------------
+					"""
+				
+				try
+				{
+					archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/Overview.png, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
+				}
+				catch(Exception e)
+				{
+					//Do nothing, its ok if a file is missing from the archive
+				}
+			}
+		}}}
+		stage("Ask How Deep to Cut")
+		{steps{script{
+		
+			//Notify user that his attention is required
+			emailext (
+				subject: "[OCTHist] Scan - Input Requested",
+				from : "Yonatan",
+				body: "Please go to Jenkins, it requests some inputs before completing<br>"
+					,
+				attachLog: true,
+				//attachmentsPattern: "Testers/*.png",
+				to: "$WHO_TO_EMAIL_WHEN_DONE" )
+				
+			//Give instructions
+			bat """ 
+				@echo off
+				echo Please review overview image and provide your input:
+				echo - Runme file:\n\t""" + env.BUILD_URL + """execution/node/3/ws/Testers/Overview.png
+				"""
+			
+			//Ask for input
+			def userInput = input( 
+				message: 'Please Provide Parameters', ok: 'Next',
+                parameters: [
+					string(defaultValue: '1.0',
+                    name: 'HowDeepMM', description: 'How deep from tissue surface should we start cutting? [mm]'),
+                    choice(name: 'Side', choices: ['black dot side','side opposite to the black dot'], description: 'Which side should we cut from?')
+                    ])
+			def howDeepMM = userInput.HowDeepMM.toInteger()
+
+			//Generate Instructions to Histologist
+			bat """
+				@echo off
+				echo - Mark a red dot on the """ + userInput.Side + """. >> HistoInstructionsFull.txt
+				echo - Start cutting from the side opposite to the red dot. >> HistoInstructions.txt
+				echo - Start sections after clearing paraffin, when seeing a full face. >> HistoInstructions.txt
+				echo - Then go in """ + howDeepMM.toString() + "mm / " + (howDeepMM*1000).toString() + """um >> HistoInstructions.txt
+				echo - Then take slides >> HistoInstructions.txt
+				echo - 5 slides with 3 sections per slide, sections interval 25um >> HistoInstructions.txt
+				echo - Slide thickness of 5um >> HistoInstructions.txt
+				
+				type HistoInstructions.txt >> HistoInstructionsFull.txt
+				
+				echo HISTOLOGIST Instructions
+				echo ------------------------
+				type HistoInstructionsFull.txt
+				echo ------------------------
+				
+				copy HistoInstructionsFull.txt %LOG_OUTPUT_FOLDER%
+				"""
+		}}}
+		stage("Save Log File")
+		{steps{script{
+			//Save log file
+			def lg =currentBuild.rawBuild.getLog(10000);
+			bat "@echo " + lg.join("\n") + " > '%LOG_OUTPUT_FOLDER%\\Build.log'"
+		}}}
 	}
 	post{ 
 		//Using ext-email plugin
@@ -184,15 +306,10 @@ pipeline {
 				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
 				body: "Scan is completed.<br>You can process the volume manualy to $TEMP_STORAGE\\$SUBJECT_ID and run bat file.<br> Or run automatically use <a href='http://localhost:9090/job/Upload%20to%20Cloud%20and%20Preprocess/'> Link </a>. <br> See log for more details <br>Yonatan<br><br>" + 
-					"<b>Instructions for Pauline:</b><br>" + 
-					"After clearing paraffin (until seeing full face of sample) from the side opposite to the dot<br>" +
-					"Cut XX mm in and then:<br>" +
-					"- Take 1 section, lose 5 sections of 5um each<br>" +
-					"- 3 Sections in each slide<br>" +
-					"- 5 slides total<br>"
+					"<b>Print instructions for Pauline from attachement</b><br>" 
 					,
 				attachLog: true,
-				attachmentsPattern: "Testers/*.png",
+				attachmentsPattern: "HistoInstructions.txt",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 		} 
 		failure {
@@ -201,7 +318,7 @@ pipeline {
 				from : "Yonatan",
 				body: "See log <br>Yonatan",
 				attachLog: true,
-				attachmentsPattern: "Testers/*.png",
+				//attachmentsPattern: "Testers/*.png",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 		aborted {
 			emailext (
@@ -209,9 +326,14 @@ pipeline {
 				from : "Yonatan",
 				body: "See log<br>Be sure to kill Matlab (run by System) if its still running<br>Yonatan",
 				attachLog: true,
-				attachmentsPattern: "Testers/*.png",
+				//attachmentsPattern: "Testers/*.png",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 			}
 		}
 	}
+}
+
+def logOutputFolder()
+{
+	return  "${TEMP_STORAGE}\\${SUBJECT_ID}\\Log\\01 OCT Scan and Pattern\\"
 }

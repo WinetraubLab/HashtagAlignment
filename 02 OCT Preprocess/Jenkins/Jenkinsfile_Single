@@ -5,7 +5,7 @@ pipeline {
 	environment {
         MATLAB_PATH = "matlab"
     	CREDENTIALS_PATH = "..\\..\\"
-		GIT_TAG = "master" //Can be "master" or any of the branches 
+		LOG_OUTPUT_FOLDER = logOutputFolder()
 	}
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
@@ -14,8 +14,8 @@ pipeline {
 	{
 		string(
 			name: "SUBJECT_FOLDER_PATH",
-			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-001/",
-			description:"Subject Directory\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LA/LA-01/",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/${GIT_TAG}/${GIT_TAG}-01/",
+			description:"Subject Directory\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/${GIT_TAG}/${GIT_TAG}-01/",
 			trim: true)
 		string(
 			name: "WHO_TO_EMAIL_WHEN_DONE",
@@ -30,8 +30,8 @@ pipeline {
 	stages{
 		stage("Checkout")
 		{steps{script{
-			//Branch to checkout
-			def branch = env.GIT_TAG
+			def branch = sh(script: "git branch | grep \* | cut -d ' ' -f2-", returnStdout: true)
+			println("Fetching: " + branch)
 			
 			//Identify where github is installed
 			def gitFolderOption1 = new File("C:\\Program Files (x86)\\Git\\cmd\\")
@@ -125,8 +125,8 @@ pipeline {
 					echo --------------------------------------------------------------------
 					"""
 					
-				//bat('copy Testers\\matlablog.txt "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\02 OCT Preprocess Log\\"')
-				//bat('copy Testers\\runme.m "%TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\02 OCT Preprocess Log\\"')
+				//bat('copy Testers\\matlablog.txt "%LOG_OUTPUT_FOLDER%"')
+				//bat('copy Testers\\runme.m "%%LOG_OUTPUT_FOLDER%"')
 				
 				archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 				
@@ -161,4 +161,8 @@ pipeline {
 			}
 		}}}
 	}
+}
+def logOutputFolder()
+{
+	return  "${TEMP_STORAGE}\\${SUBJECT_ID}\\Log\\02 OCT Preprocess Log\\"
 }
