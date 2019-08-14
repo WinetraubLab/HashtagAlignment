@@ -177,6 +177,7 @@ pipeline {
 			echo "hi"
 			str = str.replace("@stanford.edu","");
 			bat('echo ' + str);
+			bar('echo {"VolumeScannedBy" : "' + str + '"} > ScanConfig.json');
 			bat('echo { > ScanConfig.json');
 			bar('echo "VolumeScannedBy" : "' + str + '" >> ScanConfig.json');
 			bat('echo } >> ScanConfig.json');
@@ -309,6 +310,8 @@ pipeline {
 		{steps{script{
 		
 			//Notify user that his attention is required
+			try
+			{
 			emailext (
 				subject: "[OCTHist] Scan - Input Requested",
 				from : "Yonatan",
@@ -317,6 +320,11 @@ pipeline {
 				attachLog: true,
 				//attachmentsPattern: "Testers/*.png",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
+			}
+			catch(Exception e)
+			{
+				echo ("Could not send an email notifying the person to come and check outputs, its ok, we shall wait!");
+			}
 				
 			//Give instructions
 			echo "- Please review overview image and provide your input:" + "\n" +
