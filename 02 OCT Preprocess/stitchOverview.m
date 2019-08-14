@@ -164,7 +164,7 @@ hold on;
 theDot = [1;-1];
 theDot = theDot/norm(theDot)*1500;
 theDot = M*(theDot-[cx;cy]); %Rotate, [um]
-plot(theDot(1),theDot(2),'ro','MarkerSize',10,'MarkerFaceColor','r');
+plot(theDot(1),theDot(2),'bo','MarkerSize',10,'MarkerFaceColor','b');
 
 % Draw volume scan
 volPos = [ ...
