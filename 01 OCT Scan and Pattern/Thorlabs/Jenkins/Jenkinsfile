@@ -420,5 +420,5 @@ def LOG_OUTPUT_FOLDER()
 
 def VOLUME_OUTPUT_FOLDER()
 {
-	return ${TEMP_STORAGE}\\${SUBJECT_ID}\\OCTVolumes\\
+	return "${TEMP_STORAGE}\\${SUBJECT_ID}\\OCTVolumes\\"
 }
