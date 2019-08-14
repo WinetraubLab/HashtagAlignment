@@ -62,9 +62,9 @@ if ~isempty(p)
     %kill prev parpool before starting this one if it has SpmdEnabled flag
     if (p.SpmdEnabled)
         delete(p);
-        p=parpool('SpmdEnabled',false);
     end
 end
+p=parpool('SpmdEnabled',false);
 currentFileFolder = fileparts(mfilename('fullpath'));
 yOCTMainFolder = [currentFileFolder '..\..\'];
 pds = fileDatastore(yOCTMainFolder,'ReadFcn',@load,'FileExtensions','.m','IncludeSubfolders',true);  
