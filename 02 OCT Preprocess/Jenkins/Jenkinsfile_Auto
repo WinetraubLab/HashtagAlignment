@@ -7,7 +7,6 @@ pipeline {
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
     	CREDENTIALS_PATH = "F:\\Jenkins\\"
 		IS_REMOVE_TEMP_STORAGE_WHEN_DONE = "false"
-		LOG_OUTPUT_FOLDER = logOutputFolder()
 	}
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
@@ -16,8 +15,14 @@ pipeline {
 		stage("Checkout")
 		{steps{script{
 			//Branch to checkout
-			def branch = sh(script: "git branch | grep \* | cut -d ' ' -f2-", returnStdout: true)
-			println("Fetching: " + branch)
+			bat "@git branch > commandResult.txt" 
+			def gitTxt = readFile('commandResult.txt').trim()
+			if (st.contains("* (HEAD"))
+			{
+				gitTxt = "origin/master"
+			}
+			branch = gitTxt
+			echo("Fetching: " + branch)
 			
 			//Identify where github is installed
 			def gitFolderOption1 = new File("C:\\Program Files (x86)\\Git\\cmd\\")
@@ -118,9 +123,6 @@ pipeline {
 					echo ------------------------------ LOG END -----------------------------
 					echo --------------------------------------------------------------------
 					"""
-					
-				//bat('copy Testers\\matlablog.txt "%LOG_OUTPUT_FOLDER%"')
-				//bat('copy Testers\\runme.m "%%LOG_OUTPUT_FOLDER%"')
 				
 				archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 			}
@@ -143,7 +145,7 @@ pipeline {
 		}}}
 	}
 }
-def logOutputFolder()
+def LOG_OUTPUT_FOLDER()
 {
 	return  "${TEMP_STORAGE}\\${SUBJECT_ID}\\Log\\02 OCT Preprocess Log\\"
 }

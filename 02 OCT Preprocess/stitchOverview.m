@@ -17,6 +17,7 @@ lowRAMMode = true; %When set to true, doesn't load all stitched volume to RAM, i
 if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
 end
+LogFolder = [OCTVolumesFolder '..\Log\02 OCT Preprocess\'];
 
 %% Read Configuration file
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
@@ -220,12 +221,12 @@ hold off;
 if (awsIsAWSPath(OCTVolumesFolder))
     %Upload to AWS
     saveas(gcf,'Overview.png');
-    awsCopyFileFolder('Overview.png',[OCTVolumesFolder '02 OCT Preprocess Log/Overview.png']);
+    awsCopyFileFolder('Overview.png',[LogFolder '/Overview.png']);
 else
     %Save locally
-    if ~exist([OCTVolumesFolder '02 OCT Preprocess Log'],'dir')
-        mkdir([OCTVolumesFolder '02 OCT Preprocess Log'])
+    if ~exist(LogFolder,'dir')
+        mkdir(LogFolder)
     end
-    saveas(gcf,[OCTVolumesFolder '02 OCT Preprocess Log\Overview.png']);
+    saveas(gcf,[LogFolder '\Overview.png']);
 end   
 

@@ -17,6 +17,7 @@ isRunInAutomatedMode =  false;
 if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
 end
+LogFolder = [OCTVolumesFolder '..\Log\02 OCT Preprocess\'];
 
 if (exist('isRunInAutomatedMode_','var'))
     isRunInAutomatedMode = isRunInAutomatedMode_;
@@ -186,10 +187,10 @@ awsWriteJSON(json,[OCTVolumesFolder 'ScanConfig.json']); %Can save locally or to
 saveas(ax,'FindFocusInBScan.png');
 if (awsIsAWSPath(OCTVolumesFolder))
     %Upload to AWS
-    awsCopyFileFolder('FindFocusInBScan.png',[OCTVolumesFolder '02 OCT Preprocess Log/FindFocusInBScan.png']);
+    awsCopyFileFolder('FindFocusInBScan.png',[LogFolder '/FindFocusInBScan.png']);
 else
-    if ~exist([OCTVolumesFolder '02 OCT Preprocess Log'],'dir')
-        mkdir([OCTVolumesFolder '02 OCT Preprocess Log'])
+    if ~exist(LogFolder,'dir')
+        mkdir(LogFolder)
     end
-    copyfile('FindFocusInBScan.png',[OCTVolumesFolder '02 OCT Preprocess Log\FindFocusInBScan.png']);
+    copyfile('FindFocusInBScan.png',[LogFolder '\FindFocusInBScan.png']);
 end   

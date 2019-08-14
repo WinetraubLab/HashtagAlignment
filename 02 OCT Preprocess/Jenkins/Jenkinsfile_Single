@@ -30,8 +30,15 @@ pipeline {
 	stages{
 		stage("Checkout")
 		{steps{script{
-			def branch = sh(script: "git branch | grep \* | cut -d ' ' -f2-", returnStdout: true)
-			println("Fetching: " + branch)
+			//Branch to checkout
+			bat "@git branch > commandResult.txt" 
+			def gitTxt = readFile('commandResult.txt').trim()
+			if (st.contains("* (HEAD"))
+			{
+				gitTxt = "origin/master"
+			}
+			branch = gitTxt
+			echo("Fetching: " + branch)
 			
 			//Identify where github is installed
 			def gitFolderOption1 = new File("C:\\Program Files (x86)\\Git\\cmd\\")

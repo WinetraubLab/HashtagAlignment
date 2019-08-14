@@ -17,6 +17,7 @@ saveYs = 3; %How many Bscans to save (for future reference)
 if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
 end
+LogFolder = [OCTVolumesFolder '..\Log\02 OCT Preprocess\'];
 
 %% Read Configuration file
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
@@ -161,9 +162,8 @@ yOCTWriteBigVolume(bv,dim, location,'tif',log(mean(cValues)));
 awsRmDir(tmpDir); 
 
 %% Save overviews of a few Y sections to log
-logDir = [OCTVolumesFolder '02 OCT Preprocess Log'];
-if ~awsIsAWSPath(logDir) && ~exist(logDir,'dir')
-    mkdir(logDir);
+if ~awsIsAWSPath(LogFolder) && ~exist(LogFolder,'dir')
+    mkdir(LogFolder);
 end
 for i=1:length(yToSave)
     if isempty(imToSave{yToSave(i)})
@@ -171,6 +171,6 @@ for i=1:length(yToSave)
     else
         im = imToSave{yToSave(i)};
         im(im<th) = th;
-        yOCT2Tif(log(im),sprintf('%s/y%03dZStack.tif',logDir,yToSave(i)),log(cValues(i,:)));
+        yOCT2Tif(log(im),sprintf('%s/y%03dZStack.tif',LogFolder,yToSave(i)),log(cValues(i,:)));
     end
 end
