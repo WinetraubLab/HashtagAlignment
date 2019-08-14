@@ -87,9 +87,9 @@ pipeline {
 			def ht = readFile('F:\\Jenkins\\TempDataStorage\\LB-01\\Log\\01 OCT Scan and Pattern\\histoInstructions.txt').trim()
 			ht = ht.replaceAll("\n","<br>")
 			echo ht
-			ht = ht.replaceAll("Then go in","Then go in <p style='font-weight: bold;background-color: yellow'>")
+			ht = ht.replaceAll("Then go in","Then go in <div style='font-weight: bold;background-color: yellow'>")
 			echo "DEBUG"
-			ht = ht.replaceAll(" um.","</p>")
+			ht = ht.replaceAll(" um."," um.</div>")
 			ht = "<html><body>" + ht + "</body></html>"
 			echo "DEBUG"
 			def file = new File(LOG_OUTPUT_FOLDER()+ '\\histoInstructions.html')
