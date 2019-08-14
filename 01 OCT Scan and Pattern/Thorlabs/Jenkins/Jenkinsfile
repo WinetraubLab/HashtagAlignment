@@ -105,9 +105,10 @@ pipeline {
 		stage("Checkout")
 		{steps{script{
 			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
-			bat "@git branch > commandResult.txt" 
+			bat "git describe --tags > commandResult.txt" 
 			def gitTxt = readFile('commandResult.txt').trim()
-			if (gitTxt.contains("* (HEAD"))
+			echo gitTxt
+			if (gitTxt.contains("fatal: No tags can describe"))
 			{
 				gitTxt = "master"
 			}
