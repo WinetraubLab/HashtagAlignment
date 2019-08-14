@@ -178,15 +178,12 @@ pipeline {
 			
 			//Make not of the parameters we learned from input - Regarding the volume
 			def str = params.WHO_TO_EMAIL_WHEN_DONE
-			def cb1 = "{";
-			def cb2 = "}";
+			def cbl = "{";
+			def cbr = "}";
 			echo "here"
 			str = str.replace("@stanford.edu","");
 			bat('echo ' + str);
-			bar('echo {"VolumeScannedBy" : "' + str + '"} > ScanConfig.json');
-			bat('echo { > ScanConfig.json');
-			bar('echo "VolumeScannedBy" : "' + str + '" >> ScanConfig.json');
-			bat('echo } >> ScanConfig.json');
+			bar('echo ' + cbl + ' "VolumeScannedBy" : "' + str + '"' + cbr + ' > ScanConfig.json');
 			
 			//Make volume dir if it doesnt exist yet and copy JSON file there
 			def gitFolderOption4 = new File(VOLUME_OUTPUT_FOLDER())
