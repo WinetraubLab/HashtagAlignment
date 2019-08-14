@@ -464,6 +464,7 @@ def BackupLogFile()
 	def lg =currentBuild.rawBuild.getLog(10000);
 	lg = lg.join("\n");
 	lg = lg.replaceAll(env.JOB_URL,"http://localhost:NANA/job/");
+	lg = lg.replaceAll(env.JOB_URL,"@stanford.edu","");
 	def file = new File(LOG_OUTPUT_FOLDER() + "\\build.log")
 	file.write (lg)
 }
