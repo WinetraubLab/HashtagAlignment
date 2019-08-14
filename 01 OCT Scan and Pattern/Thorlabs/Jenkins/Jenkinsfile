@@ -383,13 +383,13 @@ pipeline {
 						description: 'How deep from tissue surface should we start cutting? [mm]\nShortest distance is better'
 						),
                     choice(
-						name: 'WhichSideToStartCutting', 
+						name: 'WhichSideToStartSections', 
 						choices: ['same side as black dot','side opposite to the black dot'], 
-						description: 'Which side is the thinnest, black dot side or opposite to black dot?')
+						description: 'Which side is the thinnest: black dot side or opposite to black dot?')
                     ])
 			def howDeepMM = Double.valueOf(userInput.HowDeepMM)
 			def sideToPlaceRedDot = ""
-			if (userInput.WhichSideToStartCutting == "same side as black dot")
+			if (userInput.WhichSideToStartSections == "same side as black dot")
 			{
 				sideToPlaceRedDot = "side opposite to the black dot"
 			}
