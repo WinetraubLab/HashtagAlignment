@@ -82,12 +82,11 @@ pipeline {
 	stages{
 		stage("Parameters Check and Env Setup") 
 		{steps{script{
-		echo "DEBUG"
+		
 			//Make an HTML Version 
 			def ht = readFile('F:\\Jenkins\\TempDataStorage\\LB-01\\Log\\01 OCT Scan and Pattern\\histoInstructions.txt').trim()
-			echo "DEBUG"
 			ht = ht.replaceAll("\n","<br>")
-			echo "DEBUG"
+			echo ht
 			ht = ht.replaceAll("+ Then go in","+ Then go in <p style='font-weight: bold;background-color: yellow'>")
 			echo "DEBUG"
 			ht = ht.replaceAll(" um.","</p>")
