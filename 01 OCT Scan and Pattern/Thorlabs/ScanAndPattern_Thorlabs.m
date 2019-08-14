@@ -87,7 +87,7 @@ if (isRunningOnJenkins())
 		config.vLinePositions = config.base*[0]; %[mm] 
 		config.hLinePositions = config.base*[0]; %[mm] 
 		config.exposurePerLine = 10; %sec
-		config.zToScan = config.zToScan(1:10); %Reduce number of Z scans
+		config.zToScan = [config.zToScan(1:9) 0]; %Reduce number of Z scans
 	end
 end
 
