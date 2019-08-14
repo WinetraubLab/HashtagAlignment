@@ -404,10 +404,10 @@ pipeline {
 				subject: "[OCTHist] Scan ${currentBuild.result}",
 				from : "Yonatan",
 				body: "Scan is completed.<br>You can process the volume manualy to $TEMP_STORAGE\\$SUBJECT_ID and run bat file.<br> Or run automatically use <a href='http://localhost:9090/job/Upload%20to%20Cloud%20and%20Preprocess/'> Link </a>. <br> See log for more details <br>Yonatan<br><br>" + 
-					"<b>Print instructions for Pauline from attachement</b><br>" 
+					"<b>Print instructions for Pauline from attachement</b><br>"
 					,
 				attachLog: true,
-				attachmentsPattern: "HistoInstructions.txt",
+				attachmentsPattern: "HistoInstructionsFull.txt",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 		} 
 		failure {
