@@ -88,9 +88,9 @@ pipeline {
 			ht = ht.replaceAll("Then go in","Then <span style='font-weight: bold;background-color: yellow'>go in")
 			ht = ht.replaceAll(" um."," um</span>.")
 			ht = "<html><body>" + ht + "</body></html>"
-			def file = new File('.\\histoInstructions.html')
+			def file = new File(pwd() + '\\histoInstructions.html')
 			file.write(ht)
-			echo("HERE")
+			echo(pwd())
 
 emailext (
 				subject: "[OCTHist] Scan ${currentBuild.result}",
@@ -100,7 +100,7 @@ emailext (
 					,
 				attachLog: true,
 				attachmentsPattern: "histoInstructions.html",
-				to: "$WHO_TO_EMAIL_WHEN_DONE" )
+				to: "yonatanw$WHO_TO_EMAIL_WHEN_DONE" )
 
 error("HERE")
 		
