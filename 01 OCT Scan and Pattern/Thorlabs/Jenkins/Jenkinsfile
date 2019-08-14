@@ -83,18 +83,21 @@ pipeline {
 	stages{
 		stage("Parameters Check and Env Setup") 
 		{steps{script{
-			if (params.WHO_TO_EMAIL_WHEN_DONE == "@stanford.edu") 
+			if (IS_DEBUG_MODE == "false") // Checks apply only for operational mode
 			{
-				currentBuild.result = 'ABORTED'
-				echo('Please specify email address to send a note when run is completed')
-				error('Please specify email address to send a note when run is completed')
-			}
-			
-			if (params.PATIENT_AGE == "")
-			{
-				currentBuild.result = 'ABORTED'
-				echo('Please specify patient data')
-				error('Please specify patient data')
+				if (params.WHO_TO_EMAIL_WHEN_DONE == "@stanford.edu") 
+				{
+					currentBuild.result = 'ABORTED'
+					echo('Please specify email address to send a note when run is completed')
+					error('Please specify email address to send a note when run is completed')
+				}
+				
+				if (params.PATIENT_AGE == "")
+				{
+					currentBuild.result = 'ABORTED'
+					echo('Please specify patient data')
+					error('Please specify patient data')
+				}
 			}
 			
 			// <-------------------------------SET PARAMETERS TO LOG
@@ -102,6 +105,8 @@ pipeline {
 		stage("Checkout")
 		{steps{script{
 			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
+			println("here");
+			println(sh(script" git branch", returnStdout: true))
 			def branch = sh(script: "git branch | grep \\* | cut -d ' ' -f2-", returnStdout: true)
 			println("Fetching: " + branch)
 			
