@@ -5,7 +5,6 @@ pipeline {
 	environment {
         MATLAB_PATH = "matlab"
     	CREDENTIALS_PATH = "..\\..\\"
-		LOG_OUTPUT_FOLDER = logOutputFolder()
 	}
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
@@ -137,9 +136,6 @@ pipeline {
 					echo ------------------------------ LOG END -----------------------------
 					echo --------------------------------------------------------------------
 					"""
-					
-				//bat('copy Testers\\matlablog.txt "%LOG_OUTPUT_FOLDER%"')
-				//bat('copy Testers\\runme.m "%%LOG_OUTPUT_FOLDER%"')
 				
 				archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 				
@@ -174,8 +170,4 @@ pipeline {
 			}
 		}}}
 	}
-}
-def logOutputFolder()
-{
-	return  "${TEMP_STORAGE}\\${SUBJECT_ID}\\Log\\02 OCT Preprocess Log\\"
 }
