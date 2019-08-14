@@ -42,7 +42,7 @@ pipeline {
 			trim: true)
 		choice(
 			name: "GENDER",
-			choices "Male\nFemale\nUnknown"
+			choices: "Male\nFemale\nUnknown"
 			defaultValue:"Unknown",
 			description:"",
 			trim: true)
