@@ -388,7 +388,7 @@ pipeline {
                     ])
 			def howDeepMM = Double.valueOf(userInput.HowDeepMM)
 			def sideToPlaceRedDot = ""
-			if (userInput.WhichSideToStartCutting = "same side as black dot")
+			if (userInput.WhichSideToStartCutting == "same side as black dot")
 			{
 				sideToPlaceRedDot = "side opposite to the black dot"
 			}
