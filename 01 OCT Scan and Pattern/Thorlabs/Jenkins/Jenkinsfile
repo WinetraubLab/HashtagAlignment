@@ -105,9 +105,13 @@ pipeline {
 		{steps{script{
 			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
 			println("here");
-			bat "git branch"
-			println(sh(script: "git branch", returnStdout: true))
-			def branch = sh(script: "git branch | grep \\* | cut -d ' ' -f2-", returnStdout: true)
+			bat "@git branch > commandResult.txt" 
+			def gitTxt = readFile('commandResult.txt').trim()
+			if (st.contains("* (HEAD"))
+			{
+				gitTxt = "origin/master"
+			}
+			branch = gitTxt
 			echo("Fetching: " + branch)
 			
 			//Identify where github is installed
