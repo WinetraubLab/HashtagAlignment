@@ -94,11 +94,11 @@ pipeline {
 			file.write(ht)
 			
 			//Try print to PDF if chrome is installed
-			def chromePath = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe";
+			def chromePath = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\";
 			def chromeExe = new File(chromeExe);
 			if(chromeExe.exists())
 			{
-				bat('"' + chromePath + '"--headless --print-to-pdf="histoInstructions.pdf" histoInstructions.html');
+				bat('"' + chromePath + 'chrome.exe" --headless --print-to-pdf="histoInstructions.pdf" histoInstructions.html');
 				bat("del /f histoInstructions.html") //Delete HTML we don't need it anymore
 			}
 			echo(pwd())
