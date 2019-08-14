@@ -6,7 +6,6 @@ pipeline {
         MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
     	CREDENTIALS_PATH = "F:\\Jenkins\\"
-		LOG_OUTPUT_FOLDER = logOutputFolder()
 	}
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
@@ -346,7 +345,7 @@ pipeline {
 			//<-- SAVE PATIENT DATA TO LOG
 			//Save log file
 			def lg =currentBuild.rawBuild.getLog(10000);
-			bat "@echo " + lg.join("\n") + " > '%LOG_OUTPUT_FOLDER%\\Build.log'"
+			bat "@echo " + lg.join("\n") + " > '%LOG_OUTPUT_FOLDER%\\build.log'"
 		}}}
 	}
 	post{ 
@@ -383,7 +382,7 @@ pipeline {
 	}
 }
 
-def logOutputFolder()
+def LOG_OUTPUT_FOLDER()
 {
 	return  "${TEMP_STORAGE}\\${SUBJECT_ID}\\Log\\01 OCT Scan and Pattern\\"
 }
