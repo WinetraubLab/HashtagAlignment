@@ -228,5 +228,6 @@ else
         mkdir(LogFolder)
     end
     saveas(gcf,[LogFolder '\Overview.png']);
+	saveas(gcf,'Overview.png');
 end   
 

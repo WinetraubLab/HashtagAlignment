@@ -180,17 +180,13 @@ pipeline {
 			if (!gitFolderOption4.exists()) {
 				bat('mkdir "' + VOLUME_OUTPUT_FOLDER() + '"');
 			}
-			
-			
+						
 			//Make not of the parameters we learned from input - Regarding the volume
 			def str = params.WHO_TO_EMAIL_WHEN_DONE;
 			str = str.replace("@stanford.edu","");
-			echo "here"
 			def file = new File(VOLUME_OUTPUT_FOLDER() + "\\ScanConfig.json")
-			file.write ('\u007B "VolumeScannedBy" : "' + str + '"\u007D')
-			
-			echo "here"
-		
+			file.write ('\u007B "volumeScannedBy" : "' + str + '"\u007D')
+	
 			//Make not of the parameters we learned from input - Regarding the subject (TBD)
 			def file2 = new File(VOLUME_OUTPUT_FOLDER() + "\\..\\Subject.json")
 			file2.write('\u007B ' + 
@@ -202,6 +198,12 @@ pipeline {
 				'"sampleType": "'               + params.HEALTHY_OR_TUMOR + '", ' + 
 				'"fitzpatrickSkinType" : "'     + params.SKIN_TYPE + '" ' + 
 				'\u007D')
+			
+			//Print text 
+			def file3 = new File(VOLUME_OUTPUT_FOLDER() + "\\..\\Subject.json")
+			text = fh1.getText('UTF-8')
+			echo ("Subject.json\n------------\n" + text);
+				   
 		}}}
 		stage("Scan And Photobleach")
 		{steps{script{
@@ -356,7 +358,7 @@ pipeline {
                     name: 'HowDeepMM', description: 'How deep from tissue surface should we start cutting? [mm]'),
                     choice(name: 'Side', choices: ['black dot side','side opposite to the black dot'], description: 'Which side should we cut from?')
                     ])
-			def howDeepMM = userInput.HowDeepMM.toInteger()
+			def howDeepMM = Double.valueOf(userInput.HowDeepMM)
 
 			//Generate Instructions to Histologist
 			bat """
