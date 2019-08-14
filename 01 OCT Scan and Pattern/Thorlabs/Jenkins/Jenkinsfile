@@ -389,43 +389,47 @@ pipeline {
                     ])
 			def howDeepMM = Double.valueOf(userInput.HowDeepMM)
 			def sideToPlaceRedDot = ""
+			def faceDirection = ""
 			if (userInput.WhichSideToStartSections == "same side as black dot")
 			{
 				sideToPlaceRedDot = "side opposite to the black dot"
+				faceDirection = "down"
 			}
 			else
 			{
 				sideToPlaceRedDot = "same side as black dot"
+				faceDirection = "up"
 			}
 
 			//Generate Instructions to Histologist
 			bat """
 				@echo off
-				echo Sample ID:  %SAMPLE_ID%  > HistoInstructions.txt
-				echo. >> HistoInstructions.txt
-				echo. >> HistoInstructions.txt
-				echo ---------------- Instructions for Us ---------------------------- >> HistoInstructions.txt
-				echo ----------------------------------------------------------------- >> HistoInstructions.txt
-				echo + Mark a red dot on the """ + sideToPlaceRedDot + """. >> HistoInstructions.txt
-				echo. >> HistoInstructions.txt
-				echo. >> HistoInstructions.txt
-				echo ---------------- Instructions for Pauleen ----------------------- >> HistoInstructions.txt
-				echo ----------------------------------------------------------------- >> HistoInstructions.txt
-				echo + Start cutting from the side opposite to the red dot. >> HistoInstructions.txt
-				echo + Clear paraffin, when seeing a full face >> HistoInstructions.txt
-				echo + Then go in """ + howDeepMM.toString() + " mm / " +  String.format ("%.0f", howDeepMM*1000) + """ um >> HistoInstructions.txt
-				echo + Then take 5 slides with 3 sections per slide >> HistoInstructions.txt
-				echo    - Section interval of 25 um >> HistoInstructions.txt
-				echo    - Slide thickness of 5 um >> HistoInstructions.txt
-				echo ----------------------------------------------------------------- >> HistoInstructions.txt
+				echo Sample ID:  %SAMPLE_ID%  > histoInstructions.txt
+				echo. >> histoInstructions.txt
+				echo. >> histoInstructions.txt
+				echo ---------------- Instructions for Us ---------------------------- >> histoInstructions.txt
+				echo ----------------------------------------------------------------- >> histoInstructions.txt
+				echo + Mark a red dot on the """ + sideToPlaceRedDot + """. >> histoInstructions.txt
+				echo + Plase sample in the cassette such that red dot is facing """ + faceDirection + """. >> histoInstructions.txt
+				echo. >> histoInstructions.txt
+				echo. >> histoInstructions.txt
+				echo ---------------- Instructions for Pauleen ----------------------- >> histoInstructions.txt
+				echo ----------------------------------------------------------------- >> histoInstructions.txt
+				echo + Start cutting from the side opposite to the red dot. >> histoInstructions.txt
+				echo + Clear paraffin, when seeing a full face. >> histoInstructions.txt
+				echo + Then go in """ + howDeepMM.toString() + " mm / " +  String.format ("%.0f", howDeepMM*1000) + """ um. >> histoInstructions.txt
+				echo + Then take 5 slides with 3 sections per slide. >> histoInstructions.txt
+				echo    - Section interval of 25 um >> histoInstructions.txt
+				echo    - Slide thickness of 5 um >> histoInstructions.txt
+				echo ----------------------------------------------------------------- >> histoInstructions.txt
 				
 				echo HISTOLOGIST Instructions
 				echo ------------------------
-				type HistoInstructions.txt
+				type histoInstructions.txt
 				echo ------------------------
 				"""
 			
-			bat('copy HistoInstructions.txt "' + LOG_OUTPUT_FOLDER() + '"')
+			bat('copy histoInstructions.txt "' + LOG_OUTPUT_FOLDER() + '"')
 		}}}
 		stage("Save Log File")
 		{steps{script{
@@ -442,7 +446,7 @@ pipeline {
 					"<b>Print instructions for Pauline from attachement</b><br>"
 					,
 				attachLog: true,
-				attachmentsPattern: "HistoInstructions.txt",
+				attachmentsPattern: "histoInstructions.txt",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 		} 
 		failure {
