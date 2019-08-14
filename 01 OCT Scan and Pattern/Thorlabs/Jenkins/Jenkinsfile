@@ -102,6 +102,7 @@ pipeline {
 				//bat("del /f histoInstructions.html") //Delete HTML we don't need it anymore
 			}
 			else
+			{
 				echo("Cannot make a pdf file, install chrome for that. Will send you html instead")
 			}
 			echo(pwd())
