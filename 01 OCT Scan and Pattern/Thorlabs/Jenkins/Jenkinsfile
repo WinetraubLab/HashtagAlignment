@@ -178,7 +178,7 @@ pipeline {
 			bat("""
 				@echo off
 				echo { > ScanConfig.json
-				echo "VolumeScannedBy" : """" + str """" >> ScanConfig.json
+				echo "VolumeScannedBy" : """" + str + """" >> ScanConfig.json
 				echo } >> ScanConfig.json
 				move ScanConfig.json %TEMP_STORAGE%\\%SUBJECT_ID%\\OCTVolumes\\
 				""")
