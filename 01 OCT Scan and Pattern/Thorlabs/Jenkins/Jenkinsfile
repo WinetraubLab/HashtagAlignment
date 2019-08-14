@@ -108,7 +108,7 @@ pipeline {
 			def gitTxt = readFile('commandResult.txt').trim()
 			if (gitTxt.contains("* (HEAD"))
 			{
-				gitTxt = "origin/master"
+				gitTxt = "master"
 			}
 			branch = gitTxt
 			echo("Fetching: " + branch)
