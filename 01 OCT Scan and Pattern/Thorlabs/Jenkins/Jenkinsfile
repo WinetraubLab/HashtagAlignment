@@ -34,8 +34,7 @@ pipeline {
 			defaultValue:"@stanford.edu",
 			description:"Who should get an email with the results? Including you!\nUse comma to specify multiple emails.\nExample: me@stanford.edu, you@stanford.edu",
 			trim: true)
-			
-		//<--- ADD PARAMETERS ABOUT THE SAMPLE --->
+		
 		string(
 			name: "PATIENT_AGE",
 			defaultValue:"",
@@ -64,13 +63,13 @@ pipeline {
 			trim: true)
 		choice(
 			name: "HEALTHY_OR_TUMOR",
-			choices "Healthy\nTumor\nMargin\nUnknown"
+			choices: "Healthy\nTumor\nMargin\nUnknown"
 			defaultValue:"Healthy",
 			description:"If this sample is 'dog ear' choose healthy. If inside the core of the tumor choose 'Tumor'",
 			trim: true)
 		choice(
 			name: "SKIN_TYPE",
-			choices "1\n2\n3\n4\n5\n6\nUnknown"
+			choices: "1\n2\n3\n4\n5\n6\nUnknown"
 			defaultValue:"Unknown",
 			description:"Fitzpatrick Skin Type",
 			trim: true)		
@@ -101,6 +100,8 @@ pipeline {
 				echo('Please specify patient data')
 				error('Please specify patient data')
 			}
+			
+			// <-------------------------------SET PARAMETERS TO LOG
 		}}}
 		stage("Checkout")
 		{steps{script{
@@ -339,6 +340,7 @@ pipeline {
 		}}}
 		stage("Save Log File")
 		{steps{script{
+			//<-- SAVE PATIENT DATA TO LOG
 			//Save log file
 			def lg =currentBuild.rawBuild.getLog(10000);
 			bat "@echo " + lg.join("\n") + " > '%LOG_OUTPUT_FOLDER%\\Build.log'"
