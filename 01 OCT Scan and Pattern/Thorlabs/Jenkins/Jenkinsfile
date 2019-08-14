@@ -82,6 +82,27 @@ pipeline {
 	stages{
 		stage("Parameters Check and Env Setup") 
 		{steps{script{
+		//Make an HTML Version 
+			def ht = readFile(LOG_OUTPUT_FOLDER() + '\\histoInstructions.txt').trim()
+			ht = ht.replaceAll("\n","<br>")
+			ht = ht.replaceAll("Then go in","Then <span style='font-weight: bold;background-color: yellow'>go in")
+			ht = ht.replaceAll(" um."," um</span>.")
+			ht = "<html><body>" + ht + "</body></html>"
+			def file = new File('histoInstructions.html')
+			file.write(ht)
+			echo("HERE")
+
+emailext (
+				subject: "[OCTHist] Scan ${currentBuild.result}",
+				from : "Yonatan",
+				body: "Scan is completed.<br>You can process the volume manualy to $TEMP_STORAGE\\$SAMPLE_ID and run bat file.<br> Or run automatically use <a href='http://localhost:9090/job/Upload%20to%20Cloud%20and%20Preprocess/'> Link </a>. <br> See log for more details <br>Yonatan<br><br>" + 
+					"<b>Print instructions for Pauline from attachement</b><br>"
+					,
+				attachLog: true,
+				attachmentsPattern: "histoInstructions.html",
+				to: "$WHO_TO_EMAIL_WHEN_DONE" )
+
+error("HERE")
 		
 			echo "Tmp Save of Log File"
 			BackupLogFile(); //Save the log file here just because this tends to fail the firt time you run it due to permissions. So put it at the begining as safety measure
@@ -386,7 +407,7 @@ pipeline {
                     choice(
 						name: 'WhichSideToStartSections', 
 						choices: ['same side as black dot','side opposite to the black dot'], 
-						description: 'Which side is the thinnest: black dot side or opposite to black dot?')
+						description: 'On which side should histologyist cut sections: black dot side or opposite to black dot?')
                     ])
 			def howDeepMM = Double.valueOf(userInput.HowDeepMM)
 			def sideToPlaceRedDot = ""
@@ -438,7 +459,7 @@ pipeline {
 			ht = ht.replaceAll("Then go in","Then <span style='font-weight: bold;background-color: yellow'>go in")
 			ht = ht.replaceAll(" um."," um</span>.")
 			ht = "<html><body>" + ht + "</body></html>"
-			def file = new File(pwd + '\\histoInstructions.html')
+			def file = new File('histoInstructions.html')
 			file.write(ht)
 			
 		}}}
