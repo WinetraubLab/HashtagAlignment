@@ -91,6 +91,11 @@ if (isRunningOnJenkins())
 	end
 end
 
+%Input check
+if (sum(config.zToScan == 0) == 0)
+	error('zToScan does not contain focus (z=0) that will cause problems down the road, please adjust');
+end
+
 %Make dirs for output and log
 if ~exist(outputFolder,'dir')
 	mkdir(outputFolder);
