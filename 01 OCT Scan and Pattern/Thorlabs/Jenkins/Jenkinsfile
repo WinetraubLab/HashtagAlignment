@@ -82,7 +82,7 @@ pipeline {
 	stages{
 		stage("Parameters Check and Env Setup") 
 		{steps{script{
-		//Make an HTML Version 
+			//Make an HTML Version 
 			def ht = readFile(LOG_OUTPUT_FOLDER() + '\\histoInstructions.txt').trim()
 			ht = ht.replaceAll("\n","<br>")
 			ht = ht.replaceAll("Then go in","Then <span style='font-weight: bold;background-color: yellow !important;font-size: big'>go in")
@@ -92,6 +92,13 @@ pipeline {
 				ht + "</body></html>"
 			def file = new File(pwd() + '\\histoInstructions.html')
 			file.write(ht)
+			
+			//Try print to PDF if chrome is installed
+			def chromeExe = new File("C:\Program Files (x86)\Google\Chrome\Application\chrome.exe");
+			if(chromeExe.exists())
+			{
+				bat('"' + chromeExe.absolutePath() + '"--headless --print-to-pdf="histoInstructions.pdf" histoInstructions.html');
+			}
 			echo(pwd())
 
 emailext (
@@ -101,7 +108,7 @@ emailext (
 					"<b>Print instructions for Pauline from attachement</b><br>"
 					,
 				attachLog: true,
-				attachmentsPattern: "histoInstructions.html",
+				attachmentsPattern: "histoInstructions.html", "histoInstructions.pdf"
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 
 error("HERE")
