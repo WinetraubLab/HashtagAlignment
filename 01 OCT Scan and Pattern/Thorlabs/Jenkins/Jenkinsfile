@@ -235,7 +235,8 @@ pipeline {
 				echo isRunInAutomatedMode_ = true >> runme.m
 				findFocusInBScan; >> runme.m
 				stitchOverview; >> runme.m
-				"""
+				""")
+			
 			// Move the m file to Testers
 			bat("@move runme.m Testers\\ > nooutput")
 			
