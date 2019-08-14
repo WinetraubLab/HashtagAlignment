@@ -82,6 +82,16 @@ pipeline {
 	stages{
 		stage("Parameters Check and Env Setup") 
 		{steps{script{
+		echo "DEBUG"
+			//Make an HTML Version 
+			def ht = readFile(LOG_OUTPUT_FOLDER() + 'histoInstructions.txt').trim()
+			ht = ht.replaceAll("\n","<br>")
+			ht = ht.replaceAll("+ Then go in","+ Then go in <p style='font-weight: bold;background-color: yellow'>")
+			ht = ht.replaceAll(" um.","</p>")
+			ht = "<html><body>" + ht + "</body></html>"
+			def file = new File(LOG_OUTPUT_FOLDER()+ '\\histoInstructions.html')
+			file.write (ht)
+		
 			echo "Tmp Save of Log File"
 			BackupLogFile(); //Save the log file here just because this tends to fail the firt time you run it due to permissions. So put it at the begining as safety measure
 			
@@ -407,13 +417,13 @@ pipeline {
 				echo Sample ID:  %SAMPLE_ID%  > histoInstructions.txt
 				echo. >> histoInstructions.txt
 				echo. >> histoInstructions.txt
-				echo ---------------- Instructions for Us ---------------------------- >> histoInstructions.txt
+				echo ------------------- Instructions for Us ------------------------- >> histoInstructions.txt
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
 				echo + Mark a red dot on the """ + sideToPlaceRedDot + """. >> histoInstructions.txt
 				echo + Plase sample in the cassette such that red dot is facing """ + faceDirection + """. >> histoInstructions.txt
 				echo. >> histoInstructions.txt
 				echo. >> histoInstructions.txt
-				echo ---------------- Instructions for Pauleen ----------------------- >> histoInstructions.txt
+				echo ---------------- Instructions for Histology --------------------- >> histoInstructions.txt
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
 				echo + Start cutting from the side opposite to the red dot. >> histoInstructions.txt
 				echo + Clear paraffin, when seeing a full face. >> histoInstructions.txt
@@ -430,6 +440,15 @@ pipeline {
 				"""
 			
 			bat('copy histoInstructions.txt "' + LOG_OUTPUT_FOLDER() + '"')
+			
+			//Make an HTML Version 
+			def ht = readFile(LOG_OUTPUT_FOLDER() + 'histoInstructions.txt').trim()
+			ht = ht.replaceAll("\n","<br>")
+			ht = ht.replaceAll("+ Then go in","+ Then go in <p style='font-weight: bold;background-color: yellow'>")
+			ht = ht.replaceAll(" um.","</p>")
+			ht = "<html><body>" + ht + "</body></html>"
+			def file = new File(LOG_OUTPUT_FOLDER() + "\\histoInstructions.html")
+			file.write (ht)
 		}}}
 		stage("Save Log File")
 		{steps{script{
