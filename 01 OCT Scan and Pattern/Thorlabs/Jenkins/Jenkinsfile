@@ -6,7 +6,6 @@ pipeline {
         MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
     	CREDENTIALS_PATH = "F:\\Jenkins\\"
-		DEFAULT_SUBJECT_SERIES = "LB"
 		LOG_OUTPUT_FOLDER = logOutputFolder()
 	}
 	options {
@@ -16,13 +15,13 @@ pipeline {
 	{
 		string(
 			name: "S3_DIR",
-			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/${DEFAULT_SUBJECT_SERIES}/",
-			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/${DEFAULT_SUBJECT_SERIES}/",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/",
+			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/",
 			trim: true)
 		string(
 			name: "SUBJECT_ID",
-			defaultValue:"${DEFAULT_SUBJECT_SERIES}-00",
-			description:"Subject Id.\nExample: ${DEFAULT_SUBJECT_SERIES}-01",
+			defaultValue:"LB-00",
+			description:"Subject Id.\nExample: LB-01",
 			trim: true)
 		string(
 			name: "Z_TO_PHTOBLEACH",
@@ -46,7 +45,7 @@ pipeline {
 			description:""
 			)
 		string(
-			name: "LOCATION",
+			name: "SAMPLE_LOCATION",
 			defaultValue:"Unknown",
 			description:"Forearm, Shin etc",
 			trim: true)
