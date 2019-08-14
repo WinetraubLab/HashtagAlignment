@@ -317,8 +317,8 @@ pipeline {
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 				
 			//Give instructions
-			echo "- Please review overview image and provide your input: + "\n" +
-				 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/Overview.png + "\n" +
+			echo "- Please review overview image and provide your input:" + "\n" +
+				 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/Overview.png" + "\n"
 
 			//Ask for input
 			def userInput = input( 
