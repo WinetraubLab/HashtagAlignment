@@ -105,7 +105,7 @@ pipeline {
 		stage("Checkout")
 		{steps{script{
 			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
-			bat "git describe --tags > commandResult.txt" 
+			bat "git describe --tags --exact-match > commandResult.txt" 
 			def gitTxt = readFile('commandResult.txt').trim()
 			echo gitTxt
 			if (gitTxt.contains("fatal: No tags can describe"))
