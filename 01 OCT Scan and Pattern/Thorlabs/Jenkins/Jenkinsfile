@@ -109,7 +109,7 @@ emailext (
 					"<b>Print instructions for Pauline from attachement</b><br>"
 					,
 				attachLog: true,
-				attachmentsPattern: "histoInstructions.html", "histoInstructions.pdf"
+				attachmentsPattern: "histoInstructions.html,histoInstructions.pdf"
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 
 error("HERE")
