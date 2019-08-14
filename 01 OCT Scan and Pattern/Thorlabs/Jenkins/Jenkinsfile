@@ -99,6 +99,7 @@ pipeline {
 				}
 			}
 			
+			echo "Tmp Save of Log File"
 			BackupLogFile(); //Save the log file here just because this tends to fail the firt time you run it due to permissions. So put it at the begining as safety measure
 		}}}
 		stage("Checkout")
@@ -435,6 +436,11 @@ def VOLUME_OUTPUT_FOLDER()
 
 def BackupLogFile()
 {
+	//Make sure folder exists
+	def gitFolderOption3 = new File(LOG_OUTPUT_FOLDER())
+	if (!gitFolderOption3.exists()) {
+		bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
+	}
 	//Save log file
 	def lg =currentBuild.rawBuild.getLog(10000);
 	lg = lg.join("\n");
