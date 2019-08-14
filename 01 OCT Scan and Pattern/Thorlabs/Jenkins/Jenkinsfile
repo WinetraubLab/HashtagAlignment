@@ -187,11 +187,11 @@ pipeline {
 			
 			//Make not of the parameters we learned from input - Regarding the volume
 			File file = new File("ScanConfig.json")
-			file.write '\u007D "VolumeScannedBy" : "' + str + '"' \u007B'
-			
+			file.write ('\u007D "VolumeScannedBy" : "' + str + '"\u007B')
 			bat('move ScanConfig.json "' + VOLUME_OUTPUT_FOLDER() + '"');
 				
 			//Make not of the parameters we learned from input - Regarding the subject (TBD)
+			File file = new File("Subject.json")
 			bat ('@echo "age" : "%AGE%", "gender": "%GENDER%", "sampleLocation": "%SAMPLE_LOCATION%", "side": "%SIDE%", "patientDiagnosis": "%POSSIBLE_PATIENT_DIAGNOSIS%", "sampleType": "%HEALTHY_OR_TUMOR%", "fitzpatrickSkinType" : "%SKIN_TYPE%" > Subject.json')
 			bat('move Subject.json "' + VOLUME_OUTPUT_FOLDER() + '..\"');
 		}}}
