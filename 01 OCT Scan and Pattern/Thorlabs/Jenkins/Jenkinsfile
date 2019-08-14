@@ -44,8 +44,8 @@ pipeline {
 			name: "GENDER",
 			choices: ['Unknown', 'Male', 'Female'],
 			defaultValue:"Unknown",
-			description:"",
-			trim: true)
+			description:""
+			)
 		string(
 			name: "LOCATION",
 			defaultValue:"Unknown",
@@ -64,13 +64,13 @@ pipeline {
 		choice(
 			name: "HEALTHY_OR_TUMOR",
 			choices: ['Healthy','Tumor','Margin','Unknown'],
-			description:"If this sample is 'dog ear' choose healthy. If inside the core of the tumor choose 'Tumor'",
-			trim: true)
+			description:"If this sample is 'dog ear' choose healthy. If inside the core of the tumor choose 'Tumor'"
+			)
 		choice(
 			name: "SKIN_TYPE",
 			choices: ['Unknown','1','2','3','4','5','6'],
-			description:"Fitzpatrick Skin Type",
-			trim: true)		
+			description:"Fitzpatrick Skin Type"
+			)		
 		
 		//Debug purpose 
 		booleanParam(
