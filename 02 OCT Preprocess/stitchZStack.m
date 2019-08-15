@@ -17,7 +17,6 @@ saveYs = 3; %How many Bscans to save (for future reference)
 if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
 end
-LogFolder = [OCTVolumesFolder '..\Log\02 OCT Preprocess\'];
 
 %% Read Configuration file
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
@@ -41,6 +40,18 @@ yToSave = dim.y.index(...
     );
 
 pixSizeZ = diff(dim.z.values([1 2])); %um
+
+%% Prepeaere to log
+LogFolder = [OCTVolumesFolder '..\Log\02 OCT Preprocess\'];
+if ~awsIsAWSPath(LogFolder) && ~exist(LogFolder,'dir')
+    mkdir(LogFolder);
+end
+
+%In debug mode, we shall save all temporary files 
+isRunInDebugMode = false;
+if (exist('isRunInDebugMode_','var'))
+    isRunInDebugMode = isRunInDebugMode_;
+end
 
 %% Preform stitching
 disp('Stitching ... '); tt=tic();
@@ -72,7 +83,7 @@ addAttachedFiles(p,pds.Files);
 %addAttachedFiles(p,{'tallWriter.m','yOCT2Mat.m','yOCTLoadInterfFromFile.m','yOCTInterfToScanCpx.m',})
 
 %Loop over y frames
-parfor (yI=1:length(yIndexes)) %<--
+parfor yI=1:length(yIndexes)
     try
     fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>
     
@@ -161,12 +172,14 @@ location = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/'],fa
 yOCTWriteBigVolume(bv,dim, location,'tif',log(mean(cValues)));
 
 %% Cleanup the temporary dir
-awsRmDir(tmpDir); 
+if ~isRunInDebugMode
+    awsRmDir(tmpDir);   
+else
+    yOCT2Mat(thresholds,[tmpDir '/thresholds.mat']);
+    yOCT2Mat(cValues,[tmpDir '/cValues.mat']);
+end
 
 %% Save overviews of a few Y sections to log
-if ~awsIsAWSPath(LogFolder) && ~exist(LogFolder,'dir')
-    mkdir(LogFolder);
-end
 for i=1:length(yToSave)
     if isempty(imToSave{yToSave(i)})
         fprintf('yI=%d is empty, was expecting to have an example volume to save\n',yToSave(i));
@@ -174,5 +187,9 @@ for i=1:length(yToSave)
         im = imToSave{yToSave(i)};
         im(im<th) = th;
         yOCT2Tif(log(im),sprintf('%s/y%03dZStack.tif',LogFolder,yToSave(i)),log(cValues(i,:)));
+        
+        if isRunInDebugMode
+            yOCT2Mat(yToSave(i),sprintf('%s/y%03dZStack.tif',LogFolder,yToSave(i)));
+        end
     end
 end

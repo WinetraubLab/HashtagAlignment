@@ -25,6 +25,10 @@ pipeline {
 			name: 'AWS_PARALLEL_COMPUTING',
 			defaultValue:false,
 			description:"1. Check this box if you would like to use cloud computing (AWS).\n2. Make sure your files are uploaded to Amazon cloud (s3) to be able to use this function.\n3. Please note: 1hr cloud computing is about 1USD.")
+		booleanParam(
+			name: 'IS_RUN_IN_DEBUG_MODE',
+			defaultValue:false,
+			description: "Check this box to generate more intermidiate files for debugging")
     }
 	stages{
 		stage("Checkout")
@@ -96,6 +100,7 @@ pipeline {
 			bat("@echo isRunInAutomatedMode_ = true; >> runme.m")
 			bat("@echo SubjectFolderIn_ = '%SUBJECT_FOLDER_PATH%'; >> runme.m")
 			bat("@echo SubjectFolderOut_ = '%SUBJECT_FOLDER_PATH%'; >> runme.m")
+			bat("@echo isRunInDebugMode_ =%IS_RUN_IN_DEBUG_MODE%; >> runme.m")
 			bat("@echo runAllPreprocessing; >> runme.m")
 			
 			// Move the m file to Testers
