@@ -5,7 +5,7 @@ disp('Looking For Focus Position...');
 %% Inputs
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-001/OCT Volumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01D/OCTVolumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -63,6 +63,10 @@ for i=length(size(scan1)):-1:4 %Average BScan, AScan avg but no z,x,y
 end
 dim.z = dim1.z; %Update dimensions structure
 
+%Compute the total travel distance of the scanning process
+totalZDistance = diff(json.zToScan([1 end])); %mu
+totalZDistanceI = totalZDistance/diff(dim.z.values([1 2])); %pixels
+
 %Find tissue position by maximum intensity
 figure(1);
 tissueZi = zeros(size(scan1,3),1); %Tissue depth for each scan
@@ -70,7 +74,9 @@ for i=1:length(tissueZi)
     scan = squeeze(scan1(:,:,i));
     
     %Find maximum
-    tissueZi(i) = find(median(scan,2) == max(median(scan,2)),1,'first');
+    medScan = median(scan,2);
+    medScan(1:(0.5*totalZDistanceI)) = NaN; %Its unlikely that the focus point will be at the top part, as traveling will make the 'wrap around problem'
+    tissueZi(i) = find(medScan == max(medScan),1,'first');
     
     %Plot    
     if (i<=4)
@@ -84,6 +90,7 @@ for i=1:length(tissueZi)
         title(sprintf('y=%.2f',dim1.y.values(i)));
         xlabel(['x [' dim.x.units ']'])
         ylabel(['z [' dim.z.units ']'])
+        pause(0.1)
     end
 end
 
@@ -112,6 +119,7 @@ m1 = squeeze(median(scan1,2)); %Median over x
 %Distance matrix
 d = pdist(m1'); %Distance matrix, for easy visualization do squareform(d)
 Z = linkage(d); %Cluster
+figure(2);
 dendrogram(Z)
 nClusters = round(size(m1,2)*0.6); %Number of clusters output
 c = cluster(Z,'maxclust',nClusters); %Split into clusters
@@ -134,7 +142,7 @@ tmp1 = dim.z.values(zsToUse);
 tmp2 = m2(zsToUse);
 focusDepth2 = tmp1(tmp2==max(tmp2)); %[um] - 2nd guess
 
-figure(2);
+figure(3);
 plot(dim.z.values(zsToUse),[m1(zsToUse,ysToUse)])
 hold on;
 plot(dim.z.values(zsToUse),m2(zsToUse),'k--')

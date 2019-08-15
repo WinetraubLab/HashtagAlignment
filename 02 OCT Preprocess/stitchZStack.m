@@ -1,7 +1,7 @@
 %This script stitches images aquired at different z depths 2gezer
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-001/OCT Volumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01D/OCT Volumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -72,7 +72,7 @@ addAttachedFiles(p,pds.Files);
 %addAttachedFiles(p,{'tallWriter.m','yOCT2Mat.m','yOCTLoadInterfFromFile.m','yOCTInterfToScanCpx.m',})
 
 %Loop over y frames
-parfor (yI=1:length(yIndexes)) 
+parfor (yI=1:length(yIndexes),0) %<--
     try
     fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>
     
