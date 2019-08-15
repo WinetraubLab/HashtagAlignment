@@ -394,13 +394,12 @@ pipeline {
 			if (userInput.WhichSideToStartSections == "same side as black dot")
 			{
 				sideToPlaceRedDot = "side opposite to the black dot"
-				faceDirection = "down"
 			}
 			else
 			{
 				sideToPlaceRedDot = "same side as black dot"
-				faceDirection = "up"
 			}
+			faceDirection = "up" //Red dot allways facing up
 
 			//Generate Instructions to Histologist
 			bat """
@@ -411,7 +410,7 @@ pipeline {
 				echo ------------------- Instructions for Us ------------------------- >> histoInstructions.txt
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
 				echo + Mark a red dot on the """ + sideToPlaceRedDot + """. >> histoInstructions.txt
-				echo + Plase sample in the cassette such that red dot is facing """ + faceDirection + """. >> histoInstructions.txt
+				echo + Place sample in the cassette such that red dot is facing """ + faceDirection + """. >> histoInstructions.txt
 				echo. >> histoInstructions.txt
 				echo. >> histoInstructions.txt
 				echo ---------------- Instructions for Histology --------------------- >> histoInstructions.txt
