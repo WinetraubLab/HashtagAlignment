@@ -170,8 +170,7 @@ bv = log(bv);
 %Write (using parpool)
 location = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/'],false);
 yOCTWriteBigVolume(bv,dim, location,'tif',log(mean(cValues)));
-f
-printf('Done saving sa a big volume, toatl time: %.0f[min]\n',toc(tt)/60);
+fprintf('Done saving sa a big volume, toatl time: %.0f[min]\n',toc(tt)/60);
 
 %% Cleanup the temporary dir
 if ~isRunInDebugMode
