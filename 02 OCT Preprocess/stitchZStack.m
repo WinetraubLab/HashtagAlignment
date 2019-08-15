@@ -18,6 +18,13 @@ if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
 end
 
+%Find subject folder by removing last folder
+tmp = awsModifyPathForCompetability(OCTVolumesFolder);
+tmp = fliplr(tmp);
+i = [find(tmp(2:end)=='/',1,'first'),find(tmp(2:end)=='\',1,'first')]; %Hopefully one is empty and the other contain the data
+tmp(1:min(i)) = [];
+SubjectFolder = fliplr(tmp);
+
 %% Read Configuration file
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
 if ~isfield(json,'focusPositionInImageZpix')
@@ -42,7 +49,7 @@ yToSave = dim.y.index(...
 pixSizeZ = diff(dim.z.values([1 2])); %um
 
 %% Prepeaere to log
-LogFolder = [OCTVolumesFolder '..\Log\02 OCT Preprocess\'];
+LogFolder = awsModifyPathForCompetability([SubjectFolder '\Log\02 OCT Preprocess\']);
 if ~awsIsAWSPath(LogFolder) && ~exist(LogFolder,'dir')
     mkdir(LogFolder);
 end

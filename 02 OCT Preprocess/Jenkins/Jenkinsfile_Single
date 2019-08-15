@@ -124,6 +124,7 @@ pipeline {
 				
 				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme',%AWS_PARALLEL_COMPUTING%)" -logfile matlablog.txt""")
 				
+				currentBuild.result = 'SUCCESS'
 			}
 			catch(Exception e)
 			{
@@ -170,7 +171,7 @@ pipeline {
 					"AWS_PARALLEL_COMPUTING:  $AWS_PARALLEL_COMPUTING<br>" 
 					,
 					attachLog: true,
-					attachmentsPattern: "//**//*.png",
+					attachmentsPattern: "Testers\\*.png",
 					to: "$WHO_TO_EMAIL_WHEN_DONE," + email )
 			}
 		}}}
