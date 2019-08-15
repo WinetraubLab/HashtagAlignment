@@ -199,7 +199,7 @@ for i=1:length(yToSave)
         yOCT2Tif(log(im),sprintf('%s/y%04dZStack.tif',LogFolder,yToSave(i)),log(cValues(i,:)));
         
         if isRunInDebugMode
-            yOCT2Mat(yToSave(i),sprintf('%s/y%04dZStack_db.mat',LogFolder,yToSave(i)));
+            yOCT2Mat(imToSave{yToSave(i)},sprintf('%s/y%04dZStack_db.mat',LogFolder,yToSave(i)));
         end
     end
 end
