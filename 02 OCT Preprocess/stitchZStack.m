@@ -79,6 +79,7 @@ awsRmDir(tmpDir);
 setupParpolOCTPreprocess();
 
 %Loop over y frames
+ticBytes(gcp);
 parfor yI=1:length(yIndexes)
     try
     fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>
@@ -146,6 +147,7 @@ parfor yI=1:length(yIndexes)
     end
 end
 fprintf('Done stitching, toatl time: %.0f[min]\n',toc(tt)/60);
+tocBytes(gcp)
 
 %% Threshlod
 %Compute a single threshold for all files
@@ -154,6 +156,7 @@ th = single(mean(thresholds));
 %% Collect all mat files from datastore to create a single output
 disp('Saving to Tiff ...');
 tt=tic;
+ticBytes(gcp);
 %Read (using parpool)
 bv = yOCTReadBigVolume(tmpDir,'mat');
 
@@ -165,6 +168,7 @@ bv = log(bv);
 location = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/'],false);
 yOCTWriteBigVolume(bv,dim, location,'tif',log(mean(cValues)));
 fprintf('Done saving sa a big volume, toatl time: %.0f[min]\n',toc(tt)/60);
+tocBytes(gcp)
 
 %% Cleanup the temporary dir
 if ~isRunInDebugMode
