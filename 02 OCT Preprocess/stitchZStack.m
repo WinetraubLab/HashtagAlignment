@@ -130,18 +130,14 @@ parfor yI=1:length(yIndexes)
     %Save results to temporary files
     %Since this data is big, its better to upload it to destination than
     %return it to Matlab
-    T = tall({stackmean});
-    location = awsModifyPathForCompetability(sprintf('%s/y%04d/m*.mat',tmpDir,yIndexes(yI)),false);
-    evalc(... use evalc to reduce number of screen prints
-        'write(location,T,''WriteFcn'',@tallWriter)' ... %Not a trivial implementation but it works
-        ); 
+    writeMatFileToCloud(stackmean,sprintf('%s/y%04d',tmpDir,yIndexes(yI)));
     
     %Save thresholds, this data is small so we can send it back
     thresholds(yI) = th;
     cValues(yI,:) = c;
          
     catch ME
-        fprintf('Error happened in parfor, iteration %d, yIndex: %d',yI,yIndexes(yI)); 
+        fprintf('Error happened in parfor, iteration %d, yIndex: %d\n',yI,yIndexes(yI)); 
         disp(ME.message);
         for j=1:length(ME.stack) 
             ME.stack(j) 
