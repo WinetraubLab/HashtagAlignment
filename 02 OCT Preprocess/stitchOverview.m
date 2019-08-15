@@ -67,6 +67,7 @@ else
     overviewScan = cell(length(gridYc),length(gridXc));
 end
 parfor i=1:length(gridXcc) %Because of the way the scan went we can easily stitch
+    try
     fprintf('%s Processing volume %d of %d.\n',datestr(datetime),i,length(gridYcc));
     
     fpTxt = fp{i};
@@ -82,6 +83,14 @@ parfor i=1:length(gridXcc) %Because of the way the scan went we can easily stitc
         enface{i} = squeeze(mean(scan1(zStart:zEnd,:,:),1));
     else
         overviewScan{i} = shiftdim(scan1,1); %Dimensions are (x,y,z)
+    end
+    catch ME
+        fprintf('Error happened in parfor, iteration %d, fp: %s',i,fp{i}); 
+        disp(ME.message);
+        for j=1:length(ME.stack) 
+            ME.stack(j) 
+        end  
+        error('Error in parfor');
     end
 end
 

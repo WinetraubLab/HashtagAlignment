@@ -153,10 +153,10 @@ parfor yI=1:length(yIndexes)
          
     catch ME
         fprintf('Error happened in parfor, iteration %d, yIndex: %d',yI,yIndexes(yI)); 
+        disp(ME.message);
         for j=1:length(ME.stack) 
             ME.stack(j) 
-        end 
-        disp(ME.message); 
+        end  
         error('Error in parfor');
     end
 end
