@@ -72,7 +72,7 @@ addAttachedFiles(p,pds.Files);
 %addAttachedFiles(p,{'tallWriter.m','yOCT2Mat.m','yOCTLoadInterfFromFile.m','yOCTInterfToScanCpx.m',})
 
 %Loop over y frames
-parfor (yI=1:length(yIndexes),0) %<--
+parfor (yI=1:length(yIndexes)) %<--
     try
     fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>
     
