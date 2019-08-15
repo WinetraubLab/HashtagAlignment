@@ -74,6 +74,12 @@ end
 
 %% Running
 try
+	%Create one parallel pull for all
+	p=gcp('nocreate');
+	if isempty(p) 
+		p=parpool('SpmdEnabled',false);
+	end
+	
     fprintf('%s Running findFocusInBScan.\n',datestr(datetime));
     findFocusInBScan;
     close all;
