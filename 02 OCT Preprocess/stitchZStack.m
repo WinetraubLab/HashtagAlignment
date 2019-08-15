@@ -1,7 +1,7 @@
 %This script stitches images aquired at different z depths 2gezer
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01D/OCT Volumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01D/OCTVolumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
