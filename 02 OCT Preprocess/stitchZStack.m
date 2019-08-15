@@ -64,7 +64,7 @@ imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
 imToSave = cell(size(thresholds)); %For examples files
 
 %Make sure a temporary folder to save the data is empty
-tmpDir = [OCTVolumesFolder '/tmp/'];
+tmpDir = [OCTVolumesFolder '/tmp_db/'];
 awsRmDir(tmpDir);
 
 %Setup parallel pool, attach everything we need
@@ -175,8 +175,8 @@ yOCTWriteBigVolume(bv,dim, location,'tif',log(mean(cValues)));
 if ~isRunInDebugMode
     awsRmDir(tmpDir);   
 else
-    yOCT2Mat(thresholds,[tmpDir '/thresholds.mat']);
-    yOCT2Mat(cValues,[tmpDir '/cValues.mat']);
+    yOCT2Mat(thresholds,[tmpDir '/thresholds_db.mat']);
+    yOCT2Mat(cValues,[tmpDir '/cValues_db.mat']);
 end
 
 %% Save overviews of a few Y sections to log
@@ -189,7 +189,7 @@ for i=1:length(yToSave)
         yOCT2Tif(log(im),sprintf('%s/y%03dZStack.tif',LogFolder,yToSave(i)),log(cValues(i,:)));
         
         if isRunInDebugMode
-            yOCT2Mat(yToSave(i),sprintf('%s/y%03dZStack.tif',LogFolder,yToSave(i)));
+            yOCT2Mat(yToSave(i),sprintf('%s/y%03dZStack_db.mat',LogFolder,yToSave(i)));
         end
     end
 end
