@@ -76,20 +76,7 @@ imToSave = cell(size(thresholds)); %For examples files
 tmpDir = [OCTVolumesFolder '/tmp_db/'];
 awsRmDir(tmpDir);
 
-%Setup parallel pool, attach everything we need
-p=gcp('nocreate');
-if ~isempty(p)
-    %kill prev parpool before starting this one if it has SpmdEnabled flag
-    if (p.SpmdEnabled)
-        delete(p);
-    end
-end
-p=parpool('SpmdEnabled',false);
-currentFileFolder = fileparts(mfilename('fullpath'));
-yOCTMainFolder = [currentFileFolder '..\..\'];
-pds = fileDatastore(yOCTMainFolder,'ReadFcn',@load,'FileExtensions','.m','IncludeSubfolders',true);  
-addAttachedFiles(p,pds.Files);
-%addAttachedFiles(p,{'tallWriter.m','yOCT2Mat.m','yOCTLoadInterfFromFile.m','yOCTInterfToScanCpx.m',})
+setupParpolOCTPreprocess();
 
 %Loop over y frames
 parfor yI=1:length(yIndexes)
@@ -145,7 +132,9 @@ parfor yI=1:length(yIndexes)
     %return it to Matlab
     T = tall({stackmean});
     location = awsModifyPathForCompetability(sprintf('%s/y%04d/m*.mat',tmpDir,yIndexes(yI)),false);
-    write(location,T,'WriteFcn',@tallWriter); %Not a trivial implementation but it works
+    evalc(... use evalc to reduce number of screen prints
+        'write(location,T,''WriteFcn'',@tallWriter)' ... %Not a trivial implementation but it works
+        ); 
     
     %Save thresholds, this data is small so we can send it back
     thresholds(yI) = th;
