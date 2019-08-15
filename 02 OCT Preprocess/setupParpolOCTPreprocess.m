@@ -11,7 +11,7 @@ end
 
 if isempty(p)
     %Parpool didnt start yet, start it
-    p=parpool('SpmdEnabled',false);
+    p=parpool(6,'SpmdEnabled',false);
     currentFileFolder = fileparts(mfilename('fullpath'));
     yOCTMainFolder = [currentFileFolder '..\..\'];
     pds = fileDatastore(yOCTMainFolder,'ReadFcn',@load,'FileExtensions','.m','IncludeSubfolders',true);  
