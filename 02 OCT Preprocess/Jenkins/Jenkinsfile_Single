@@ -155,7 +155,7 @@ pipeline {
 					from : "Yonatan",
 					body: 
 					"Hi,<br>" +
-					"Your files are processed (Build # $BUILD_NUMBER, $BUILD_STATUS).<br>" +
+					"Your files are processed (Build # ${BUILD_NUMBER}, ${currentBuild.result}).<br>" +
 					"All the files are saved at:<br>" +
 					"$SUBJECT_FOLDER_PATH<br>" +
 					"See attached files for result summary.<br><br>" + 
