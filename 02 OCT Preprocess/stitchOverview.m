@@ -54,7 +54,7 @@ else
     focusPositionInImageZpix = json.focusPositionInImageZpix;
 end
 
-OCTSystem = json.OCTSystem; %Provide OCT system to prevent unesscecary polling of file system
+OCTSystem = [json.OCTSystem '_SRR']; %Provide OCT system to prevent unesscecary polling of file system
 reconstructConfig = [reconstructConfig {'OCTSystem',OCTSystem}];
 
 %% Set start & Finish positions
