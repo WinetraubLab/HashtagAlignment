@@ -17,7 +17,18 @@ lowRAMMode = true; %When set to true, doesn't load all stitched volume to RAM, i
 if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
 end
-LogFolder = [OCTVolumesFolder '..\Log\02 OCT Preprocess\'];
+
+%Find subject folder by removing last folder
+tmp = awsModifyPathForCompetability(OCTVolumesFolder);
+tmp = fliplr(tmp);
+i = [find(tmp(2:end)=='/',1,'first'),find(tmp(2:end)=='\',1,'first')]; %Hopefully one is empty and the other contain the data
+tmp(1:min(i)) = [];
+SubjectFolder = fliplr(tmp);
+
+LogFolder = awsModifyPathForCompetability([SubjectFolder '\Log\02 OCT Preprocess\']);
+if ~awsIsAWSPath(LogFolder) && ~exist(LogFolder,'dir')
+    mkdir(LogFolder);
+end
 
 %% Read Configuration file
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
@@ -222,16 +233,12 @@ end
 hold off;
 
 %% Save figure
+saveas(gcf,'Overview.png');
 if (awsIsAWSPath(OCTVolumesFolder))
     %Upload to AWS
-    saveas(gcf,'Overview.png');
     awsCopyFileFolder('Overview.png',[LogFolder '/Overview.png']);
 else
     %Save locally
-    if ~exist(LogFolder,'dir')
-        mkdir(LogFolder)
-    end
     saveas(gcf,[LogFolder '\Overview.png']);
-	saveas(gcf,'Overview.png');
 end   
 
