@@ -159,7 +159,7 @@ th = single(mean(thresholds));
 
 %% Collect all mat files from datastore to create a single output
 disp('Saving to Tiff ...');
-
+tt=tic;
 %Read (using parpool)
 bv = yOCTReadBigVolume(tmpDir,'mat');
 
@@ -170,6 +170,8 @@ bv = log(bv);
 %Write (using parpool)
 location = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/'],false);
 yOCTWriteBigVolume(bv,dim, location,'tif',log(mean(cValues)));
+f
+printf('Done saving sa a big volume, toatl time: %.0f[min]\n',toc(tt)/60);
 
 %% Cleanup the temporary dir
 if ~isRunInDebugMode
