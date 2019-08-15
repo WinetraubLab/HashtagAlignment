@@ -48,6 +48,8 @@ yToSave = dim.y.index(...
 
 pixSizeZ = diff(dim.z.values([1 2])); %um
 
+OCTSystem = json.OCTSystem; %Provide OCT system to prevent unesscecary polling of file system
+reconstructConfig = [reconstructConfig {'OCTSystem',OCTSystem}]; 
 %% Prepeaere to log
 LogFolder = awsModifyPathForCompetability([SubjectFolder '\Log\02 OCT Preprocess\']);
 if ~awsIsAWSPath(LogFolder) && ~exist(LogFolder,'dir')

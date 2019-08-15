@@ -42,6 +42,10 @@ if ~isfield(json,'focusPositionInImageZpix')
 else
     focusPositionInImageZpix = json.focusPositionInImageZpix;
 end
+
+OCTSystem = json.OCTSystem; %Provide OCT system to prevent unesscecary polling of file system
+reconstructConfig = [reconstructConfig {'OCTSystem',OCTSystem}];
+
 %% Set start & Finish positions
 zStart = max(focusPositionInImageZpix - focusSigma*5,1);
 zEnd = min(focusPositionInImageZpix + focusSigma*7,1000);
