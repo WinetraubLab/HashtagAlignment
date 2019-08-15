@@ -1,7 +1,7 @@
 %This script stitches overview file
 
 %% Inputs
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/OCTVolumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01D/OCTVolumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07};%,'YFramesToProcess',1:5:100}; %Configuration for processing OCT Volume
 
 %Probe Data

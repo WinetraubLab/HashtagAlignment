@@ -8,8 +8,16 @@ if ~isempty(p)
         delete(p);
     end
 end
-p=parpool('SpmdEnabled',false);
-currentFileFolder = fileparts(mfilename('fullpath'));
-yOCTMainFolder = [currentFileFolder '..\..\'];
-pds = fileDatastore(yOCTMainFolder,'ReadFcn',@load,'FileExtensions','.m','IncludeSubfolders',true);  
-addAttachedFiles(p,pds.Files);
+
+if isempty(p)
+    %Parpool didnt start yet, start it
+    p=parpool('SpmdEnabled',false);
+    currentFileFolder = fileparts(mfilename('fullpath'));
+    yOCTMainFolder = [currentFileFolder '..\..\'];
+    pds = fileDatastore(yOCTMainFolder,'ReadFcn',@load,'FileExtensions','.m','IncludeSubfolders',true);  
+    addAttachedFiles(p,pds.Files);
+    
+else
+    %Assuming all is fine
+    
+end
