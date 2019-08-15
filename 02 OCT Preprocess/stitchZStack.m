@@ -175,8 +175,8 @@ yOCTWriteBigVolume(bv,dim, location,'tif',log(mean(cValues)));
 if ~isRunInDebugMode
     awsRmDir(tmpDir);   
 else
-    yOCT2Mat(thresholds,[tmpDir '/thresholds_db.mat']);
-    yOCT2Mat(cValues,[tmpDir '/cValues_db.mat']);
+    yOCT2Mat(thresholds,[LogFolder '/thresholds_db.mat']);
+    yOCT2Mat(cValues,[LogFolder '/cValues_db.mat']);
 end
 
 %% Save overviews of a few Y sections to log
@@ -186,10 +186,10 @@ for i=1:length(yToSave)
     else
         im = imToSave{yToSave(i)};
         im(im<th) = th;
-        yOCT2Tif(log(im),sprintf('%s/y%03dZStack.tif',LogFolder,yToSave(i)),log(cValues(i,:)));
+        yOCT2Tif(log(im),sprintf('%s/y%04dZStack.tif',LogFolder,yToSave(i)),log(cValues(i,:)));
         
         if isRunInDebugMode
-            yOCT2Mat(yToSave(i),sprintf('%s/y%03dZStack_db.mat',LogFolder,yToSave(i)));
+            yOCT2Mat(yToSave(i),sprintf('%s/y%04dZStack_db.mat',LogFolder,yToSave(i)));
         end
     end
 end
