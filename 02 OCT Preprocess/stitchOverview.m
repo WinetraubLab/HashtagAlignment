@@ -1,7 +1,7 @@
 %This script stitches overview file
 
 %% Inputs
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/OCT Volumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/OCTVolumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07};%,'YFramesToProcess',1:5:100}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -45,8 +45,10 @@ scanRangeX = json.scan.rangeX;
 scanRangeY = json.scan.rangeY;
 
 %Define file path
-fp = @(frameI)(sprintf('%s/Overview/Overview%02d/',OCTVolumesFolder,frameI));
-fp = cellfun(fp,num2cell(1:length(gridXcc)),'UniformOutput',false)';
+f = @(frameI)(sprintf('%s/Overview/Overview%02d/',OCTVolumesFolder,frameI));
+fp = cellfun(f,num2cell(1:length(gridXcc)),'UniformOutput',false)';
+fp = cellfun(@(x)(awsModifyPathForCompetability(x,false)),fp,'UniformOutput',false);
+
 
 if ~isfield(json,'focusPositionInImageZpix')
     error('Please run findFocusInBScan before running this script');
@@ -85,7 +87,7 @@ parfor i=1:length(gridXcc) %Because of the way the scan went we can easily stitc
         overviewScan{i} = shiftdim(scan1,1); %Dimensions are (x,y,z)
     end
     catch ME
-        fprintf('Error happened in parfor, iteration %d, fp: %s',i,fp{i}); 
+        fprintf('Error happened in parfor, iteration %d, fp: %s\n',i,fp{i}); 
         disp(ME.message);
         for j=1:length(ME.stack) 
             ME.stack(j) 
