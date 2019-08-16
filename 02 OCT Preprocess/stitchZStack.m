@@ -52,6 +52,16 @@ pixSizeZ = diff(dim.z.values([1 2])); %um
 OCTSystem = [json.OCTSystem '_SRR']; %Provide OCT system to prevent unesscecary polling of file system
 [dimensions] = ...
             yOCTLoadInterfFromFile([fp{1}, reconstructConfig, {'OCTSystem',OCTSystem,'peakOnly',true}]);
+        
+%% Set up for paralel processing
+yIndexes=dim.y.index;
+thresholds = zeros(length(yIndexes),1);
+cValues = zeros(length(yIndexes),2);
+imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
+
+%Directory structure
+dirToSaveProcessedYFrames = awsModifyPathForCompetability([OCTVolumesFolder '/yFrames_db/']);
+dirToSaveStackDemos = awsModifyPathForCompetability([OCTVolumesFolder '/SomeStacks_db/']);
 
 %% Prepeaere to log
 LogFolder = awsModifyPathForCompetability([SubjectFolder '\Log\02 OCT Preprocess\']);
@@ -68,18 +78,10 @@ end
 %% Preform stitching
 fprintf('%s Stitching ...\n',datestr(datetime)); tt=tic();
 
-%Set up for paralel processing
-yIndexes=dim.y.index;
-thresholds = zeros(length(yIndexes),1);
-cValues = zeros(length(yIndexes),2);
-imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
-
 %Make sure a temporary folder to save the data is empty
-dirToSaveProcessedYFrames = awsModifyPathForCompetability([OCTVolumesFolder '/yFrames_db/']);
 awsRmDir(dirToSaveProcessedYFrames);
 
 if ~isempty(yToSave)
-    dirToSaveStackDemos = awsModifyPathForCompetability([OCTVolumesFolder '/SomeStacks_db/']);
     awsRmDir(dirToSaveStackDemos);
 end
 
@@ -90,12 +92,12 @@ printStatsEveryyI = floor(length(yIndexes)/20);
 ticBytes(gcp);
 parfor yI=1:length(yIndexes)
     try
+    %fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>        
     if mod(yI,printStatsEveryyI)==0
         %Stats time!
-        %fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>
-        ds = fileDatastore(dirToSaveProcessedYFrames,'ReadFcn',@(x)(x),'FileExtensions','.mat'); %Count all artifacts
+        ds = fileDatastore(dirToSaveProcessedYFrames,'ReadFcn',@(x)(x),'FileExtensions','.getmeout','IncludeSubfolders',true); %Count all artifacts
         done = length(ds.Files);
-        fprintf('%s So far, completed yIs: %d/%d (%.1f%%)\n',datestr(datetime),done,length(yI),100*done/length(yI));
+        fprintf('%s Completed yIs so far: %d/%d (%.1f%%)\n',datestr(datetime),done,length(yIndexes),100*done/length(yIndexes));
     end
     
     %Loop over depths
