@@ -57,8 +57,9 @@ else
 end
 
 OCTSystem = [json.OCTSystem '_SRR']; %Provide OCT system to prevent unesscecary polling of file system
-reconstructConfig = [reconstructConfig {'OCTSystem',OCTSystem}];
-
+[dimensions] = ...
+            yOCTLoadInterfFromFile([fp{1}, reconstructConfig, {'OCTSystem',OCTSystem,'peakOnly',true}]);
+        
 %% Set start & Finish positions
 zStart = max(focusPositionInImageZpix - focusSigma*5,1);
 zEnd = min(focusPositionInImageZpix + focusSigma*7,1000);
@@ -74,7 +75,7 @@ parfor i=1:length(gridXcc) %Because of the way the scan went we can easily stitc
     
     fpTxt = fp{i};
     [int1,dim1] = ...
-        yOCTLoadInterfFromFile([{fpTxt}, reconstructConfig]);
+        yOCTLoadInterfFromFile([{fpTxt}, reconstructConfig, {'dimensions', dimensions}]);
     [scan1,dim1] = yOCTInterfToScanCpx ([{int1 dim1},reconstructConfig]);
     scan1 = abs(scan1);
     for j=length(size(scan1)):-1:4 %Average BScan Averages, A Scan etc
