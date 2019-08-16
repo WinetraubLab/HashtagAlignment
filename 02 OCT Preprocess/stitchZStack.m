@@ -163,12 +163,12 @@ tocBytes(gcp)
 
 %% Reorganizing files
 fprintf('Reorg files ... ');
-tic;
+tt=tic;
 awsCopyFile_MW2(dirToSaveProcessedYFrames);
 if ~isempty(yToSave)
     awsCopyFile_MW2(LogFolder); %For the ys that are saved
 end
-fprintf('Done! took %.0f sec\n',toc);
+fprintf('Done! took %.0f[min]\n',toc(tt)/60);
 
 %% Threshlod
 %Compute a single threshold for all files

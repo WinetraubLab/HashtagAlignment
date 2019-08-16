@@ -25,7 +25,7 @@ i = [find(tmp(2:end)=='/',1,'first'),find(tmp(2:end)=='\',1,'first')]; %Hopefull
 tmp(1:min(i)) = [];
 SubjectFolder = fliplr(tmp);
 
-LogFolder = awsModifyPathForCompetability([SubjectFolder '\Log\02 OCT Preprocess\']);
+LogFolder = awsModifyPathForCompetability([SubjectFolder '\Log\01 OCT Scan and Pattern\']); %Overview should be saved to the scan part as we use it to decide which side to cut and how deep
 if ~awsIsAWSPath(LogFolder) && ~exist(LogFolder,'dir')
     mkdir(LogFolder);
 end
