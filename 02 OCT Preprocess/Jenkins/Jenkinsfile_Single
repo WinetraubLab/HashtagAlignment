@@ -178,8 +178,7 @@ pipeline {
 				}
 				catch(Exception e)
 				{
-					echo "Sending email faild..."
-					echo e
+					echo "Might had a problem with sending the email out"
 				}
 				
 			}
