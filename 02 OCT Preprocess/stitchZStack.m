@@ -93,12 +93,6 @@ ticBytes(gcp);
 parfor yI=1:length(yIndexes)
     try
     %fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>        
-    if mod(yI,printStatsEveryyI)==0
-        %Stats time!
-        ds = fileDatastore(dirToSaveProcessedYFrames,'ReadFcn',@(x)(x),'FileExtensions','.getmeout','IncludeSubfolders',true); %Count all artifacts
-        done = length(ds.Files);
-        fprintf('%s Completed yIs so far: %d/%d (%.1f%%)\n',datestr(datetime),done,length(yIndexes),100*done/length(yIndexes));
-    end
     
     %Loop over depths
     stack = zeros([imOutSize(1:2), length(zToScan)])*NaN; %#ok<PFBNS> %z,x,zStach
@@ -157,6 +151,14 @@ parfor yI=1:length(yIndexes)
     %Save thresholds, this data is small so we can send it back
     thresholds(yI) = th;
     cValues(yI,:) = c;
+    
+    %Is it time to print statistics?
+    if mod(yI,printStatsEveryyI)==0
+        %Stats time!
+        ds = fileDatastore(dirToSaveProcessedYFrames,'ReadFcn',@(x)(x),'FileExtensions','.getmeout','IncludeSubfolders',true); %Count all artifacts
+        done = length(ds.Files);
+        fprintf('%s Completed yIs so far: %d/%d (%.1f%%)\n',datestr(datetime),done,length(yIndexes),100*done/length(yIndexes));
+    end
          
     catch ME
         fprintf('Error happened in parfor, iteration %d, yIndex: %d\n',yI,yIndexes(yI)); 
