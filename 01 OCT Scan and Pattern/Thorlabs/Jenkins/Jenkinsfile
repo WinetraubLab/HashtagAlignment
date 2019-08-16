@@ -34,6 +34,12 @@ pipeline {
 			trim: true)
 		
 		string(
+			name: "SAME_PATIENT_AS_SAMPLE_ID",
+			defaultValue:"New Patient",
+			description:"If this sample is from the same patient as another sample specify here. For example LB_01.\nIf this sample is from a patient that wasn't scanned before, leave as 'New Patient'",
+			trim: true)
+		
+		string(
 			name: "AGE",
 			defaultValue:"",
 			description:"Subject's Age",
@@ -96,7 +102,7 @@ pipeline {
 					error('Please specify email address to send a note when run is completed')
 				}
 				
-				if (params.PATIENT_AGE == "")
+				if (params.PATIENT_AGE == "" && params.SAME_PATIENT_AS_SAMPLE_ID == "New Patient")
 				{
 					currentBuild.result = 'ABORTED'
 					echo('Please specify patient data')
@@ -206,15 +212,16 @@ pipeline {
 	
 			//Make not of the parameters we learned from input - Regarding the subject (TBD)
 			def file2 = new File(VOLUME_OUTPUT_FOLDER() + "\\..\\Subject.json")
-			file2.write('\u007B ' + 
-				'"sampleId" : "'                + params.SAMPLE_ID + '", ' + 
-				'"age" : "'                     + params.AGE + '", ' + 
-				'"gender": "'                   + params.GENDER + '", ' + 
-				'"sampleLocation": "'           + params.SAMPLE_LOCATION + '", ' + 
-				'"side": "'                     + params.SIDE + '", ' + 
-				'"possiblePatientDiagnosis": "' + params.POSSIBLE_PATIENT_DIAGNOSIS + '", ' + 
-				'"sampleType": "'               + params.HEALTHY_OR_TUMOR + '", ' + 
-				'"fitzpatrickSkinType" : "'     + params.SKIN_TYPE + '" ' + 
+			file2.write('\u007B\n' + 
+				'"sampleId" : "'                    + params.SAMPLE_ID + '",\n' + 
+				'"SAME_PATIENT_AS_SAMPLE_ID" : "'   + params.SAME_PATIENT_AS_SAMPLE_ID + '",\n' +
+				'"age" : "'                         + params.AGE + '",\n' + 
+				'"gender": "'                       + params.GENDER + '",\n' + 
+				'"sampleLocation": "'               + params.SAMPLE_LOCATION + '",\n' + 
+				'"side": "'                         + params.SIDE + '",\n' + 
+				'"possiblePatientDiagnosis": "'     + params.POSSIBLE_PATIENT_DIAGNOSIS + '",\n' + 
+				'"sampleType": "'                   + params.HEALTHY_OR_TUMOR + '",\n' + 
+				'"fitzpatrickSkinType" : "'         + params.SKIN_TYPE + '"\n' + 
 				'\u007D')
 			
 			//Print text 
