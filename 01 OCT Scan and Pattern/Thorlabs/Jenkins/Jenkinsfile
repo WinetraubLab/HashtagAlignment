@@ -214,7 +214,7 @@ pipeline {
 			def file2 = new File(VOLUME_OUTPUT_FOLDER() + "\\..\\Subject.json")
 			file2.write('\u007B\n' + 
 				'"sampleId" : "'                    + params.SAMPLE_ID + '",\n' + 
-				'"SAME_PATIENT_AS_SAMPLE_ID" : "'   + params.SAME_PATIENT_AS_SAMPLE_ID + '",\n' +
+				'"samePatientAsSampleWithId" : "'   + params.SAME_PATIENT_AS_SAMPLE_ID + '",\n' +
 				'"age" : "'                         + params.AGE + '",\n' + 
 				'"gender": "'                       + params.GENDER + '",\n' + 
 				'"sampleLocation": "'               + params.SAMPLE_LOCATION + '",\n' + 
@@ -415,7 +415,7 @@ pipeline {
 			bat """
 				@echo off
 				echo Sample ID:  %SAMPLE_ID%  > histoInstructions.txt
-				echo Sample scanned by: """ + str + """ > histoInstructions.txt
+				echo Sample scanned by: """ + str + """ >> histoInstructions.txt
 				echo. >> histoInstructions.txt
 				echo. >> histoInstructions.txt
 				echo ------------------- Instructions for Us ------------------------- >> histoInstructions.txt
