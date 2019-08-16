@@ -120,7 +120,7 @@ parfor yI=1:length(yIndexes)
         tn = [tempname '.mat'];
         yOCT2Mat(stack,tn)
         awsCopyFile_MW1(tn, ...
-            printf('%s/y%04dZStack_db.mat',LogFolder,yIndexes(yI)) ...
+            awsModifyPathForCompetability(sprintf('%s/y%04dZStack_db.mat',LogFolder,yIndexes(yI))) ...
             );
         delete(tn);
     end
@@ -133,7 +133,9 @@ parfor yI=1:length(yIndexes)
     %scale of the images to write
     tn = [tempname '.mat'];
     yOCT2Mat(stackmean,tn)
-    awsCopyFile_MW1(tn, sprintf('%s/y%04d.mat',tmpDir,yIndexes(yI))); %Matlab worker version of copy files
+    awsCopyFile_MW1(tn, ...
+        awsCopyFile_MW1(sprintf('%s/y%04d.mat',tmpDir,yIndexes(yI)))...
+        ); %Matlab worker version of copy files
     delete(tn);
     
     %Save thresholds, this data is small so we can send it back
@@ -156,7 +158,10 @@ tocBytes(gcp)
 fprintf('Reorg files ... ');
 tic;
 awsCopyFile_MW2(tmpDir);
-fprintf('Done! took %s sec\n',toc);
+if ~isempty(yToSave)
+    awsCopyFile_MW2(LogFolder); %For the ys that are saved
+end
+fprintf('Done! took %.0f sec\n',toc);
 
 %% Threshlod
 %Compute a single threshold for all files
@@ -179,7 +184,32 @@ yOCTWriteBigVolume(bv,dim, location,'tif',log(mean(cValues)));
 fprintf('Done saving sa a big volume, toatl time: %.0f[min]\n',toc(tt)/60);
 tocBytes(gcp)
 
-%% Cleanup the temporary dir
+%% Save overviews of a few Y sections to log
+if ~isempty(yToSave)
+    yStackPath = cell(size(yToSave(:)));
+    for i=1:length(yToSave)
+        yStackPath{i} = sprintf('%s/y%04d.',tmpDir,yToSave(i));
+    end
+
+    parfor i=1:length(yToSave)
+        im = yOCTFromTif([yStackPath{i} 'mat']);
+
+        im(im<th) = th;
+
+        tn = [tempname '.tif'];
+        yOCT2Tif(log(im),tn,log(cValues(i,:))); %Save to temp file
+        awsCopyFile_MW1(tn, yStackPath{i}); %Matlab worker version of copy files
+    end
+    awsCopyFile_MW2(LogFolder); %Finish the job
+end
+
+if ~isRunInDebugMode
+    for i=1:length(yToSave)
+        %awsRmDir(yStackPath{i}); %Remove file, TBD
+    end
+end
+
+%% Cleanup temporary files and debugs
 if ~isRunInDebugMode
     awsRmDir(tmpDir);   
 else
@@ -187,17 +217,3 @@ else
     yOCT2Mat(cValues,[LogFolder '/cValues_db.mat']);
 end
 
-%% Save overviews of a few Y sections to log
-for i=1:length(yToSave)
-    if isempty(imToSave{yToSave(i)})
-        fprintf('yI=%d is empty, was expecting to have an example volume to save\n',yToSave(i));
-    else
-        im = imToSave{yToSave(i)};
-        im(im<th) = th;
-        yOCT2Tif(log(im),sprintf('%s/y%04dZStack.tif',LogFolder,yToSave(i)),log(cValues(i,:)));
-        
-        if isRunInDebugMode
-            yOCT2Mat(imToSave{yToSave(i)},sprintf('%s/y%04dZStack_db.mat',LogFolder,yToSave(i)));
-        end
-    end
-end
