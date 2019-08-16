@@ -86,10 +86,17 @@ end
 setupParpolOCTPreprocess();
 
 %Loop over y frames
+printStatsEveryyI = floor(length(yIndexes)/20);
 ticBytes(gcp);
 parfor yI=1:length(yIndexes)
     try
-    fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>
+    if mod(yI,printStatsEveryyI)==0
+        %Stats time!
+        %fprintf('%s Processing yIndex=%d (yI=%d of %d).\n',datestr(datetime),yIndexes(yI),yI,length(yIndexes)); %#ok<PFBNS>
+        ds = fileDatastore(dirToSaveProcessedYFrames,'ReadFcn',@(x)(x),'FileExtensions','.mat'); %Count all artifacts
+        done = length(ds.Files);
+        fprintf('%s So far, completed yIs: %d/%d (%.1f%%)\n',datestr(datetime),done,length(yI),100*done/length(yI));
+    end
     
     %Loop over depths
     stack = zeros([imOutSize(1:2), length(zToScan)])*NaN; %#ok<PFBNS> %z,x,zStach
