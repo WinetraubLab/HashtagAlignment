@@ -129,10 +129,12 @@ parfor yI=1:length(yIndexes)
     stackmean = squeeze(single(nanmean(stack,3))); 
     stack = []; %Clear memory
     
-    %Save results to temporary files
-    %Since this data is big, its better to upload it to destination than
-    %return it to Matlab
-    writeMatFileToCloud(stackmean,sprintf('%s/y%04d',tmpDir,yIndexes(yI)));
+    %Save results to temporary files to be used later (once we know the
+    %scale of the images to write
+    tn = tempname;
+    yOCT2Mat(stackmean,tn)
+    awsCopyFile_MW1(tn, sprintf('%s/y%04d.mat',tmpDir,yIndexes(yI))); %Matlab worker version of copy files
+    delete(tn);
     
     %Save thresholds, this data is small so we can send it back
     thresholds(yI) = th;
@@ -149,6 +151,12 @@ parfor yI=1:length(yIndexes)
 end
 fprintf('Done stitching, toatl time: %.0f[min]\n',toc(tt)/60);
 tocBytes(gcp)
+
+%% Reorganizing files
+fprintf('Reorg files ... ');
+tic;
+awsCopyFile_MW2(tmpDir);
+fprintf('Done! took %s sec\n',toc);
 
 %% Threshlod
 %Compute a single threshold for all files
