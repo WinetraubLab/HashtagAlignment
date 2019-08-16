@@ -71,7 +71,6 @@ yIndexes=dim.y.index;
 thresholds = zeros(length(yIndexes),1);
 cValues = zeros(length(yIndexes),2);
 imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
-imToSave = cell(size(thresholds)); %For examples files
 
 %Make sure a temporary folder to save the data is empty
 tmpDir = [OCTVolumesFolder '/tmp_db/'];
@@ -116,13 +115,14 @@ parfor yI=1:length(yIndexes)
     th = max(tmp(:))/size(stack,3)/2; %Devided by the amount of averages
     c = [prctile(tmp(:),20), prctile(tmp(:),99.9)];
     
-    %Save Stack
-    %Since we can't save directly to drive as AWS CLI, we will generate the
-    %image and save it to a cell, upload later. This is a small dataset so
-    %we can return it to matlab no need to use tall
-    imToSave{yI} = [];
+    %Save Stack, some files for future reference
     if (sum(yIndexes(yI) == yToSave)>0)
-        imToSave{yI} = single(stack);
+        tn = [tempname '.mat'];
+        yOCT2Mat(stack,tn)
+        awsCopyFile_MW1(tn, ...
+            printf('%s/y%04dZStack_db.mat',LogFolder,yIndexes(yI)) ...
+            );
+        delete(tn);
     end
     
     %Compute stacked frame
@@ -131,7 +131,7 @@ parfor yI=1:length(yIndexes)
     
     %Save results to temporary files to be used later (once we know the
     %scale of the images to write
-    tn = tempname;
+    tn = [tempname '.mat'];
     yOCT2Mat(stackmean,tn)
     awsCopyFile_MW1(tn, sprintf('%s/y%04d.mat',tmpDir,yIndexes(yI))); %Matlab worker version of copy files
     delete(tn);
