@@ -1,7 +1,7 @@
 %This script stitches images aquired at different z depths 2gezer
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01D/OCTVolumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/OCTVolumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -66,7 +66,7 @@ if (exist('isRunInDebugMode_','var'))
 end
 
 %% Preform stitching
-disp('Stitching ... '); tt=tic();
+fprintf('%s Stitching ...\n',datestr(datetime)); tt=tic();
 
 %Set up for paralel processing
 yIndexes=dim.y.index;
@@ -162,9 +162,12 @@ fprintf('Done stitching, toatl time: %.0f[min]\n',toc(tt)/60);
 tocBytes(gcp)
 
 %% Reorganizing files
-fprintf('Reorg files ... ');
+fprintf('% Reorg files ... ',datestr(datetime));
 tt=tic;
-awsCopyFile_MW2(dirToSaveProcessedYFrames);
+if (isRunInDebugMode)
+    %Only reorg if we run in debug mode, otherwise don't bother
+    awsCopyFile_MW2(dirToSaveProcessedYFrames);
+end
 if ~isempty(yToSave)
     awsCopyFile_MW2(LogFolder); %For the ys that are saved
 end
