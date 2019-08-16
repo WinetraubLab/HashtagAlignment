@@ -206,7 +206,7 @@ pipeline {
 						
 			//Make not of the parameters we learned from input - Regarding the volume
 			def str = params.WHO_TO_EMAIL_WHEN_DONE;
-			str = str.replace("@stanford.edu","");
+			str = str.substring(0,str.indexOf('@'))
 			def file = new File(VOLUME_OUTPUT_FOLDER() + "\\ScanConfig.json")
 			file.write ('\u007B "volumeScannedBy" : "' + str + '"\u007D')
 	
@@ -407,15 +407,20 @@ pipeline {
 				sideToPlaceRedDot = "same side as black dot"
 			}
 			faceDirection = "up" //Red dot allways facing up
+			
+			def str = params.WHO_TO_EMAIL_WHEN_DONE;
+			str = str.substring(0,str.indexOf('@'))
 
 			//Generate Instructions to Histologist
 			bat """
 				@echo off
 				echo Sample ID:  %SAMPLE_ID%  > histoInstructions.txt
+				echo Sample scanned by: """ + str + """ > histoInstructions.txt
 				echo. >> histoInstructions.txt
 				echo. >> histoInstructions.txt
 				echo ------------------- Instructions for Us ------------------------- >> histoInstructions.txt
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
+				echo + We want to cut sections at the """ + userInput.WhichSideToStartSections + """. >> histoInstructions.txt
 				echo + Mark a red dot on the """ + sideToPlaceRedDot + """. >> histoInstructions.txt
 				echo + Place sample in the cassette such that red dot is facing """ + faceDirection + """. >> histoInstructions.txt
 				echo. >> histoInstructions.txt
