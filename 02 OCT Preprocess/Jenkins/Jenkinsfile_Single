@@ -151,6 +151,8 @@ pipeline {
 				hudson.model.User user = hudson.model.User.get(userId)
 				email = user.getProperty(hudson.tasks.Mailer.UserProperty).getAddress()
 				
+				try
+				{
 				emailext ( //Using ext-email plugin
 					subject: "[OCTHist] Processing Completed ${currentBuild.result} #$BUILD_NUMBER",
 					from : "Yonatan",
@@ -173,6 +175,13 @@ pipeline {
 					attachLog: true,
 					attachmentsPattern: "Testers\\*.png",
 					to: "$WHO_TO_EMAIL_WHEN_DONE," + email )
+				}
+				catch(Exception e)
+				{
+					echo "Sending email faild..."
+					echo e
+				}
+				
 			}
 		}}}
 	}
