@@ -25,7 +25,7 @@ i = [find(tmp(2:end)=='/',1,'first'),find(tmp(2:end)=='\',1,'first')]; %Hopefull
 tmp(1:min(i)) = [];
 SubjectFolder = fliplr(tmp);
 
-%% Read Configuration file
+%% Read Configuration
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
 if ~isfield(json,'focusPositionInImageZpix')
     error(sprintf('Prior to running stitching, you need to find the position of the focus in the stack\n run findFocusInBScan script'));
@@ -50,7 +50,9 @@ yToSave = []; %Dont save <--
 pixSizeZ = diff(dim.z.values([1 2])); %um
 
 OCTSystem = [json.OCTSystem '_SRR']; %Provide OCT system to prevent unesscecary polling of file system
-reconstructConfig = [reconstructConfig {'OCTSystem',OCTSystem}]; 
+[dimensions] = ...
+            yOCTLoadInterfFromFile([fp{1}, reconstructConfig, {'OCTSystem',OCTSystem,'peakOnly',true}]);
+
 %% Prepeaere to log
 LogFolder = awsModifyPathForCompetability([SubjectFolder '\Log\02 OCT Preprocess\']);
 if ~awsIsAWSPath(LogFolder) && ~exist(LogFolder,'dir')
@@ -96,7 +98,7 @@ parfor yI=1:length(yIndexes)
         %Load Frame
         fpTxt = fp{zzI};
         [int1,dim1] = ...
-            yOCTLoadInterfFromFile([{fpTxt}, reconstructConfig, {'YFramesToProcess',yIndexes(yI)}]);
+            yOCTLoadInterfFromFile([{fpTxt}, reconstructConfig, {'dimensions',dimensions, 'YFramesToProcess',yIndexes(yI)}]);
         [scan1,dim1] = yOCTInterfToScanCpx ([{int1 dim1} reconstructConfig]);
         int1 = []; %Freeup some memory
         scan1 = abs(scan1);
