@@ -75,11 +75,11 @@ cValues = zeros(length(yIndexes),2);
 imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
 
 %Make sure a temporary folder to save the data is empty
-dirToSaveProcessedYFrames = [OCTVolumesFolder '/yFrames_db/'];
+dirToSaveProcessedYFrames = awsModifyPathForCompetability([OCTVolumesFolder '/yFrames_db/']);
 awsRmDir(dirToSaveProcessedYFrames);
 
 if ~isempty(yToSave)
-    dirToSaveStackDemos = [OCTVolumesFolder '/SomeStacks_db/'];
+    dirToSaveStackDemos = awsModifyPathForCompetability([OCTVolumesFolder '/SomeStacks_db/']);
     awsRmDir(dirToSaveStackDemos);
 end
 
