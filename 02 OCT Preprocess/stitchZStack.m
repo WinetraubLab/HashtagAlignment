@@ -73,8 +73,13 @@ cValues = zeros(length(yIndexes),2);
 imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
 
 %Make sure a temporary folder to save the data is empty
-tmpDir = [OCTVolumesFolder '/tmp_db/'];
-awsRmDir(tmpDir);
+dirToSaveProcessedYFrames = [OCTVolumesFolder '/yFrames_db/'];
+awsRmDir(dirToSaveProcessedYFrames);
+
+if ~isempty(yToSave)
+    dirToSaveStackDemos = [OCTVolumesFolder '/SomeStacks_db/'];
+    awsRmDir(dirToSaveStackDemos);
+end
 
 setupParpolOCTPreprocess();
 
@@ -120,7 +125,7 @@ parfor yI=1:length(yIndexes)
         tn = [tempname '.mat'];
         yOCT2Mat(stack,tn)
         awsCopyFile_MW1(tn, ...
-            awsModifyPathForCompetability(sprintf('%s/y%04dZStack_db.mat',LogFolder,yIndexes(yI))) ...
+            awsModifyPathForCompetability(sprintf('%s/y%04dZStack_db.mat',dirToSaveStackDemos,yIndexes(yI))) ...
             );
         delete(tn);
     end
@@ -134,7 +139,7 @@ parfor yI=1:length(yIndexes)
     tn = [tempname '.mat'];
     yOCT2Mat(stackmean,tn)
     awsCopyFile_MW1(tn, ...
-        awsCopyFile_MW1(sprintf('%s/y%04d.mat',tmpDir,yIndexes(yI)))...
+        awsCopyFile_MW1(sprintf('%s/y%04d.mat',dirToSaveProcessedYFrames,yIndexes(yI)))...
         ); %Matlab worker version of copy files
     delete(tn);
     
@@ -157,7 +162,7 @@ tocBytes(gcp)
 %% Reorganizing files
 fprintf('Reorg files ... ');
 tic;
-awsCopyFile_MW2(tmpDir);
+awsCopyFile_MW2(dirToSaveProcessedYFrames);
 if ~isempty(yToSave)
     awsCopyFile_MW2(LogFolder); %For the ys that are saved
 end
@@ -172,7 +177,7 @@ disp('Saving to Tiff ...');
 tt=tic;
 ticBytes(gcp);
 %Read (using parpool)
-bv = yOCTReadBigVolume(tmpDir,'mat');
+bv = yOCTReadBigVolume(dirToSaveProcessedYFrames,'mat');
 
 %Apply threshold
 bv(bv<th) = th;
@@ -188,7 +193,7 @@ tocBytes(gcp)
 if ~isempty(yToSave)
     yStackPath = cell(size(yToSave(:)));
     for i=1:length(yToSave)
-        yStackPath{i} = sprintf('%s/y%04d.',tmpDir,yToSave(i));
+        yStackPath{i} = sprintf('%s/y%04d.',dirToSaveStackDemos,yToSave(i));
     end
 
     parfor i=1:length(yToSave)
@@ -203,17 +208,13 @@ if ~isempty(yToSave)
     awsCopyFile_MW2(LogFolder); %Finish the job
 end
 
-if ~isRunInDebugMode
-    for i=1:length(yToSave)
-        %awsRmDir(yStackPath{i}); %Remove file, TBD
-    end
-end
-
 %% Cleanup temporary files and debugs
 if ~isRunInDebugMode
-    awsRmDir(tmpDir);   
+    awsRmDir(dirToSaveProcessedYFrames);  
+    if ~isempty(yToSave)
+        awsRmDir(dirToSaveStackDemos);
+    end
 else
     yOCT2Mat(thresholds,[LogFolder '/thresholds_db.mat']);
     yOCT2Mat(cValues,[LogFolder '/cValues_db.mat']);
 end
-
