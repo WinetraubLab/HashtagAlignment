@@ -45,6 +45,7 @@ dim = json.VolumeOCTDimensions;
 yToSave = dim.y.index(...
     round(linspace(1,length(dim.y.index),saveYs)) ...
     );
+yToSave = []; %Dont save <--
 
 pixSizeZ = diff(dim.z.values([1 2])); %um
 
