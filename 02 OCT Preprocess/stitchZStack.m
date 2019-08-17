@@ -197,7 +197,7 @@ else
     fileExt = '.getmeout'; %Still a matfile but located slightly differently
 end
 ds = fileDatastore(awsModifyPathForCompetability(dirToSaveProcessedYFrames),'ReadFcn',@(x)(x),'FileExtensions',fileExt,'IncludeSubfolders',true); 
-files = ds.FileNames;
+files = ds.Files;
 
 %Make sure dir is empty
 awsRmDir(tiffOutputFolder);
