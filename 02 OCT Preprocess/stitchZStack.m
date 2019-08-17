@@ -30,7 +30,7 @@ json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
 if ~isfield(json,'focusPositionInImageZpix')
     error(sprintf('Prior to running stitching, you need to find the position of the focus in the stack\n run findFocusInBScan script'));
 end
-zToScan = json.zToScan;
+zToScan = json.zToScan(1:10:end); %<-- speed things up
 n = json.tissueRefractiveIndex; 
 focusPositionInImageZpix = json.focusPositionInImageZpix;
 
