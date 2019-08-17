@@ -172,7 +172,7 @@ fprintf('Done stitching, toatl time: %.0f[min]\n',toc(tt)/60);
 tocBytes(gcp)
 
 %% Reorganizing files
-fprintf('% Reorg files ... ',datestr(datetime));
+fprintf('%s Reorg files ... ',datestr(datetime));
 tt=tic;
 if (isRunInDebugMode)
     %Only reorg if we run in debug mode, otherwise don't bother
@@ -181,7 +181,7 @@ end
 if ~isempty(yToSave)
     awsCopyFile_MW2(dirToSaveStackDemos); %For the ys that are saved
 end
-fprintf('Done! took %.0f[min]\n',toc(tt)/60);
+fprintf('Done! took %.1f[min]\n',toc(tt)/60);
 
 %% Threshlod
 %Compute a single threshold for all files
