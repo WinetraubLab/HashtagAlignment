@@ -80,7 +80,6 @@ fprintf('%s Stitching ...\n',datestr(datetime)); tt=tic();
 
 %Make sure a temporary folder to save the data is empty
 awsRmDir(dirToSaveProcessedYFrames);
-
 if ~isempty(yToSave)
     awsRmDir(dirToSaveStackDemos);
 end
@@ -180,7 +179,7 @@ if (isRunInDebugMode)
     awsCopyFile_MW2(dirToSaveProcessedYFrames);
 end
 if ~isempty(yToSave)
-    awsCopyFile_MW2(LogFolder); %For the ys that are saved
+    awsCopyFile_MW2(dirToSaveStackDemos); %For the ys that are saved
 end
 fprintf('Done! took %.0f[min]\n',toc(tt)/60);
 
