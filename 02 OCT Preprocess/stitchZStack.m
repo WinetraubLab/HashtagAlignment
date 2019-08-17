@@ -30,7 +30,7 @@ json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
 if ~isfield(json,'focusPositionInImageZpix')
     error(sprintf('Prior to running stitching, you need to find the position of the focus in the stack\n run findFocusInBScan script'));
 end
-zToScan = json.zToScan(1:10:end); %<-- speed things up
+zToScan = json.zToScan(1:10:end); %<-- speed things up (1:10:end)
 n = json.tissueRefractiveIndex; 
 focusPositionInImageZpix = json.focusPositionInImageZpix;
 
@@ -62,6 +62,7 @@ imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
 %Directory structure
 dirToSaveProcessedYFrames = awsModifyPathForCompetability([OCTVolumesFolder '/yFrames_db/']);
 dirToSaveStackDemos = awsModifyPathForCompetability([OCTVolumesFolder '/SomeStacks_db/']);
+tiffOutputFolder = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/']);
 
 %% Prepeaere to log
 LogFolder = awsModifyPathForCompetability([SubjectFolder '\Log\02 OCT Preprocess\']);
@@ -189,19 +190,40 @@ th = single(mean(thresholds));
 
 %% Collect all mat files from datastore to create a single output
 disp('Saving to Tiff ...');
+
+if (isRunInDebugMode)
+    fileExt = '.mat';
+else
+    fileExt = '.getmeout'; %Still a matfile but located slightly differently
+end
+ds = fileDatastore(awsModifyPathForCompetability(dirToSaveProcessedYFrames),'ReadFcn',@(x)(x),'FileExtensions',fileExt,'IncludeSubfolders',true); 
+files = ds.FileNames;
+
+%Make sure dir is empty
+awsRmDir(tiffOutputFolder);
+
 tt=tic;
 ticBytes(gcp);
-%Read (using parpool)
-bv = yOCTReadBigVolume(dirToSaveProcessedYFrames,'mat');
+parfor yI=1:length(ds)
+    %Read
+    slice = yOCTFromMat(files{yI});
+    
+    %Apply threshold
+    slice(slice<th) = th;
+    slice = log(slice);
+    
+    %Write
+    tn = [tempname '.tif'];
+    yOCT2Tif(slice,tn)
+    awsCopyFile_MW1(tn, ...
+        awsModifyPathForCompetability(sprintf('%s/y%04d.tif',tiffOutputFolder,yIndexes(yI)))...
+        ); %Matlab worker version of copy files
+    delete(tn);
+end
+%Reorganize
+awsCopyFile_MW2(tiffOutputFolder);
 
-%Apply threshold
-bv(bv<th) = th;
-bv = log(bv);
-
-%Write (using parpool)
-location = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/'],false);
-yOCTWriteBigVolume(bv,dim, location,'tif',log(mean(cValues)));
-fprintf('Done saving sa a big volume, toatl time: %.0f[min]\n',toc(tt)/60);
+fprintf('Done saving as tif, toatl time: %.0f[min]\n',toc(tt)/60);
 tocBytes(gcp)
 
 %% Save overviews of a few Y sections to log
