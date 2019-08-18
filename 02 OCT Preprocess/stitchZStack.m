@@ -10,12 +10,20 @@ focusSigma = 20; %Sigma size of focus [pixel]
 %Save Some Intermediate Y Scans
 saveYs = 3; %How many Bscans to save (for future reference)
 
-%Low memory mode, save results to a Tiff remotely than gather them all at
-%the very end
+%When executing this file, would you like to work in debug mode?
+isRunInDebugMode = true; %In debug mode, we shall save all temporary files 
+isLoadFromDebugModeAfterPreProcessing = true; %When set to true, will skip processing and just load current state from debug loads
 
 %% Jenkins
 if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
+    
+    %Usually when running from a runner, don't want to work in debug mode
+    isRunInDebugMode = false; 
+    isLoadFromDebugModeAfterPreProcessing = false;
+end
+if (exist('isRunInDebugMode_','var'))
+    isRunInDebugMode = isRunInDebugMode_;
 end
 
 %Find subject folder by removing last folder
@@ -30,7 +38,7 @@ json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
 if ~isfield(json,'focusPositionInImageZpix')
     error(sprintf('Prior to running stitching, you need to find the position of the focus in the stack\n run findFocusInBScan script'));
 end
-zToScan = json.zToScan(1:10:end); %<-- speed things up (1:10:end)
+%zToScan = json.zToScan(1:10:end); %<-- speed things up (1:10:end)
 n = json.tissueRefractiveIndex; 
 focusPositionInImageZpix = json.focusPositionInImageZpix;
 
@@ -45,7 +53,6 @@ dim = json.VolumeOCTDimensions;
 yToSave = dim.y.index(...
     round(linspace(1,length(dim.y.index),saveYs)) ...
     );
-yToSave = []; %Dont save <--
 
 pixSizeZ = diff(dim.z.values([1 2])); %um
 
@@ -63,17 +70,12 @@ imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
 dirToSaveProcessedYFrames = awsModifyPathForCompetability([OCTVolumesFolder '/yFrames_db/']);
 dirToSaveStackDemos = awsModifyPathForCompetability([OCTVolumesFolder '/SomeStacks_db/']);
 tiffOutputFolder = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/']);
-
-%% Prepeaere to log
 LogFolder = awsModifyPathForCompetability([SubjectFolder '\Log\02 OCT Preprocess\']);
+
+if ~isLoadFromDebugModeAfterPreProcessing
+%% Prepeaere to log
 if ~awsIsAWSPath(LogFolder) && ~exist(LogFolder,'dir')
     mkdir(LogFolder);
-end
-
-%In debug mode, we shall save all temporary files 
-isRunInDebugMode = false;
-if (exist('isRunInDebugMode_','var'))
-    isRunInDebugMode = isRunInDebugMode_;
 end
 
 %% Preform stitching
@@ -123,7 +125,7 @@ parfor yI=1:length(yIndexes)
     %Let us trim the image using the signal at the gel (top of the image)
     tmp = nanmedian(squeeze(stack(:,:,1)),2);
     th = max(tmp(:))/size(stack,3)/2; %Devided by the amount of averages
-    c = [prctile(tmp(:),20), prctile(tmp(:),99.9)];
+    c = [prctile(tmp(:),20), prctile(tmp(:),99.99)];
     
     %Save Stack, some files for future reference
     if (sum(yIndexes(yI) == yToSave)>0)
@@ -184,9 +186,22 @@ if ~isempty(yToSave)
 end
 fprintf('Done! took %.1f[min]\n',toc(tt)/60);
 
+if isRunInDebugMode
+    %Save some overviews
+    yOCT2Mat(thresholds,[LogFolder '/thresholds_db.mat']);
+    yOCT2Mat(cValues,[LogFolder '/cValues_db.mat']);
+end
+
+%% Loading from debug mode
+else %isLoadFromDebugModeAfterPreProcessing
+    thresholds = yOCTFromMat([LogFolder '/thresholds_db.mat']);
+    cValues = yOCTFromMat([LogFolder '/cValues_db.mat']);
+end
+
 %% Threshlod
 %Compute a single threshold for all files
-th = single(mean(thresholds));
+th = single(median(thresholds));
+c = [th, median(cValues(:,2))];
 
 %% Collect all mat files from datastore to create a single output
 disp('Saving to Tiff ...');
@@ -204,7 +219,7 @@ awsRmDir(tiffOutputFolder);
 
 tt=tic;
 ticBytes(gcp);
-parfor yI=1:length(ds)
+parfor yI=1:length(files)
     %Read
     slice = yOCTFromMat(files{yI});
     
@@ -214,9 +229,9 @@ parfor yI=1:length(ds)
     
     %Write
     tn = [tempname '.tif'];
-    yOCT2Tif(slice,tn)
+    yOCT2Tif(slice,tn, log(c))
     awsCopyFile_MW1(tn, ...
-        awsModifyPathForCompetability(sprintf('%s/y%04d.tif',tiffOutputFolder,yIndexes(yI)))...
+        awsModifyPathForCompetability(sprintf('%s/y%04d.tif',tiffOutputFolder,yI))...
         ); %Matlab worker version of copy files
     delete(tn);
 end
@@ -251,7 +266,4 @@ if ~isRunInDebugMode
     if ~isempty(yToSave)
         awsRmDir(dirToSaveStackDemos);
     end
-else
-    yOCT2Mat(thresholds,[LogFolder '/thresholds_db.mat']);
-    yOCT2Mat(cValues,[LogFolder '/cValues_db.mat']);
 end
