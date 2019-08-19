@@ -122,6 +122,13 @@ config.overview.gridYcc = config.overview.gridYcc(:);
 %    eval(sprintf('config.%s = %s;',s{i},s{i}));
 %end
 
+%% Move up and down to make sure dynamic rage is clear
+fprintf('%s Moving up and down to test and make sure dynamic range is clear: %.0fum to %.0fum \n',datestr(datetime),min(config.zToScan),max(config.zToScan));
+ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+min(config.zToScan)/1000); %Movement [mm]
+pause(0.5);
+ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+max(config.zToScan)/1000); %Movement [mm]
+fprintf('%s Test Completed\n',datestr(datetime));
+
 %% Photobleach
 ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+config.zToPhtobleach/1000); %Movement [mm]
 
