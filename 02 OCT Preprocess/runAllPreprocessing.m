@@ -138,8 +138,8 @@ catch ME
 		ME.stack(i) 
 	end 
 	disp(ME.message); 
-    
-    if (isUploadToCloud && deleteFolderAfterUpload) %Only manual cleaning
+   
+    if (false && isUploadToCloud && deleteFolderAfterUpload) %Only manual cleaning
         disp('Cleaning up local folder (as we alrady uploaded to the cloud)');
         %Delete local folder
         rmdir(SubjectFolderIn,'s');
