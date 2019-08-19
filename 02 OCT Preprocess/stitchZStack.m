@@ -257,9 +257,32 @@ if ~isempty(yToSave)
         tn = [tempname '.tif'];
         yOCT2Tif(log(im),tn,log(cValues(i,:))); %Save to temp file
         awsCopyFile_MW1(tn, yStackPath{i}); %Matlab worker version of copy files
+        delete(tn);
     end
     awsCopyFile_MW2(LogFolder); %Finish the job
 end
+
+%% Concatinate all yTifs to one (do it on matlab pool so it will run on EC2
+disp('Concatinaing ... ');
+ticBytes(gcp('nocreate'))
+ds = fileDatastore(awsModifyPathForCompetability(tiffOutputFolder),'ReadFcn',@(x)(x),'FileExtensions','.tif','IncludeSubfolders',true); 
+files = ds.Files;
+sz = [length(dim.z.values) length(dim.x.values) length(dim.y.values)];
+parfor(i=1:1,1) %Run once but on a worker
+    yTiffAll = zeros(sz);
+    
+    for j=1:length(files)
+       yTiffAll(:,:,j) = yOCTFromTif(files{j});
+    end
+    
+    tn = [tempname '.tif'];
+    yOCT2Tif(yTiffAll,log(c));
+    awsCopyFile_MW1(tn,[tiffOutputFolder '_OneFile.tif']); %Matlab worker version of copy files
+    delete(tn);
+       
+end
+awsCopyFile_MW2([tiffOutputFolder '_OneFile.tif']);
+tocBytes(gcp)
 
 %% Cleanup temporary files and debugs
 if ~isRunInDebugMode
