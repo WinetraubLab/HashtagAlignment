@@ -8,7 +8,7 @@ isRunInAutomatedMode = true; %When set to false, will allow human more control t
 
 %For debug purpose, skip the uploading part
 isProcessOnly = false; %No uploading to the cloud
-deleteFolderAfterUpload = true; %Would you like to delete data after uploading to the cloud or ask for manual delete?
+deleteFolderAfterUpload = false; %Would you like to delete data after uploading to the cloud or ask for manual delete?
 
 %% Setup environment
 if (exist('SubjectFolderIn_','var'))
