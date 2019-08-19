@@ -1,7 +1,7 @@
 %This script stitches images aquired at different z depths 2gezer
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/OCTVolumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-02/OCTVolumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -73,7 +73,7 @@ LogFolder = awsModifyPathForCompetability([SubjectFolder '\Log\02 OCT Preprocess
 dirToSaveStackDemos = awsModifyPathForCompetability([OCTVolumesFolder '/SomeStacks_db/']);
 dirToSaveStackDemosTif = awsModifyPathForCompetability([LogFolder '/SomeStacks/']);
 tiffOutputFolder = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/']);
-tiffOutputFolder1 = [tiffOutputFolder(1:(end-1)) '_OneFile.tif'];
+tiffOutput_AsOneFile = [tiffOutputFolder(1:(end-1)) '_OneFile.tif'];
 
 
 if ~isLoadFromDebugModeAfterPreProcessing
@@ -263,6 +263,7 @@ end
 try
 disp('Concatinaing ... ');
 ticBytes(gcp('nocreate'))
+awsRmFile(tiffOutput_AsOneFile);
 ds = fileDatastore(awsModifyPathForCompetability(tiffOutputFolder),'ReadFcn',@(x)(x),'FileExtensions','.tif','IncludeSubfolders',true); 
 files = ds.Files;
 sz = [length(dim.z.values) length(dim.x.values) length(dim.y.values)];
@@ -275,11 +276,11 @@ parfor(i=1:1,1) %Run once but on a worker
     
     tn = [tempname '.tif'];
     yOCT2Tif(yTiffAll,tn,log(c));
-    awsCopyFile_MW1(tn,tiffOutputFolder1); %Matlab worker version of copy files
+    awsCopyFile_MW1(tn,tiffOutput_AsOneFile); %Matlab worker version of copy files
     delete(tn);
        
 end
-awsCopyFile_MW2(tiffOutputFolder1);
+awsCopyFile_MW2(tiffOutput_AsOneFile);
 tocBytes(gcp)
 catch ME
     disp(['Faild to concatinate, error message: ' ME.message])
