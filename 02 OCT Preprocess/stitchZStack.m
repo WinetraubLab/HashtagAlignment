@@ -126,14 +126,14 @@ parfor yI=1:length(yIndexes)
     %Let us trim the image using the signal at the gel (top of the image)
     tmp = nanmedian(squeeze(stack(:,:,1)),2);
     th = max(tmp(:))/size(stack,3)/2; %Devided by the amount of averages
-    c = [prctile(tmp(:),20), prctile(tmp(:),99.99)];
+    c = [prctile(tmp(:),20), prctile(tmp(:),99.9999)];
     
     %Save Stack, some files for future reference
     if (sum(yIndexes(yI) == yToSave)>0)
         tn = [tempname '.mat'];
         yOCT2Mat(stack,tn)
         awsCopyFile_MW1(tn, ...
-            awsModifyPathForCompetability(sprintf('%s/y%04dZStack_db.mat',dirToSaveStackDemos,yIndexes(yI))) ...
+            awsModifyPathForCompetability(sprintf('%s/y%04d_ZStack_db.mat',dirToSaveStackDemos,yIndexes(yI))) ...
             );
         delete(tn);
     end
@@ -202,7 +202,7 @@ end
 %% Threshlod
 %Compute a single threshold for all files
 th = single(median(thresholds));
-c = [th, median(cValues(:,2))];
+c = [th*4, median(cValues(:,2))];
 
 %% Collect all mat files from datastore to create a single output
 disp('Saving to Tiff ...');
