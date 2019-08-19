@@ -5,7 +5,7 @@ disp('Looking For Focus Position...');
 %% Inputs
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01D/OCTVolumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-02D/OCTVolumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -75,7 +75,7 @@ for i=1:length(tissueZi)
     
     %Find maximum
     medScan = median(scan,2);
-    medScan(1:(0.5*totalZDistanceI)) = NaN; %Its unlikely that the focus point will be at the top part, as traveling will make the 'wrap around problem'
+    medScan(1:round(0.5*totalZDistanceI)) = NaN; %Its unlikely that the focus point will be at the top part, as traveling will make the 'wrap around problem'
     tissueZi(i) = find(medScan == max(medScan),1,'first');
     
     %Plot    
