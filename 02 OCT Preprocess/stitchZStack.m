@@ -69,9 +69,12 @@ imOutSize = [length(dim.z.values) length(dim.x.values) length(yIndexes)]; %z,x,y
 
 %Directory structure
 dirToSaveProcessedYFrames = awsModifyPathForCompetability([OCTVolumesFolder '/yFrames_db/']);
-dirToSaveStackDemos = awsModifyPathForCompetability([OCTVolumesFolder '/SomeStacks_db/']);
-tiffOutputFolder = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/']);
 LogFolder = awsModifyPathForCompetability([SubjectFolder '\Log\02 OCT Preprocess\']);
+dirToSaveStackDemos = awsModifyPathForCompetability([OCTVolumesFolder '/SomeStacks_db/']);
+dirToSaveStackDemosTif = awsModifyPathForCompetability([LogFolder '/SomeStacks/']);
+tiffOutputFolder = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/']);
+tiffOutputFolder1 = [tiffOutputFolder(1:(end-1)) '_OneFile.tif'];
+
 
 if ~isLoadFromDebugModeAfterPreProcessing
 %% Prepeaere to log
@@ -205,12 +208,7 @@ c = [th*4, cm];
 %% Collect all mat files from datastore to create a single output
 disp('Saving to Tiff ...');
 
-if (isRunInDebugMode)
-    fileExt = '.mat';
-else
-    fileExt = '.getmeout'; %Still a matfile but located slightly differently
-end
-ds = fileDatastore(awsModifyPathForCompetability(dirToSaveProcessedYFrames),'ReadFcn',@(x)(x),'FileExtensions',fileExt,'IncludeSubfolders',true); 
+ds = fileDatastore(awsModifyPathForCompetability(dirToSaveProcessedYFrames),'ReadFcn',@(x)(x),'FileExtensions','.mat','IncludeSubfolders',true); 
 files = ds.Files;
 
 %Make sure dir is empty
@@ -241,6 +239,7 @@ fprintf('Done saving as tif, toatl time: %.0f[min]\n',toc(tt)/60);
 tocBytes(gcp)
 
 %% Save overviews of a few Y sections to log
+awsRmDir(dirToSaveStackDemosTif);
 if ~isempty(yToSave)
     yStackPath = cell(size(yToSave(:)));
     for i=1:length(yToSave)
@@ -254,13 +253,14 @@ if ~isempty(yToSave)
 
         tn = [tempname '.tif'];
         yOCT2Tif(log(im),tn,log([th max(im(:))])); %Save to temp file
-        awsCopyFile_MW1(tn, yStackPath{i}); %Matlab worker version of copy files
+        awsCopyFile_MW1(tn, sprintf('%s/y%04d_ZStack.tif',dirToSaveStackDemosTif,yToSave(i))); %Matlab worker version of copy files
         delete(tn);
     end
-    awsCopyFile_MW2(LogFolder); %Finish the job
+    awsCopyFile_MW2(dirToSaveStackDemosTif); %Finish the job
 end
 
 %% Concatinate all yTifs to one (do it on matlab pool so it will run on EC2
+try
 disp('Concatinaing ... ');
 ticBytes(gcp('nocreate'))
 ds = fileDatastore(awsModifyPathForCompetability(tiffOutputFolder),'ReadFcn',@(x)(x),'FileExtensions','.tif','IncludeSubfolders',true); 
@@ -274,13 +274,17 @@ parfor(i=1:1,1) %Run once but on a worker
     end
     
     tn = [tempname '.tif'];
-    yOCT2Tif(yTiffAll,log(c));
-    awsCopyFile_MW1(tn,[tiffOutputFolder '_OneFile.tif']); %Matlab worker version of copy files
+    yOCT2Tif(yTiffAll,tn,log(c));
+    awsCopyFile_MW1(tn,tiffOutputFolder1); %Matlab worker version of copy files
     delete(tn);
        
 end
-awsCopyFile_MW2([tiffOutputFolder '_OneFile.tif']);
+awsCopyFile_MW2(tiffOutputFolder1);
 tocBytes(gcp)
+catch ME
+    disp(['Faild to concatinate, error message: ' ME.message])
+    disp('Continuing anyways');
+end
 
 %% Cleanup temporary files and debugs
 if ~isRunInDebugMode
