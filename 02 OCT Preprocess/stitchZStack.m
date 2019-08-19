@@ -126,7 +126,6 @@ parfor yI=1:length(yIndexes)
     %Let us trim the image using the signal at the gel (top of the image)
     tmp = nanmedian(squeeze(stack(:,:,1)),2);
     th = max(tmp(:))/size(stack,3)/2; %Devided by the amount of averages
-    c = [prctile(tmp(:),20), prctile(tmp(:),99.9999)];
     
     %Save Stack, some files for future reference
     if (sum(yIndexes(yI) == yToSave)>0)
@@ -140,6 +139,7 @@ parfor yI=1:length(yIndexes)
     
     %Compute stacked frame
     stackmean = squeeze(single(nanmean(stack,3))); 
+    c = [prctile(stackmean(:),20), max(stackmean(:))];
     stack = []; %Clear memory
     
     %Save results to temporary files to be used later (once we know the
@@ -202,7 +202,8 @@ end
 %% Threshlod
 %Compute a single threshold for all files
 th = single(median(thresholds));
-c = [th*4, median(cValues(:,2))];
+cm = prctile(cValues(:,2),95);
+c = [th*4, cm];
 
 %% Collect all mat files from datastore to create a single output
 disp('Saving to Tiff ...');
@@ -246,16 +247,16 @@ tocBytes(gcp)
 if ~isempty(yToSave)
     yStackPath = cell(size(yToSave(:)));
     for i=1:length(yToSave)
-        yStackPath{i} = sprintf('%s/y%04d.',dirToSaveStackDemos,yToSave(i));
+        yStackPath{i} = sprintf('%s/y%04d_ZStack_db.mat',dirToSaveStackDemos,yToSave(i));
     end
 
     parfor i=1:length(yToSave)
-        im = yOCTFromTif([yStackPath{i} 'mat']);
+        im = yOCTFromMat([yStackPath{i}]);
 
         im(im<th) = th;
 
         tn = [tempname '.tif'];
-        yOCT2Tif(log(im),tn,log(cValues(i,:))); %Save to temp file
+        yOCT2Tif(log(im),tn,log([th max(im(:))])); %Save to temp file
         awsCopyFile_MW1(tn, yStackPath{i}); %Matlab worker version of copy files
         delete(tn);
     end
