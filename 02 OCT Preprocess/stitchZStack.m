@@ -178,10 +178,7 @@ tocBytes(gcp)
 %% Reorganizing files
 fprintf('%s Reorg files ... ',datestr(datetime));
 tt=tic;
-if (isRunInDebugMode)
-    %Only reorg if we run in debug mode, otherwise don't bother
-    awsCopyFile_MW2(dirToSaveProcessedYFrames);
-end
+awsCopyFile_MW2(dirToSaveProcessedYFrames);
 if ~isempty(yToSave)
     awsCopyFile_MW2(dirToSaveStackDemos); %For the ys that are saved
 end
