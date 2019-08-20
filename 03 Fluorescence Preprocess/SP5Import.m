@@ -27,7 +27,7 @@ if exist('s3Dir_','var')
 end
 
 %% Import
-
+fp = strrep(fp,'"',''); %Remove "
 if ~exist(fp,'file')
     error('Please provide a valid filepath. Got: %s',fp);
 end
