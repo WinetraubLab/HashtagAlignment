@@ -27,6 +27,11 @@ if exist('s3Dir_','var')
 end
 
 %% Import
+
+if ~exist(fp,'file')
+    error('Please provide a valid filepath. Got: %s',fp);
+end
+
 json = [];
 json.version = 1;
 
