@@ -127,15 +127,9 @@ pipeline {
 				echo Testers\\runme.m
 				echo ----------------
 				type Testers\\runme.m """)
-				
-			//Make a folder for the log
-			def folder3 = new File(LOG_OUTPUT_FOLDER())
-			if (!folder3.exists()) {
-				bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
-			}
 				   
 		}}}
-		stage("Scan And Photobleach")
+		stage("Import")
 		{steps{script{
 			try
 			{
@@ -165,31 +159,6 @@ pipeline {
 					"""
 			}
 		}}}
-		stage("Save Log File")
-		{steps{script{
-			BackupLogFile();
-		}}}
 	}
 }
 
-def LOG_OUTPUT_FOLDER()
-{
-	return  "${S3_DIR}/${SAMPLE_ID}/Log/03 Fluorescence Preprocess/"
-}
-
-def BackupLogFile()
-{
-	//Make sure folder exists
-	def logFolder = new File(LOG_OUTPUT_FOLDER())
-	if (!logFolder.exists()) {
-		bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
-	}
-	
-	//Save log file
-	def lg =currentBuild.rawBuild.getLog(10000);
-	lg = lg.join("\n");
-	lg = lg.replaceAll(env.JOB_URL,"http://localhost:NANA/job/");
-	lg = lg.replaceAll("@stanford.edu","");
-	def file = new File(LOG_OUTPUT_FOLDER() + "\\build.log")
-	file.write (lg)
-}
