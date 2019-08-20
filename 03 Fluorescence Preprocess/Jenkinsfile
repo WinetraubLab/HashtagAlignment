@@ -1,0 +1,195 @@
+//This Jenkinsfile will preform a scan and save the results to a common storage
+//It will also create a .m file explaining how to preprocess this scan
+pipeline {
+	agent any
+	environment {
+        MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
+    	CREDENTIALS_PATH = "..\\..\\"
+	}
+	options {
+		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
+  	}
+	parameters 
+	{
+		string(
+			name: "S3_DIR",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/",
+			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/",
+			trim: true)
+		string(
+			name: "SAMPLE_ID",
+			defaultValue:"LB-00",
+			description:"Subject Id.\nExample: LB-01",
+			trim: true)
+		string(
+			name: "FP",
+			defaultValue:"",
+			description:"Filepath of one of the fluorescence image",
+			trim: true)
+		
+		string(
+			name: "SLIDE_N",
+			defaultValue:"1",
+			description:"Slide Number",
+			trim: true)
+		string(
+			name: "SECTION_N",
+			defaultValue:"1",
+			description:"Section Number",
+			trim: true)
+		string(
+			name: "ANG_ROTATE",
+			defaultValue:"0",
+			description:"Angle to rotate slide such that lines are on the top (counter clockwise)",
+			trim: true)	
+    }
+	stages{
+		stage("Checkout")
+		{steps{script{
+			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
+			def gitTxt
+			try
+			{
+				bat "git describe --tags --exact-match > commandResult.txt" 
+				gitTxt = readFile('commandResult.txt').trim()
+				echo gitTxt
+				if (gitTxt.contains("fatal: No tags can describe"))
+				{
+					gitTxt = "master"
+				}
+			}
+			catch(Exception e)
+			{ 
+				// Couldn't find exact match, its actually we look at the master
+				gitTxt = "master"
+			}
+			
+			branch = gitTxt
+			echo("Jenkins Build #: " + env.BUILD_NUMBER)
+			echo("Fetching: " + branch)
+			
+			//Identify where github is installed
+			def gitFolderOption1 = new File("C:\\Program Files (x86)\\Git\\cmd\\")
+			def gitFolderOption2 = new File("C:\\Program Files\\Git\\cmd\\")
+			def gitFolder = ""
+			if (gitFolderOption1.exists()) {
+				gitFolder = gitFolderOption1.absolutePath
+			} else if (gitFolderOption2.exists()) {
+				gitFolder = gitFolderOption2.absolutePath
+			} else {
+				error "Clould not find git in the known possible possitions"
+			}
+			gitFolder = gitFolder + "\\"
+			
+			//Checkout a fresh copy 
+			cleanWs()
+			bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/HashtagAlignment.git"') //Checkout HashtagAlignment
+			bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/myOCT.git"') //Checkout myOCT
+			
+			//Make note of the repository version
+			bat('@cd HashtagAlignment && @"' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			def hashtagAlignmentVer = readFile('commandResult.txt').trim()
+			bat('@cd myOCT && @"' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			def myOCTVer = readFile('commandResult.txt').trim()
+			
+			//Move files to main folder
+			bat('@xcopy /E HashtagAlignment . /Y /Q')
+			bat('@xcopy /E myOCT . /Y /Q')
+			bat('@copy "%CREDENTIALS_PATH%\\*.m" .')
+			
+			//Delete folder used for checkout
+			bat('@rmdir HashtagAlignment /S /Q')
+			bat('@rmdir myOCT /S /Q')
+			
+			//Start buidling the runme file
+			bat("@echo disp('HashtagAlignment Git Hash: " + hashtagAlignmentVer + "');  >> runme.m")
+			bat("@echo disp('myOCT Git Hash: " + myOCTVer + "');  >> runme.m")
+			bat("@echo disp('To see repository go to');  >> runme.m")
+			bat("@echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
+			bat("@echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
+		}}}
+		stage("Build Runme")
+		{steps{script{
+			bat("@echo s3Dir_ = '%S3_DIR%/%SAMPLE_ID%'; >> runme.m")
+			bat("@echo fp_ = '%S3_DIR%/%FP%'; >> runme.m")
+			bat("@echo slideNumber_=%SLIDE_N%; >> runme.m")
+			bat("@echo sectionNumber_=%SECTION_N%; >> runme.m")
+			bat("@echo angRotate=%ANG_ROTATE%; >> runme.m")
+
+			bat("@echo run SP5Import.m  >> runme.m")
+			
+			// Move the m file to Testers
+			bat("@move runme.m Testers\\ > nooutput")
+			
+			//Type the result
+			bat("""
+				@echo off
+				echo Testers\\runme.m
+				echo ----------------
+				type Testers\\runme.m """)
+				
+			//Make a folder for the log
+			def folder3 = new File(LOG_OUTPUT_FOLDER())
+			if (!folder3.exists()) {
+				bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
+			}
+				   
+		}}}
+		stage("Scan And Photobleach")
+		{steps{script{
+			try
+			{
+				//Usefull links
+				echo "- Running Matlab log can be found here:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/matlablog.txt/*view*/" + "\n" +
+					 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/" + "\n" +
+					 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/" + 
+					 "- Output image file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/output.png" + "\n"
+				
+				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
+			}
+			catch(Exception e)
+			{
+				currentBuild.result = 'FAILURE'
+				throw("Matlab Failed")
+			}
+			finally
+			{
+				//In any case, copy what we did to log folder
+				bat """
+					@echo off
+					echo ---------------------------- MATLAB LOG ----------------------------
+					echo --------------------------------------------------------------------
+					type Testers\\matlablog.txt
+					echo ------------------------------ LOG END -----------------------------
+					echo --------------------------------------------------------------------
+					"""
+			}
+		}}}
+		stage("Save Log File")
+		{steps{script{
+			BackupLogFile();
+		}}}
+	}
+}
+
+def LOG_OUTPUT_FOLDER()
+{
+	return  "${S3_DIR}/${SAMPLE_ID}/Log/03 Fluorescence Preprocess/"
+}
+
+def BackupLogFile()
+{
+	//Make sure folder exists
+	def logFolder = new File(LOG_OUTPUT_FOLDER())
+	if (!logFolder.exists()) {
+		bat ('mkdir "' + LOG_OUTPUT_FOLDER() + '"');
+	}
+	
+	//Save log file
+	def lg =currentBuild.rawBuild.getLog(10000);
+	lg = lg.join("\n");
+	lg = lg.replaceAll(env.JOB_URL,"http://localhost:NANA/job/");
+	lg = lg.replaceAll("@stanford.edu","");
+	def file = new File(LOG_OUTPUT_FOLDER() + "\\build.log")
+	file.write (lg)
+}
