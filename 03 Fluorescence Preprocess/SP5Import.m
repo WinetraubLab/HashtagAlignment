@@ -126,6 +126,9 @@ if (abs(xRes/yRes-1) > 0.01)
     error('Large error between x & y resolutions: %.3f[um/pix] vs %.3f[um/pix]. Whats up with that',xRes,yRes);
 end
 
+tmp = dir('fileToUse');
+json.FMWhenWasItScanned = tmp.date;
+
 %% Rotate & Present
 fprintf('Rotating image by %.0f[deg] counter clockwise\n',angRotate);
 flourescenceIm = imrotate(imread(flourescenceImagePath),angRotate);
@@ -151,7 +154,10 @@ end
 
 awsWriteJSON(json,[outputFolder '/SlideConfig.json']);
 awsCopyFileFolder(json.photobleachedLinesImagePath,outputFolder);
-awsCopyFileFolder(json.brightFieldImagePath,outputFolder);
+
+if ~isempty(brightfieldImagePath)
+    awsCopyFileFolder(json.brightFieldImagePath,outputFolder);
+end
 
 ds = fileDatastore(folder,'ReadFcn',@(x)(x),'IncludeSubfolders',true);
 files = ds.Files;

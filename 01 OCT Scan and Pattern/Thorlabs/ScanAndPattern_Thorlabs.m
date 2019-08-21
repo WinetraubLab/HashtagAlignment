@@ -71,7 +71,7 @@ x0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('x'); %Init stage
 y0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('y'); %Init stage
 
 isExecutingOnJenkins = isRunningOnJenkins();
-ExecutionStartTime = datestr(now());
+config.whenWasItScanned = datestr(now());
 
 if (isRunningOnJenkins())
     outputFolder = outputFolder_; %Set by Jenkins
