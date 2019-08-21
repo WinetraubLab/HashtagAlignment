@@ -28,22 +28,22 @@ pipeline {
 			trim: true)
 		
 		string(
-			name: "SLIDE_N",
-			defaultValue:"1",
-			description:"Slide Number",
-			trim: true)
-		string(
-			name: "SECTION_N",
-			defaultValue:"1",
-			description:"Section Number",
-			trim: true)
-		string(
 			name: "ANG_ROTATE",
 			defaultValue:"0",
 			description:"Angle to rotate slide such that lines are on the top (counter clockwise)",
 			trim: true)	
     }
 	stages{
+		stage("Parameters Check and Env Setup") 
+		{steps{script{			
+			echo "Input checks"
+			if (params.MAIN_FOLDER == "")
+			{
+				currentBuild.result = 'ABORTED'
+				echo('Please a folder to load data from')
+				error('Please a folder to load data from')
+			}
+		}}}
 		stage("Checkout")
 		{steps{script{
 			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
