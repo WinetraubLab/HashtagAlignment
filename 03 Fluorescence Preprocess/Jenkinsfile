@@ -22,9 +22,9 @@ pipeline {
 			description:"Subject Id.\nExample: LB-01",
 			trim: true)
 		string(
-			name: "FP",
+			name: "%MAIN_FOLDER%",
 			defaultValue:"",
-			description:"Filepath of one of the fluorescence image",
+			description:"Directed at the main directory, Under the main directory we expect to have these folders \\slide #\\sec #\\ \nIn each folder palace MetaData and Tif files of the scan",
 			trim: true)
 		
 		string(
@@ -111,9 +111,7 @@ pipeline {
 		stage("Build Runme")
 		{steps{script{
 			bat("@echo s3Dir_ = '%S3_DIR%/%SAMPLE_ID%/'; >> runme.m")
-			bat("@echo fp_ = '%FP%'; >> runme.m")
-			bat("@echo slideNumber_ = %SLIDE_N%; >> runme.m")
-			bat("@echo sectionNumber_ = %SECTION_N%; >> runme.m")
+			bat("@echo folderStructurePath_ = '%MAIN_FOLDER%'; >> runme.m")
 			bat("@echo angRotate_ = %ANG_ROTATE%; >> runme.m")
 
 			bat("@echo run SP5Import.m  >> runme.m")

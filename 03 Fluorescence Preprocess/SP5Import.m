@@ -8,8 +8,12 @@ s3Dir = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/';
 slideNumber = 1;
 sectionNumber = 1;
 
-%Fluorescence Image Path
-fp = '\\171.65.17.174\MATLAB_Share\Yonatan\Edwin SP5\LB\S1\slide 1\sec 1\Experiment_TileScan_005_Merging001_z0_ch01.tif';
+%Pointer to the folder structure, expecting [folderStructurePath '\slideX\section Y']
+%In each section we will need to have the tif, and MetaData xml
+folderStructurePath = '\\171.65.17.174\MATLAB_Share\Yonatan\Edwin SP5\LB\S1\';
+
+%Fluorescence Image Path of one og
+%fp = '\\171.65.17.174\MATLAB_Share\Yonatan\Edwin SP5\LB\S1\slide 1\sec 1\Experiment_TileScan_005_Merging001_z0_ch01.tif';
 
 %Chanel
 flourescenceChanel = 0;
@@ -20,18 +24,53 @@ angRotate = 180;
 %% Jenkins
 if exist('s3Dir_','var')
     s3Dir = s3Dir_;
-    sectionNumber = sectionNumber_;
-    slideNumber = slideNumber_;
-    fp = fp_;
+    folderStructurePath = folderStructurePath_;
     angRotate = angRotate_;
 end
 
-%% Import
-fp = strrep(fp,'"',''); %Remove "
-if ~exist(fp,'file')
-    error('Please provide a valid filepath. Got: %s',fp);
+%% Get files in folder
+folderStructurePath = strrep(folderStructurePath,'"',''); %Remove "
+folderStructurePath = [folderStructurePath '\'];
+if ~exist(folderStructurePath,'dir')
+    error('Please provide a valid folder path. Got: %s',fp);
 end
 
+dsXml = fileDatastore(folderStructurePath,'ReadFcn',@(x)(x),'FileExtensions','.xml','IncludeSubfolders',true);
+xmlFiles = dsXml.Files;
+
+folders = cellfun(@(x)fileparts(x),xmlFiles,'UniformOutput',false);
+folders = unique(folders);
+folders(cellfun(@(x)~contains(lower(x),'slide'),folders)) = []; %Delete folders which don't have 'slide' in their name
+folders= cellfun(@(x)strrep(x,'\MetaData',''),folders,'UniformOutput',false);
+
+%% Loop for each folder extract data
+for i=1:length(folders)
+folder = folders{i};
+
+%% Find a tif file, and slide & section
+ds = fileDatastore(folder,'FileExtensions','.tif','ReadFcn',@(x)(x));
+fp = ds.Files{1};
+
+slideNumber = NaN;
+sectionNumber = NaN;
+sp = split(folder,'\');
+sp = sp(end+(-1:0));
+for j=1:length(sp)
+    if (contains(lower(sp{j}),'slide'))
+        d = sscanf(sp{j},'%s%d');
+        slideNumber = d(end);
+    elseif (contains(lower(sp{j}),'sec'))
+        d = sscanf(sp{j},'%s%d');
+        sectionNumber = d(end);
+    end
+end
+if(isnan(slideNumber) || isnan(sectionNumber))
+    error('Could''nt interpert section and or slide from: %s',folder);
+end
+
+fprintf('Processing: %s (slide %d, section %d)\n',folder,slideNumber,sectionNumber);
+
+%% Import
 json = [];
 json.version = 1;
 
@@ -110,4 +149,6 @@ toSend = cellfun(@(x)(contains(x,fileName)),files);
 files = files(toSend);
 for i=1:length(files)
     awsCopyFileFolder(files{i},[outputFolder '/FM_Raw/']);
+end
+
 end
