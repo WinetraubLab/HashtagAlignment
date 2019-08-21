@@ -126,7 +126,7 @@ if (abs(xRes/yRes-1) > 0.01)
     error('Large error between x & y resolutions: %.3f[um/pix] vs %.3f[um/pix]. Whats up with that',xRes,yRes);
 end
 
-tmp = dir('fileToUse');
+tmp = dir(xmlFilePath);
 json.FMWhenWasItScanned = tmp.date;
 
 %% Rotate & Present
