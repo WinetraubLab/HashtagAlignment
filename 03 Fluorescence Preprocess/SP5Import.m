@@ -44,6 +44,7 @@ folders(cellfun(@(x)~contains(lower(x),'slide'),folders)) = []; %Delete folders 
 folders= cellfun(@(x)strrep(x,'\MetaData',''),folders,'UniformOutput',false);
 
 %% Loop for each folder extract data
+disp(' '); disp('Looping Over All Folders');
 for i=1:length(folders)
 folder = folders{i};
 
@@ -91,9 +92,11 @@ flourescenceImagePath = flourescenceImagePath{:};
    
 brightfieldImagePath = files(cellfun(@(x)(contains(x,sprintf('ch%02d',brightfieldChanel))),files));
 if length(brightfieldImagePath) ~= 1
-    error('Could not find one file with _ch%02d',brightfieldChanel);
+    warning('Could not find one file with _ch%02d',brightfieldChanel);
+    brightfieldImagePath = '';
+else
+    brightfieldImagePath = brightfieldImagePath{:};
 end
-brightfieldImagePath = brightfieldImagePath{:};
 
 %% Read pixel size from meta data
 
@@ -126,7 +129,9 @@ end
 %% Rotate & Present
 fprintf('Rotating image by %.0f[deg] counter clockwise\n',angRotate);
 flourescenceIm = imrotate(imread(flourescenceImagePath),angRotate);
-brightfieldIm = imrotate(imread(brightfieldImagePath),angRotate);
+if ~isempty(brightfieldImagePath)
+    brightfieldIm = imrotate(imread(brightfieldImagePath),angRotate);
+end
 
 imshow(flourescenceIm);
 title(sprintf('Are the lines at the top of the flourescence image?, Resolution %.2f%s',json.FMRes,json.FMResUnits));
@@ -135,9 +140,14 @@ saveas(gca,'output.png');
 %% Save Output
 outputFolder = awsModifyPathForCompetability(sprintf('%s/Slides/Slide%02d_Section%02d/',s3Dir,slideNumber,sectionNumber));
 json.photobleachedLinesImagePath = 'FM_PhotobleachedLinesImage.tif';
-json.brightFieldImagePath = 'FM_BrightfieldImage.tif';
 imwrite(flourescenceIm,json.photobleachedLinesImagePath);
-imwrite(brightfieldIm,json.brightFieldImagePath);
+
+if ~isempty(brightfieldImagePath)
+    json.brightFieldImagePath = 'FM_BrightfieldImage.tif';
+    imwrite(brightfieldIm,json.brightFieldImagePath);
+else
+    json.brightFieldImagePath = '';
+end
 
 awsWriteJSON(json,[outputFolder '/SlideConfig.json']);
 awsCopyFileFolder(json.photobleachedLinesImagePath,outputFolder);
