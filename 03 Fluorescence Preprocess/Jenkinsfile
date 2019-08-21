@@ -22,7 +22,7 @@ pipeline {
 			description:"Subject Id.\nExample: LB-01",
 			trim: true)
 		string(
-			name: "%MAIN_FOLDER%",
+			name: "MAIN_FOLDER",
 			defaultValue:"",
 			description:"Directed at the main directory, Under the main directory we expect to have these folders \\slide #\\sec #\\ \nIn each folder palace MetaData and Tif files of the scan",
 			trim: true)
