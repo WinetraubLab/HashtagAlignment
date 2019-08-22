@@ -32,7 +32,7 @@ end
 folderStructurePath = strrep(folderStructurePath,'"',''); %Remove "
 folderStructurePath = [folderStructurePath '\'];
 if ~exist(folderStructurePath,'dir')
-    error('Please provide a valid folder path. Got: %s',fp);
+    error('Please provide a valid folder path. Got: %s',folderStructurePath);
 end
 
 dsXml = fileDatastore(folderStructurePath,'ReadFcn',@(x)(x),'FileExtensions','.xml','IncludeSubfolders',true);
