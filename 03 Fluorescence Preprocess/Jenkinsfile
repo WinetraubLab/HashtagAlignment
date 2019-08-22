@@ -24,7 +24,7 @@ pipeline {
 		string(
 			name: "MAIN_FOLDER",
 			defaultValue:"",
-			description:"Directed at the main directory, Under the main directory we expect to have these folders \\slide #\\sec #\\ \nIn each folder palace MetaData and Tif files of the scan",
+			description:"Directed at the main directory, Under the main directory we expect to have these folders \\slide #\\sec #\\ \nIn each folder palace MetaData and Tif files of the scan\nThis folder should be local",
 			trim: true)
 		
 		string(
