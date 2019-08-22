@@ -127,6 +127,7 @@ fprintf('%s Moving up and down to test and make sure dynamic range is clear: %.0
 ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+min(config.zToScan)/1000); %Movement [mm]
 pause(0.5);
 ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+max(config.zToScan)/1000); %Movement [mm]
+pause(0.5);
 fprintf('%s Test Completed\n',datestr(datetime));
 
 %% Photobleach
@@ -141,6 +142,7 @@ fprintf('\n');
 
 ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(true); %Switch on
 for i=1:length(config.vLinePositions)
+	fprintf('%s Photobleaching V Line # %d / %d\n',datestr(datetime),i,length(config.vLinePositions));
     ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
         config.vLinePositions(i),-config.lineLength/2, ... Start X,Y
         config.vLinePositions(i),+config.lineLength/2, ... End X,Y
@@ -148,6 +150,7 @@ for i=1:length(config.vLinePositions)
 end
 
 for i=1:length(config.hLinePositions)
+	fprintf('%s Photobleaching H Line # %d / %d\n',datestr(datetime),i,length(config.hLinePositions));
     ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
         -config.lineLength/2,config.hLinePositions(i), ... Start X,Y
         +config.lineLength/2,config.hLinePositions(i), ... End X,Y
