@@ -209,7 +209,7 @@ if (config.isRunOverview)
 	fprintf('%s Scanning Overview\n',datestr(datetime));
     
     pause(0.5);
-    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+config.overview.zToScan); %Bring stage to begining of overview imageing
+    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+config.overview.zToScan/1000); %Bring stage to begining of overview imageing [mm]
     pause(0.5);
     
 	mkdir([outputFolder '\Overview\']);
@@ -242,7 +242,7 @@ if (config.isRunOverview)
 end
 
 pause(0.5);
-ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0); %Bring stage to 0
+ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0); %Bring stage to 0 [mm]
 pause(0.5);
 
 %% Finalize
