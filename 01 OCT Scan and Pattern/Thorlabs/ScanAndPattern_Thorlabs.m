@@ -92,6 +92,10 @@ if (isRunningOnJenkins())
 	end
 end
 
+if exist('gitBranch_','var')
+    config.gitBranchUsedToScan = gitBranch_; %Save which git branch was used to scan
+end
+
 %Input check
 if (sum(config.zToScan == 0) == 0)
 	error('zToScan does not contain focus (z=0) that will cause problems down the road, please adjust');

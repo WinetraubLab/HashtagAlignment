@@ -169,10 +169,9 @@ pipeline {
 			
 			//Start buidling the runme file
 			bat("@echo disp('HashtagAlignment Git Hash: " + hashtagAlignmentVer + "');  >> runme.m")
-			bat("@echo disp('myOCT Git Hash: " + myOCTVer + "');  >> runme.m")
-			bat("@echo disp('To see repository go to');  >> runme.m")
 			bat("@echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
 			bat("@echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
+			bat("@echo gitBranch_ = '" + branch + "'; >> runme.m")
 		}}}
 		stage("Build Files")
 		{steps{script{
