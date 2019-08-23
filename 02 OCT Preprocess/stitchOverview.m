@@ -61,8 +61,8 @@ OCTSystem = [json.OCTSystem '_SRR']; %Provide OCT system to prevent unesscecary 
             yOCTLoadInterfFromFile([fp{1}, reconstructConfig, {'OCTSystem',OCTSystem,'peakOnly',true}]);
         
 %% Set start & Finish positions
-zStart = max(focusPositionInImageZpix - focusSigma*5,1);
-zEnd = min(focusPositionInImageZpix + focusSigma*7,1000);
+zStart = 300; %max(focusPositionInImageZpix - focusSigma*5,1);
+zEnd = 1000;  %min(focusPositionInImageZpix + focusSigma*7,1000);
 %% Load overview images 
 if lowRAMMode
     enface = cell(length(gridYc),length(gridXc));

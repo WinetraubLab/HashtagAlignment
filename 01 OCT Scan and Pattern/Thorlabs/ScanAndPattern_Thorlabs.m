@@ -48,6 +48,7 @@ config.BScanAvg = 1;
 %+z is deeper
 config.zToPhtobleach = -300; %[um] this parameter is ignored if running from jenkins - will assume provided by jenkins
 config.zToScan = (-190:15:500)-5; %[um]
+config.overview.zToScan = max(config.zToScan); %[um]
 
 %Tissue Defenitions
 config.tissueRefractiveIndex = 1.4;
@@ -195,11 +196,15 @@ for i=1:length(config.zToScan)
 		end
 	end
 end
-ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0); %Bring stage to 0
 
 %% Scan Overview
 if (config.isRunOverview)
 	fprintf('%s Scanning Overview\n',datestr(datetime));
+    
+    pause(0.5);
+    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+config.overview.zToScan); %Bring stage to begining of overview imageing
+    pause(0.5);
+    
 	mkdir([outputFolder '\Overview\']);
 	for q = 1:length(config.overview.gridXcc)
 		fprintf('Imaging at xc=%.1f,yc=%.1f (%d of %d)...\n',...
@@ -228,6 +233,10 @@ if (config.isRunOverview)
 	ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',x0);
 	ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0);
 end
+
+pause(0.5);
+ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0); %Bring stage to 0
+pause(0.5);
 
 %% Finalize
 fprintf('%s Finalizing\n',datestr(datetime));
