@@ -94,6 +94,9 @@ end
 
 if exist('gitBranch_','var')
     config.gitBranchUsedToScan = gitBranch_; %Save which git branch was used to scan
+else
+    config.gitBranchUsedToScan = 'unknown';
+    config.version = 1; %Version of this JSON file
 end
 
 %Input check
