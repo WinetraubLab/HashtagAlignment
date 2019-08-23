@@ -73,7 +73,7 @@ fprintf('Processing: %s (slide %d, section %d)\n',folder,slideNumber,sectionNumb
 
 %% Import
 json = [];
-json.version = 1;
+json.version = 1.1;
 
 %Split file components
 [folder,fileName] = fileparts(fp);
@@ -118,8 +118,7 @@ yAttributes = x.Data.Image.ImageDescription.Dimensions.DimensionDescription{2}.A
 xRes = str2double(xAttributes.Length)/str2double(xAttributes.NumberOfElements)*1000;
 yRes = str2double(yAttributes.Length)/str2double(yAttributes.NumberOfElements)*1000;
 
-json.FMRes = mean([xRes,yRes]);
-json.FMResUnits = 'um/pix';
+json.FM.pixelSize_um = mean([xRes,yRes]);
 fprintf('xRes/yRes-1 = %.5f\n',xRes/yRes-1);
 fprintf('xRes = %.5f[um/pix] yRes = %.5f[um/pix]\n',xRes,yRes);
 if (abs(xRes/yRes-1) > 0.01)
@@ -127,7 +126,7 @@ if (abs(xRes/yRes-1) > 0.01)
 end
 
 tmp = dir(xmlFilePath);
-json.FMWhenWasItScanned = tmp.date;
+json.FM.imagedAt = datestr(tmp(1).datenum);
 
 %% Rotate & Present
 fprintf('Rotating image by %.0f[deg] counter clockwise\n',angRotate);
@@ -137,7 +136,7 @@ if ~isempty(brightfieldImagePath)
 end
 
 imshow(flourescenceIm);
-title(sprintf('Are the lines at the top of the flourescence image?, Resolution %.2f%s',json.FMRes,json.FMResUnits));
+title(sprintf('Are the lines at the top of the flourescence image?, Pixel Size %.2f%s',json.FM.pixelSize_um,'[um]'));
 saveas(gca,'output.png');
 
 %% Save Output
