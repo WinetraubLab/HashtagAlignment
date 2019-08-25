@@ -236,6 +236,7 @@ function json = AddPhotobleachedLineToJson(json,x,y,group)
 pl.u_pix = x(:)';
 pl.v_pix = y(:)';
 pl.group = group;
+pl.linePosition_mm = NaN;
 
 if ~isfield(json.FM,'photobleachedLines')
     json.FM.photobleachedLines = pl;
