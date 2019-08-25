@@ -133,7 +133,7 @@ function axes1_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 axis off;
 currentFileFolder = fileparts(mfilename('fullpath'));
-yOCTMainFolder = [currentFileFolder '\..\..\'];
+yOCTMainFolder = [currentFileFolder '\..\'];
 d = dir(yOCTMainFolder);yOCTMainFolder = [d(1).folder '\'];
 
 p=path;
