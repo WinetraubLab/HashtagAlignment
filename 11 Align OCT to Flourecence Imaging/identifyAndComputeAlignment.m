@@ -213,6 +213,8 @@ if (rewriteMode)
        fi = [f.group] ~= 't';
        fi = find(fi);
        
+       fprintf('vLinePositions [mm] = %s\n',sprintf('%.3f ',octVolumeJson.vLinePositions));
+       fprintf('hLinePositions [mm] = %s\n',sprintf('%.3f ',octVolumeJson.hLinePositions));
        fprintf('Please enter line groups (left to right), seperate by comma or space [can be v or h]\n Was: ')
        fprintf('%s',sprintf('%s',[transpose([f(fi).group]) repmat(' ',length(fi),1)]'));
        gr = input('\n','s');
