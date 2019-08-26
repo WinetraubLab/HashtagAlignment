@@ -1,7 +1,7 @@
 %This function identifies lines and compute basic alignment (single plane)
 
 %% Inputs
-slideFilepath =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/Slides/Slide01_Section01/SlideConfig.json';
+slideFilepath =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/Slides/Slide01_Section02/SlideConfig.json';
 
 rewriteMode = true; %Don't re write information
 
@@ -11,6 +11,7 @@ if exist('slideFilepath_','var')
 end
 
 %% Extract Slide Folder
+disp([datestr(now) ' Loading JSON']);
 slideFolder = awsModifyPathForCompetability([fileparts(slideFilepath) '/']);
 ds = fileDatastore(slideFolder,'ReadFcn',@awsReadJSON,'FileExtensions','.json');
 slideJsonFilePath = ds.Files{1};
@@ -24,6 +25,7 @@ octVolumeJson = ds.read();
 f = slideJson.FM.fiducialLines;
 
 %% Load Flourecent image
+disp([datestr(now) ' Loading Flourecent Image']);
 ds = fileDatastore(awsModifyPathForCompetability([slideFolder slideJson.photobleachedLinesImagePath]),'ReadFcn',@imread);
 histologyFluorescenceIm = ds.read();
 
