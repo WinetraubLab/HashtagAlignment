@@ -78,7 +78,7 @@ function pushbuttonAddGroup1Lines_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [x,y] = ginput(2);
-handles.json =AddPhotobleachedLineToJson(handles.json,x,y,'1');
+handles.json = AddFiducialLineToJson(handles.json,x,y,'1');
 
 drawStatus(handles)
 guidata(hObject, handles);
@@ -89,7 +89,7 @@ function pushbuttonAddGroup2Lines_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [x,y] = ginput(2);
-handles.json =AddPhotobleachedLineToJson(handles.json,x,y,'2');
+handles.json = AddFiducialLineToJson(handles.json,x,y,'2');
 
 drawStatus(handles)
 guidata(hObject, handles);
@@ -101,8 +101,7 @@ function pushbuttonMarkTissueInterface_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [x,y] = ginput(2);
-handles.json.FM.tissueInterface.u_pix = x(:)';
-handles.json.FM.tissueInterface.v_pix = y(:)';
+handles.json = AddFiducialLineToJson(handles.json,x,y,'t'); 
 
 drawStatus(handles)
 guidata(hObject, handles);
@@ -153,16 +152,34 @@ if isempty(handles)
 end
 handles.filePath = awsModifyPathForCompetability(get(handles.editFileToLoad,'String'));
 
-%Find JSON in the filepath, load it and load flourescent image
-folder = [fileparts(handles.filePath) '/'];
-ds = fileDatastore(folder,'ReadFcn',@awsReadJSON,'FileExtensions','.json');
-handles.jsonFilePath = ds.Files{1};
-handles.json = ds.read();
-ds = fileDatastore(awsModifyPathForCompetability([folder handles.json.photobleachedLinesImagePath]),'ReadFcn',@imread);
-handles.im = ds.read();
-drawStatus(handles);
-guidata(hObject, handles);
+hObject.Enable = 'off';
+pause(0.01);
+try
+    
+    %Find JSON in the filepath, load it and load flourescent image
+    folder = [fileparts(handles.filePath) '/'];
+    ds = fileDatastore(folder,'ReadFcn',@awsReadJSON,'FileExtensions','.json');
+    handles.jsonFilePath = ds.Files{1};
+    handles.json = ds.read();
+    ds = fileDatastore(awsModifyPathForCompetability([folder handles.json.photobleachedLinesImagePath]),'ReadFcn',@imread);
+    handles.im = ds.read();
+    
+    %Remove fields that mighte be in the data structure but are no longer in use
+    if (isfield(handles.json.FM,'photobleachedLines'))
+        handles.json.FM = rmfield(handles.json.FM,'photobleachedLines');
+    end
+    if (isfield(handles.json.FM,'tissueInterface'))
+        handles.json.FM = rmfield(handles.json.FM,'tissueInterface');
+    end
+    
+    drawStatus(handles);
+    guidata(hObject, handles);
 
+    hObject.Enable = 'on';
+catch ME
+    hObject.Enable = 'on';
+    rethrow(ME);
+end
 
 % --- Executes on button press in pushbutton6.
 function pushbutton6_Callback(hObject, eventdata, handles)
@@ -170,19 +187,28 @@ function pushbutton6_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-if ~isfield(handles.json.FM,'tissueInterface')
-    error('Please mark tissue interface');
+err = ~isfield(handles.json.FM,'fiducialLines');
+if ~err
+    gr = [handles.json.FM.fiducialLines.group];
+    if ~contains(gr,'t')
+        err = true;
+    end
 end
+
+if err
+    error('Please mark group 1 lines, group 2 lines and tissue interface');
+end
+
 %Save JSON
 hObject.Enable = 'off';
 try
     awsWriteJSON(handles.json,handles.jsonFilePath);
     slideFilepath_ = handles.jsonFilePath;
-    computeAlignment;
+    identifyAndComputeAlignment;
     hObject.Enable = 'on';
 catch ME
     hObject.Enable = 'on';
-    error(ME.message);
+    rethrow(ME);
 end
 
 % --- Executes on button press in pushbuttonDeleteAll.
@@ -191,7 +217,7 @@ function pushbuttonDeleteAll_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-handles.json = RemoveLastPhotobleachedLine(handles.json);
+handles.json = RemoveLastFiducialLine(handles.json);
 drawStatus(handles)
 guidata(hObject, handles);
 
@@ -211,47 +237,41 @@ else
 end
 
 hold on;
-json = handles.json;
-if isfield(json.FM,'photobleachedLines')
-    for i=1:length(json.FM.photobleachedLines)
-        ln = json.FM.photobleachedLines(i);
+FM = handles.json.FM;
+if isfield(FM,'fiducialLines') 
+    for i=1:length(FM.fiducialLines)
+        ln = FM.fiducialLines(i);
         switch(ln.group)
             case {'1','v'}
                 spec = '-ob';
             case {'2','h'}
                 spec = '-or';
+            case 't'
+                spec = '--ow';
         end
         
         plot(ln.u_pix,ln.v_pix,spec,'LineWidth',2); 
     end
 end
-
-if isfield(json.FM,'tissueInterface')
-    plot(json.FM.tissueInterface.u_pix,json.FM.tissueInterface.v_pix,'--ow','LineWidth',2);
-end
 hold off;
 
-function json = AddPhotobleachedLineToJson(json,x,y,group)
+function json = AddFiducialLineToJson(json,x,y,group)
+f = fdlnCreate(x(:),y(:),group);
 
-pl.u_pix = x(:)';
-pl.v_pix = y(:)';
-pl.group = group;
-pl.linePosition_mm = NaN;
-
-if ~isfield(json.FM,'photobleachedLines')
-    json.FM.photobleachedLines = pl;
+if ~isfield(json.FM,'fiducialLines')
+    json.FM.fiducialLines = f;
 else
-    json.FM.photobleachedLines(end+1) = pl;
+    json.FM.fiducialLines(end+1) = f;
 end
 
-function json = RemoveLastPhotobleachedLine(json)
+function json = RemoveLastFiducialLine(json)
 
-if ~isfield(json.FM,'photobleachedLines')
+if ~isfield(json.FM,'fiducialLines')
     %Do Nothing
 else
-    json.FM.photobleachedLines(end) = [];
-    if isempty(json.FM.photobleachedLines)
-        json.FM = rmfield(json.FM,'photobleachedLines');
+    json.FM.fiducialLines(end) = [];
+    if isempty(json.FM.fiducialLines)
+        json.FM = rmfield(json.FM,'fiducialLines');
     end
 end
 

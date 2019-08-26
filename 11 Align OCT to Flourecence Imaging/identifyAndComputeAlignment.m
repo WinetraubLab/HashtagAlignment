@@ -1,9 +1,7 @@
-%function computeAlignment(slideFilepath,v)
-%This function computes alignment of sample
-%slideFilePath - file path of JSON of the slide or slide folder
+%This function identifies lines and compute basic alignment (single plane)
 
 %% Inputs
-slideFilepath =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/Slides/Slide01_Section02/SlideConfig.json';
+slideFilepath =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/Slides/Slide01_Section01/SlideConfig.json';
 
 rewriteMode = true; %Don't re write information
 
@@ -23,57 +21,52 @@ ds = fileDatastore(octVolumeFolder,'ReadFcn',@awsReadJSON,'FileExtensions','.jso
 octVolumeJsonFilePath = ds.Files{1};
 octVolumeJson = ds.read();
 
-pls = slideJson.FM.photobleachedLines;
+f = slideJson.FM.fiducialLines;
 
 %% Load Flourecent image
 ds = fileDatastore(awsModifyPathForCompetability([slideFolder slideJson.photobleachedLinesImagePath]),'ReadFcn',@imread);
 histologyFluorescenceIm = ds.read();
 
 %% Identify Lines
-if ~contains([pls.group],'1') && ~rewriteMode
+f = fdlnSortLines(f); %Sort lines such that they are organized by position, left to right
+
+isidentifySuccssful = false;
+if ~contains([f.group],'1') && ~rewriteMode
     %Identification already happend, skip
+    isidentifySuccssful = true;
 else
-    group1I = [pls.group]=='1' | [pls.group]=='v';
-    group2I = [pls.group]=='2' | [pls.group]=='h';
     
-    for i=1:size(pls)
-        pls(i).linePosition_mm = NaN;
+    %Get z position of the interface bettween tissue and gel, because that was
+    %the position we set at the begning
+    zInterface = octVolumeJson.VolumeOCTDimensions.z.values(octVolumeJson.focusPositionInImageZpix); %[um]
+    zInterface = zInterface/1000; %[mm]
+    grT = [f.group] == 't';
+    grTi = find(grT);
+    for i=grTi
+        f(i).linePosition_mm = zInterface;
     end
+
     
-    pls(group1I) = identifyLines(...
-        pls(group1I), ...
-        octVolumeJson.vLinePositions,'v',octVolumeJson.hLinePositions,'h');
-    pls(group2I) = identifyLines(...
-        pls(group2I), ...
-        octVolumeJson.vLinePositions,'v',octVolumeJson.hLinePositions,'h');
+    group1I = [f.group]=='1' | [f.group]=='v';
+    group2I = [f.group]=='2' | [f.group]=='h';
+    
+    f(group1I) = fdlnIdentifyLines(...
+        f(group1I), ...
+        octVolumeJson.vLinePositions,octVolumeJson.hLinePositions);
+    f(group2I) = fdlnIdentifyLines(...
+        f(group2I), ...
+        octVolumeJson.vLinePositions,octVolumeJson.hLinePositions);
+    
+    if (sum([f.group] ~= f(1).group) ~= 0)
+        isidentifySuccssful = true;
+    end
 end
 
-%Sort lines such that they are organized by position, left to right
-upos = cellfun(@mean,{pls.u_pix});
-[~,iSort] = sort(upos);
-plsOld = pls;
-for i=1:length(pls)
-    p = plsOld(iSort(i));
-    [~,ii] = sort(p.v_pix);
-    p.u_pix = p.u_pix(ii);
-    p.v_pix = p.v_pix(ii);
-    pls(i) = p;
-end
-
-slideJson.FM.photobleachedLines = pls;
+slideJson.FM.fiducialLines = f;
 
 %% Compute U,V,H
-[u,v,h] = identifiedPointsToUVH (pls);
-
-%Get z position of the interface bettween tissue and gel, because that was
-%the position we set at the begning
-zInterface = octVolumeJson.VolumeOCTDimensions.z.values(octVolumeJson.focusPositionInImageZpix); %[um]
-zInterface = zInterface/1000; %[mm]
-
-%Interface positoin in the image
-uInterface = mean(slideJson.FM.tissueInterface.u_pix); %[pix]
-vInterface = mean(slideJson.FM.tissueInterface.v_pix); %[pix]
-h(3)=uInterface*u(3) + vInterface*v(3)-zInterface; %Estimate for h(3)
+if (isidentifySuccssful)
+[u,v,h] = fdlnEstimateUVHSinglePlane(f);
 
 slideJson.FM.singlePlaneFit.u = u;
 slideJson.FM.singlePlaneFit.v = v;
@@ -95,7 +88,7 @@ slideJson.FM.singlePlaneFit.sizeChangePrecent = sizeChange;
 u_yIntercept = @(vint,c)(-v(1)/u(1)*vint-h(1)/u(1)+c/u(1)); %x=0
 u_xIntercept = @(vint,c)(-v(2)/u(2)*vint-h(2)/u(2)+c/u(2)); %y=0
 
-vspan = [min(min([pls.v_pix])) max(max([pls.v_pix]))];
+vspan = [min(min([f.v_pix])) max(max([f.v_pix]))];
 yOfYIntercept = u_yIntercept(mean(vspan),0)*u(2)+mean(vspan)*v(2)+h(2);
 xOfXIntercept = u_xIntercept(mean(vspan),0)*u(1)+mean(vspan)*v(1)+h(1);
 slideJson.FM.singlePlaneFit.xIntercept_mm = [xOfXIntercept 0];
@@ -105,19 +98,20 @@ slideJson.FM.singlePlaneFit.yIntercept_mm = [0 yOfYIntercept];
 u_yIntercept = @(vint,c)(-v(1)/u(1)*vint-h(1)/u(1)+c/u(1)); %x=0
 u_xIntercept = @(vint,c)(-v(2)/u(2)*vint-h(2)/u(2)+c/u(2)); %y=0
 
+end
 %% Plot
 
-f = figure(223);
-set(f,'units','normalized','outerposition',[0 0 1 1])
+f1 = figure(223);
+set(f1,'units','normalized','outerposition',[0 0 1 1])
 subplot(2,2,[1 2]);
 
 %Main Figure
 imagesc(histologyFluorescenceIm);
 colormap gray
 hold on;
-uspan = [min(min([pls.u_pix])) max(max([pls.u_pix]))];
+uspan = [min(min([f.u_pix])) max(max([f.u_pix]))];
 uspan = uspan+uspan.*[-1 1]*0.05;
-vspan = [min(min([pls.v_pix])) max(max([pls.v_pix]))];
+vspan = [min(min([f.v_pix])) max(max([f.v_pix]))];
 vspan = vspan+vspan.*[-0.2 0.75];
 xlim(uspan);
 ylim(vspan);
@@ -128,14 +122,16 @@ xlabel('u pix');
 ylabel('v pix');
 
 %Plot points found on figure
-for i=1:length(pls)
-    tmp = pls(i);
+for i=1:length(f)
+    tmp = f(i);
     
     switch(lower(tmp.group))
-        case 'h'
+        case {'h','2'}
             cc = [0.8 0.8 1];
-        case 'v'
+        case {'v','1'}
             cc = [1 0.8 0.8];
+        case 't'
+            continue; %No need to plot tissue
     end
     
     plot(tmp.u_pix,tmp.v_pix,'.-','LineWidth',2);
@@ -145,27 +141,29 @@ for i=1:length(pls)
         'Color',cc,'HorizontalAlignment','center','FontSize',12,'VerticalAlignment','top');
 end
 
-%Plot Intercepts
-for i=1:length(octVolumeJson.hLinePositions)
-    plot(u_xIntercept(vspan,octVolumeJson.hLinePositions(i)),vspan,'--','Color',[0.8 0.8 1]);
-end
-for i=1:length(octVolumeJson.vLinePositions)
-    plot(u_yIntercept(vspan,octVolumeJson.vLinePositions(i)),vspan,'--','Color',[1 0.8 0.8]);
-end
-    
-plot(u_yIntercept(vspan,0),vspan,'--r');
-plot(u_xIntercept(vspan,0),vspan,'--r');
-text(u_yIntercept(mean(vspan)*1.1,0),mean(vspan)*1.1,sprintf(' x=+0\n y=%+.1fmm',yOfYIntercept),'Color','red','FontSize',12,'VerticalAlignment','top')
-text(u_xIntercept(mean(vspan)*1.1,0),mean(vspan)*1.1,sprintf(' x=%+.1fmm\n y=+0',xOfXIntercept),'Color','red','FontSize',12,'VerticalAlignment','top')
+if isidentifySuccssful
+    %Plot Intercepts
+    for i=1:length(octVolumeJson.hLinePositions)
+        plot(u_xIntercept(vspan,octVolumeJson.hLinePositions(i)),vspan,'--','Color',[0.8 0.8 1]);
+    end
+    for i=1:length(octVolumeJson.vLinePositions)
+        plot(u_yIntercept(vspan,octVolumeJson.vLinePositions(i)),vspan,'--','Color',[1 0.8 0.8]);
+    end
 
+    plot(u_yIntercept(vspan,0),vspan,'--r');
+    plot(u_xIntercept(vspan,0),vspan,'--r');
+    text(u_yIntercept(mean(vspan)*1.1,0),mean(vspan)*1.1,sprintf(' x=+0\n y=%+.1fmm',yOfYIntercept),'Color','red','FontSize',12,'VerticalAlignment','top')
+    text(u_xIntercept(mean(vspan)*1.1,0),mean(vspan)*1.1,sprintf(' x=%+.1fmm\n y=+0',xOfXIntercept),'Color','red','FontSize',12,'VerticalAlignment','top')
+end
 hold off;
 
 %Plot Plane
 subplot(2,2,3);
+if isidentifySuccssful
 mm = [-1 1]*(octVolumeJson.lineLength/2);
-for i=1:length(pls)
-    c = pls(i).linePosition_mm;
-    switch(lower(pls(i).group))
+for i=1:length(f)
+    c = f(i).linePosition_mm;
+    switch(lower(f(i).group))
         case 'v'
             plot([c c],mm,'-','LineWidth',1);
         case 'h'
@@ -176,7 +174,6 @@ for i=1:length(pls)
         hold on;
     end
 end
-
 
 v_ = 0;
 plot(u(1)*uspan+v(2)*v_+h(1),u(2)*uspan+v(2)*v_+h(2),'k');
@@ -206,8 +203,41 @@ text(0,0.5,s,'VerticalAlignment','Middle','HorizontalAlignment','Left','FontSize
 set(gca,'Color','white');
 set(gca,'XColor','white');
 set(gca,'YColor','white');
-
+end
 pause(0.01);
+
+%% Prompt user, would they like to update before we save?
+if (rewriteMode)
+   button = questdlg('Would you like to manually override line identification?','Q','Yes','No','No');
+   if (strcmp(button,'Yes'))
+       fi = [f.group] ~= 't';
+       fi = find(fi);
+       
+       fprintf('Please enter line groups (left to right), seperate by comma or space [can be v or h]\n Was: ')
+       fprintf('%s',sprintf('%s',[transpose([f(fi).group]) repmat(' ',length(fi),1)]'));
+       gr = input('\n','s');
+       gr = strsplit(gr,{',',' '});
+       gr(cellfun(@isempty,gr)) = [];
+       
+       fprintf('Please enter line positions (left to right), seperate by comma or space [in mm]\n Was: ');
+       fprintf('%.3f ',[f(fi).linePosition_mm]);  
+       pos = input('\n','s');
+       pos = strsplit(pos,{',',' '});
+       pos = cellfun(@str2double,pos);
+       
+       
+       if length(fi) ~= length(pos) || length(fi) ~= length(gr)
+           error('Missing some lines');
+       end
+       
+       for i=1:length(fi)
+           f(i).group = gr(i);
+           f(i).linePosition_mm = pos(i);
+       end
+       
+       slideJson.FM.fiducialLines = f;
+   end
+end
 
 %% Save to JSON & figure
 if (rewriteMode)
@@ -220,5 +250,4 @@ if (rewriteMode)
     else
         copyfile('SlideAlignment.png',[fileparts(slideJsonFilePath) '\SlideAlignment.png']);
     end   
-    
 end

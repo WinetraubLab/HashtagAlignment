@@ -1,26 +1,17 @@
-function photobleachedLines = identifyLines(photobleachedLines,linePosGroup1,lineGroup1Name,linePosGroup2,lineGroup2Name)
-%This function tries to identify line ids based on their ratios.
+function fdln = fdlnIdentifyLines(fdln,vLinePositions,hLinePositions)
+%This function tries to identify fiducial line structure based on the distance ratios.
 %INPUTS:
-%   photobleachedLines - lines to be identified, structure should contain
-%   u_pix, v_pix will update the rest
-%   linePosGroup1 - line positions (along 1 dimension line) of group 1 of
-%       lines. Example (-0.100mm,0,0.200mm). Position should be mm!
-%   linePosGroup2 - optional, same as linePosGroup1.
-%   lineGroup1Name - name 'h' or 'v' for example
+%   fdln - fiducial line structure array
+%   vLinePositions - crossing points of vertical lines (x=0, y=c) [mm]
+%   hLinePositions - crossing points of horizontal lines (x=c, y=0) [mm]
 %
 %OUTPUTS:
-%   update photobleachedLines structure
+%   update fiducial line structure
 
-%% Input checks
-if ~exist('linePosGroup2','var')
-    linePosGroup2 = [];
-end
-
-pls = photobleachedLines;
-
-%% Preprocess positions
-lineU = [pls.u_pix]'; %(line #, point in line)
-lineV = [pls.v_pix]'; %(line #, point in line)
+%% Preprocess positions of fdln, extract ratios
+f = fdln;
+lineU = [f.u_pix]'; %(line #, point in line)
+lineV = [f.v_pix]'; %(line #, point in line)
 
 %Compute line centers
 lineUm = mean(lineU,2);
@@ -58,36 +49,36 @@ end
 
 dr = d(1:(end-1))/d(2:end);
 
-%% Encode lines ratios
-ratios = zeros(2*(length(linePosGroup1)-2 + length(linePosGroup2)-2),1);
+%% Encode lines ratios of the groups we have
+ratios = zeros(2*(length(vLinePositions)-2 + length(hLinePositions)-2),1);
 allLineId_Group = zeros(size(ratios));
 allLineId_LineNumbers = zeros(length(ratios),3);
 allLineId_Pos = zeros(length(ratios),3);
 
 ri = 1;
 
-for i=2:(length(linePosGroup1)-1)
+for i=2:(length(vLinePositions)-1)
     
-    ratios(ri) = abs(linePosGroup1(i-1)-linePosGroup1(i))/abs(linePosGroup1(i+1)-linePosGroup1(i));
+    ratios(ri) = abs(vLinePositions(i-1)-vLinePositions(i))/abs(vLinePositions(i+1)-vLinePositions(i));
     ratios(ri+1) = 1/ratios(ri);
     
-    allLineId_Group(ri+(0:1)) = lineGroup1Name;
+    allLineId_Group(ri+(0:1)) = 'v';
     allLineId_LineNumbers(ri,:) = [i-1 i i+1];
-    allLineId_Pos(ri,:) = linePosGroup1(allLineId_LineNumbers(ri,:));
+    allLineId_Pos(ri,:) = vLinePositions(allLineId_LineNumbers(ri,:));
     allLineId_LineNumbers(ri+1,:) = [i+1 i i-1];
-    allLineId_Pos(ri+1,:) = linePosGroup1(allLineId_LineNumbers(ri+1,:));
+    allLineId_Pos(ri+1,:) = vLinePositions(allLineId_LineNumbers(ri+1,:));
     ri = ri+2;
 end
-for i=2:(length(linePosGroup2)-1)
+for i=2:(length(hLinePositions)-1)
     
-    ratios(ri) = abs(linePosGroup2(i-1)-linePosGroup2(i))/abs(linePosGroup2(i+1)-linePosGroup2(i));
+    ratios(ri) = abs(hLinePositions(i-1)-hLinePositions(i))/abs(hLinePositions(i+1)-hLinePositions(i));
     ratios(ri+1) = 1/ratios(ri);
     
-    allLineId_Group(ri+(0:1)) = lineGroup2Name;
+    allLineId_Group(ri+(0:1)) = 'h';
     allLineId_LineNumbers(ri,:) = [i-1 i i+1];
-    allLineId_Pos(ri,:) = linePosGroup2(allLineId_LineNumbers(ri,:));
+    allLineId_Pos(ri,:) = hLinePositions(allLineId_LineNumbers(ri,:));
     allLineId_LineNumbers(ri+1,:) = [i+1 i i-1];
-    allLineId_Pos(ri+1,:) = linePosGroup2(allLineId_LineNumbers(ri+1,:));
+    allLineId_Pos(ri+1,:) = hLinePositions(allLineId_LineNumbers(ri+1,:));
     ri = ri+2;
 end
     
@@ -116,8 +107,8 @@ end
 
 %% Copy output
 for i=1:length(lineId_Group)
-    pls(iSort(i)).group = char(lineId_Group(i));
-    pls(iSort(i)).linePosition_mm = lineId_Pos(i);
+    f(iSort(i)).group = char(lineId_Group(i));
+    f(iSort(i)).linePosition_mm = lineId_Pos(i);
 end
-photobleachedLines = pls;
+fdln = f;
     

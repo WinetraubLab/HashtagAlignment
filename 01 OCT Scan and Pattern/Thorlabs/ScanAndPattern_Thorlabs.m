@@ -27,8 +27,10 @@ config.BScanAvg = 1;
 %Photobleaching defenitions
     %Line placement (vertical - up/down, horizontal - left/right)
 	config.base = 100/1000; %base seperation [mm]
-    config.vLinePositions = config.base*[-1 0 3]; %[mm] 
-    config.hLinePositions = config.base*[-1 0 2]; %[mm] 
+    %config.vLinePositions = config.base*[-1 0 3]; %[mm] 
+    %config.hLinePositions = config.base*[-1 0 2]; %[mm] 
+	config.vLinePositions = config.base*[-4  0 1 3]; %[mm] 
+    config.hLinePositions = config.base*[-3 -2 1 3]; %[mm] 
 
     config.exposurePerLine = 30; %[sec]
     config.passes = 2;
