@@ -139,6 +139,7 @@ p=path;
 if ~contains(p,yOCTMainFolder)
     addpath(genpath(yOCTMainFolder)); %Add current files to path
 end
+awsSetCredentials(1);
 
 % --- Executes on button press in pushbuttonLoad.
 function pushbuttonLoad_Callback(hObject, eventdata, handles)
