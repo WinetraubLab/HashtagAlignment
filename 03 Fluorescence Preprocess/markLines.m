@@ -22,7 +22,7 @@ function varargout = markLines(varargin)
 
 % Edit the above text to modify the response to help markLines
 
-% Last Modified by GUIDE v2.5 21-Aug-2019 23:44:12
+% Last Modified by GUIDE v2.5 28-Aug-2019 10:00:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -77,7 +77,7 @@ function pushbuttonAddGroup1Lines_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonAddGroup1Lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[x,y] = ginput(2);
+[x,y] = getline();
 handles.json = AddFiducialLineToJson(handles.json,x,y,'1');
 
 drawStatus(handles)
@@ -88,7 +88,7 @@ function pushbuttonAddGroup2Lines_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonAddGroup2Lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[x,y] = ginput(2);
+[x,y] = getline();
 handles.json = AddFiducialLineToJson(handles.json,x,y,'2');
 
 drawStatus(handles)
@@ -100,7 +100,7 @@ function pushbuttonMarkTissueInterface_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonMarkTissueInterface (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[x,y] = ginput(2);
+[x,y] = getline();
 handles.json = AddFiducialLineToJson(handles.json,x,y,'t'); 
 
 drawStatus(handles)
@@ -211,13 +211,14 @@ catch ME
     rethrow(ME);
 end
 
-% --- Executes on button press in pushbuttonDeleteAll.
+% --- Executes on button press in pushbuttonDelete
 function pushbuttonDeleteAll_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonDeleteAll (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+[u0,v0] = getline();
 
-handles.json = RemoveLastFiducialLine(handles.json);
+handles.json = RemoveFiducialLineClosestTo(handles.json,mean(u0),mean(v0));
 drawStatus(handles)
 guidata(hObject, handles);
 
@@ -264,15 +265,44 @@ else
     json.FM.fiducialLines(end+1) = f;
 end
 
-function json = RemoveLastFiducialLine(json)
+function json = RemoveFiducialLineClosestTo(json,u0,v0)
 
-if ~isfield(json.FM,'fiducialLines')
+if ~isfield(json.FM,'fiducialLines') || isempty(json.FM.fiducialLines)
     %Do Nothing
 else
-    json.FM.fiducialLines(end) = [];
-    if isempty(json.FM.fiducialLines)
-        json.FM = rmfield(json.FM,'fiducialLines');
+    %Find which line is the closest to the mouse click
+    fs = json.FM.fiducialLines;
+    d = zeros(size(fs));
+    for i=1:length(d)
+        f = fs(i);
+        
+        u = f.u_pix([1 end]);
+        v = f.v_pix([1 end]);
+        
+        Q1 = [u(1); v(1)];
+        Q2 = [u(2); v(2)];
+        P = [u0; v0];
+        
+        l = Q2-Q1;
+        n = [l(2); -l(1)];%normal
+        
+        dt = dot(l,P-Q1)/norm(l);
+        if (dt > 0 && dt < norm(l))
+            %Intersection is closes to the line
+            d(i) = abs(dot(P-Q1,n))/norm(n);
+        else
+            %Intersection is outside, d is the closest distance to edge
+            %points
+            d(i) = min(norm(P-Q1),norm(P-Q2));
+        end
     end
+    iLineToDelete = find(d==min(d),1,'first');
+    
+    json.FM.fiducialLines(iLineToDelete) = [];
+end
+
+if isempty(json.FM.fiducialLines)
+    json.FM = rmfield(json.FM,'fiducialLines');
 end
 
 

@@ -113,5 +113,5 @@ else
     
     zInterface = mean([fdln(tI).linePosition_mm]);
     
-    h(3)=uInterface*u(3) + vInterface*v(3)-zInterface; 
+    h(3)= - uInterface*u(3) - vInterface*v(3) + zInterface; 
 end
