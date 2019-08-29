@@ -9,6 +9,7 @@ rewriteMode = true; %Don't re write information
 if exist('slideFilepath_','var')
     slideFilepath = slideFilepath_;
 end
+awsSetCredentials(1);
 
 %% Extract Slide Folder
 disp([datestr(now) ' Loading JSON']);
