@@ -73,7 +73,7 @@ fprintf('Processing: %s (slide %d, section %d)\n',folder,slideNumber,sectionNumb
 
 %% Import
 json = [];
-json.version = 1.1;
+json.version = 1.2;
 
 %Split file components
 [folder,fileName] = fileparts(fp);
@@ -138,6 +138,8 @@ end
 imshow(flourescenceIm);
 title(sprintf('Are the lines at the top of the flourescence image?, Pixel Size %.2f%s',json.FM.pixelSize_um,'[um]'));
 saveas(gca,'output.png');
+
+json.FM.imageSize_pix = size(flourescenceIm);
 
 %% Save Output
 outputFolder = awsModifyPathForCompetability(sprintf('%s/Slides/Slide%02d_Section%02d/',s3Dir,slideNumber,sectionNumber));
