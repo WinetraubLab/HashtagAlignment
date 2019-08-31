@@ -42,10 +42,10 @@ for i=1:length(fps)
             jsonOut.FM.imageSize_pix = [info.Height info.Width];
             
             if isfield(jsonIn.FM,'fiducialLines')
-                jsonOut.FM.fiducialLines = jsoIn.FM.fiducialLines;
+                jsonOut.FM.fiducialLines = jsonIn.FM.fiducialLines;
             end
             if isfield(jsonIn.FM,'singlePlaneFit')
-                jsonOut.FM.singlePlaneFit = jsoIn.FM.singlePlaneFit;
+                jsonOut.FM.singlePlaneFit = jsonIn.FM.singlePlaneFit;
             end
             
         case {lastVersion,1.2} %Version 1.2 - started August 30, 2019
@@ -57,7 +57,10 @@ for i=1:length(fps)
             error('Dont know how to convert from that version');
     end
     
-    awsWriteJSON(jsonOut,fps{i});
+    if (jsonIn.version ~= lastVersion)
+        %JSON update is required
+        awsWriteJSON(jsonOut,fps{i});
+    end
     
     %Progress report
     if ~exist('tt','var') || toc(tt) > 60*2
