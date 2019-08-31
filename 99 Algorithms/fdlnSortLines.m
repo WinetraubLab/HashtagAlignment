@@ -15,5 +15,6 @@ for i=1:length(fdln)
 end
 
 %% Put tissue at the begining
+fdln = fdln(:);
 tI = [fdln.group] == 't';
 fdln = [fdln(tI); fdln(~tI)];

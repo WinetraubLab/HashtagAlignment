@@ -172,7 +172,6 @@ try
     handles.octVolumeJsonFilePath = ds.Files{1};
     handles.octVolumeJson = ds.read();
     
-    
     handles.isIdentifySuccssful = false;
 
     drawStatus(handles);
