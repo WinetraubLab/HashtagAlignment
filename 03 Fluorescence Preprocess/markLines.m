@@ -22,7 +22,7 @@ function varargout = markLines(varargin)
 
 % Edit the above text to modify the response to help markLines
 
-% Last Modified by GUIDE v2.5 28-Aug-2019 10:00:21
+% Last Modified by GUIDE v2.5 30-Aug-2019 09:56:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -78,7 +78,7 @@ function pushbuttonAddGroup1Lines_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [x,y] = getline();
-handles.json = AddFiducialLineToJson(handles.json,x,y,'1');
+handles.slideJson = AddFiducialLineToJson(handles.slideJson,x,y,'1');
 
 drawStatus(handles)
 guidata(hObject, handles);
@@ -89,7 +89,7 @@ function pushbuttonAddGroup2Lines_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [x,y] = getline();
-handles.json = AddFiducialLineToJson(handles.json,x,y,'2');
+handles.slideJson = AddFiducialLineToJson(handles.slideJson,x,y,'2');
 
 drawStatus(handles)
 guidata(hObject, handles);
@@ -101,14 +101,14 @@ function pushbuttonMarkTissueInterface_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [x,y] = getline();
-handles.json = AddFiducialLineToJson(handles.json,x,y,'t'); 
+handles.slideJson = AddFiducialLineToJson(handles.slideJson,x,y,'t'); 
 
 drawStatus(handles)
 guidata(hObject, handles);
 
 
 function editFileToLoad_Callback(hObject, eventdata, handles)
-% hObject    handle to editFileToLoad (see GCBO)
+% hObject    handle to 
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 guidata(hObject, handles);
@@ -151,28 +151,30 @@ guidata(hObject, handles);
 if isempty(handles)
     return;
 end
-handles.filePath = awsModifyPathForCompetability(get(handles.editFileToLoad,'String'));
+filePath = awsModifyPathForCompetability(get(handles.editFileToLoad,'String'));
 
 hObject.Enable = 'off';
 pause(0.01);
 try
+    awsSetCredentials();
     
-    %Find JSON in the filepath, load it and load flourescent image
-    folder = [fileparts(handles.filePath) '/'];
+    %Find Slide JSON in the filepath, load it and load flourescent image
+    folder = [fileparts(filePath) '/'];
     ds = fileDatastore(folder,'ReadFcn',@awsReadJSON,'FileExtensions','.json');
-    handles.jsonFilePath = ds.Files{1};
-    handles.json = ds.read();
-    ds = fileDatastore(awsModifyPathForCompetability([folder handles.json.photobleachedLinesImagePath]),'ReadFcn',@imread);
+    handles.slideJsonFilePath = ds.Files{1};
+    handles.slideJson = ds.read();
+    ds = fileDatastore(awsModifyPathForCompetability([folder handles.slideJson.photobleachedLinesImagePath]),'ReadFcn',@imread);
     handles.im = ds.read();
     
-    %Remove fields that mighte be in the data structure but are no longer in use
-    if (isfield(handles.json.FM,'photobleachedLines'))
-        handles.json.FM = rmfield(handles.json.FM,'photobleachedLines');
-    end
-    if (isfield(handles.json.FM,'tissueInterface'))
-        handles.json.FM = rmfield(handles.json.FM,'tissueInterface');
-    end
+    %Load Oct Volume JSON
+    folder = awsModifyPathForCompetability([fileparts(handles.slideJsonFilePath) '/../../OCTVolumes/']);
+    ds = fileDatastore(folder,'ReadFcn',@awsReadJSON,'FileExtensions','.json');
+    handles.octVolumeJsonFilePath = ds.Files{1};
+    handles.octVolumeJson = ds.read();
     
+    
+    handles.isIdentifySuccssful = false;
+
     drawStatus(handles);
     guidata(hObject, handles);
 
@@ -182,15 +184,12 @@ catch ME
     rethrow(ME);
 end
 
-% --- Executes on button press in pushbutton6.
+%Save button pressed
 function pushbutton6_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton6 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-err = ~isfield(handles.json.FM,'fiducialLines');
+err = ~isfield(handles.slideJson.FM,'fiducialLines');
 if ~err
-    gr = [handles.json.FM.fiducialLines.group];
+    gr = [handles.slideJson.FM.fiducialLines.group];
     if ~contains(gr,'t')
         err = true;
     end
@@ -203,23 +202,31 @@ end
 %Save JSON
 hObject.Enable = 'off';
 try
-    awsWriteJSON(handles.json,handles.jsonFilePath);
-    slideFilepath_ = handles.jsonFilePath;
-    identifyAndComputeAlignment;
+    awsSetCredentials(1);
+    awsWriteJSON(handles.slideJson,handles.slideJsonFilePath);
+    
+    %Upload the PNG if successful
+    pngPath = awsModifyPathForCompetability([fileparts(handles.slideJsonFilePath) '/SlideAlignment.png']);
+    if (handles.isIdentifySuccssful && exist('SlideAlignment.png','file'))
+        if (awsIsAWSPath(pngPath))
+            %Upload to AWS
+            awsCopyFileFolder('SlideAlignment.png',pngPath);
+        else
+            copyfile('SlideAlignment.png',pngPath);
+        end   
+    end
     hObject.Enable = 'on';
 catch ME
     hObject.Enable = 'on';
     rethrow(ME);
 end
 
-% --- Executes on button press in pushbuttonDelete
+% Delete Line button pressed
 function pushbuttonDeleteAll_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbuttonDeleteAll (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+
 [u0,v0] = getline();
 
-handles.json = RemoveFiducialLineClosestTo(handles.json,mean(u0),mean(v0));
+handles.slideJson = RemoveFiducialLineClosestTo(handles.slideJson,mean(u0),mean(v0));
 drawStatus(handles)
 guidata(hObject, handles);
 
@@ -239,7 +246,7 @@ else
 end
 
 hold on;
-FM = handles.json.FM;
+FM = handles.slideJson.FM;
 if isfield(FM,'fiducialLines') 
     for i=1:length(FM.fiducialLines)
         ln = FM.fiducialLines(i);
@@ -308,3 +315,26 @@ end
 
 
     
+
+
+% --- Executes on button press in pushbuttonIdentifyManually.
+function pushbuttonIdentifyManually_Callback(hObject, eventdata, handles)
+
+[slideJson,isIdentifySuccssful] = identifyLinesAndAlignSlide(handles.slideJson,handles.octVolumeJson,'Manual');
+plotSignlePlane(slideJson.FM.singlePlaneFit,slideJson.FM.fiducialLines,handles.im,handles.octVolumeJson,isIdentifySuccssful);
+if (isIdentifySuccssful)
+    handles.slideJson = slideJson;
+    handles.isIdentifySuccssful = true;
+end
+guidata(hObject, handles);
+
+% --- Executes on button press in pushbuttonIdentifyByRatio.
+function pushbuttonIdentifyByRatio_Callback(hObject, eventdata, handles)
+
+[slideJson,isIdentifySuccssful] = identifyLinesAndAlignSlide(handles.slideJson,handles.octVolumeJson,'ByLinesRatio');
+plotSignlePlane(slideJson.FM.singlePlaneFit,slideJson.FM.fiducialLines,handles.im,handles.octVolumeJson,isIdentifySuccssful);
+if (isIdentifySuccssful)
+    handles.slideJson = slideJson;
+    handles.isIdentifySuccssful = true;
+end
+guidata(hObject, handles);

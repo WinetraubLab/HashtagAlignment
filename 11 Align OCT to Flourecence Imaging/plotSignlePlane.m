@@ -1,4 +1,4 @@
-function plotSignlePlane(singlePlaneFit,f,histologyFluorescenceIm,octVolumeJson)
+function plotSignlePlane(singlePlaneFit,f,histologyFluorescenceIm,octVolumeJson,isSaveFigureAsPNG)
 %This function plots the data estimated by single plane fit & Fiducial line
 %structure.
 %INPUTS:
@@ -7,6 +7,11 @@ function plotSignlePlane(singlePlaneFit,f,histologyFluorescenceIm,octVolumeJson)
 %   histologyFluorescenceIm - optional, Fluoresence image to plot on. set
 %       to [] if no image is found
 %   octVolumeJson - JSON loaded from the OCT Volume scan
+%   isSaveFigureAsPNG - default: true
+
+if ~exist('isSaveFigureAsPNG','var')
+    isSaveFigureAsPNG = true;
+end
 
 if ~exist('histologyFluorescenceIm','var') 
     histologyFluorescenceIm = [];
@@ -201,5 +206,7 @@ end
 
 %% Make figure and save
 pause(0.01);
-saveas(gcf,'SlideAlignment.png');
+if (isSaveFigureAsPNG)
+    saveas(gcf,'SlideAlignment.png');
+end
 
