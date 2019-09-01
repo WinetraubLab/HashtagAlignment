@@ -176,6 +176,7 @@ if isstruct(singlePlaneFit)
     text(u(1)*uspan(1)+v(1)*v_+h(1),u(2)*uspan(1)+v(2)*v_+h(2),sprintf('u=%.0f',uspan(1)));
     text(u(1)*uspan(end)+v(1)*v_+h(1),u(2)*uspan(end)+v(2)*v_+h(2),sprintf('u=%.0f',uspan(end)));
     axis equal;
+    axis ij;
     hold off;
     grid on;
     title('Plane [To Scale]');

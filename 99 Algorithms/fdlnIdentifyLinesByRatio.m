@@ -47,7 +47,7 @@ for i=1:length(d)
    d(i) = sqrt( (diff(lineUi(i+[0 1]))).^2 + (diff(lineVi(i+[0 1]))).^2);
 end
 
-dr = d(1:(end-1))/d(2:end);
+dr = d(1:(end-1))./d(2:end);
 
 %% Encode lines ratios of the groups we have
 ratios = zeros(2*(length(vLinePositions)-2 + length(hLinePositions)-2),1);

@@ -10,7 +10,10 @@ for i=1:length(fdln)
     f = fdlnOld(iSort(i));
     [~,ii] = sort(f.v_pix);
     f.u_pix = f.u_pix(ii);
+    f.u_pix = f.u_pix(:);
+    
     f.v_pix = f.v_pix(ii);
+    f.v_pix = f.v_pix(:);
     fdln(i) = f;
 end
 

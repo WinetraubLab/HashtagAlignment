@@ -156,7 +156,7 @@ yPlaneUFunc_pix = @(vint,c)(-v(2)/u(2)*vint-h(2)/u(2)+c/u(2)); %y=c
 zPlaneVFunc_pix = @(uint,c)(-u(3)/v(3)*uint-h(3)/v(3)+c/v(3)); %z=c
 
 %0 intercepts
-vspan = [min(min([f.v_pix])) max(max([f.v_pix]))];
+vspan = [min(cellfun(@min,{f.v_pix})) max(cellfun(@max,{f.v_pix}))];
 yOfYIntercept = xPlaneUFunc_pix(mean(vspan),0)*u(2)+mean(vspan)*v(2)+h(2);
 xOfXIntercept = yPlaneUFunc_pix(mean(vspan),0)*u(1)+mean(vspan)*v(1)+h(1);
 singlePlaneFit.xIntercept_mm = [xOfXIntercept 0];
