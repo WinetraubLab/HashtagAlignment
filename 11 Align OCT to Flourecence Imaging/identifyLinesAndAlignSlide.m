@@ -135,7 +135,7 @@ singlePlaneFit.notes = sprintf([...
 %% Compute general gemoetry
 tilt = asin(n(3))*180/pi; %[deg]
 rotation = atan2(-n(2),n(1))*180/pi; %[orientation]
-dFromOrigin = dot(h,n);
+dFromOrigin = abs(dot(h,n));
 
 if exist('pixelSize_um','var')
     sizeChange = 100*(( pixelSize_um / ((norm(u)+norm(v))/2*1e3)  )-1); 
