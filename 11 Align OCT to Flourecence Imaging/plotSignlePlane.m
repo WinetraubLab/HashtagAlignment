@@ -170,11 +170,12 @@ if isstruct(singlePlaneFit)
     end
    
     %Histology plane
-    v_ = mean(vspanO);
-    plot(u(1)*uspan+v(1)*v_+h(1),u(2)*uspan+v(2)*v_+h(2),'k');
-    plot(u(1)*uspan(1)+v(1)*v_+h(1),u(2)*uspan(1)+v(2)*v_+h(2),'ko');
-    text(u(1)*uspan(1)+v(1)*v_+h(1),u(2)*uspan(1)+v(2)*v_+h(2),sprintf('u=%.0f',uspan(1)));
-    text(u(1)*uspan(end)+v(1)*v_+h(1),u(2)*uspan(end)+v(2)*v_+h(2),sprintf('u=%.0f',uspan(end)));
+    x = polyval(singlePlaneFit.xFunctionOfU,uspan);
+    y = singlePlaneFit.m*x+singlePlaneFit.n;
+    plot(x,y,'k');
+    plot(x(1),y(1),'ko');
+    text(x(1),y(1),sprintf('u=%.0f',uspan(1)));
+    text(x(end),y(end),sprintf('u=%.0f',uspan(end)));
     axis equal;
     axis ij;
     hold off;

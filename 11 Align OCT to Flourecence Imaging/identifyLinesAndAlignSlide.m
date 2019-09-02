@@ -119,6 +119,9 @@ singlePlaneFit.h = h;
 
 n = cross(u/norm(u),v/norm(v)); %Compute norm vector to the plane
 
+vspan = [min(cellfun(@min,{f.v_pix})) max(cellfun(@max,{f.v_pix}))];
+v_ = mean(vspan);
+
 %% Notes
 singlePlaneFit.notes = sprintf([...
     'tilt_deg - angle between plane norm and z axis [deg] \n' ...
@@ -130,7 +133,21 @@ singlePlaneFit.notes = sprintf([...
 ...    'zPlaneVFunc_pix - This describes the projection of the plane z=c on to the histology section the fuction recives u [pix] and c and returns v_pix\n' ...
     'xIntercept_mm - (x,y) position of where histology plane hits x=0 plane (average position) [mm]\n' ...
     'yIntercept_mm - (x,y) position of where histology plane hits y=0 plane (average position) [mm]\n' ...
+    'Parameters when viewing from the top, approximation if tilt was 0[deg], y=mx+n:\n' ...
+    ' * m,n - equation that defines the plane\n' ...
+    ' * xFunctionOfU - 2vector (to be used by polyvar) converts u coordinates to x'
     ]);
+
+%% Top plane approximation
+pt1 = 0*u+v_*v+h;
+pt2 = 1*u+v_*v+h;
+dp = pt2-pt1;
+ml = dp(2)/dp(1);
+nl = pt1(2)-pt1(1)*ml;
+
+singlePlaneFit.m = ml;
+singlePlaneFit.n = nl;
+singlePlaneFit.xFunctionOfU = polyfit([0,1],[pt1(1) pt2(1)],1);
 
 %% Compute general gemoetry
 tilt = asin(n(3))*180/pi; %[deg]
@@ -156,9 +173,8 @@ yPlaneUFunc_pix = @(vint,c)(-v(2)/u(2)*vint-h(2)/u(2)+c/u(2)); %y=c
 zPlaneVFunc_pix = @(uint,c)(-u(3)/v(3)*uint-h(3)/v(3)+c/v(3)); %z=c
 
 %0 intercepts
-vspan = [min(cellfun(@min,{f.v_pix})) max(cellfun(@max,{f.v_pix}))];
-yOfYIntercept = xPlaneUFunc_pix(mean(vspan),0)*u(2)+mean(vspan)*v(2)+h(2);
-xOfXIntercept = yPlaneUFunc_pix(mean(vspan),0)*u(1)+mean(vspan)*v(1)+h(1);
+yOfYIntercept = xPlaneUFunc_pix(v_,0)*u(2)+v_*v(2)+h(2);
+xOfXIntercept = yPlaneUFunc_pix(v_,0)*u(1)+v_*v(1)+h(1);
 singlePlaneFit.xIntercept_mm = [xOfXIntercept 0];
 singlePlaneFit.yIntercept_mm = [0 yOfYIntercept];
 end
