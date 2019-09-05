@@ -1,4 +1,4 @@
-function [slideJson,isIdentifySuccssful] = identifyLinesAndAlignSlide(slideJson,octVolumeJson,identifyMethod)
+function [slideJson,isIdentifySuccssful] = identifyLinesAndAlignSlide(slideJson,octVolumeJson,identifyMethod,SlidesJsonsStack)
 %This function preforms the basic preprocessing of a slide, identify the
 %lines and do a single plane alignment
 %INPUTS:
@@ -7,7 +7,11 @@ function [slideJson,isIdentifySuccssful] = identifyLinesAndAlignSlide(slideJson,
 %   - identifyMethod - which method to use to identify the lines. Can be:
 %       'None' - keep lines as is, don't change
 %       'ByLinesRatio' - identify lines by ratio between lines distances
+%       'ByStack' - identify lines by interpolation of stack, must inclide
+%           SlideJsonsStack as well.
 %       'Manual' - prompt user to enter their insights
+%   - SlidesJsonsStack - optional, if user would like to do alignment by
+%       stack, Jsons of all slide should appear here
 %OUTPUT:
 % - isIdentifySuccssful - true when line identification was successful
 
@@ -48,6 +52,10 @@ switch(lower(identifyMethod))
                 f(group2I), ...
                 octVolumeJson.vLinePositions,octVolumeJson.hLinePositions);
         end
+        
+    case 'bystack'
+        f = fdlnIdentifyLinesByStackInterpolation(f,octVolumeJson.vLinePositions,octVolumeJson.hLinePositions,...
+            cellfun(@(x)(x.fiducialLines),{SlidesJsonsStack.FM},'UniformOutput',false));
         
     case 'manual'
         fprintf('vLinePositions [mm] = %s\n',sprintf('%.3f ',octVolumeJson.vLinePositions));
@@ -133,6 +141,7 @@ singlePlaneFit.notes = sprintf([...
 ...    'zPlaneVFunc_pix - This describes the projection of the plane z=c on to the histology section the fuction recives u [pix] and c and returns v_pix\n' ...
     'xIntercept_mm - (x,y) position of where histology plane hits x=0 plane (average position) [mm]\n' ...
     'yIntercept_mm - (x,y) position of where histology plane hits y=0 plane (average position) [mm]\n' ...
+    'fitScore - lower is better, distance between photobleached feducial lines to the approximation [pix]\n' ...
     'Parameters when viewing from the top, approximation if tilt was 0[deg], y=mx+n:\n' ...
     ' * m,n - equation that defines the plane\n' ...
     ' * xFunctionOfU - 2vector (to be used by polyvar) converts u coordinates to x'
@@ -148,10 +157,14 @@ nl = pt1(2)-pt1(1)*ml;
 singlePlaneFit.m = ml;
 singlePlaneFit.n = nl;
 singlePlaneFit.xFunctionOfU = polyfit([0,1],[pt1(1) pt2(1)],1);
+singlePlaneFit.xFunctionOfU = singlePlaneFit.xFunctionOfU(:);
 
 %% Compute general gemoetry
 tilt = asin(n(3))*180/pi; %[deg]
-rotation = atan2(-n(2),n(1))*180/pi; %[orientation]
+rotation = 90-atan2(-n(2),n(1))*180/pi; %[orientation]
+if (rotation > 180)
+    rotation = rotation-360;
+end
 dFromOrigin = abs(dot(h,n));
 
 if exist('pixelSize_um','var')
@@ -175,6 +188,21 @@ zPlaneVFunc_pix = @(uint,c)(-u(3)/v(3)*uint-h(3)/v(3)+c/v(3)); %z=c
 %0 intercepts
 yOfYIntercept = xPlaneUFunc_pix(v_,0)*u(2)+v_*v(2)+h(2);
 xOfXIntercept = yPlaneUFunc_pix(v_,0)*u(1)+v_*v(1)+h(1);
-singlePlaneFit.xIntercept_mm = [xOfXIntercept 0];
-singlePlaneFit.yIntercept_mm = [0 yOfYIntercept];
+singlePlaneFit.xIntercept_mm = [xOfXIntercept;0];
+singlePlaneFit.yIntercept_mm = [0;yOfYIntercept];
+
+%% Compute Fit Score, lower is better
+scores = zeros(size(f));
+for i=1:length(f)
+    ff = f(i);
+    switch(ff.group)
+        case 'v'
+            scores(i) = sqrt(mean( (ff.u_pix-xPlaneUFunc_pix(ff.v_pix,ff.linePosition_mm) ).^2 ));
+        case 'h'
+            scores(i) = sqrt(mean( (ff.u_pix-yPlaneUFunc_pix(ff.v_pix,ff.linePosition_mm) ).^2 ));
+        otherwise
+            scores(i) = NaN;
+    end
+end
+singlePlaneFit.fitScore = scores(:);
 end

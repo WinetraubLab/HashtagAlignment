@@ -89,12 +89,13 @@ end
 %Set axis
 fToUse = [f.group] ~= 't';
 uspanO = [min(min([f(fToUse).u_pix])) max(max([f(fToUse).u_pix]))];
-uspan = uspanO+uspanO.*[-1 1]*0.05;
-vspanO = [min(min([f(fToUse).v_pix])) max(max([f(fToUse).v_pix]))];
-vspan = vspanO+vspanO.*[-0.2 0.7];
+uspan = uspanO+uspanO.*[-1 1]*0.1;
+vspanO = [min(cellfun(@min,{f.v_pix})) max(cellfun(@max,{f.v_pix}))];
+vspan = vspanO+vspanO.*[-0.2 0.2];
 xlim(uspan);
 ylim(vspan);
 axis equal
+xlim(uspan);
 uspan = xlim;
 vspan = ylim;
 xlabel('u pix');
@@ -195,8 +196,12 @@ if isstruct(singlePlaneFit)
     s2 = sprintf('Size Change: %.1f%% (%s)\n',singlePlaneFit.sizeChange_precent,s);
     s3 = sprintf('Angle In X-Y Plane: %.2f[deg]\nZ Tilt: %.2f[deg]\n', ...
         singlePlaneFit.rotation_deg,singlePlaneFit.tilt_deg);
-    s4 = sprintf('Distance from Origin: %.1f[um]',singlePlaneFit.distanceFromOrigin_mm*1000);
-    s = [s1 s2 s3 s4];
+    s4 = sprintf('Distance from Origin: %.1f[um]\n',singlePlaneFit.distanceFromOrigin_mm*1000);
+    
+    fs = singlePlaneFit.fitScore; fs(isnan(fs)) = [];
+    ss = sprintf('%.0f, ',fs); ss(end+(-1:0)) = [];
+    s5 = sprintf('Fit Score (Mean) %.1f[pix].\n  Individual Lines (Left to Right): %s [pix]\n',mean(fs),ss);
+    s = [s1 s2 s3 s4 s5];
 
     set(gcf,'Color', 'white')
     delete(get(gca,'Children')); %Clear prev text (if exist)

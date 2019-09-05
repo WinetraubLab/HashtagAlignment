@@ -8,13 +8,13 @@ function isIt = fdlnIsLineIdentified (fdln)
 %   isIt - 0 if non of fdln are identified, 1 - if all are identified, 0.5
 %   if some but not all are identified
 
-gr = [fdln.groups];
+gr = lower([fdln.group]);
 is = gr=='v' | gr=='h' | gr=='t';
 is = sum(is);
 
 if (is == 0)
     isIt = 0;
-elseif (is == length(is))
+elseif (is == length(gr))
     isIt = 1;
 else
     isIt = 0.5;
