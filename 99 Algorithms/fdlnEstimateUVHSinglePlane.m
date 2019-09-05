@@ -45,8 +45,8 @@ for i=1:length(fdlnsI)
 end
 
 pt_h_u = zeros(size([fdln(gr == 'h').u_pix])); pt_h_u = pt_h_u(:);
-pt_h_v = pt_v_u;
-pos_h = pt_v_u;
+pt_h_v = pt_h_u;
+pos_h = pt_h_u;
 fdlnsI = find(gr == 'h'); n=1;
 for i=1:length(fdlnsI)
    f = fdln(fdlnsI(i)); 

@@ -14,6 +14,10 @@ function fdln = fdlnIdentifyLinesByStackInterpolation(fdln,vLinePositions,hLineP
 %NOTICE:
 %   fdln must also be a member of fdlnStack cell array
 
+%Sort for good measure
+fdlnStack = cellfun(@fdlnSortLines,fdlnStack,'UniformOutput',false);
+fdln = fdlnSortLines(fdln);
+
 %% Find fdln in fdlnStack
 %Find fdln in fdlnStack
 isIt = cellfun(@(x)isequal(x,fdln),fdlnStack);

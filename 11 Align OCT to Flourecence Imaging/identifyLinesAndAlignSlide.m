@@ -21,16 +21,6 @@ isIdentifySuccssful = false;
 
 f = slideJson.FM.fiducialLines;
 f = fdlnSortLines(f); %Sort lines such that they are organized by position, left to right
-
-%Get z position of the interface bettween tissue and gel, because that was
-%the position we set at the begning
-zInterface = octVolumeJson.VolumeOCTDimensions.z.values(octVolumeJson.focusPositionInImageZpix); %[um]
-zInterface = zInterface/1000; %[mm]
-grT = [f.group] == 't';
-grTi = find(grT);
-for i=grTi
-    f(i).linePosition_mm = zInterface;
-end
     
 %% Part #1, identify lines (x-y)
 switch(lower(identifyMethod))
@@ -86,7 +76,7 @@ switch(lower(identifyMethod))
 end
 
 %Check if we have multiple groups present
-if (sum([f.group] == 'v') >= 2 && sum([f.group] == 'h'))
+if (sum([f.group] == 'v') >= 2) && (sum([f.group] == 'h') >=2)
     isIdentifySuccssful = true;
 end
 
@@ -95,6 +85,17 @@ if (isIdentifySuccssful)
     singlePlaneFit = alignSignlePlane(f,slideJson.FM.pixelSize_um);
 else
     singlePlaneFit = NaN;
+end
+
+%% Finalize - update z position
+%Get z position of the interface bettween tissue and gel, because that was
+%the position we set at the begning
+zInterface = octVolumeJson.VolumeOCTDimensions.z.values(octVolumeJson.focusPositionInImageZpix); %[um]
+zInterface = zInterface/1000; %[mm]
+grT = [f.group] == 't';
+grTi = find(grT);
+for i=grTi
+    f(i).linePosition_mm = zInterface;
 end
 
 %% Finalize by updating the JSON structure
