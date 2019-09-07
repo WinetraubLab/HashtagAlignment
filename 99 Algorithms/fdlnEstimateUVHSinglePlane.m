@@ -92,6 +92,10 @@ A = A_(u,v,0); B = B_(u,v,0);
 v(3) = vz(A,B);
 u(3) = -A/v(3);
 
+if (B^2 < 4*A^2)
+    error('Faild to estimate vz,uz');
+end
+
 %Iteration #2 include shearing effects
 if (a~=0 || b~=0)
     A = A_(u,v,a); B = B_(u,v,b);

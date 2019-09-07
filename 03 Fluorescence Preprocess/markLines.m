@@ -22,7 +22,7 @@ function varargout = markLines(varargin)
 
 % Edit the above text to modify the response to help markLines
 
-% Last Modified by GUIDE v2.5 30-Aug-2019 09:56:07
+% Last Modified by GUIDE v2.5 06-Sep-2019 16:57:02
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -151,7 +151,11 @@ guidata(hObject, handles);
 if isempty(handles)
     return;
 end
-filePath = awsModifyPathForCompetability(get(handles.editFileToLoad,'String'));
+filePath = get(handles.editFileToLoad,'String');
+if(filePath(end) ~= '/')
+    filePath(end+1) = '/';
+end
+filePath = awsModifyPathForCompetability(filePath);
 
 hObject.Enable = 'off';
 pause(0.01);
@@ -166,8 +170,20 @@ try
     ds = fileDatastore(awsModifyPathForCompetability([folder handles.slideJson.photobleachedLinesImagePath]),'ReadFcn',@imread);
     handles.im = ds.read();
     
+    handles.allSlidesPath = awsModifyPathForCompetability([fileparts(handles.slideJsonFilePath) '/../']);
+    
+    %Load Stack
+    ds = fileDatastore(handles.allSlidesPath,'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
+    slideJsonStack = ds.readall;
+    xx = cellfun(@(x)(isequal(handles.slideJson.FM.fiducialLines,x.FM.fiducialLines)),slideJsonStack);
+    if sum(xx) ~= 1
+        disp('Couldn''t locate position in stack');
+    end
+    handles.slideJsonPositionInStack = find(xx,1,'first');
+    handles.slideJsonStack = [slideJsonStack{:}];
+    
     %Load Oct Volume JSON
-    folder = awsModifyPathForCompetability([fileparts(handles.slideJsonFilePath) '/../../OCTVolumes/']);
+    folder = awsModifyPathForCompetability([handles.allSlidesPath '/../OCTVolumes/']);
     ds = fileDatastore(folder,'ReadFcn',@awsReadJSON,'FileExtensions','.json');
     handles.octVolumeJsonFilePath = ds.Files{1};
     handles.octVolumeJson = ds.read();
@@ -333,6 +349,25 @@ function pushbuttonIdentifyByRatio_Callback(hObject, eventdata, handles)
 [slideJson,isIdentifySuccssful] = identifyLinesAndAlignSlide(handles.slideJson,handles.octVolumeJson,'ByLinesRatio');
 plotSignlePlane(slideJson.FM.singlePlaneFit,slideJson.FM.fiducialLines,handles.im,handles.octVolumeJson,isIdentifySuccssful);
 if (isIdentifySuccssful)
+    handles.slideJson = slideJson;
+    handles.isIdentifySuccssful = true;
+end
+guidata(hObject, handles);
+
+% --- Executes on button press in pushbuttonIdentifyByStack.
+function pushbuttonIdentifyByStack_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonIdentifyByStack (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+%Update this in the right place in stack
+handles.slideJsonStack(handles.slideJsonPositionInStack) = handles.slideJson;
+
+%Compute stack fit
+[slideJson,isIdentifySuccssful] = identifyLinesAndAlignSlide(handles.slideJson,handles.octVolumeJson,'ByStack',handles.slideJsonStack);
+if (isIdentifySuccssful)
+    drawStatus(handles); %Update 
+    plotSignlePlane(slideJson.FM.singlePlaneFit,slideJson.FM.fiducialLines,handles.im,handles.octVolumeJson,isIdentifySuccssful);
     handles.slideJson = slideJson;
     handles.isIdentifySuccssful = true;
 end

@@ -3,7 +3,6 @@
 
 %% Inputs
 subjectFilePath =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/';
-%subjectFilePath =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/DoubleHashtag/';
 
 %% Find all JSONS
 awsSetCredentials(1);
@@ -82,6 +81,7 @@ for i=1:length(ii)
     d_mm(i) = sign(dot(c,n))*norm(c);
 end
 
+figure(100);
 subplot(1,1,1); %Clear previuse figure
 %% Plot all planes on one figure
 subplot(2,2,1);

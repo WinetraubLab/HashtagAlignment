@@ -53,13 +53,13 @@ switch(lower(identifyMethod))
         fprintf('Please enter line groups (left to right), seperate by comma or space [can be v or h]\n');
         fprintf(   'Orig Was: %s\n',sprintf('%s',[transpose([f.group]) repmat(' ',length(f),1)]'))
         gr = input('Input:    ','s');
-        gr = strsplit(lower(gr),{',',' '});
+        gr = strsplit(lower(strtrim(gr)),{',',' '});
         gr(cellfun(@isempty,gr)) = [];
 
         fprintf('Please enter line positions (left to right), seperate by comma or space [in mm]\n');
         fprintf(    'Orig Was: %s\n',sprintf('%.3f ',[f.linePosition_mm]));  
         pos = input('Input:    ','s');
-        pos = strsplit(pos,{',',' '});
+        pos = strsplit(strtrim(pos),{',',' '});
         pos = cellfun(@str2double,pos);
 
         if length(f) ~= length(pos) || length(f) ~= length(gr)

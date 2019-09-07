@@ -46,6 +46,8 @@ for slideI=1:length(slideJsons)
 slideJson = slideJsons(slideI);
 slideJsonFilePath = slideJsonFilePaths{slideI};
 slideFolder = [fileparts(slideJsonFilePath) '/'];
+[~,slideName] = fileparts([slideFolder(1:(end-1)) '.a']);
+slideName = strrep(slideName,'_',' ');
 
 if ~isfield(slideJson.FM,'fiducialLines')
     fprintf('%s doesn''t have fiducialLines marked. Skipping\n',slideJsonFilePath);
@@ -58,8 +60,23 @@ ds = fileDatastore(awsModifyPathForCompetability([slideFolder slideJson.photoble
 histologyFluorescenceIm = ds.read();
 
 %% Align and plot
+try
 [slideJson1,isIdentifySuccssful] = identifyLinesAndAlignSlide(slideJson,octVolumeJson,lineIdentifyMethod,SlidesJsonsStack);
-plotSignlePlane(slideJson1.FM.singlePlaneFit,slideJson1.FM.fiducialLines,histologyFluorescenceIm,octVolumeJson);
+catch Me
+    disp(Me.message)
+    for i=1:length(Me.stack)
+        Me.stack(i)
+    end
+    isIdentifySuccssful = false;
+end
+
+if (isIdentifySuccssful)
+    plotSignlePlane(slideJson1.FM.singlePlaneFit,slideJson1.FM.fiducialLines,histologyFluorescenceIm,octVolumeJson);
+    title(slideName);
+    pause(0.01);
+else
+    disp('Identification Failed');
+end
 
 %% Save to JSON & figure
 if (isIdentifySuccssful && rewriteMode)
@@ -79,3 +96,4 @@ if (isIdentifySuccssful && rewriteMode)
 end
 
 end %For
+disp([datestr(now) ' Done']);
