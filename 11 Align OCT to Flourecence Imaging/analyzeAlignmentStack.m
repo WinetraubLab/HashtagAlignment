@@ -122,7 +122,7 @@ for i = [1 size(plans_x,2)]
     text(mean(plans_x(:,i))-v(1)*d,mean(plans_y(:,i))-v(2)*d,strrep(slideNames{ii(i)},'_',' '),'Rotation',ang,'HorizontalAlignment','center','VerticalAlignment','middle')
 end
 
-theDot = [1;-1];
+theDot = [octVolumeJson.theDotX; octVolumeJson.theDotY];
 theDot = theDot/norm(theDot)*octVolumeJson.lineLength/2;
 plot(theDot(1),theDot(2),'bo','MarkerSize',10,'MarkerFaceColor','b');
 

@@ -188,7 +188,7 @@ grid on;
 hold on;
 
 %Plot the dot
-theDot = [1;-1];
+theDot = [json.theDotX; json.theDotY];
 theDot = theDot/norm(theDot)*1500;
 theDot = M*(theDot-[cx;cy]); %Rotate, [um]
 plot(theDot(1),theDot(2),'bo','MarkerSize',10,'MarkerFaceColor','b');

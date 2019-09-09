@@ -60,6 +60,10 @@ config.isDrawTickmarks = false;
 config.tickmarksX0 = [-0.3, 0.25];
 config.tickmarksY0 = [-0.25,0.25];
 
+config.isDrawTheDot = true;
+config.theDotX = 1;
+config.theDotY = -1;
+
 %% Initialize
 fprintf('%s Initialzing\n',datestr(datetime));
 disp('We assume laser is focused on the top of the tissue interface');
@@ -169,6 +173,18 @@ end
 
 if (config.isDrawTickmarks)
     PhotobleachTickmarks_Thorlabs(config.tickmarksX0,config.tickmarksY0,config.vLinePositions,config.hLinePositions,logFolder);
+end
+
+if (config.isDrawTheDot)
+    dl = 0.1; %[mm]
+    ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
+        config.theDotX-dl/2,config.theDotY, ... Start X,Y
+        config.theDotX+dl/2,config.theDotY, ... End X,Y
+        2*dl*config.exposurePerLine/config.lineLength,config.passes);  
+    ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
+        config.theDotX,config.theDotY-dl/2, ... Start X,Y
+        config.theDotX,config.theDotY+dl/2, ... End X,Y
+        2*dl*config.exposurePerLine/config.lineLength,config.passes); 
 end
 
 ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(false); %Switch off
