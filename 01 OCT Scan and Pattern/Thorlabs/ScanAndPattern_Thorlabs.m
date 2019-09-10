@@ -60,6 +60,7 @@ config.isDrawTickmarks = false;
 config.tickmarksX0 = [-0.3, 0.25];
 config.tickmarksY0 = [-0.25,0.25];
 
+%Orientation dot
 config.isDrawTheDot = true;
 config.theDotX = config.lineLength/2;
 config.theDotY = -config.lineLength/2;
