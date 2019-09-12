@@ -121,7 +121,7 @@ if ~exist(logFolder,'dir')
 end
 
 %Scan one silce where we photobleaching
-config.zToScan = [config.zToPhtobleach config.zToScan];
+config.zToScan = unique([config.zToPhtobleach config.zToScan]);
 
 %Overview center positons
 config.overview.gridXc = (-config.overview.rangeAll/2+config.overview.range/2):config.overview.range:(config.overview.rangeAll/2-config.overview.range/2);
