@@ -21,7 +21,7 @@ overviewOutputFolder = awsModifyPathForCompetability([SubjectFolder 'Log\01 OCT 
 logFolder = [SubjectFolder 'Log\02 OCT Preprocess\'];
 output3DOverviewVolume = awsModifyPathForCompetability([logFolder 'Overview\']); 
 
-%% Process overview folder
+%% Process overview scan
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
 
 if (length(json.overview.zDepts) > 1 && isfield(json,'focusPositionInImageZpix'))
