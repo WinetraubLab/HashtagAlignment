@@ -102,7 +102,7 @@ if lowRAMMode
 else
     overviewScan = cell2mat(overviewScan); %Convert to a big volume. (x,y,z)
     overviewScan = shiftdim(overviewScan,2); %Convert dimensions to (z,x,y)
-    enface = squeeze(mean(overviewScan(zStart:zEnd,:,:),1));
+    enface = squeeze(mean(overviewScan(zStart:zEnd,:,:),1)); %(x,y)
 end
 
 %% Correct for any vineeting done by the lens
@@ -129,6 +129,8 @@ clear enface; %Prevent confusion down the line
 %% Create enfece, find principal axis of tissue
 %Since image was scanned in ~45 degrees, find the angle that will re align
 %it with the natural view
+
+enface1 = enface1'; %Make sure enface is (y,x) - better for presentation later
 
 %Create grid
 x = pixSizeX*( (-size(enface1,2)/2):(+size(enface1,2)/2) );
@@ -166,6 +168,7 @@ enface2 = imtranslate(enface1,-[cxj cyi]+size(enface1)/2,'FillValues',med);
 %facing X axis
 V_1 = V^-1;
 ang = acos(V_1(1));
+angle = 0; %Dont use for now
 
 %Rotate
 enface3 = imrotate(enface2,ang*180/pi,'crop');

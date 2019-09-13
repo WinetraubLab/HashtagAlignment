@@ -176,7 +176,7 @@ pipeline {
 		stage("Build Files")
 		{steps{script{
 			bat("@echo isDebugFastMode_ = %IS_DEBUG_MODE%; >> runme.m")
-			bat("@echo zToPhtobleach_=%Z_TO_PHTOBLEACH%; >> runme.m")
+			bat("@echo zToPhtobleach_=%Z_TO_PHTOBLEACH%/1000; >> runme.m") //Matlab works in mm, Z_TO_PHTOBLEACH is in um here
 			bat("@echo outputFolder_='" + VOLUME_OUTPUT_FOLDER() + "'; >> runme.m")
 			bat("@echo isDrawTickmarks_=%IS_PHOTOBLEACH_TICKMARKS%; >> runme.m")
 			bat("@echo run ScanAndPattern_Thorlabs.m  >> runme.m")
