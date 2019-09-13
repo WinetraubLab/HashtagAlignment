@@ -22,20 +22,37 @@ logFolder = [SubjectFolder 'Log\02 OCT Preprocess\'];
 output3DOverviewVolume = awsModifyPathForCompetability([logFolder 'Overview\']); 
 
 %% Process overview folder
+json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
+
+if (length(json.overview.zDepts) > 1 && isfield(json,'focusPositionInImageZpix'))
+    %Multiple depths, so try to stitch appropretly
+    focusPositionInImageZpix = json.focusPositionInImageZpix;
+    
+    %Z projection parametres
+    zStart = 1;
+    zEnd = Inf;
+else
+    %One depth, just save all of it
+    focusPositionInImageZpix = NaN;
+    
+    %Z projection parametres
+    zStart = 100; %max(focusPositionInImageZpix - focusSigma*5,1);
+    zEnd = 1000;  %min(focusPositionInImageZpix + focusSigma*7,1000);
+end
+
 setupParpolOCTPreprocess();
 yOCTProcessTiledScan(...
     [OCTVolumesFolder 'Overview\'], ... Input
     output3DOverviewVolume,...
     'debugFolder',[logFolder 'OverviewDebug\'],...
     'saveYs',0,... No need to save Ys 
-    'focusPositionInImageZpix',NaN,... No Z scan filtering
+    'focusPositionInImageZpix',focusPositionInImageZpix,... No Z scan filtering
     'dispersionParameterA',dispersionParameterA,...
     'v',true);
 
 %% Read processed volume and create an enface view
 overviewVol = yOCTFromTif([output3DOverviewVolume(1:(end-1)) '_All.tif']); %Dimentions (z,x,y)
 processedJson = awsReadJSON([output3DOverviewVolume 'processedScanConfig.json']);
-json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
 
 xOverview = processedJson.xAllmm;
 yOverview = processedJson.yAllmm;
@@ -44,10 +61,6 @@ zOverview = processedJson.zAllmm;
 %Enface projection in Matlab prefers to work with matrix which is (y,x). So
 %change dimentions to fit
 overviewVol = permute(overviewVol,[1 3 2]); %(z,y,x)
-
-%Z projection parametres
-zStart = 100; %max(focusPositionInImageZpix - focusSigma*5,1);
-zEnd = 1000;  %min(focusPositionInImageZpix + focusSigma*7,1000);
 
 %Make sure start and end are in the volume
 zStart = max(zStart,1);

@@ -254,9 +254,13 @@ if exist([outputFolder 'ScanConfig.json'],'file')
         config.(fn{1}) = cfg.(fn{1});
     end
 end
+disp('config');
 config
+disp('config.photobleach');
 config.photobleach
+disp('config.scan');
 config.scan
+disp('config.overview');
 config.overview
 
 %Save
