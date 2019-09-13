@@ -14,13 +14,13 @@ pipeline {
 	{
 		string(
 			name: "S3_DIR",
-			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/",
-			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LB/",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LC/",
+			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LC/",
 			trim: true)
 		string(
 			name: "SAMPLE_ID",
-			defaultValue:"LB-00",
-			description:"Subject Id.\nExample: LB-01",
+			defaultValue:"LC-00",
+			description:"Subject Id.\nExample: LC-01",
 			trim: true)
 		string(
 			name: "Z_TO_PHTOBLEACH",
@@ -32,11 +32,16 @@ pipeline {
 			defaultValue:"@stanford.edu",
 			description:"Who should get an email with the results? Including you!\nUse comma to specify multiple emails.\nExample: me@stanford.edu, you@stanford.edu",
 			trim: true)
+			
+		booleanParam(
+			name: 'IS_FRESH_HUMAN_SAMPLE',
+			defaultValue:false,
+			description:"Is this a fresh human sample?")
 		
 		string(
 			name: "SAME_PATIENT_AS_SAMPLE_ID",
 			defaultValue:"New Patient",
-			description:"If this sample is from the same patient as another sample specify here. For example LB-01.\nIf this sample is from a patient that wasn't scanned before, leave as 'New Patient'",
+			description:"If this sample is from the same patient as another sample specify here. For example LC-01.\nIf this sample is from a patient that wasn't scanned before, leave as 'New Patient'",
 			trim: true)
 		
 		string(
@@ -102,11 +107,15 @@ pipeline {
 					error('Please specify email address to send a note when run is completed')
 				}
 				
-				if (params.PATIENT_AGE == "" && params.SAME_PATIENT_AS_SAMPLE_ID == "New Patient")
+				if (IS_FRESH_HUMAN_SAMPLE == "true")
 				{
-					currentBuild.result = 'ABORTED'
-					echo('Please specify patient data')
-					error('Please specify patient data')
+					//This is a fresh human sample make sure we have data about it
+					if (params.PATIENT_AGE == "" && params.SAME_PATIENT_AS_SAMPLE_ID == "New Patient")
+					{
+						currentBuild.result = 'ABORTED'
+						echo('Please specify patient data')
+						error('Please specify patient data')
+					}
 				}
 			}
 		}}}
@@ -213,6 +222,7 @@ pipeline {
 			def file2 = new File(VOLUME_OUTPUT_FOLDER() + "\\..\\Subject.json")
 			file2.write('\u007B\n' + 
 				'"sampleId" : "'                    + params.SAMPLE_ID + '",\n' + 
+				'"isFreshHumanSample" : '           + params.IS_FRESH_HUMAN_SAMPLE + ',\n' +
 				'"samePatientAsSampleWithId" : "'   + params.SAME_PATIENT_AS_SAMPLE_ID + '",\n' +
 				'"age" : "'                         + params.AGE + '",\n' + 
 				'"gender": "'                       + params.GENDER + '",\n' + 
