@@ -84,7 +84,7 @@ if (isRunningOnJenkins())
         config.photobleach.vLinePositions = base*[0]; %[mm] 
 		config.photobleach.hLinePositions = base*[0]; %[mm] 
 		config.photobleach.exposurePerLine_sec = 10; %sec
-		config.zToScan = [config.zToScan(1:3) 0]; %Reduce number of Z scans
+		config.zToScan = [config.zToScan(1:3) 0 config.zToScan(end)]; %Reduce number of Z scans
 	end
 end
 
