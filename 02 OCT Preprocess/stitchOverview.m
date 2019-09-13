@@ -19,7 +19,7 @@ SubjectFolder = awsModifyPathForCompetability([OCTVolumesFolder '..\']);
 
 overviewOutputFolder = awsModifyPathForCompetability([SubjectFolder 'Log\01 OCT Scan and Pattern\Overview.png']); %Overview should be saved to the scan part as we use it to decide which side to cut and how deep
 logFolder = [SubjectFolder 'Log\02 OCT Preprocess\'];
-output3DOverviewVolume = awsModifyPathForCompetability([logFolder 'Overview\']); 
+output3DOverviewVolume = awsModifyPathForCompetability([OCTVolumesFolder '/OverviewScanAbs/']);
 
 %% Process overview scan
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
