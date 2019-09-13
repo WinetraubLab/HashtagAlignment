@@ -1,7 +1,7 @@
 %This script stitches overview file
 
 %% Inputs
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01D/OCTVolumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-00D/OCTVolumes/';
 reconstructConfig = {'dispersionParameterA',6.539e07};%,'YFramesToProcess',1:5:100}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -18,17 +18,23 @@ if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
 end
 
-%Find subject folder by removing last folder
-tmp = awsModifyPathForCompetability(OCTVolumesFolder);
-tmp = fliplr(tmp);
-i = [find(tmp(2:end)=='/',1,'first'),find(tmp(2:end)=='\',1,'first')]; %Hopefully one is empty and the other contain the data
-tmp(1:min(i)) = [];
-SubjectFolder = fliplr(tmp);
+OCTVolumesFolder = awsModifyPathForCompetability([OCTVolumesFolder '\']);
+SubjectFolder = awsModifyPathForCompetability([OCTVolumesFolder '..\']);
 
-LogFolder = awsModifyPathForCompetability([SubjectFolder '\Log\01 OCT Scan and Pattern\']); %Overview should be saved to the scan part as we use it to decide which side to cut and how deep
-if ~awsIsAWSPath(LogFolder) && ~exist(LogFolder,'dir')
-    mkdir(LogFolder);
-end
+overviewOutputFolder = awsModifyPathForCompetability([SubjectFolder 'Log\01 OCT Scan and Pattern\Overview.png']); %Overview should be saved to the scan part as we use it to decide which side to cut and how deep
+output3DOverviewVolume = awsModifyPathForCompetability([SubjectFolder 'Log\02 OCT Preprocess\Overview\']); 
+
+%% Process overview folder
+yOCTProcessTiledScan(...
+    [OCTVolumesFolder 'Overview\'], ... Input
+    output3DOverviewVolume,...
+    'debugFolder',[LogFolder 'OverviewDebug\'],...
+    'saveYs',0,... No need to save Ys 
+    'focusPositionInImageZpix',NaN,... No Z scan filtering
+    'v',true);
+
+
+return;
 
 %% Read Configuration file
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
