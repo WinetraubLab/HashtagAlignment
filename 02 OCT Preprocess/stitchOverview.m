@@ -151,7 +151,7 @@ if isPlotEnface
     colormap bone;
 else
     imagesc(xOverview,yOverview,-depthOfMaxZ_pix);
-    title('Depth of Max Reflection (Blue is deeper)');
+    title('Depth of Max Intensity (Blue is deeper)');
     colormap parula
 end
 axis equal
