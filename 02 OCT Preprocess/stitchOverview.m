@@ -2,16 +2,12 @@
 
 %% Inputs
 OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-00D/OCTVolumes/';
-reconstructConfig = {'dispersionParameterA',6.539e07};%,'YFramesToProcess',1:5:100}; %Configuration for processing OCT Volume
-
-%Probe Data
-focusSigma = 20; %Sigma size of focus [pixel]
+dispersionParameterA = 6.539e07;
 
 %Total width covered by histological sectioning 
 histologyVolumeThickness = 15*5*(5+1); %[um]
 
-%Low RAM mode
-lowRAMMode = true; %When set to true, doesn't load all stitched volume to RAM, instead calculate enface in each worker
+isPlotEnface = false; %Set to true to plot enface, false to plot depth map
 
 %% Jenkins
 if (exist('OCTVolumesFolder_','var'))
@@ -22,231 +18,210 @@ OCTVolumesFolder = awsModifyPathForCompetability([OCTVolumesFolder '\']);
 SubjectFolder = awsModifyPathForCompetability([OCTVolumesFolder '..\']);
 
 overviewOutputFolder = awsModifyPathForCompetability([SubjectFolder 'Log\01 OCT Scan and Pattern\Overview.png']); %Overview should be saved to the scan part as we use it to decide which side to cut and how deep
-output3DOverviewVolume = awsModifyPathForCompetability([SubjectFolder 'Log\02 OCT Preprocess\Overview\']); 
+logFolder = [SubjectFolder 'Log\02 OCT Preprocess\'];
+output3DOverviewVolume = awsModifyPathForCompetability([logFolder 'Overview\']); 
 
 %% Process overview folder
+setupParpolOCTPreprocess();
 yOCTProcessTiledScan(...
     [OCTVolumesFolder 'Overview\'], ... Input
     output3DOverviewVolume,...
-    'debugFolder',[LogFolder 'OverviewDebug\'],...
+    'debugFolder',[logFolder 'OverviewDebug\'],...
     'saveYs',0,... No need to save Ys 
     'focusPositionInImageZpix',NaN,... No Z scan filtering
+    'dispersionParameterA',dispersionParameterA,...
     'v',true);
 
-
-return;
-
-%% Read Configuration file
+%% Read processed volume and create an enface view
+overviewVol = yOCTFromTif([output3DOverviewVolume(1:(end-1)) '_All.tif']); %Dimentions (z,x,y)
+processedJson = awsReadJSON([output3DOverviewVolume 'processedScanConfig.json']);
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
 
-%Get dimensions
-pixSizeX = json.overview.range * 1000/ json.overview.nPixels; % in microns
-pixSizeY = pixSizeX;
-gridXcc = json.overview.gridXcc;
-gridYcc = json.overview.gridYcc;
-gridXc = json.overview.gridXc;
-gridYc = json.overview.gridYc;
+xOverview = processedJson.xAllmm;
+yOverview = processedJson.yAllmm;
+zOverview = processedJson.zAllmm;
 
-scanRangeX = json.scan.rangeX;
-scanRangeY = json.scan.rangeY;
+%Enface projection in Matlab prefers to work with matrix which is (y,x). So
+%change dimentions to fit
+overviewVol = permute(overviewVol,[1 3 2]); %(z,y,x)
 
-%Define file path
-f = @(frameI)(sprintf('%s/Overview/Overview%02d/',OCTVolumesFolder,frameI));
-fp = cellfun(f,num2cell(1:length(gridXcc)),'UniformOutput',false)';
-fp = cellfun(@(x)(awsModifyPathForCompetability(x,false)),fp,'UniformOutput',false);
-
-
-if ~isfield(json,'focusPositionInImageZpix')
-    error('Please run findFocusInBScan before running this script');
-else
-    focusPositionInImageZpix = json.focusPositionInImageZpix;
-end
-
-OCTSystem = [json.OCTSystem '_SRR']; %Provide OCT system to prevent unesscecary polling of file system
-[dimensions] = ...
-            yOCTLoadInterfFromFile([fp{1}, reconstructConfig, {'OCTSystem',OCTSystem,'peakOnly',true}]);
-        
-%% Set start & Finish positions
-zStart = 300; %max(focusPositionInImageZpix - focusSigma*5,1);
+%Z projection parametres
+zStart = 100; %max(focusPositionInImageZpix - focusSigma*5,1);
 zEnd = 1000;  %min(focusPositionInImageZpix + focusSigma*7,1000);
-%% Load overview images 
-if lowRAMMode
-    enface = cell(length(gridYc),length(gridXc));
-else
-    overviewScan = cell(length(gridYc),length(gridXc));
-end
-parfor i=1:length(gridXcc) %Because of the way the scan went we can easily stitch
-    try
-    fprintf('%s Processing volume %d of %d.\n',datestr(datetime),i,length(gridYcc));
+
+%Make sure start and end are in the volume
+zStart = max(zStart,1);
+zEnd   = min(zEnd,size(overviewVol,1));
+
+%Compute enface
+enface = squeeze(max(overviewVol(zStart:zEnd,:,:))); %(y,x)
+
+%Compute position of maximal z
+depthOfMaxZ_pix = zeros(size(enface));
+for i=1:numel(depthOfMaxZ_pix)
+    o = overviewVol(zStart:zEnd,i);
     
-    fpTxt = fp{i};
-    [int1,dim1] = ...
-        yOCTLoadInterfFromFile([{fpTxt}, reconstructConfig, {'dimensions', dimensions}]);
-    [scan1,dim1] = yOCTInterfToScanCpx ([{int1 dim1},reconstructConfig]);
-    scan1 = abs(scan1);
-    for j=length(size(scan1)):-1:4 %Average BScan Averages, A Scan etc
-        scan1 = squeeze(mean(scan1,j));
-    end
-    
-    if lowRAMMode
-        enface{i} = squeeze(mean(scan1(zStart:zEnd,:,:),1));
-    else
-        overviewScan{i} = shiftdim(scan1,1); %Dimensions are (x,y,z)
-    end
-    catch ME
-        fprintf('Error happened in parfor, iteration %d, fp: %s\n',i,fp{i}); 
-        disp(ME.message);
-        for j=1:length(ME.stack) 
-            ME.stack(j) 
-        end  
-        error('Error in parfor');
-    end
+    ii = find(o >= max(o)*0.9);
+    depthOfMaxZ_pix(i) = median(ii);
 end
 
-if lowRAMMode
-    enface = cell2mat(enface);
-else
-    overviewScan = cell2mat(overviewScan); %Convert to a big volume. (x,y,z)
-    overviewScan = shiftdim(overviewScan,2); %Convert dimensions to (z,x,y)
-    enface = squeeze(mean(overviewScan(zStart:zEnd,:,:),1)); %(x,y)
-end
-
-%% Correct for any vineeting done by the lens
+%% Correct enface for vineeting 
 %Our assumption s most of the scanning area is empty gel with no tissue
-vv = mat2cell(enface,...
-     json.overview.nPixels*ones(length(gridYc),1),...
-      json.overview.nPixels*ones(length(gridXc),1));
-vm = zeros([size(vv{1}) numel(vv)]);
+if false
+    
+    %Split enface to many small slices
+    vv = mat2cell(enface,...
+        json.overview.nYPixels*ones(length(json.overview.yCenters),1),...
+        json.overview.nXPixels*ones(length(json.overview.xCenters),1));
+    vm = zeros([size(vv{1}) numel(vv)]);
+    
+    %Calculate distortion
+    for k=1:size(vm,3)
+        vm(:,:,k) = vv{k};
+    end
+    vm = median(vm,3);
 
-%Calculate distortion
-for k=1:size(vm,3)
-    vm(:,:,k) = vv{k};
+    %Correct for distortion
+    for k=1:numel(vv)
+        vv{k} = vv{k}./vm;
+    end
+
+    enface = cell2mat(vv); %Corrected version  
 end
-vm = median(vm,3);
 
-%Correct for distortion
-for k=1:numel(vv)
-    vv{k} = vv{k}./vm;
-end
-
-enface1 = cell2mat(vv); %Corrected version
-clear enface; %Prevent confusion down the line
-
-%% Create enfece, find principal axis of tissue
+%% Compute principal axis and center of tissue
 %Since image was scanned in ~45 degrees, find the angle that will re align
 %it with the natural view
 
-enface1 = enface1'; %Make sure enface is (y,x) - better for presentation later
-
-%Create grid
-x = pixSizeX*( (-size(enface1,2)/2):(+size(enface1,2)/2) );
-y = pixSizeY*( (-size(enface1,1)/2):(+size(enface1,1)/2) );
-
-med = median(enface1(:));
+med = median(enface(:));
 thershold =med*1.5;
 
 %Find Principal Axis
-[i,j] = find(enface1 > thershold); %x,y, positions of points which are 'tissue'
+[i,j] = find(enface > thershold); %x,y, positions of points which are 'tissue'
 if ~isempty(i)
     V = pca([j,i]); %Main axis
     cxj = round(mean(j));
     cyi = round(mean(i));    
 else
-    disp('Warning: Could not determine orientation, using default')
-    V = diag([1 1]);
-    cxj = round(size(enface1,2)/2);
-    cyi = round(size(enface1,1)/2);
+    disp('Warning: Could not determine orientation, using default 45 deg');
+    V = sqrt(2)/2*[1 1; -1 1];
+    cxj = round(size(enface,2)/2);
+    cyi = round(size(enface,1)/2);
 end
-cx = x(cxj);
-cy = y(cyi);
+cx = xOverview(cxj);
+cy = yOverview(cyi);
 
-%Plot
-imagesc(x,y,enface1 > thershold)
-imagesc(x,y,enface1)
+%Plot (debug)
+imagesc(xOverview,yOverview,enface > thershold)
+imagesc(xOverview,yOverview,enface)
 hold on;
 plot(cx+V(1)*1000*[-1,1],cy+V(2)*1000*[-1,1],'w');
 hold off
 
-%% Move Enface and rotate
-enface2 = imtranslate(enface1,-[cxj cyi]+size(enface1)/2,'FillValues',med);
-
-%Compute what should be the inverse rotation such that V(:,1) will be
-%facing X axis
+%Rotation matrix
 V_1 = V^-1;
 ang = acos(V_1(1));
-angle = 0; %Dont use for now
-
-%Rotate
-enface3 = imrotate(enface2,ang*180/pi,'crop');
-enface3(enface3 == 0) = med;
-
-subplot(2,1,1);
-imagesc(enface2)
-subplot(2,1,2);
-imagesc(enface3)
-
-%% Make the figure
 M = [cos(ang) sin(ang); -sin(ang) cos(ang)]; %Rotation matrix
+Mc = M*[cx;cy];
+Mcx = Mc(1);
+Mcy = Mc(2);
 
+%% Make the figure - Raw Data
 figure(1); subplot(1,1,1);
-imagesc(x,y,enface3)
-xlabel('microns');
-ylabel('microns');
-colormap bone;
+
+%OCT Information
+if isPlotEnface
+    imagesc(xOverview,yOverview,enface);
+    title('Enface View');
+    colormap bone;
+else
+    imagesc(xOverview,yOverview,-depthOfMaxZ_pix);
+    title('Depth of Max Reflection (Blue is deeper)');
+    colormap jet
+end
+axis equal
+xlabel('x[mm]');
+ylabel('y[mm]');
 grid on;
 hold on;
 
+%Create varibles with additional information for easy acess
+lineLength = json.photobleach.lineLength;
+vLinePositions = json.photobleach.vLinePositions;
+hLinePositions = json.photobleach.hLinePositions;
+scanRangeX = json.scan.rangeX;
+scanRangeY = json.scan.rangeY;
+
 %Plot the dot
 theDot = [json.theDotX; json.theDotY];
-theDot = theDot/norm(theDot)*1500;
-theDot = M*(theDot-[cx;cy]); %Rotate, [um]
-plot(theDot(1),theDot(2),'bo','MarkerSize',10,'MarkerFaceColor','b');
+theDot = theDot/norm(theDot)*lineLength/2*1.1;
+plot(theDot(1),theDot(2),'bo','MarkerSize',10,'MarkerFaceColor','b','MarkerEdgeColor','w');
 
 % Draw volume scan
 volPos = [ ...
     +scanRangeX, -scanRangeX, -scanRangeX, +scanRangeX, +scanRangeX ; ... x
     +scanRangeY, +scanRangeY, -scanRangeY, -scanRangeY, +scanRangeY ; ... y
     ]/2; %mm
-volPos = M*(volPos*1000-[cx;cy]); %Rotate, [um]
 plot(volPos(1,:),volPos(2,:),'g--','LineWidth',2);
 
 %Draw Lines V lines
-for k=1:length(json.vLinePositions)
+for k=1:length(vLinePositions)
     vPos = [...
-        json.vLinePositions(k) json.vLinePositions(k); ... x
-        -json.lineLength/2 +json.lineLength/2; ... y
-        ];
-    vPos = M*(vPos*1000-[cx;cy]); %Rotate, [um]
-    
+        vLinePositions(k) vLinePositions(k); ... x
+        -lineLength/2 +lineLength/2; ... y
+        ];    
     plot(vPos(1,:), vPos(2,:),'Color','r','LineWidth',2); %[x1,x2], [y1,y2]
 end
 
 %Draw Lines H lines
-for k=1:length(json.hLinePositions)
+for k=1:length(hLinePositions)
     vPos = [...
-        -json.lineLength/2 +json.lineLength/2; ... x
-        json.hLinePositions(k) json.hLinePositions(k); ... y
+        -lineLength/2 +lineLength/2; ... x
+        hLinePositions(k) hLinePositions(k); ... y
         ];
-    vPos = M*(vPos*1000-[cx;cy]); %Rotate, [um]
     
     plot(vPos(1,:), vPos(2,:),'Color','r','LineWidth',1); %[x1,x2], [y1,y2]
 end
 
-Mc = M*[cx;cy];
-Mcx = Mc(1);
-Mcy = Mc(2);
+%% Make the figure - Recomendations
+
+%Set color for plots
+if (isPlotEnface)
+    c = 'w';
+else
+    c = 'w';
+end
+
 %Draw Sweet Spot, and where sectioning should start
-st = histologyVolumeThickness/2;
-dst = [0.5 1 1.5 2];
+st = histologyVolumeThickness/2*1e-3;%mm
+dst = [0 0.5 1 1.5 2];
 for i=1:2
+    %Progress between the two line sets
     st = -st;
     dst = -dst;
-    plot([-1000 1000]-Mcx,[st st]-Mcy,'--w');
-    text(1000-Mcx,st-Mcy,'Optimal','color','w')
+    
     for j=1:length(dst)
-        plot([-1000 1000]-Mcx,[st st]+dst(j)*1000-Mcy,'--w');
-        if mod(j,2)==0
-            text(1000-Mcx,st+dst(j)*1000-Mcy,sprintf('+%.1fmm',abs(dst(j))),'color','w');
+        lStart = [-lineLength/2 ; st+dst(j)]; %(x,y)
+        lEnd   = [+lineLength/2 ; st+dst(j)]; %(x,y)
+        
+        %Rotate
+        lStart = M*lStart;
+        lEnd   = M*lEnd;
+        
+        %Plot
+        plot([lStart(1) lEnd(1)],[lStart(2) lEnd(2)],['--' c]);
+        
+        
+        %Anotate
+        if (lStart(1) > lEnd(1))
+            lMax = lStart;
+        else
+            lMax = lEnd;
+        end
+        if j==1
+            text(lMax(1),lMax(2),'Optimal','color',c);
+        elseif mod(j,2)==1
+            text(lMax(1),lMax(2),sprintf('+%.1fmm',abs(dst(j))),'color',c);
         end
     end
 end
@@ -257,9 +232,9 @@ hold off;
 saveas(gcf,'Overview.png');
 if (awsIsAWSPath(OCTVolumesFolder))
     %Upload to AWS
-    awsCopyFileFolder('Overview.png',[LogFolder '/Overview.png']);
+    awsCopyFileFolder('Overview.png',overviewOutputFolder);
 else
     %Save locally
-    saveas(gcf,[LogFolder '\Overview.png']);
+    saveas(gcf,overviewOutputFolder);
 end   
 
