@@ -31,12 +31,12 @@ if (isfield(json,'focusPositionInImageZpix') && isRunInAutomatedMode)
     return; %Don't try to focus again, only in manual mode
 end
 
-zToScan = json.zToScan;
-n = json.tissueRefractiveIndex; 
+zToScan = json.scan.zDepts*1000; %[um]
+n = json.scan.tissueRefractiveIndex; 
 
 %Define file path
 OCTVolumesFolderVolume = [OCTVolumesFolder '/Volume/'];
-fp = @(frameI)(sprintf('%sPos%02d/',OCTVolumesFolderVolume,frameI));
+fp = @(frameI)(sprintf('%sData%02d/',OCTVolumesFolderVolume,frameI));
 
 %Get Dimensions of one reference volume
 dim = yOCTLoadInterfFromFile(fp(1),'peakOnly',true);
@@ -64,7 +64,7 @@ end
 dim.z = dim1.z; %Update dimensions structure
 
 %Compute the total travel distance of the scanning process
-totalZDistance = diff(json.zToScan([1 end])); %mu
+totalZDistance = diff(zToScan([1 end])); %mu
 totalZDistanceI = totalZDistance/diff(dim.z.values([1 2])); %pixels
 
 %Find tissue position by maximum intensity

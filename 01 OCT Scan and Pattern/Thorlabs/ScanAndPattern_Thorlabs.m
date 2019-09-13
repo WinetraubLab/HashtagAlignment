@@ -42,8 +42,8 @@ config.overview.nZToScan = 1; %How many different depths to scan in overview to 
 base = 100/1000; %base seperation [mm]
 %config.vLinePositions = base*[-1 0 3]; %[mm] 
 %config.hLinePositions = base*[-1 0 2]; %[mm] 
-config.vLinePositions = base*[-4  0 1 3]; %[mm] 
-config.hLinePositions = base*[-3 -2 1 3]; %[mm] 
+config.photobleach.vLinePositions = base*[-4  0 1 3]; %[mm] 
+config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm] 
 config.photobleach.exposurePerLine_sec = 30; %[sec]
 config.photobleach.passes = 2;
 config.photobleach.lineLength = 2; %[mm]
@@ -81,10 +81,10 @@ if (isRunningOnJenkins())
 		config.scan.nPixelsY = 100; 
 		config.overview.rangeAllX = 2;
         config.overview.rangeAllY = 1;
-		config.vLinePositions = config.base*[0]; %[mm] 
-		config.hLinePositions = config.base*[0]; %[mm] 
-        config.overview.nZToScan = 1;
-		config.exposurePerLine_sec = 10; %sec
+		config.overview.nZToScan = 1;
+        config.photobleach.vLinePositions = base*[0]; %[mm] 
+		config.photobleach.hLinePositions = base*[0]; %[mm] 
+		config.photobleach.exposurePerLine_sec = 10; %sec
 		config.zToScan = [config.zToScan(1:3) 0]; %Reduce number of Z scans
 	end
 end
@@ -130,6 +130,7 @@ if ~exist(logFolder,'dir')
 end
 %% Photobleach
 ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+config.zToPhtobleach); %Movement [mm]
+ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(config.octProbePath); %Init OCT
 
 fprintf('%s Put on safety glasses. photobleaching in ...',datestr(datetime));
 for i=5:-1:1
@@ -139,24 +140,27 @@ end
 fprintf('\n');
 
 ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(true); %Switch on
-for i=1:length(config.vLinePositions)
-	fprintf('%s Photobleaching V Line # %d / %d\n',datestr(datetime),i,length(config.vLinePositions));
+
+vLinePositions=config.photobleach.vLinePositions;
+for i=1:length(vLinePositions)
+	fprintf('%s Photobleaching V Line # %d / %d\n',datestr(datetime),i,length(vLinePositions));
     ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
-        config.vLinePositions(i),-config.photobleach.lineLength/2, ... Start X,Y
-        config.vLinePositions(i),+config.photobleach.lineLength/2, ... End X,Y
+        vLinePositions(i),-config.photobleach.lineLength/2, ... Start X,Y
+        vLinePositions(i),+config.photobleach.lineLength/2, ... End X,Y
         config.photobleach.exposurePerLine_sec,config.photobleach.passes); 
 end
 
-for i=1:length(config.hLinePositions)
-	fprintf('%s Photobleaching H Line # %d / %d\n',datestr(datetime),i,length(config.hLinePositions));
+hLinePositions=config.photobleach.hLinePositions;
+for i=1:length(hLinePositions)
+	fprintf('%s Photobleaching H Line # %d / %d\n',datestr(datetime),i,length(hLinePositions));
     ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
-        -config.photobleach.lineLength/2,config.hLinePositions(i), ... Start X,Y
-        +config.photobleach.lineLength/2,config.hLinePositions(i), ... End X,Y
-        config.photobleach.exposurePerLine_sec,config.photobleachs.passes); 
+        -config.photobleach.lineLength/2,hLinePositions(i), ... Start X,Y
+        +config.photobleach.lineLength/2,hLinePositions(i), ... End X,Y
+        config.photobleach.exposurePerLine_sec,config.photobleach.passes); 
 end
 
 if (config.isDrawTickmarks)
-    PhotobleachTickmarks_Thorlabs(config.tickmarksX0,config.tickmarksY0,config.vLinePositions,config.hLinePositions,logFolder);
+    PhotobleachTickmarks_Thorlabs(config.tickmarksX0,config.tickmarksY0,vLinePositions,hLinePositions,logFolder);
 end
 
 if (config.isDrawTheDot)
@@ -172,14 +176,18 @@ if (config.isDrawTheDot)
 end
 
 ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(false); %Switch off
+ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose(); %Close scanner
+ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0); %Return to base
+pause(0.5);
+
 disp('Done');
 
 %% Scans
 
 %Volume
+fprintf('%s Scanning Volume\n',datestr(datetime));
 volumeOutputFolder = [outputFolder '\Volume\'];
-mkdir(volumeOutputFolder);
-config.scan.scanParameters = yOCTScanTile (...
+scanParameters = yOCTScanTile (...
     volumeOutputFolder, ...
     'octProbePath', config.octProbePath, ...
     'tissueRefractiveIndex', config.tissueRefractiveIndex, ...
@@ -193,12 +201,15 @@ config.scan.scanParameters = yOCTScanTile (...
     'zDepts',    config.zToScan, ... [mm]
     'v',true  ...
     );
+config.scan = rmfield(config.scan,{'nPixelsX','nPixelsY','nBScanAvg'});
+for fn = fieldnames(scanParameters)'
+    config.scan.(fn{1}) = scanParameters.(fn{1});
+end
 
 %Overview
 if (config.isRunOverview)
 	fprintf('%s Scanning Overview\n',datestr(datetime));
     
-    overviewOutputFolder = [outputFolder '\Overview\'];
     %Overview center positons
     gridXc = (-config.overview.rangeAllX/2+config.overview.range/2):config.overview.range:(config.overview.rangeAllX/2-config.overview.range/2);
     gridYc = (-config.overview.rangeAllY/2+config.overview.range/2):config.overview.range:(config.overview.rangeAllY/2-config.overview.range/2);
@@ -207,8 +218,8 @@ if (config.isRunOverview)
     z(z<0) = []; %Overview should be scanned in tissue 
     z = z(round(linspace(1,length(z),min(config.overview.nZToScan,length(z)))));
     
-    mkdir(overviewOutputFolder);
-    config.overview.scanParameters = yOCTScanTile (...
+    overviewOutputFolder = [outputFolder '\Overview\'];
+    scanParameters = yOCTScanTile (...
         overviewOutputFolder, ...
         'octProbePath', config.octProbePath, ...
         'tissueRefractiveIndex', config.tissueRefractiveIndex, ...
@@ -224,29 +235,30 @@ if (config.isRunOverview)
         'yCenters', gridYc ,...
         'v',true  ...
         );
+    config.overview = rmfield(config.overview,{'range','nPixels','nZToScan','rangeAllX','rangeAllY'});
+    for fn = fieldnames(scanParameters)'
+        config.overview.(fn{1}) = scanParameters.(fn{1});
+    end
 end
 
 %% Finalize
 fprintf('%s Finalizing\n',datestr(datetime));
+
+%Remove fields that are not in use again, their information is redundent
+config = rmfield(config,{'octProbePath','tissueRefractiveIndex','zToScan'});
     
 %Save scan configuration parameters
 if exist([outputFolder 'ScanConfig.json'],'file')
 	%Load Config first, dont override it
 	cfg = awsReadJSON([outputFolder 'ScanConfig.json']);
-	fns = fieldnames(cfg);
-	for i=1:length(fns)
-		eval(['config.' fns{i} ' = cfg.' fns{i} ';']);
-	end
+    for fn = fieldnames(cfg)'
+        config.(fn{1}) = cfg.(fn{1});
+    end
 end
 config
 config.photobleach
 config.scan
 config.overview
-
-%Remove fields that are not in use again, their information is redundent
-config.scan = rmfield(config.scan,{'nPixelsX','nPixelsY','nBScanAvg'});
-config.overview = rmfield(config.overview,{'range','nPixels','nBScanAvg','nZToScan','rangeAllX','rangeAllY'});
-config = rmfield(config,{'octProbePath','tissueRefractiveIndex','zDepts'});
 
 %Save
 awsWriteJSON(config, [outputFolder 'ScanConfig.json']);
