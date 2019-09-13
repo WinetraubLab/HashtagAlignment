@@ -213,8 +213,8 @@ if (config.isRunOverview)
     gridXc = (-config.overview.rangeAllX/2+config.overview.range/2):config.overview.range:(config.overview.rangeAllX/2-config.overview.range/2);
     gridYc = (-config.overview.rangeAllY/2+config.overview.range/2):config.overview.range:(config.overview.rangeAllY/2-config.overview.range/2);
     
-    z = config.zToScan;
-    z(z<0) = []; %Overview should be scanned in tissue 
+    z = config.zToScan(2:end); %Ignore photobleaching depth at z(1)
+    %z(z<0) = []; %Overview should be scanned in tissue 
     z = z(round(linspace(1,length(z),min(config.overview.nZToScan,length(z)))));
     
     overviewOutputFolder = [outputFolder '\Overview\'];

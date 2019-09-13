@@ -71,14 +71,16 @@ enface = squeeze(max(overviewVol(zStart:zEnd,:,:))); %(y,x)
 
 %Compute position of maximal z
 depthOfMaxZ_pix = zeros(size(enface));
-for i=1:numel(depthOfMaxZ_pix)
-    o = overviewVol(zStart:zEnd,i);
+for i=1:size(depthOfMaxZ_pix,1)
+    for j=1:size(depthOfMaxZ_pix,2) 
+        o = overviewVol(zStart:zEnd,i,j);
     
-    ii = find(o >= max(o)*0.9);
-    depthOfMaxZ_pix(i) = median(ii);
+        ii = find(o >= max(o)*1);
+        depthOfMaxZ_pix(i,j) = median(ii);
+    end
 end
 
-%% Correct enface for vineeting 
+%% Correct enface for vineeting
 %Our assumption s most of the scanning area is empty gel with no tissue
 if false
     
@@ -150,7 +152,7 @@ if isPlotEnface
 else
     imagesc(xOverview,yOverview,-depthOfMaxZ_pix);
     title('Depth of Max Reflection (Blue is deeper)');
-    colormap jet
+    colormap parula
 end
 axis equal
 xlabel('x[mm]');
