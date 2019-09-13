@@ -35,7 +35,7 @@ config.overview.rangeAllX = 6;%[mm] Total tiles range
 config.overview.rangeAllY = 5;%[mm] Total tiles range
 config.overview.range = config.scan.rangeX;%[mm] x=y range of each tile
 config.overview.nPixels = max(config.scan.nPixelsX/20,50); %same for x and y, number of pixels in each tile
-config.overview.nZToScan = 1; %How many different depths to scan in overview to provide coverage
+config.overview.nZToScan = 2; %How many different depths to scan in overview to provide coverage
 
 %Photobleaching defenitions
 %Line placement (vertical - up/down, horizontal - left/right)
