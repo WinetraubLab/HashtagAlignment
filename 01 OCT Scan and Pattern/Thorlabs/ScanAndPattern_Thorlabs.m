@@ -81,7 +81,6 @@ if (isRunningOnJenkins())
 		config.scan.nPixelsY = 100; 
 		config.overview.rangeAllX = 2;
         config.overview.rangeAllY = 1;
-		config.overview.nZToScan = 1;
         config.photobleach.vLinePositions = base*[0]; %[mm] 
 		config.photobleach.hLinePositions = base*[0]; %[mm] 
 		config.photobleach.exposurePerLine_sec = 10; %sec
