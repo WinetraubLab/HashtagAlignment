@@ -78,7 +78,7 @@ function pushbuttonAddGroup1Lines_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [x,y] = getline();
-handles.slideJson = AddFiducialLineToJson(handles.slideJson,x,y,'1');
+handles.slideJson = AddFiducialLineToJson(handles.slideJson,x([1 end]),y([1 end]),'1');
 
 drawStatus(handles)
 guidata(hObject, handles);
@@ -89,7 +89,7 @@ function pushbuttonAddGroup2Lines_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [x,y] = getline();
-handles.slideJson = AddFiducialLineToJson(handles.slideJson,x,y,'2');
+handles.slideJson = AddFiducialLineToJson(handles.slideJson,x([1 end]),y([1 end]),'2');
 
 drawStatus(handles)
 guidata(hObject, handles);
@@ -101,7 +101,7 @@ function pushbuttonMarkTissueInterface_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [x,y] = getline();
-handles.slideJson = AddFiducialLineToJson(handles.slideJson,x,y,'t'); 
+handles.slideJson = AddFiducialLineToJson(handles.slideJson,x([1 end]),y([1 end]),'t'); 
 
 drawStatus(handles)
 guidata(hObject, handles);

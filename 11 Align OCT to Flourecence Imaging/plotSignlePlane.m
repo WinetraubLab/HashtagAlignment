@@ -92,10 +92,13 @@ uspanO = [min(min([f(fToUse).u_pix])) max(max([f(fToUse).u_pix]))];
 uspan = uspanO+uspanO.*[-1 1]*0.1;
 vspanO = [min(cellfun(@min,{f.v_pix})) max(cellfun(@max,{f.v_pix}))];
 vspan = vspanO+vspanO.*[-0.2 0.2];
+axis equal
+xl = xlim;
+yl = ylim;
+r = diff(xl)/diff(yl);
+vspan = mean(vspan) + diff(uspan)/r/2*[-1 1];
 xlim(uspan);
 ylim(vspan);
-axis equal
-xlim(uspan);
 uspan = xlim;
 vspan = ylim;
 xlabel('u pix');

@@ -10,6 +10,13 @@ function fdln = fdlnIdentifyLinesByRatio(fdln,vLinePositions,hLinePositions)
 
 %% Preprocess positions of fdln, extract ratios
 f = fdln;
+
+%Make sure to use to points per line
+for i=1:length(f)
+    f(i).u_pix = f(i).u_pix([1 end]);
+    f(i).v_pix = f(i).v_pix([1 end]);
+end
+
 lineU = [f.u_pix]'; %(line #, point in line)
 lineV = [f.v_pix]'; %(line #, point in line)
 
