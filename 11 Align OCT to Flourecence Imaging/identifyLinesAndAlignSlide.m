@@ -44,8 +44,14 @@ switch(lower(identifyMethod))
         end
         
     case 'bystack'
-        f = fdlnIdentifyLinesByStackInterpolation(f,octVolumeJson.vLinePositions,octVolumeJson.hLinePositions,...
-            cellfun(@(x)(x.fiducialLines),{SlidesJsonsStack.FM},'UniformOutput',false));
+        fdlnStack = cell(length(SlidesJsonsStack),1);
+        for i=1:length(fdlnStack)
+           if isfield(SlidesJsonsStack(i).FM,'fiducialLines')
+               fdlnStack{i} = SlidesJsonsStack(i).FM.fiducialLines;
+           end
+        end
+        
+        f = fdlnIdentifyLinesByStackInterpolation(f,octVolumeJson.vLinePositions,octVolumeJson.hLinePositions,fdlnStack);
         
     case 'manual'
         fprintf('vLinePositions [mm] = %s\n',sprintf('%.3f ',octVolumeJson.vLinePositions));

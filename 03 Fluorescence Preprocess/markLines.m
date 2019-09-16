@@ -175,7 +175,7 @@ try
     %Load Stack
     ds = fileDatastore(handles.allSlidesPath,'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
     slideJsonStack = ds.readall;
-    xx = cellfun(@(x)(isequal(handles.slideJson.FM.fiducialLines,x.FM.fiducialLines)),slideJsonStack);
+    xx = cellfun(@(x)(isequaln(handles.slideJson,x)),slideJsonStack);
     if sum(xx) ~= 1
         disp('Couldn''t locate position in stack');
     end

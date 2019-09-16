@@ -20,7 +20,7 @@ fdln = fdlnSortLines(fdln);
 
 %% Find fdln in fdlnStack
 %Find fdln in fdlnStack
-isIt = cellfun(@(x)isequal(x,fdln),fdlnStack);
+isIt = cellfun(@(x)isequaln(x,fdln),fdlnStack);
 if (sum(isIt) ~= 1)
     error('Could not find fdln in stack');
 else
@@ -31,6 +31,11 @@ isTissueInterface = lower([fdln.group]) == 't'; %Find which lines are tissue int
 
 %% Find average stack parameters
 fdlnsToUse = find(cellfun(@fdlnIsLineIdentified,fdlnStack) == 1);
+
+if (length(fdlnsToUse)<2)
+    error('Not enugh identified lines in stack, cannot estimate');
+end
+
 us = zeros(3,length(fdlnsToUse));
 vs = us;
 hs = us;
@@ -51,7 +56,7 @@ n = cross(uStack,vStack); n = n / norm(n);
 
 %Compute h component prepandicular to the plane
 hdotn = dot(hs,repmat(n,[1 size(hs,2)]));
-p = polyfit(fdlnsToUse,hdotn,1);
+p = polyfit(fdlnsToUse(:),hdotn(:),1);
 if false
     plot(fdlnsToUse,hdotn,fdlnsToUse,polyval(p,fdlnsToUse));
 end

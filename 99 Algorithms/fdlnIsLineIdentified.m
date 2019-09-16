@@ -8,6 +8,12 @@ function isIt = fdlnIsLineIdentified (fdln)
 %   isIt - 0 if non of fdln are identified, 1 - if all are identified, 0.5
 %   if some but not all are identified
 
+%Empty stack, not identified
+if isempty(fdln)
+    isIt = 0;
+    return;
+end
+
 gr = lower([fdln.group]);
 is = gr=='v' | gr=='h' | gr=='t';
 is = sum(is);

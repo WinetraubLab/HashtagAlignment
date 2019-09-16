@@ -2,6 +2,13 @@ function fdln = fdlnSortLines (fdln)
 %This function sorts Fiducial Line structure array such that they are orderd left to
 %right, tissue interface at the begning of the array
 
+
+%% In case class is empty
+if isempty(fdln)
+    %No lines in the structure, so consider it sorted
+    return;
+end
+
 %% Sort from left to right
 upos = cellfun(@mean,{fdln.u_pix});
 [~,iSort] = sort(upos);
