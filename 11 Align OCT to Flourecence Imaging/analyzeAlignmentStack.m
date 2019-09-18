@@ -87,9 +87,9 @@ subplot(1,1,1); %Clear previuse figure
 subplot(2,2,1);
 
 %Plot Photobleached lines
-vLinePositions = octVolumeJson.vLinePositions;
-hLinePositions = octVolumeJson.hLinePositions;
-lineLength = octVolumeJson.lineLength;
+vLinePositions = octVolumeJson.photobleach.vLinePositions;
+hLinePositions = octVolumeJson.photobleach.hLinePositions;
+lineLength = octVolumeJson.photobleach.lineLength;
 mm = [-1 1]*(lineLength/2);
 for i=1:length(vLinePositions)
     c = vLinePositions(i);

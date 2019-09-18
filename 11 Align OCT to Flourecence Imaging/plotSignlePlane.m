@@ -30,9 +30,15 @@ end
 
 %Data from OCT Volume
 if exist('octVolumeJson','var')
-    lineLength = octVolumeJson.lineLength;
-    hLinePositions = octVolumeJson.hLinePositions;
-    vLinePositions = octVolumeJson.vLinePositions;
+    if (octVolume.version == 2)
+        lineLength = octVolumeJson.photobleach.lineLength;
+        hLinePositions = octVolumeJson.photobleach.hLinePositions;
+        vLinePositions = octVolumeJson.photobleach.vLinePositions;
+    else
+        lineLength = octVolumeJson.lineLength;
+        hLinePositions = octVolumeJson.hLinePositions;
+        vLinePositions = octVolumeJson.vLinePositions;
+    end
 else
     lineLength = 2;
     hLinePositions = [f([f.group]=='h').linePosition_mm];

@@ -23,6 +23,14 @@ f = slideJson.FM.fiducialLines;
 f = fdlnSortLines(f); %Sort lines such that they are organized by position, left to right
     
 %% Part #1, identify lines (x-y)
+if json.version == 2
+    vLinePositions = json.photobleach.vLinePositions;
+    hLinePositions = json.photobleach.hLinePositions;
+else
+    vLinePositions = json.vLinePositions;
+    hLinePositions = json.hLinePositions;
+end 
+
 switch(lower(identifyMethod))
     case {'none','asis'}
         %Do nothing, keep the identification we already have
@@ -36,11 +44,9 @@ switch(lower(identifyMethod))
             disp('Not enugh lines to preform identification, make that manually');
         else
             f(group1I) = fdlnIdentifyLinesByRatio(...
-                f(group1I), ...
-                octVolumeJson.vLinePositions,octVolumeJson.hLinePositions);
+                f(group1I), vLinePositions, hLinePositions);
             f(group2I) = fdlnIdentifyLinesByRatio(...
-                f(group2I), ...
-                octVolumeJson.vLinePositions,octVolumeJson.hLinePositions);
+                f(group2I), vLinePositions, hLinePositions);
         end
         
     case 'bystack'
@@ -51,11 +57,11 @@ switch(lower(identifyMethod))
            end
         end
         
-        f = fdlnIdentifyLinesByStackInterpolation(f,octVolumeJson.vLinePositions,octVolumeJson.hLinePositions,fdlnStack);
+        f = fdlnIdentifyLinesByStackInterpolation(f, vLinePositions, hLinePositions,fdlnStack);
         
     case 'manual'
-        fprintf('vLinePositions [mm] = %s\n',sprintf('%.3f ',octVolumeJson.vLinePositions));
-        fprintf('hLinePositions [mm] = %s\n',sprintf('%.3f ',octVolumeJson.hLinePositions));
+        fprintf('vLinePositions [mm] = %s\n',sprintf('%.3f ',vLinePositions));
+        fprintf('hLinePositions [mm] = %s\n',sprintf('%.3f ',hLinePositions));
         fprintf('Please enter line groups (left to right), seperate by comma or space [can be v or h]\n');
         fprintf(   'Orig Was: %s\n',sprintf('%s',[transpose([f.group]) repmat(' ',length(f),1)]'))
         gr = input('Input:    ','s');
