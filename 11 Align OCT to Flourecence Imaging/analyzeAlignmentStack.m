@@ -8,7 +8,7 @@ subjectFilePath =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/';
 awsSetCredentials(1);
 
 disp([datestr(now) ' Loading JSONs']);
-ds = fileDatastore(subjectFilePath,'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
+ds = fileDatastore(awsModifyPathForCompetability(subjectFilePath),'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
 jsons = ds.readall();
 
 octJsonI = find(cellfun(@(x)contains(x,'ScanConfig.json'),ds.Files));

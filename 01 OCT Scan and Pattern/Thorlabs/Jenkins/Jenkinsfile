@@ -404,6 +404,7 @@ pipeline {
 						choices: ['same side as black dot','side opposite to the black dot'], 
 						description: 'On which side should histologyist cut sections: black dot side or opposite to black dot?')
                     ])
+			echo "here"
 			def howDeepUM = Double.valueOf(userInput.HowDeepMM) * 1000
 			def howDeepSectionSize = 25 //um
 			def howDeepNSections = Math.round(howDeepUM/howDeepSectionSize)
@@ -423,6 +424,7 @@ pipeline {
 			def str = params.WHO_TO_EMAIL_WHEN_DONE;
 			str = str.substring(0,str.indexOf('@'))
 
+			echo "here"
 			//Generate Instructions to Histologist
 			bat """
 				@echo off
@@ -441,8 +443,7 @@ pipeline {
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
 				echo + Start cutting from the side opposite to the red dot. >> histoInstructions.txt
 				echo + Clear paraffin, when seeing a full face. >> histoInstructions.txt
-				echo + Then go in """ + String.format ("%.0f", howDeepNSections*howDeepSectionSize) + " um," +
-					" by cutting " + String.format("%.0f",howDeepNSections) + " sections of " + String.format("%.0f",howDeepSectionSize) + """ um each. >> histoInstructions.txt
+				echo + Then go in """ + (howDeepNSections*howDeepSectionSize).toString() + " um," + " by cutting " + howDeepNSections.toString() + " sections of " + howDeepSectionSize.toString() + """ um each. >> histoInstructions.txt
 				echo + Then take 5 slides with 3 sections per slide. >> histoInstructions.txt
 				echo    - Section interval of 25 um >> histoInstructions.txt
 				echo    - Slide thickness of 5 um >> histoInstructions.txt
