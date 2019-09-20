@@ -190,6 +190,11 @@ try
     
     handles.isIdentifySuccssful = false;
 
+    %Reset x & y lim
+    set(0,'CurrentFigure',handles.figure1); %Set current figure as top active one
+    xlim([0 1]);
+    ylim([0 1]); 
+    
     drawStatus(handles);
     guidata(hObject, handles);
 
