@@ -39,8 +39,8 @@ config.overview.nZToScan = 2; %How many different depths to scan in overview to 
 %Photobleaching defenitions
 %Line placement (vertical - up/down, horizontal - left/right)
 base = 100/1000; %base seperation [mm]
-%config.vLinePositions = base*[-1 0 3]; %[mm] 
-%config.hLinePositions = base*[-1 0 2]; %[mm] 
+%config.photobleach.vLinePositions = base*[-1 0 3]; %[mm] 
+%config.photobleach.hLinePositions = base*[-1 0 2]; %[mm] 
 config.photobleach.vLinePositions = base*[-4  0 1 3]; %[mm] 
 config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm] 
 config.photobleach.exposure = 30/2; %[sec per line length (mm)]
@@ -191,7 +191,7 @@ axis ij;
 grid on;
 xlabel('x[mm]');
 ylabel('y[mm]');
-saveas(cfg,[logFolder 'PhotobleachOverview.png']);
+saveas(gcf,[logFolder 'PhotobleachOverview.png']);
 
 config.photobleach.ptStart = ptStart;
 config.photobleach.ptEnd = ptEnd;
@@ -210,7 +210,7 @@ yOCTPhotobleachTile(config.photobleach.ptStart,config.photobleach.ptEnd,...
     'octProbePath',config.octProbePath,'FOV',config.octProbeFOV,...
     'z',config.photobleach.z,'exposure',config.photobleach.exposure,...
     'nPasses',config.photobleach.nPasses,...
-    enableZone,@(x,y)(abs(x)<config.octProbeFOV(1)/2 & abs(y)<config.octProbeFOV(2)/2));
+    'enableZone',@(x,y)(abs(x)<config.octProbeFOV(1)/2 & abs(y)<config.octProbeFOV(2)/2));
 pause(0.5);
 
 disp('Done');
@@ -289,7 +289,7 @@ if config.photobleach.isPhotobleachOverview
         'octProbePath',config.octProbePath,'FOV',config.octProbeFOV,...
         'z',config.photobleach.z,'exposure',config.photobleach.exposure,...
         'nPasses',config.photobleach.nPasses,...
-        enableZone,@(x,y)(~(abs(x)<config.octProbeFOV(1)/2 & abs(y)<config.octProbeFOV(2)/2))); %Photobleach the outside
+        'enableZone',@(x,y)(~(abs(x)<config.octProbeFOV(1)/2 & abs(y)<config.octProbeFOV(2)/2))); %Photobleach the outside
     pause(0.5);
 
     disp('Done');
