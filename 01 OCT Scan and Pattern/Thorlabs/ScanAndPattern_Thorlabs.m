@@ -124,18 +124,24 @@ ptStart = [];
 ptEnd = [];
 
 %H & V Lines
+ptStart = [];
+ptEnd = [];
+
+%H & V Lines
 if (~config.photobleach.isPhotobleachOverview)
-    l = config.photobleach.lineLength;
+    lx = config.photobleach.lineLength;
+    ly = config.photobleach.lineLength;
 else
-    l = min(config.overview.rangeAllX,config.overview.rangeAllY);
+    lx = config.overview.rangeAllX;
+    ly = config.overview.rangeAllY;
 end
 for i=1:length(config.photobleach.vLinePositions)
-    ptStart(:,end+1) = [config.photobleach.vLinePositions(i);-l/2]; %Start
-    ptEnd(:,end+1)   = [config.photobleach.vLinePositions(i);+l/2]; %Ebd
+    ptStart(:,end+1) = [config.photobleach.vLinePositions(i);-ly/2]; %Start
+    ptEnd(:,end+1)   = [config.photobleach.vLinePositions(i);+ly/2]; %Ebd
 end
 for i=1:length(config.photobleach.hLinePositions)
-    ptStart(:,end+1) = [-l/2; config.photobleach.hLinePositions(i)]; %Start
-    ptEnd(:,end+1)   = [+l/2; config.photobleach.hLinePositions(i)]; %Ebd
+    ptStart(:,end+1) = [-lx/2; config.photobleach.hLinePositions(i)]; %Start
+    ptEnd(:,end+1)   = [+lx/2; config.photobleach.hLinePositions(i)]; %Ebd
 end
 
 %Tick marks 
