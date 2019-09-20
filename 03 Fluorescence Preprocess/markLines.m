@@ -22,7 +22,7 @@ function varargout = markLines(varargin)
 
 % Edit the above text to modify the response to help markLines
 
-% Last Modified by GUIDE v2.5 06-Sep-2019 16:57:02
+% Last Modified by GUIDE v2.5 19-Sep-2019 07:11:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -340,6 +340,7 @@ plotSignlePlane(slideJson.FM.singlePlaneFit,slideJson.FM.fiducialLines,handles.i
 if (isIdentifySuccssful)
     handles.slideJson = slideJson;
     handles.isIdentifySuccssful = true;
+    drawStatus(handles);
 end
 guidata(hObject, handles);
 
@@ -351,6 +352,7 @@ plotSignlePlane(slideJson.FM.singlePlaneFit,slideJson.FM.fiducialLines,handles.i
 if (isIdentifySuccssful)
     handles.slideJson = slideJson;
     handles.isIdentifySuccssful = true;
+    drawStatus(handles);
 end
 guidata(hObject, handles);
 
@@ -366,9 +368,25 @@ handles.slideJsonStack(handles.slideJsonPositionInStack) = handles.slideJson;
 %Compute stack fit
 [slideJson,isIdentifySuccssful] = identifyLinesAndAlignSlide(handles.slideJson,handles.octVolumeJson,'ByStack',handles.slideJsonStack);
 if (isIdentifySuccssful)
-    drawStatus(handles); %Update 
     plotSignlePlane(slideJson.FM.singlePlaneFit,slideJson.FM.fiducialLines,handles.im,handles.octVolumeJson,isIdentifySuccssful);
     handles.slideJson = slideJson;
     handles.isIdentifySuccssful = true;
+    drawStatus(handles); %Update 
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in pushbuttonIdentifyRunAllOptions.
+function pushbuttonIdentifyRunAllOptions_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonIdentifyRunAllOptions (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+[slideJson,isIdentifySuccssful] = identifyLinesAndAlignSlide(handles.slideJson,handles.octVolumeJson,'AllOptions',[],handles.im);
+if (isIdentifySuccssful)
+    plotSignlePlane(slideJson.FM.singlePlaneFit,slideJson.FM.fiducialLines,handles.im,handles.octVolumeJson,isIdentifySuccssful);
+    handles.slideJson = slideJson;
+    handles.isIdentifySuccssful = true;
+    drawStatus(handles);
 end
 guidata(hObject, handles);

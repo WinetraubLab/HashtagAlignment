@@ -30,7 +30,7 @@ end
 
 %Data from OCT Volume
 if exist('octVolumeJson','var')
-    if (octVolume.version == 2)
+    if (isfield(octVolumeJson,'vesion') && octVolumeJson.version == 2)
         lineLength = octVolumeJson.photobleach.lineLength;
         hLinePositions = octVolumeJson.photobleach.hLinePositions;
         vLinePositions = octVolumeJson.photobleach.vLinePositions;

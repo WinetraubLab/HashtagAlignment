@@ -23,14 +23,13 @@ config.scan.nBScanAvg = 1;
 %We assume stage starting position is at the top of the tissue.
 %z defenitions below are compared to starting position
 %+z is deeper
-config.zToPhtobleach = -300*1e-3; %[mm] this parameter is ignored if running from jenkins - will assume provided by jenkins
 config.zToScan = ((-190:15:500)-5)*1e-3; %[mm]
 
 %Tissue Defenitions
 config.tissueRefractiveIndex = 1.4;
 
 %Overview of the entire area
-config.isRunOverview = false; %Do you want to scan overview volume? When running on Jenkins, will allways run overview 
+config.overview.isScanOverview = false; %Do you want to scan overview volume? When running on Jenkins, will allways run overview 
 config.overview.rangeAllX = 6;%[mm] Total tiles range
 config.overview.rangeAllY = 5;%[mm] Total tiles range
 config.overview.range = config.scan.rangeX;%[mm] x=y range of each tile
@@ -44,12 +43,15 @@ base = 100/1000; %base seperation [mm]
 %config.hLinePositions = base*[-1 0 2]; %[mm] 
 config.photobleach.vLinePositions = base*[-4  0 1 3]; %[mm] 
 config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm] 
-config.photobleach.exposurePerLine_sec = 30; %[sec]
-config.photobleach.passes = 2;
+config.photobleach.exposure = 30/2; %[sec per line length (mm)]
+config.photobleach.nPasses = 2;
 config.photobleach.lineLength = 2; %[mm]
+config.photobleach.isPhotobleachOverview = true; %Would you like to photobleach overview areas as well (extended photobleach)
+config.photobleach.z = -300*1e-3; %[mm] this parameter is ignored if running from jenkins - will assume provided by jenkins
     
 %Probe defenitions
 config.octProbePath = [currentFileFolder 'Probe - Olympus 10x.ini'];
+config.octProbeFOV  = [2 2]; %mm
 %Define scale and offset for fast & slow axis calibration
 config.offsetX = 0/1000; %[mm]
 config.offsetY = 0; %[mm]
@@ -57,12 +59,12 @@ config.scaleX =  0.99421;
 config.scaleY =  1;
 
 %Tickmarks (if required)
-config.isDrawTickmarks = false;
-config.tickmarksX0 = [-0.3, 0.25];
-config.tickmarksY0 = [-0.25,0.25];
+config.photobleach.isDrawTickmarks = false;
+config.photobleach.tickmarksX0 = [0.3, -0.25];
+config.photobleach.tickmarksY0 = [-0.25,0.25];
 
 %Orientation dot
-config.isDrawTheDot = false;
+config.photobleach.isDrawTheDot = false;
 config.theDotX = -config.photobleach.lineLength/2;
 config.theDotY = +config.photobleach.lineLength/2;
 
@@ -70,10 +72,10 @@ config.theDotY = +config.photobleach.lineLength/2;
 isExecutingOnJenkins = isRunningOnJenkins();
 if (isRunningOnJenkins())
     outputFolder = outputFolder_; %Set by Jenkins
-    config.zToPhtobleach = zToPhtobleach_; %Set by Jenkins
+    config.photobleach.z = zToPhtobleach_; %Set by Jenkins
     config.isDrawTickmarks = isDrawTickmarks_; %Set by Jenkins
     config.isDrawTheDot = isDrawTickmarks_;
-	config.isRunOverview = true;	
+	config.overview.isScanOverview = true;	
 	
 	if (exist('isDebugFastMode_','var') && isDebugFastMode_ == true) %Debug mode, make a faster scan
 		disp('Entering debug mode!');
@@ -105,20 +107,9 @@ config.whenWasItScanned = datestr(now());
 config.version = 2; %Version of this JSON file
 
 %Scan one silce where we photobleaching
-config.zToScan = unique([config.zToPhtobleach config.zToScan]);
+config.zToScan = unique([config.photobleach.z config.zToScan]);
 
-%% Initialize Hardware
-fprintf('%s Initialzing\n',datestr(datetime));
-disp('We assume laser is focused on the top of the tissue interface');
-disp('Otherwise abort now');
-if ~exist(config.octProbePath,'file')
-	error(['Cannot find probe file: ' config.octProbePath]);
-end
-ThorlabsImagerNETLoadLib(); %Init library
-z0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('z'); %Init stage
-x0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('x'); %Init stage
-y0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('y'); %Init stage
-
+%% Initialize Folders
 %Make dirs for output and log
 if ~exist(outputFolder,'dir')
 	mkdir(outputFolder);
@@ -127,10 +118,87 @@ logFolder = [outputFolder '..\Log\01 OCT Scan and Pattern\'];
 if ~exist(logFolder,'dir')
 	mkdir(logFolder);
 end
-%% Photobleach
-ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0+config.zToPhtobleach); %Movement [mm]
-ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(config.octProbePath); %Init OCT
 
+%% Compute Photobleaching Image
+ptStart = [];
+ptEnd = [];
+
+%H & V Lines
+if (~config.photobleach.isPhotobleachOverview)
+    l = config.photobleach.lineLength;
+else
+    l = min(config.overview.rangeAllX,config.overview.rangeAllY);
+end
+for i=1:length(config.photobleach.vLinePositions)
+    ptStart(:,end+1) = [config.photobleach.vLinePositions(i);-l/2]; %Start
+    ptEnd(:,end+1)   = [config.photobleach.vLinePositions(i);+l/2]; %Ebd
+end
+for i=1:length(config.photobleach.hLinePositions)
+    ptStart(:,end+1) = [-l/2; config.photobleach.hLinePositions(i)]; %Start
+    ptEnd(:,end+1)   = [+l/2; config.photobleach.hLinePositions(i)]; %Ebd
+end
+
+%Tick marks 
+if (config.photobleach.isDrawTickmarks)
+
+    %Make sure tick marks don't collide with regular lines
+    clrnce = 0.1;
+    isCleared = @(x,y)( ...
+        ( ...
+            x < (min (config.photobleach.vLinePositions)-clrnce) | ...
+            x > (max (config.photobleach.vLinePositions)+clrnce)   ...
+        ) & ( ... 
+            y < (min (config.photobleach.hLinePositions)-clrnce) | ...
+            y > (max (config.photobleach.hLinePositions)+clrnce)   ...
+        ) );
+    for i=1:length(config.photobleach.tickmarksX0)
+        c = [config.photobleach.tickmarksX0(i)/2; config.photobleach.tickmarksY0(i)/2];
+        v = [config.photobleach.tickmarksX0(i); -config.photobleach.tickmarksY0(i)]; v = v/norm(v);
+
+        [pts,pte] = yOCTApplyEnableZone(...
+            c-v*config.photobleach.lineLength, ...
+            c+v*config.photobleach.lineLength, ...
+            isCleared, 10e-3);
+
+        ptStart = [ptStart pts];
+        ptEnd = [ptEnd pte];
+    end
+end
+
+if config.photobleach.isDrawTheDot
+    ptStart = [ptStart ([ config.theDotX+0.1*[-1 0] ; config.theDotY+0.1*[0 -1]])];
+    ptEnd   = [ptEnd   ([ config.theDotX+0.1*[+1 0] ; config.theDotY+0.1*[0 +1]])];
+end
+
+if ~config.photobleach.isPhotobleachOverview
+    %Trim everything to one FOV if it doesn't fit
+    [ptStart,ptEnd] = yOCTApplyEnableZone(ptStart, ptEnd, ...
+            @(x,y)(abs(x)<config.octProbeFOV(1)/2 & abs(y)<config.octProbeFOV(2)/2) , 10e-3);
+end
+
+%Plot
+figure(2); subplot(1,1,1);
+for i=1:size(ptStart,2)
+    plot([ptStart(1,i) ptEnd(1,i)], [ptStart(2,i) ptEnd(2,i)]);
+    if (i==1)
+        hold on;
+    end
+end
+rectangle('Position',[-config.scan.rangeX/2 -config.scan.rangeY/2 config.scan.rangeY config.scan.rangeY]);
+hold off;
+axis equal;
+axis ij;
+grid on;
+xlabel('x[mm]');
+ylabel('y[mm]');
+saveas(cfg,[logFolder 'PhotobleachOverview.png']);
+
+config.photobleach.ptStart = ptStart;
+config.photobleach.ptEnd = ptEnd;
+    
+%% Actual Photobleach (first run)
+
+%Safety warning
 fprintf('%s Put on safety glasses. photobleaching in ...',datestr(datetime));
 for i=5:-1:1
     fprintf(' %d',i);
@@ -138,45 +206,11 @@ for i=5:-1:1
 end
 fprintf('\n');
 
-ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(true); %Switch on
-
-vLinePositions=config.photobleach.vLinePositions;
-for i=1:length(vLinePositions)
-	fprintf('%s Photobleaching V Line # %d / %d\n',datestr(datetime),i,length(vLinePositions));
-    ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
-        vLinePositions(i),-config.photobleach.lineLength/2, ... Start X,Y
-        vLinePositions(i),+config.photobleach.lineLength/2, ... End X,Y
-        config.photobleach.exposurePerLine_sec,config.photobleach.passes); 
-end
-
-hLinePositions=config.photobleach.hLinePositions;
-for i=1:length(hLinePositions)
-	fprintf('%s Photobleaching H Line # %d / %d\n',datestr(datetime),i,length(hLinePositions));
-    ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
-        -config.photobleach.lineLength/2,hLinePositions(i), ... Start X,Y
-        +config.photobleach.lineLength/2,hLinePositions(i), ... End X,Y
-        config.photobleach.exposurePerLine_sec,config.photobleach.passes); 
-end
-
-if (config.isDrawTickmarks)
-    PhotobleachTickmarks_Thorlabs(config.tickmarksX0,config.tickmarksY0,vLinePositions,hLinePositions,logFolder);
-end
-
-if (config.isDrawTheDot)
-    dl = 0.1; %[mm]
-    ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
-        config.theDotX-dl/2,config.theDotY, ... Start X,Y
-        config.theDotX+dl/2,config.theDotY, ... End X,Y
-        2*dl*config.exposurePerLine_sec/config.lineLength,config.passes);  
-    ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
-        config.theDotX,config.theDotY-dl/2, ... Start X,Y
-        config.theDotX,config.theDotY+dl/2, ... End X,Y
-        2*dl*config.photobleach.exposurePerLine_sec/config.lineLength,config.photobleach.passes); 
-end
-
-ThorlabsImagerNET.ThorlabsImager.yOCTTurnLaser(false); %Switch off
-ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose(); %Close scanner
-ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('z',z0); %Return to base
+yOCTPhotobleachTile(config.photobleach.ptStart,config.photobleach.ptEnd,...
+    'octProbePath',config.octProbePath,'FOV',config.octProbeFOV,...
+    'z',config.photobleach.z,'exposure',config.photobleach.exposure,...
+    'nPasses',config.photobleach.nPasses,...
+    enableZone,@(x,y)(abs(x)<config.octProbeFOV(1)/2 & abs(y)<config.octProbeFOV(2)/2));
 pause(0.5);
 
 disp('Done');
@@ -206,7 +240,7 @@ for fn = fieldnames(scanParameters)'
 end
 
 %Overview
-if (config.isRunOverview)
+if (config.overview.isScanOverview)
 	fprintf('%s Scanning Overview\n',datestr(datetime));
     
     %Overview center positons
@@ -240,11 +274,33 @@ if (config.isRunOverview)
     end
 end
 
+%% Actual Photobleach (second run for overview photobleaching)
+
+if config.photobleach.isPhotobleachOverview
+    %Safety warning
+    fprintf('%s Photobleaching overview in ...',datestr(datetime));
+    for i=5:-1:1
+        fprintf(' %d',i);
+        pause(1);
+    end
+    fprintf('\n');
+
+    yOCTPhotobleachTile(config.photobleach.ptStart,config.photobleach.ptEnd,...
+        'octProbePath',config.octProbePath,'FOV',config.octProbeFOV,...
+        'z',config.photobleach.z,'exposure',config.photobleach.exposure,...
+        'nPasses',config.photobleach.nPasses,...
+        enableZone,@(x,y)(~(abs(x)<config.octProbeFOV(1)/2 & abs(y)<config.octProbeFOV(2)/2))); %Photobleach the outside
+    pause(0.5);
+
+    disp('Done');
+
+end
+
 %% Finalize
 fprintf('%s Finalizing\n',datestr(datetime));
 
 %Remove fields that are not in use again, their information is redundent
-config = rmfield(config,{'octProbePath','tissueRefractiveIndex','zToScan'});
+config = rmfield(config,{'tissueRefractiveIndex','zToScan'});
     
 %Save scan configuration parameters
 if exist([outputFolder 'ScanConfig.json'],'file')

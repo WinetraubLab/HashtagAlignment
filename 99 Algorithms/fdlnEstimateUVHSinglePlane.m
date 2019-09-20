@@ -1,4 +1,4 @@
-function [u,v,h] = fdlnEstimateUVHSinglePlane (fdln,a,b)
+function [u,v,h, fitScore] = fdlnEstimateUVHSinglePlane (fdln,a,b)
 %Uses Fiducial Line structure of identified markers to identify u,v,h assuming a single plane approiximation
 %INPUTS:
 %   fdln - array of identified Fiducial Line structures (see
@@ -13,6 +13,7 @@ function [u,v,h] = fdlnEstimateUVHSinglePlane (fdln,a,b)
 %   h - location of image's origin (point 0*u + 0*v, sometimes called top
 %       left corner of the image): (x,y,z). If no tissue interface is found
 %       h(3) = NaN as it cannot be estimated without tissue interface
+%   fitScore - model's least square fit error (RMS)
 
 %% Input checks
 if ~exist('a','var')
@@ -87,6 +88,9 @@ if (norm(u) < norm(v))
     error('It seems that v is not pointed towards z axis. Probably something is wrong in the estimation');
 end
 
+%% Compute Fit Score, lower is better
+fitScore = sqrt(mean( (A*tmp-lnDist).^2));
+
 %% Solve z by solving non linear cuppled equation
 A_ = @(u,v,a) u(1)*v(1)+u(2)*v(2)         -a*norm(u)*norm(v);
 B_ = @(u,v,b) u(1)^2-v(1)^2+u(2)^2-v(2)^2 -b*norm(u)*norm(v);
@@ -99,7 +103,7 @@ v(3) = vz(A,B);
 u(3) = -A/v(3);
 
 if (B^2 < 4*A^2)
-    error('Faild to estimate vz,uz');
+    error('Faild to estimate vz,uz, right hand role violated');
 end
 
 %Iteration #2 include shearing effects
