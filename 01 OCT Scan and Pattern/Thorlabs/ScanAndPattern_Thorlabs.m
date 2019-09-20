@@ -73,8 +73,8 @@ isExecutingOnJenkins = isRunningOnJenkins();
 if (isRunningOnJenkins())
     outputFolder = outputFolder_; %Set by Jenkins
     config.photobleach.z = zToPhtobleach_; %Set by Jenkins
-    config.isDrawTickmarks = isDrawTickmarks_; %Set by Jenkins
-    config.isDrawTheDot = isDrawTickmarks_;
+    config.photobleach.isDrawTickmarks = isDrawTickmarks_; %Set by Jenkins
+    config.photobleach.isDrawTheDot = isDrawTickmarks_;
 	config.overview.isScanOverview = true;	
 	
 	if (exist('isDebugFastMode_','var') && isDebugFastMode_ == true) %Debug mode, make a faster scan
