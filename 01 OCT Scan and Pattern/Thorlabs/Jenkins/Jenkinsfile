@@ -404,7 +404,10 @@ pipeline {
 						choices: ['same side as black dot','side opposite to the black dot'], 
 						description: 'On which side should histologyist cut sections: black dot side or opposite to black dot?')
                     ])
-			def howDeepMM = Double.valueOf(userInput.HowDeepMM)
+			def howDeepUM = Double.valueOf(userInput.HowDeepMM) * 1000
+			def howDeepSectionSize = 25 //um
+			def howDeepNSections = Math.round(howDeepUM/howDeepSectionSize)
+			
 			def sideToPlaceRedDot = ""
 			def faceDirection = ""
 			if (userInput.WhichSideToStartSections == "same side as black dot")
@@ -438,7 +441,8 @@ pipeline {
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
 				echo + Start cutting from the side opposite to the red dot. >> histoInstructions.txt
 				echo + Clear paraffin, when seeing a full face. >> histoInstructions.txt
-				echo + Then go in """ + howDeepMM.toString() + " mm / " +  String.format ("%.0f", howDeepMM*1000) + """ um. >> histoInstructions.txt
+				echo + Then go in """ + String.format ("%.0f", howDeepNSections*howDeepSectionSize) + " um," +
+					" by cutting " + String.format("%.0f",howDeepNSections) + " sections of " + String.format("%.0f",howDeepSectionSize) + """ um each. >> histoInstructions.txt
 				echo + Then take 5 slides with 3 sections per slide. >> histoInstructions.txt
 				echo    - Section interval of 25 um >> histoInstructions.txt
 				echo    - Slide thickness of 5 um >> histoInstructions.txt
@@ -456,7 +460,7 @@ pipeline {
 			def ht = readFile(LOG_OUTPUT_FOLDER() + '\\histoInstructions.txt').trim()
 			ht = ht.replaceAll("\n","<br>")
 			ht = ht.replaceAll("Then go in","Then <span style='font-weight: bold;background-color: yellow !important;font-size: big'>go in")
-			ht = ht.replaceAll(" um."," um</span>.")
+			ht = ht.replaceAll(" um, by"," um</span>, by")
 			ht = "<html><head><style>\n" +
 				"@media print {\nbody {-webkit-print-color-adjust: exact;}\n}</style></head><body>" + 
 				ht + "</body></html>"
