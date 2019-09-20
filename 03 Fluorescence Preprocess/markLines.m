@@ -247,6 +247,8 @@ guidata(hObject, handles);
 
 function drawStatus(handles)
 
+set(0,'CurrentFigure',handles.figure1); %Set current figure as top active one
+
 L = get(gca,{'xlim','ylim'});  % Get axes limits.
 imagesc(handles.im);
 axis equal;
@@ -387,6 +389,6 @@ if (isIdentifySuccssful)
     plotSignlePlane(slideJson.FM.singlePlaneFit,slideJson.FM.fiducialLines,handles.im,handles.octVolumeJson,isIdentifySuccssful);
     handles.slideJson = slideJson;
     handles.isIdentifySuccssful = true;
-    drawStatus(handles);
+    drawStatus(handles); 
 end
 guidata(hObject, handles);
