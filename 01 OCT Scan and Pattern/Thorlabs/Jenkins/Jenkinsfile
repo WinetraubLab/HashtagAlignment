@@ -550,6 +550,6 @@ def BackupLogFile()
 	lg = lg.join("\n");
 	lg = lg.replaceAll(env.JOB_URL,"http://localhost:NANA/job/");
 	lg = lg.replaceAll("@stanford.edu","");
-	def file = new File(LOG_OUTPUT_FOLDER() + "\\build.log")
+	def file = new File(LOG_OUTPUT_FOLDER() + "\\buildLog.txt")
 	file.write (lg)
 }
