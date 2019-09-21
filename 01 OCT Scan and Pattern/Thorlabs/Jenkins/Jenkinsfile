@@ -433,10 +433,9 @@ pipeline {
 			//Generate Instructions to Histologist
 			bat """
 				@echo off
-				echo Sample Date: """ + todaysDateSTR + """ > histoInstructions.txt
-				echo Sample ID:  %SAMPLE_ID%  >> histoInstructions.txt
-				echo Sample scanned by: """ + whoRanExperiment + """ >> histoInstructions.txt
-				echo. >> histoInstructions.txt
+				echo Sample ID:  %SAMPLE_ID%  > histoInstructions.txt
+				echo Scanned by: """ + whoRanExperiment + """ >> histoInstructions.txt
+				echo Date: """ + todaysDateSTR + """ >> histoInstructions.txt
 				echo. >> histoInstructions.txt
 				echo ------------------- Instructions for Us ------------------------- >> histoInstructions.txt
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
