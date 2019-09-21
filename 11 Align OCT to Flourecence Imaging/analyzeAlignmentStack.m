@@ -2,7 +2,7 @@
 %run this script twice to correct slide alignment based on stack trned
 
 %% Inputs
-subjectFilePath =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/';
+subjectFilePath =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-13 25 um/';
 
 %% Find all JSONS
 awsSetCredentials(1);
@@ -87,9 +87,15 @@ subplot(1,1,1); %Clear previuse figure
 subplot(2,2,1);
 
 %Plot Photobleached lines
-vLinePositions = octVolumeJson.photobleach.vLinePositions;
-hLinePositions = octVolumeJson.photobleach.hLinePositions;
-lineLength = octVolumeJson.photobleach.lineLength;
+if isfield(octVolumeJson,'version') && octVolumeJson.version == 2
+    vLinePositions = octVolumeJson.photobleach.vLinePositions;
+    hLinePositions = octVolumeJson.photobleach.hLinePositions;
+    lineLength = octVolumeJson.photobleach.lineLength;
+else
+    vLinePositions = octVolumeJson.vLinePositions;
+    hLinePositions = octVolumeJson.hLinePositions;
+    lineLength = octVolumeJson.lineLength;
+end
 mm = [-1 1]*(lineLength/2);
 for i=1:length(vLinePositions)
     c = vLinePositions(i);

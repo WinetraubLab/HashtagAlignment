@@ -404,7 +404,6 @@ pipeline {
 						choices: ['same side as black dot','side opposite to the black dot'], 
 						description: 'On which side should histologyist cut sections: black dot side or opposite to black dot?')
                     ])
-			echo "here"
 			def howDeepUM = Double.valueOf(userInput.HowDeepMM) * 1000
 			def howDeepSectionSize = 25 //um
 			def howDeepNSections = Math.round(howDeepUM/howDeepSectionSize)
@@ -421,15 +420,22 @@ pipeline {
 			}
 			faceDirection = "up" //Red dot allways facing up
 			
-			def str = params.WHO_TO_EMAIL_WHEN_DONE;
-			str = str.substring(0,str.indexOf('@'))
+			//Get person who scanned name
+			def whoRanExperiment = params.WHO_TO_EMAIL_WHEN_DONE;
+			whoRanExperiment = whoRanExperiment.substring(0,whoRanExperiment.indexOf('@'))
+			
+			//Get todays date
+			def dateFormat = new java.text.SimpleDateFormat("MMM dd, yyyy")
+			def date = new Date()
+			def todaysDateSTR = dateFormat.format(date)
 
 			echo "here"
 			//Generate Instructions to Histologist
 			bat """
 				@echo off
-				echo Sample ID:  %SAMPLE_ID%  > histoInstructions.txt
-				echo Sample scanned by: """ + str + """ >> histoInstructions.txt
+				echo Sample Date: """ + todaysDateSTR + """ > histoInstructions.txt
+				echo Sample ID:  %SAMPLE_ID%  >> histoInstructions.txt
+				echo Sample scanned by: """ + whoRanExperiment + """ >> histoInstructions.txt
 				echo. >> histoInstructions.txt
 				echo. >> histoInstructions.txt
 				echo ------------------- Instructions for Us ------------------------- >> histoInstructions.txt
