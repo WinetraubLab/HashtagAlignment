@@ -13,6 +13,7 @@ outputFolder = 'output'; %This will be override if running with Jenkins
 outputFolder = [outputFolder '\'];
 
 %OCT scan defenitions (scan is centered along (0,0)
+config.scan.isScanEnabled = true; %Enable/Disable regular scan
 config.scan.rangeX = 1; %[mm]
 config.scan.rangeY = 1; %[mm]
 config.scan.nPixelsX = 1000; %How many pixels in x direction
@@ -46,6 +47,7 @@ config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm]
 config.photobleach.exposure = 30/2; %[sec per line length (mm)]
 config.photobleach.nPasses = 2;
 config.photobleach.lineLength = 2; %[mm]
+config.photobleach.isPhotobleachEnabled = true; %Would you like to photobleach? this flag disables all photobleaching
 config.photobleach.isPhotobleachOverview = true; %Would you like to photobleach overview areas as well (extended photobleach)
 config.photobleach.z = -300*1e-3; %[mm] this parameter is ignored if running from jenkins - will assume provided by jenkins
     
@@ -182,6 +184,11 @@ if ~config.photobleach.isPhotobleachOverview
             @(x,y)(abs(x)<config.octProbeFOV(1)/2 & abs(y)<config.octProbeFOV(2)/2) , 10e-3);
 end
 
+if (~config.photobleach.isPhotobleachEnabled)
+    ptStart = [];
+    ptEnd = [];
+end
+
 %Plot
 figure(2); subplot(1,1,1);
 for i=1:size(ptStart,2)
@@ -203,7 +210,7 @@ config.photobleach.ptStart = ptStart;
 config.photobleach.ptEnd = ptEnd;
     
 %% Actual Photobleach (first run)
-
+if (config.photobleach.isPhotobleachEnabled)
 %Safety warning
 fprintf('%s Put on safety glasses. photobleaching in ...',datestr(datetime));
 for i=5:-1:1
@@ -220,10 +227,12 @@ yOCTPhotobleachTile(config.photobleach.ptStart,config.photobleach.ptEnd,...
 pause(0.5);
 
 disp('Done');
+end
 
 %% Scans
 
 %Volume
+if (config.scan.isScanEnabled)
 fprintf('%s Scanning Volume\n',datestr(datetime));
 volumeOutputFolder = [outputFolder '\Volume\'];
 scanParameters = yOCTScanTile (...
@@ -243,6 +252,7 @@ scanParameters = yOCTScanTile (...
 config.scan = rmfield(config.scan,{'nPixelsX','nPixelsY','nBScanAvg'});
 for fn = fieldnames(scanParameters)'
     config.scan.(fn{1}) = scanParameters.(fn{1});
+end
 end
 
 %Overview
@@ -282,7 +292,7 @@ end
 
 %% Actual Photobleach (second run for overview photobleaching)
 
-if config.photobleach.isPhotobleachOverview
+if config.photobleach.isPhotobleachOverview && config.photobleach.isPhotobleachEnabled
     %Safety warning
     fprintf('%s Photobleaching overview in ...',datestr(datetime));
     for i=5:-1:1
