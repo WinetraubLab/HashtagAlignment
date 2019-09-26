@@ -7,7 +7,7 @@ dispersionParameterA = 6.539e07;
 %Total width covered by histological sectioning 
 histologyVolumeThickness = 15*5*(5+1); %[um]
 
-isPlotEnface = false; %Set to true to plot enface, false to plot depth map
+isPlotEnface = true; %Set to true to plot enface, false to plot depth map
 
 %% Jenkins
 if (exist('OCTVolumesFolder_','var'))

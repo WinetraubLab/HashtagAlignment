@@ -64,7 +64,7 @@ d_mm = zeros(1,length(ii));%Directional distance
 slideCenter_mm = zeros(2,length(ii)); %Center position of the slide (x/y,n)
 
 %Compute prepandicular direction to the slides
-sn = 1:length(singlePlanes);
+sn = ii(:)';
 xm = mean(plans_x,1);
 ym = mean(plans_y,1);
 px = polyfit(sn,xm,1);
@@ -143,7 +143,7 @@ p = polyfit(sn,d_mm,1);
 plot(sn,polyval(p,sn),'--r',mean(sn),polyval(p,mean(sn)),'.r');
 y = ylim;
 hold on;
-plot(d_mm,'.');
+plot(sn,d_mm,'.');
 hold off;
 ylim(y);
 ylabel('\mum');
@@ -161,7 +161,7 @@ legend(...
 %% Plot rotations
 subplot(2,2,2);
 rot = [singlePlanes.rotation_deg];
-plot(rot,'.')
+plot(sn,rot,'.')
 hold on;
 plot(sn([1 end]),median(rot)*[1 1],'--');
 hold off;
@@ -173,7 +173,7 @@ grid on;
 %% Plot size change 
 subplot(2,2,4);
 sc = [singlePlanes.sizeChange_precent];
-plot(sc,'.')
+plot(sn,sc,'.')
 hold on;
 plot(sn([1 end]),median(sc)*[1 1],'--');
 hold off;
