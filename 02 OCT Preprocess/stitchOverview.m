@@ -24,7 +24,7 @@ output3DOverviewVolume = awsModifyPathForCompetability([OCTVolumesFolder '/Overv
 %% Process overview scan
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
 
-if (length(json.overview.zDepts) > 1 && isfield(json,'focusPositionInImageZpix'))
+if (length(json.overview.zDepths) > 1 && isfield(json,'focusPositionInImageZpix'))
     %Multiple depths, so try to stitch appropretly
     focusPositionInImageZpix = json.focusPositionInImageZpix;
     
@@ -45,7 +45,7 @@ yOCTProcessTiledScan(...
     [OCTVolumesFolder 'Overview\'], ... Input
     output3DOverviewVolume,...
     'debugFolder',[logFolder 'OverviewDebug\'],...
-    'saveYs',2*(length(json.overview.zDepts)>1),... Save some raw data ys if there are multiple depths
+    'saveYs',2*(length(json.overview.zDepths)>1),... Save some raw data ys if there are multiple depths
     'focusPositionInImageZpix',focusPositionInImageZpix,... No Z scan filtering
     'dispersionParameterA',dispersionParameterA,...
     'v',true);
