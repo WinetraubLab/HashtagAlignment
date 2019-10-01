@@ -85,8 +85,8 @@ try
     stitchOverview;
     close all;
     
-    fprintf('%s Running stitchZStack.\n',datestr(datetime));
-    stitchZStack
+    fprintf('%s Running stitchVolume.\n',datestr(datetime));
+    stitchVolume
     close all;
 	
 	%Upload new files to the cloud, but only if processing was finished correctly

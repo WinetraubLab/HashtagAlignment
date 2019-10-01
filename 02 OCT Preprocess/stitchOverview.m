@@ -164,8 +164,8 @@ hold on;
 lineLength = json.photobleach.lineLength;
 vLinePositions = json.photobleach.vLinePositions;
 hLinePositions = json.photobleach.hLinePositions;
-scanRangeX = json.scan.rangeX;
-scanRangeY = json.scan.rangeY;
+scanRangeX = json.volume.rangeX;
+scanRangeY = json.volume.rangeY;
 
 %Plot the dot
 theDot = [json.theDotX; json.theDotY];

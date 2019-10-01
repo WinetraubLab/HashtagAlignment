@@ -13,12 +13,12 @@ outputFolder = 'output'; %This will be override if running with Jenkins
 outputFolder = [outputFolder '\'];
 
 %OCT scan defenitions (scan is centered along (0,0)
-config.scan.isScanEnabled = true; %Enable/Disable regular scan
-config.scan.rangeX = 1; %[mm]
-config.scan.rangeY = 1; %[mm]
-config.scan.nPixelsX = 1000; %How many pixels in x direction
-config.scan.nPixelsY = 1000; %How many pixels in y direction
-config.scan.nBScanAvg = 1;
+config.volume.isScanEnabled = true; %Enable/Disable regular scan
+config.volume.rangeX = 1; %[mm]
+config.volume.rangeY = 1; %[mm]
+config.volume.nPixelsX = 1000; %How many pixels in x direction
+config.volume.nPixelsY = 1000; %How many pixels in y direction
+config.volume.nBScanAvg = 1;
 
 %Depth Defenitions
 %We assume stage starting position is at the top of the tissue.
@@ -30,11 +30,11 @@ config.zToScan = ((-190:15:500)-5)*1e-3; %[mm]
 config.tissueRefractiveIndex = 1.4;
 
 %Overview of the entire area
-config.overview.isScanOverview = false; %Do you want to scan overview volume? When running on Jenkins, will allways run overview 
+config.overview.isScanEnabled = false; %Do you want to scan overview volume? When running on Jenkins, will allways run overview 
 config.overview.rangeAllX = 6;%[mm] Total tiles range
 config.overview.rangeAllY = 5;%[mm] Total tiles range
-config.overview.range = config.scan.rangeX;%[mm] x=y range of each tile
-config.overview.nPixels = max(config.scan.nPixelsX/20,50); %same for x and y, number of pixels in each tile
+config.overview.range = config.volume.rangeX;%[mm] x=y range of each tile
+config.overview.nPixels = max(config.volume.nPixelsX/20,50); %same for x and y, number of pixels in each tile
 config.overview.nZToScan = 2; %How many different depths to scan in overview to provide coverage
 
 %Photobleaching defenitions
@@ -77,12 +77,12 @@ if (isRunningOnJenkins())
     config.photobleach.z = zToPhtobleach_; %Set by Jenkins
     config.photobleach.isDrawTickmarks = isDrawTickmarks_; %Set by Jenkins
     config.photobleach.isDrawTheDot = isDrawTickmarks_;
-	config.overview.isScanOverview = true;	
+	config.overview.isScanEnabled = true;	
 	
 	if (exist('isDebugFastMode_','var') && isDebugFastMode_ == true) %Debug mode, make a faster scan
 		disp('Entering debug mode!');
-		config.scan.nPixelsX = 100; 
-		config.scan.nPixelsY = 100; 
+		config.volume.nPixelsX = 100; 
+		config.volume.nPixelsY = 100; 
 		config.overview.rangeAllX = 2;
         config.overview.rangeAllY = 1;
         config.photobleach.vLinePositions = base*[0]; %[mm] 
@@ -197,7 +197,7 @@ for i=1:size(ptStart,2)
         hold on;
     end
 end
-rectangle('Position',[-config.scan.rangeX/2 -config.scan.rangeY/2 config.scan.rangeY config.scan.rangeY]);
+rectangle('Position',[-config.volume.rangeX/2 -config.volume.rangeY/2 config.volume.rangeY config.volume.rangeY]);
 hold off;
 axis equal;
 axis ij;
@@ -232,7 +232,7 @@ end
 %% Scans
 
 %Volume
-if (config.scan.isScanEnabled)
+if (config.volume.isScanEnabled)
 fprintf('%s Scanning Volume\n',datestr(datetime));
 volumeOutputFolder = [outputFolder '\Volume\'];
 scanParameters = yOCTScanTile (...
@@ -241,22 +241,22 @@ scanParameters = yOCTScanTile (...
     'tissueRefractiveIndex', config.tissueRefractiveIndex, ...
     'xOffset', config.offsetX, ...
     'yOffset', config.offsetY, ... 
-    'xRange', config.scan.rangeX * config.scaleX, ...
-    'yRange', config.scan.rangeY * config.scaleY, ...
-    'nXPixels', config.scan.nPixelsX, ...
-    'nYPixels', config.scan.nPixelsY, ...
-    'nBScanAvg', config.scan.nBScanAvg, ...
+    'xRange', config.volume.rangeX * config.scaleX, ...
+    'yRange', config.volume.rangeY * config.scaleY, ...
+    'nXPixels', config.volume.nPixelsX, ...
+    'nYPixels', config.volume.nPixelsY, ...
+    'nBScanAvg', config.volume.nBScanAvg, ...
     'zDepts',    config.zToScan, ... [mm]
     'v',true  ...
     );
-config.scan = rmfield(config.scan,{'nPixelsX','nPixelsY','nBScanAvg'});
+config.volume = rmfield(config.volume,{'nPixelsX','nPixelsY','nBScanAvg'});
 for fn = fieldnames(scanParameters)'
-    config.scan.(fn{1}) = scanParameters.(fn{1});
+    config.volume.(fn{1}) = scanParameters.(fn{1});
 end
 end
 
 %Overview
-if (config.overview.isScanOverview)
+if (config.overview.isScanEnabled)
 	fprintf('%s Scanning Overview\n',datestr(datetime));
     
     %Overview center positons
@@ -330,8 +330,8 @@ disp('config');
 config
 disp('config.photobleach');
 config.photobleach
-disp('config.scan');
-config.scan
+disp('config.volume');
+config.volume
 disp('config.overview');
 config.overview
 

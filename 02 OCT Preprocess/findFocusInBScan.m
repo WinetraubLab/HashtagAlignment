@@ -31,18 +31,54 @@ if (isfield(json,'focusPositionInImageZpix') && isRunInAutomatedMode)
     return; %Don't try to focus again, only in manual mode
 end
 
-zToScan = json.scan.zDepts*1000; %[um]
-n = json.scan.tissueRefractiveIndex; 
+if isfield(json.volume,'tissueRefractiveIndex')
+    n = json.volume.tissueRefractiveIndex; 
+elseif isfield(json.overview,'tissueRefractiveIndex')
+    n = json.overview.tissueRefractiveIndex; 
+else
+    warining('Can''t figure out what is index of refraction, assuming default value');
+    n = 1.33;
+end
 
-%Define file path
-OCTVolumesFolderVolume = [OCTVolumesFolder '/Volume/'];
-fp = @(frameI)(sprintf('%sData%02d/',OCTVolumesFolderVolume,frameI));
+%% Find a scan that was done when tissue was at focus (z=0)
+%Decide wheter to use scan or overview for findig focus
+if isfield(json.volume,'zDepths')
+    findFocusByUsing = 'volume';
+    zDepths = json.volume.gridZcc; 
+    
+    %Find the frame to be used 
+    frameI = find(abs(zDepths) == min(abs(zDepths)),1,'first'); %Find the one closest to 0
+    
+    %Define a path by frame
+    OCTVolumesFolderVolume = [OCTVolumesFolder '/Volume/'];
+    fp = sprintf('%sData%02d/',OCTVolumesFolderVolume,frameI);
+    
+    %Define range
+    rangeX = json.volume.rangeX;
+    rangeY = json.volume.rangeY;
 
+elseif isfield(json.overview,'zDepths')
+    findFocusByUsing = 'overview';
+    zDepths = json.overview.gridZcc;
+    
+    %Find the frame to be used 
+    frameI = find(abs(zDepths) == min(abs(zDepths)),1,'first'); %Find the one closest to 0
+    
+    %Define a path by frame
+    OCTVolumesFolderVolume = [OCTVolumesFolder '/Overview/'];
+    fp = sprintf('%sData%02d/',OCTVolumesFolderVolume,frameI);
+    
+    %Define range
+    rangeX = json.overview.range;
+    rangeY = json.overview.range;
+end
+
+%% Get peak data
 %Get Dimensions of one reference volume
-dim = yOCTLoadInterfFromFile(fp(1),'peakOnly',true);
+dim = yOCTLoadInterfFromFile(fp,'peakOnly',true);
 dim.x.units = 'microns';
-dim.x.values = 1000* linspace(-json.scan.rangeX/2,json.scan.rangeX/2,length(dim.x.values));
-dim.y.values = 1000* linspace(-json.scan.rangeY/2,json.scan.rangeY/2,length(dim.x.values));
+dim.x.values = 1000* linspace(-rangeX/2,rangeX/2,length(dim.x.values));
+dim.y.values = 1000* linspace(-rangeY/2,rangeY/2,length(dim.y.values));
 dim.y.units = 'microns';
 
 %Load a few y slices
@@ -51,7 +87,6 @@ yToLoad = dim.y.index(...
     );
 
 %% Use frame where focus is at tissue to make an initial guess of where focus is in B Scan
-frameI = find(zToScan == 0,1,'first');
 
 %Load a few y slices
 [int1,dim1] = ...
@@ -64,7 +99,7 @@ end
 dim.z = dim1.z; %Update dimensions structure
 
 %Compute the total travel distance of the scanning process
-totalZDistance = diff(zToScan([1 end])); %mu
+totalZDistance = diff(zDepths([1 end]))*1000; %mu
 totalZDistanceI = totalZDistance/diff(dim.z.values([1 2])); %pixels
 
 %Find tissue position by maximum intensity
