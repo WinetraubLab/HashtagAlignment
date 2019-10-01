@@ -91,34 +91,6 @@ pipeline {
 			description:"Set to true if you would like to do a fast debug scan")
     }
 	stages{
-		stage("Parameters Check and Env Setup") 
-		{steps{script{
-		
-			echo "Tmp Save of Log File"
-			BackupLogFile(); //Save the log file here just because this tends to fail the firt time you run it due to permissions. So put it at the begining as safety measure
-			
-			echo "Input checks"
-			if (IS_DEBUG_MODE == "false") // Checks apply only for operational mode
-			{
-				if (params.WHO_TO_EMAIL_WHEN_DONE == "@stanford.edu") 
-				{
-					currentBuild.result = 'ABORTED'
-					echo('Please specify email address to send a note when run is completed')
-					error('Please specify email address to send a note when run is completed')
-				}
-				
-				if (IS_FRESH_HUMAN_SAMPLE == "true")
-				{
-					//This is a fresh human sample make sure we have data about it
-					if (params.PATIENT_AGE == "" && params.SAME_PATIENT_AS_SAMPLE_ID == "New Patient")
-					{
-						currentBuild.result = 'ABORTED'
-						echo('Please specify patient data')
-						error('Please specify patient data')
-					}
-				}
-			}
-		}}}
 		stage("Checkout")
 		{steps{script{
 			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
@@ -181,6 +153,34 @@ pipeline {
 			bat("@echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
 			bat("@echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
 			bat("@echo gitBranch_ = '" + branch + "'; >> runme.m")
+		}}}
+		stage("Parameters Check and Env Setup") 
+		{steps{script{
+		
+			echo "Tmp Save of Log File"
+			BackupLogFile(); //Save the log file here just because this tends to fail the firt time you run it due to permissions. So put it at the begining as safety measure
+			
+			echo "Input checks"
+			if (IS_DEBUG_MODE == "false") // Checks apply only for operational mode
+			{
+				if (params.WHO_TO_EMAIL_WHEN_DONE == "@stanford.edu") 
+				{
+					currentBuild.result = 'ABORTED'
+					echo('Please specify email address to send a note when run is completed')
+					error('Please specify email address to send a note when run is completed')
+				}
+				
+				if (IS_FRESH_HUMAN_SAMPLE == "true")
+				{
+					//This is a fresh human sample make sure we have data about it
+					if (params.PATIENT_AGE == "" && params.SAME_PATIENT_AS_SAMPLE_ID == "New Patient")
+					{
+						currentBuild.result = 'ABORTED'
+						echo('Please specify patient data')
+						error('Please specify patient data')
+					}
+				}
+			}
 		}}}
 		stage("Build Files")
 		{steps{script{
