@@ -136,6 +136,7 @@ hold off
 %Rotation matrix
 V_1 = V^-1;
 ang = acos(V_1(1));
+ang = -45/180*pi;
 M = [cos(ang) sin(ang); -sin(ang) cos(ang)]; %Rotation matrix
 Mc = M*[cx;cy];
 Mcx = Mc(1);
@@ -252,4 +253,7 @@ else
     %Save locally
     saveas(gcf,overviewOutputFolder);
 end   
+
+%Save enface view
+yOCT2Tif(enface,[output3DOverviewVolume(1:(end-1)) '_Enface.tif']);
 
