@@ -448,11 +448,16 @@ pipeline {
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
 				echo + Start cutting from the side opposite to the red dot. >> histoInstructions.txt
 				echo + Clear paraffin, when seeing a full face. >> histoInstructions.txt
+				echo + Take one slide / section. >> histoInstructions.txt
+				echo    - Slide thickness of 5 um >> histoInstructions.txt
 				echo + Then go in """ + (howDeepNSections*howDeepSectionSize).toString() + " um," + " by cutting " + howDeepNSections.toString() + " sections of " + howDeepSectionSize.toString() + """ um each. >> histoInstructions.txt
-				echo + Then take 5 slides with 3 sections per slide. >> histoInstructions.txt
-				echo    - Section interval of 25 um >> histoInstructions.txt
+				echo + Then take 5 slides with 3 sections per slide (14 sections). >> histoInstructions.txt
+				echo    - Section interval of 10 um >> histoInstructions.txt
 				echo    - Slide thickness of 5 um >> histoInstructions.txt
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
+				echo. >> histoInstructions.txt
+				echo. >> histoInstructions.txt
+				echo Note: actual section interval will be larger, we choose this specific section interval after calibrating machine settings vs our algorithm.>> histoInstructions.txt
 				
 				echo HISTOLOGIST Instructions
 				echo ------------------------
