@@ -14,7 +14,9 @@ if ~exist('linePosition','var')
     linePosition = NaN;
 end
 
-fdln.u_pix = u(:)';
-fdln.v_pix = v(:)';
+%When loading structure from json its been loaded as colum vector
+fdln.u_pix = u(:); 
+fdln.v_pix = v(:);
+
 fdln.group = group;
 fdln.linePosition_mm = linePosition;

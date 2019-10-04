@@ -107,14 +107,7 @@ if (sum([f.group] == 'v') >= 2) && (sum([f.group] == 'h') >=2)
     isIdentifySuccssful = true;
 end
 
-%% Part #2, Compute U,V,H & stats
-if (isIdentifySuccssful)
-    singlePlaneFit = alignSignlePlane(f,slideJson.FM.pixelSize_um);
-else
-    singlePlaneFit = NaN;
-end
-
-%% Finalize - update z position
+%% Update z position of tissue interface
 %Get z position of the interface bettween tissue and gel, because that was
 %the position we set at the begning
 zInterface = octVolumeJson.VolumeOCTDimensions.z.values(octVolumeJson.focusPositionInImageZpix); %[um]
@@ -123,6 +116,13 @@ grT = [f.group] == 't';
 grTi = find(grT);
 for i=grTi
     f(i).linePosition_mm = zInterface;
+end
+
+%% Part #2, Compute U,V,H & stats
+if (isIdentifySuccssful)
+    singlePlaneFit = alignSignlePlane(f,slideJson.FM.pixelSize_um);
+else
+    singlePlaneFit = NaN;
 end
 
 %% Finalize by updating the JSON structure

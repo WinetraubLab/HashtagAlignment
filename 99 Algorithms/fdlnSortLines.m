@@ -15,7 +15,13 @@ upos = cellfun(@mean,{fdln.u_pix});
 fdlnOld = fdln;
 for i=1:length(fdln)
     f = fdlnOld(iSort(i));
-    [~,ii] = sort(f.v_pix);
+    
+    if ~strcmp(f.group,'t')
+        [~,ii] = sort(f.v_pix); %Sort lines from up to down
+    else
+        [~,ii] = sort(f.u_pix); %Tissue markers should be sorted left to right
+    end
+    
     f.u_pix = f.u_pix(ii);
     f.u_pix = f.u_pix(:);
     

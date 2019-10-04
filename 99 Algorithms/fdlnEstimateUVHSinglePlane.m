@@ -30,10 +30,12 @@ elseif (sum(gr == 'h') < 2)
     error('Not enugh fiducial lines are identified as ''h'' (horizontal), need at least 2');
 end
 
-%% Make sure to use to points per line
+%% Make sure to use to points per line in h v lines
 for i=1:length(fdln)
-    fdln(i).u_pix = fdln(i).u_pix([1 end]);
-    fdln(i).v_pix = fdln(i).v_pix([1 end]);
+    if ~strcmp(fdln(i).group,'t')
+        fdln(i).u_pix = fdln(i).u_pix([1 end]);
+        fdln(i).v_pix = fdln(i).v_pix([1 end]);
+    end
 end
 
 %% Convert lines to points

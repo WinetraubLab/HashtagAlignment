@@ -101,7 +101,7 @@ function pushbuttonMarkTissueInterface_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [x,y] = getline();
-handles.slideJson = AddFiducialLineToJson(handles.slideJson,x([1 end]),y([1 end]),'t'); 
+handles.slideJson = AddFiducialLineToJson(handles.slideJson,x,y,'t'); 
 
 drawStatus(handles)
 guidata(hObject, handles);
@@ -211,12 +211,16 @@ err = ~isfield(handles.slideJson.FM,'fiducialLines');
 if ~err
     gr = [handles.slideJson.FM.fiducialLines.group];
     if ~contains(gr,'t')
-        err = true;
+        err = true; %Tissue interface missing
+    end
+    
+    if count(gr,'t') > 1
+        err = true; %Too many lines marked as tissue interface
     end
 end
 
 if err
-    error('Please mark group 1 lines, group 2 lines and tissue interface');
+    error('Please mark group 1 lines, group 2 lines and one continues line which is tissue interface');
 end
 
 %Save JSON
