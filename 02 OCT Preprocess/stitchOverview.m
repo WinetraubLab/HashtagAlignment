@@ -1,7 +1,7 @@
 %This script stitches overview file
 
 %% Inputs
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-00D/OCTVolumes/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-06/OCTVolumes/';
 dispersionParameterA = 6.539e07;
 
 %Total width covered by histological sectioning 
@@ -20,6 +20,7 @@ SubjectFolder = awsModifyPathForCompetability([OCTVolumesFolder '..\']);
 overviewOutputFolder = awsModifyPathForCompetability([SubjectFolder 'Log\01 OCT Scan and Pattern\Overview.png']); %Overview should be saved to the scan part as we use it to decide which side to cut and how deep
 logFolder = [SubjectFolder 'Log\02 OCT Preprocess\'];
 output3DOverviewVolume = awsModifyPathForCompetability([OCTVolumesFolder '/OverviewScanAbs/']);
+output3DOverviewVolumeAll = [output3DOverviewVolume(1:(end-1)) '_All.tif'];
 
 %% Process overview scan
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
@@ -29,29 +30,42 @@ if (length(json.overview.zDepths) > 1 && isfield(json,'focusPositionInImageZpix'
     focusPositionInImageZpix = json.focusPositionInImageZpix;
     
     %Z projection parametres
-    zStart = 1;
-    zEnd = Inf;
+    zStartI = 1;
+    zEndI = Inf;
 else
     %One depth, just save all of it
     focusPositionInImageZpix = NaN;
     
     %Z projection parametres
-    zStart = 100; %max(focusPositionInImageZpix - focusSigma*5,1);
-    zEnd = 1000;  %min(focusPositionInImageZpix + focusSigma*7,1000);
+    zStartI = 100; %max(focusPositionInImageZpix - focusSigma*5,1);
+    zEndI = 1000;  %min(focusPositionInImageZpix + focusSigma*7,1000);
 end
 
-setupParpolOCTPreprocess();
-yOCTProcessTiledScan(...
-    [OCTVolumesFolder 'Overview\'], ... Input
-    output3DOverviewVolume,...
-    'debugFolder',[logFolder 'OverviewDebug\'],...
-    'saveYs',2*(length(json.overview.zDepths)>1),... Save some raw data ys if there are multiple depths
-    'focusPositionInImageZpix',focusPositionInImageZpix,... No Z scan filtering
-    'dispersionParameterA',dispersionParameterA,...
-    'v',true);
+%Figure out if we already processed this volume, if so, no need to redo it
+try
+	overviewVol = yOCTFromTif(output3DOverviewVolumeAll); 
+    isAlreadyProcessed = true;
+catch
+    isAlreadyProcessed = false;
+end
+
+%Process
+if ~isAlreadyProcessed
+    setupParpolOCTPreprocess();
+    yOCTProcessTiledScan(...
+        [OCTVolumesFolder 'Overview\'], ... Input
+        output3DOverviewVolume,...
+        'debugFolder',[logFolder 'OverviewDebug\'],...
+        'saveYs',2*(length(json.overview.zDepths)>1),... Save some raw data ys if there are multiple depths
+        'focusPositionInImageZpix',focusPositionInImageZpix,... No Z scan filtering
+        'dispersionParameterA',dispersionParameterA,...
+        'v',true);
+end
 
 %% Read processed volume and create an enface view
-overviewVol = yOCTFromTif([output3DOverviewVolume(1:(end-1)) '_All.tif']); %Dimentions (z,x,y)
+if (~isAlreadyProcessed)
+    overviewVol = yOCTFromTif(output3DOverviewVolumeAll); %Dimentions (z,x,y)
+end
 processedJson = awsReadJSON([output3DOverviewVolume 'processedScanConfig.json']);
 
 xOverview = processedJson.xAllmm;
@@ -63,17 +77,26 @@ zOverview = processedJson.zAllmm;
 overviewVol = permute(overviewVol,[1 3 2]); %(z,y,x)
 
 %Make sure start and end are in the volume
-zStart = max(zStart,1);
-zEnd   = min(zEnd,size(overviewVol,1));
+zStartI = max(zStartI,1);
+zEndI   = min(zEndI,size(overviewVol,1));
+
+%See if zStartI is above gel interface. If it is, it has reflections that
+%will cause us problems
+zTissueClear = json.photobleach.z+175e-3; %Have some clearence
+if (zOverview(zStartI) < zTissueClear)
+    warning('Overview scan starts at %.0f[um], however photboleach line is at %.0f[um] (%.0f[um] just to be safe).\nAdjusting zStart such that we will not include gel interface in enface',...
+        zOverview(zStartI)*1e3,json.photobleach.z*1e3,zTissueClear*1e3);
+    zStartI = find(zOverview > zTissueClear,1,'first');
+end
 
 %Compute enface
-enface = squeeze(max(overviewVol(zStart:zEnd,:,:))); %(y,x)
+enface = squeeze(max(overviewVol(zStartI:zEndI,:,:))); %(y,x)
 
 %Compute position of maximal z
 depthOfMaxZ_pix = zeros(size(enface));
 for i=1:size(depthOfMaxZ_pix,1)
     for j=1:size(depthOfMaxZ_pix,2) 
-        o = overviewVol(zStart:zEnd,i,j);
+        o = overviewVol(zStartI:zEndI,i,j);
     
         ii = find(o >= max(o)*1);
         depthOfMaxZ_pix(i,j) = median(ii);
