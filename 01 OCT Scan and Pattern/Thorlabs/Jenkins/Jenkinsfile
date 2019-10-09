@@ -360,8 +360,51 @@ pipeline {
 				}
 			}
 		}}}
-		stage("Ask How Deep to Cut")
+		stage("SubmitScanToSpreadsheet") //Google spreadsheets
 		{steps{script{
+			//Cereate an m file to process the overview
+			bat ("""
+				@echo off
+				echo OCTVolumesFolder_ = '""" + VOLUME_OUTPUT_FOLDER() + """'; >> runme.m
+				echo makeLinks; >> runme.m
+				""")
+			
+			// Move the m file to Testers
+			bat("@move runme.m Testers\\ > nooutput")
+			
+			try
+			{
+				//Usefull links
+				echo "- Running Matlab log can be found here:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/matlablog.txt/*view*/" + "\n" +
+					 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/" + "\n" +
+					 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/"
+				
+				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
+			}
+			catch(Exception e)
+			{
+				currentBuild.result = 'FAILURE'
+				throw("Matlab Failed")
+			}
+			finally
+			{
+				//In any case, copy what we did to log folder
+				bat """
+					@echo off
+					echo ------------------------ Submit Scan To Spreadsheet ----------------
+					echo ---------------------------- MATLAB LOG ----------------------------
+					echo --------------------------------------------------------------------
+					type Testers\\matlablog.txt
+					echo ------------------------------ LOG END -----------------------------
+					echo --------------------------------------------------------------------
+					"""
+			}
+		}}}
+		stage("Ask User Input")
+		{steps{script{
+		
+			//Get the links
+			def lk = readFile('Testers\\out.txt').trim()
 		
 			//Notify user that his attention is required
 			try
@@ -371,6 +414,9 @@ pipeline {
 				from : "Yonatan",
 				body: 
 					"Please go to Jenkins, it requests some inputs before completing<br>"+
+					"<br>"+
+					'To submit sample to the google spreadsheet folow this <a href="' + lk + '">link</a><br>' +
+					"<br>"+
 					'To view interactive log click <a href="' + env.BUILD_URL + '/console">here</a><br>' +
 					"<br>" + 
 					'Examine <a href="' + env.BUILD_URL + '/execution/node/3/ws/Testers/Overview.png">Overview Image</a>.<br>' +
