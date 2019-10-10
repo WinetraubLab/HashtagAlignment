@@ -360,7 +360,7 @@ pipeline {
 				}
 			}
 		}}}
-		stage("SubmitScanToSpreadsheet") //Google spreadsheets
+		stage("Submit Scan to Spreadsheet") //Google spreadsheets
 		{steps{script{
 			//Cereate an m file to process the overview
 			bat ("""
