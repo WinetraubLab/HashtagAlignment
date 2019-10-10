@@ -42,6 +42,6 @@ disp('Go to this link to submit this scan as a form');
 disp(lnk);
 
 %% Write link to file
-fid = fopen('out.txt');
+fid = fopen('out.txt','w');
 fprintf(fid,'%s',lnk);
 fclose(fid);
