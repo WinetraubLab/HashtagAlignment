@@ -11,7 +11,7 @@ disp([datestr(now) ' Loading JSONs']);
 ds = fileDatastore(awsModifyPathForCompetability(subjectFilePath),'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
 jsons = ds.readall();
 
-octJsonI = find(cellfun(@(x)contains(x,'ScanConfig.json'),ds.Files));
+octJsonI = [find(cellfun(@(x)contains(x,'/ScanConfig.json'),ds.Files)); find(cellfun(@(x)contains(x,'\ScanConfig.json'),ds.Files))];
 octVolumeJsonFilePath = ds.Files{octJsonI};
 octVolumeJson = jsons{octJsonI};
 
@@ -44,7 +44,11 @@ fs = fs(ii);
 %% For every fame compute key parameters
 plans_x = zeros(2,length(ii)); %(Start & Finish, n)
 plans_y = plans_x; 
-l = octVolumeJson.lineLength;
+if (isfield(octVolumeJson.photobleach,'lineLength'))
+    l = octVolumeJson.photobleach.lineLength;
+else
+    l = 2;%mm
+end
 
 for i=1:length(ii)
     
@@ -129,7 +133,7 @@ for i = [1 size(plans_x,2)]
 end
 
 theDot = [octVolumeJson.theDotX; octVolumeJson.theDotY];
-theDot = theDot/norm(theDot)*octVolumeJson.lineLength/2;
+theDot = theDot/norm(theDot)*l/2;
 plot(theDot(1),theDot(2),'bo','MarkerSize',10,'MarkerFaceColor','b');
 
 hold off;
