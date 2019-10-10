@@ -102,9 +102,17 @@ axis equal
 xl = xlim;
 yl = ylim;
 r = diff(xl)/diff(yl);
-vspan = mean(vspan) + diff(uspan)/r/2*[-1 1];
-xlim(uspan);
-ylim(vspan);
+vspanR = mean(vspan) + diff(uspan)/r/2*[-1 1];
+uspanR = mean(uspan) + diff(vspan)*r/2*[-1 1];
+if (diff(vspanR) < diff(vspan))
+    %Fit like this
+    xlim(uspanR);
+    ylim(vspan);
+else
+    %Fit like that
+    xlim(uspan);
+    ylim(vspanR);
+end
 uspan = xlim;
 vspan = ylim;
 xlabel('u pix');
