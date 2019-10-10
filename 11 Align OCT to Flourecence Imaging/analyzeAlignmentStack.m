@@ -2,7 +2,7 @@
 %run this script twice to correct slide alignment based on stack trned
 
 %% Inputs
-subjectFilePath =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-13 25 um/';
+subjectFilePath =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-02/';
 
 %% Find all JSONS
 awsSetCredentials(1);
