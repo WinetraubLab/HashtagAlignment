@@ -90,7 +90,8 @@ if (zOverview(zStartI) < zTissueClear)
 end
 
 %Compute enface
-enface = squeeze(max(overviewVol(zStartI:zEndI,:,:))); %(y,x)
+%enface = squeeze(max(overviewVol(zStartI:zEndI,:,:))); %(y,x)
+enface = squeeze(prctile(overviewVol(zStartI:zEndI,:,:),98,1)); %(y,x)
 
 %Compute position of maximal z
 depthOfMaxZ_pix = zeros(size(enface));
