@@ -31,8 +31,8 @@ config.tissueRefractiveIndex = 1.4;
 
 %Overview of the entire area
 config.overview.isScanEnabled = false; %Do you want to scan overview volume? When running on Jenkins, will allways run overview 
-config.overview.rangeAllX = 6;%[mm] Total tiles range
-config.overview.rangeAllY = 5;%[mm] Total tiles range
+config.overview.rangeAllX = 8;%[mm] Total tiles range
+config.overview.rangeAllY = 7;%[mm] Total tiles range
 config.overview.range = config.volume.rangeX;%[mm] x=y range of each tile
 config.overview.nPixels = max(config.volume.nPixelsX/20,50); %same for x and y, number of pixels in each tile
 config.overview.nZToScan = 2; %How many different depths to scan in overview to provide coverage
