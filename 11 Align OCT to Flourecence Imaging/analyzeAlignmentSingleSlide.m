@@ -27,7 +27,7 @@ if ~exist('subjectFolderUsed','var') || ~strcmp(subjectFolder,subjectFolderUsed)
     jsonsFilePaths = ds.Files;
 end
 
-octJsonI = find(cellfun(@(x)contains(x,'ScanConfig.json'),jsonsFilePaths));
+octJsonI = [find(cellfun(@(x)contains(x,'\ScanConfig.json'),jsonsFilePaths)); find(cellfun(@(x)contains(x,'/ScanConfig.json'),jsonsFilePaths))];
 octVolumeJsonFilePath = jsonsFilePaths{octJsonI};
 octVolumeJson = jsons{octJsonI};
 
