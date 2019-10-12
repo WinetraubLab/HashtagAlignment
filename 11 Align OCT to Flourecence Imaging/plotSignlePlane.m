@@ -1,4 +1,4 @@
-function plotSignlePlane(singlePlaneFit,f,histologyFluorescenceIm,octVolumeJson,isSaveFigureAsPNG)
+function plotSignlePlane(singlePlaneFit,f,histologyFluorescenceIm,octVolumeJson,isSaveFigureAsPNG,enfaceViewIm)
 %This function plots the data estimated by single plane fit & Fiducial line
 %structure.
 %INPUTS:
@@ -8,6 +8,8 @@ function plotSignlePlane(singlePlaneFit,f,histologyFluorescenceIm,octVolumeJson,
 %       to [] if no image is found
 %   octVolumeJson - JSON loaded from the OCT Volume scan
 %   isSaveFigureAsPNG - default: true
+%   enfaceViewIm -  optional, OCT overview to plot on. set
+%       to [] if no image is found
 
 if ~exist('isSaveFigureAsPNG','var')
     isSaveFigureAsPNG = true;
@@ -15,6 +17,10 @@ end
 
 if ~exist('histologyFluorescenceIm','var') 
     histologyFluorescenceIm = [];
+end
+
+if ~exist('enfaceViewIm','var') 
+    enfaceViewIm = [];
 end
 
 if isstruct(singlePlaneFit)
@@ -173,31 +179,12 @@ if isstruct(singlePlaneFit)
     subplot(2,2,3);
     delete(get(gca,'Children')); %Clear prev text (if exist)
     
-    %Photobleached lines
-    mm = [-1 1]*(lineLength/2);
-    for i=1:length(vLinePositions)
-        c = vLinePositions(i);
-        plot([c c],mm,'-','LineWidth',1);
-        if (i==1)
-            hold on;
-        end
-    end
-    for i=1:length(hLinePositions)
-        c = hLinePositions(i);
-        plot(mm,[c c],'-','LineWidth',1);
-    end
+    spfPlotTopView( ...
+        singlePlaneFit,hLinePositions,vLinePositions, ...
+        'lineLength',lineLength, ...
+        'planeULim',uspan ...
+        );
    
-    %Histology plane
-    x = polyval(singlePlaneFit.xFunctionOfU,uspan);
-    y = singlePlaneFit.m*x+singlePlaneFit.n;
-    plot(x,y,'k');
-    plot(x(1),y(1),'ko');
-    text(x(1),y(1),sprintf('u=%.0f',uspan(1)));
-    text(x(end),y(end),sprintf('u=%.0f',uspan(end)));
-    axis equal;
-    axis ij;
-    hold off;
-    grid on;
     title('Plane [To Scale]');
 end
 

@@ -2,7 +2,7 @@
 
 %% Inputs
 
-subjectFolder =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-01/';
+subjectFolder =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-06/';
 slideName = 'Slide01_Section01'; %Leve empty for loading of all slides, otherwise specify 'Slide01_Section01'
 
 % How to identify the lines. Can be: 
@@ -10,7 +10,7 @@ slideName = 'Slide01_Section01'; %Leve empty for loading of all slides, otherwis
 % - 'ByStack' - to compute alignment according to what best fits the stack
 % - 'Manual' - user inputs
 % - 'None' - keep as is 
-lineIdentifyMethod = 'ByStack'; 
+lineIdentifyMethod = 'None'; 
 
 %Would you like to upload updated information to the cloud (JSON update)
 rewriteMode = true; 
@@ -38,6 +38,14 @@ slideJsons = [jsons{slideJsonsI}];
 %Compute Stack (in case we need it for by stack alignment)
 slideJsonsI2 = find(cellfun(@(x)contains(x,'SlideConfig.json'),jsonsFilePaths));
 SlidesJsonsStack = [jsons{slideJsonsI2}]; %For the entire subject
+
+%% Load Enface view if avilable 
+try
+    ds = fileDatastore([subjectFolder '/OCTVolumes/OverviewScanAbs_Enface.tif'],'ReadFcn',@yOCTFromTif,'FileExtensions','.tif','IncludeSubfolders',true);
+    enfaceView = ds.read();
+catch
+    enfaceView = [];
+end
 
 %% Loop over all slides
 for slideI=1:length(slideJsons)
@@ -71,13 +79,25 @@ catch Me
 end
 
 if (isIdentifySuccssful)
-    plotSignlePlane(slideJson1.FM.singlePlaneFit,slideJson1.FM.fiducialLines,histologyFluorescenceIm,octVolumeJson);
+    plotSignlePlane(slideJson1.FM.singlePlaneFit,slideJson1.FM.fiducialLines,histologyFluorescenceIm,octVolumeJson,true);
     title(slideName);
     pause(0.01);
 else
     disp('Identification Failed');
 end
 
+if ~isempty(enfaceView)
+    figure;
+    spfPlotTopView( ...
+        slideJson1.FM.singlePlaneFit,octVolumeJson.photobleach.hLinePositions,octVolumeJson.photobleach.vLinePositions, ...
+        'lineLength',octVolumeJson.photobleach.lineLength, ...
+        'theDot',[octVolumeJson.theDotX; octVolumeJson.theDotY],...
+        'enfaceViewImage',enfaceView, ...
+        'enfaceViewImageXLim', [min(octVolumeJson.overview.xCenters) max(octVolumeJson.overview.xCenters)] + octVolumeJson.overview.range*[-1/2 1/2],...
+        'enfaceViewImageYLim', [min(octVolumeJson.overview.yCenters) max(octVolumeJson.overview.yCenters)] + octVolumeJson.overview.range*[-1/2 1/2] ...
+        );
+    colormap bone
+end
 %% Save to JSON & figure
 if (isIdentifySuccssful && rewriteMode)
     slideJson = slideJson1;

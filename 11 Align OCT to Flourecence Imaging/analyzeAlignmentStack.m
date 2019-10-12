@@ -2,13 +2,13 @@
 %run this script twice to correct slide alignment based on stack trned
 
 %% Inputs
-subjectFilePath =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-02/';
+subjectFolder =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-07/';
 
 %% Find all JSONS
 awsSetCredentials(1);
 
 disp([datestr(now) ' Loading JSONs']);
-ds = fileDatastore(awsModifyPathForCompetability(subjectFilePath),'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
+ds = fileDatastore(awsModifyPathForCompetability(subjectFolder),'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
 jsons = ds.readall();
 
 octJsonI = [find(cellfun(@(x)contains(x,'/ScanConfig.json'),ds.Files)); find(cellfun(@(x)contains(x,'\ScanConfig.json'),ds.Files))];
@@ -18,6 +18,14 @@ octVolumeJson = jsons{octJsonI};
 slideJsonsI = find(cellfun(@(x)contains(x,'SlideConfig.json'),ds.Files));
 slideJsonFilePaths = ds.Files(slideJsonsI);
 slideJsons = [jsons{slideJsonsI}];
+
+%% Load Enface view if avilable 
+try
+    ds = fileDatastore([subjectFolder '/OCTVolumes/OverviewScanAbs_Enface.tif'],'ReadFcn',@yOCTFromTif,'FileExtensions','.tif','IncludeSubfolders',true);
+    enfaceView = ds.read();
+catch
+    enfaceView = [];
+end
 
 %%  Figure out slide names & other parameters
 slideNames = cell(size(slideJsonFilePaths));
@@ -39,6 +47,7 @@ end
 ii = find(~cellfun(@isempty,singlePlanes) & ~cellfun(@isempty,fs));
 singlePlanes = singlePlanes(ii);
 singlePlanes = [singlePlanes{:}];
+slideNames = slideNames(ii);
 fs = fs(ii);
 
 %% For every fame compute key parameters
@@ -100,46 +109,12 @@ else
     hLinePositions = octVolumeJson.hLinePositions;
     lineLength = octVolumeJson.lineLength;
 end
-mm = [-1 1]*(lineLength/2);
-for i=1:length(vLinePositions)
-    c = vLinePositions(i);
-    plot([c c],mm,'-k','LineWidth',1);
-    if (i==1)
-        hold on;
-    end
-end
-for i=1:length(hLinePositions)
-    c = hLinePositions(i);
-    plot(mm,[c c],'-k','LineWidth',1);
-end
-grid on;
-axis equal;
-axis ij;
-h = plot(plans_x,plans_y,'LineWidth',2); %Plot the planes
-set(h, {'color'}, num2cell(winter(size(plans_x,2)),2));
 
-%Texts
-v = [mean(diff(mean(plans_x)));mean(diff(mean(plans_y)))];
-v = v/norm(v)*0.2; 
-for i = [1 size(plans_x,2)]
-    d = (i==1)*2-1;
-    if (abs(singlePlanes(i).rotation_deg)>90)
-        %Line arrangement is filpt, so add 180[deg]
-        ang = -(singlePlanes(i).rotation_deg+180);
-    else
-        ang = -singlePlanes(i).rotation_deg;
-    end
-    text(mean(plans_x(:,i))-v(1)*d,mean(plans_y(:,i))-v(2)*d,strrep(slideNames{ii(i)},'_',' '),'Rotation',ang,'HorizontalAlignment','center','VerticalAlignment','middle')
-end
-
-theDot = [octVolumeJson.theDotX; octVolumeJson.theDotY];
-theDot = theDot/norm(theDot)*l/2;
-plot(theDot(1),theDot(2),'bo','MarkerSize',10,'MarkerFaceColor','b');
-
-hold off;
-title('Planes');
-xlabel('[mm]');
-ylabel('[mm]');
+spfPlotTopView( ...
+    singlePlanes,hLinePositions,vLinePositions, ...
+    'lineLength',lineLength,'planeNames',slideNames, ...
+    'theDot',[octVolumeJson.theDotX; octVolumeJson.theDotY] ...
+    );
 
 %% Plot distance to origin
 subplot(2,2,3);
@@ -185,3 +160,14 @@ ylabel('%');
 xlabel('Slide #');
 title(sprintf('1D Pixel Size Change: %.1f \\pm %.1f [%%]',mean(sc),std(sc)));
 grid on;
+
+%% Plot top view in a new figure with enface under it
+figure();
+spfPlotTopView( ...
+    singlePlanes,hLinePositions,vLinePositions, ...
+    'lineLength',lineLength,'planeNames',slideNames, ...
+    'theDot',[octVolumeJson.theDotX; octVolumeJson.theDotY],...
+    'enfaceViewImage',enfaceView, ...
+    'enfaceViewImageXLim', [min(octVolumeJson.overview.xCenters) max(octVolumeJson.overview.xCenters)] + octVolumeJson.overview.range*[-1/2 1/2],...
+    'enfaceViewImageYLim', [min(octVolumeJson.overview.yCenters) max(octVolumeJson.overview.yCenters)] + octVolumeJson.overview.range*[-1/2 1/2] ...
+    );
