@@ -55,9 +55,9 @@ config.photobleach.z = -300*1e-3; %[mm] this parameter is ignored if running fro
 config.octProbePath = [currentFileFolder 'Probe - Olympus 10x.ini'];
 config.octProbeFOV  = [2 2]; %mm
 %Define scale and offset for fast & slow axis calibration
-config.offsetX = 0/1000; %[mm]
+config.offsetX = 4.54/1000; %[mm]
 config.offsetY = 0; %[mm]
-config.scaleX =  0.99421;
+config.scaleX =  1.006225;
 config.scaleY =  1;
 
 %Tickmarks (if required)
