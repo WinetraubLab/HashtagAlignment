@@ -281,6 +281,8 @@ if isfield(FM,'fiducialLines')
                 spec = '-ob';
             case {'2','h'}
                 spec = '-or';
+            case '-'
+                spec = '--oy';
             case 't'
                 spec = '--ow';
         end

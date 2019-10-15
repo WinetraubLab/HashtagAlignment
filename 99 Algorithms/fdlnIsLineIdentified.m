@@ -1,6 +1,6 @@
 function isIt = fdlnIsLineIdentified (fdln)
 %Are lines in fdln structure identified? meaning are they of type
-%'v','h', or 't' and at least one 'h' and one 'v'
+%'v','h','t', or '-' and at least one 'h' and one 'v'
 %INPUT:
 %   fdln - a single Fiducial Line structure or an array of a few
 %       structures
@@ -15,7 +15,7 @@ if isempty(fdln)
 end
 
 gr = lower([fdln.group]);
-is = gr=='v' | gr=='h' | gr=='t';
+is = gr=='v' | gr=='h' | gr=='t' | gr=='-';
 is = sum(is);
 
 isContains = (sum(gr=='v')>=2) + (sum(gr=='h')>=2);

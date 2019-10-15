@@ -84,11 +84,10 @@ f1 = figure(223);
 set(f1,'units','normalized','outerposition',[0 0 1 1])
 subplot(1,1,1);
 
-%% Plot 
 subplot(2,2,[1 2]);
 delete(get(gca,'Children')); %Clear prev text (if exist)
 
-%Plot Fluoresence if we have it
+%% Plot Fluoresence background if we have it
 if ~isempty(histologyFluorescenceIm)
     imagesc(histologyFluorescenceIm);
     colormap gray
@@ -98,7 +97,7 @@ else
     axis ij;
 end
 
-%Set axis
+%% Set axis (equispace and everything)
 fToUse = [f.group] ~= 't';
 uspanO = [min(min([f(fToUse).u_pix])) max(max([f(fToUse).u_pix]))];
 uspan = uspanO+uspanO.*[-1 1]*0.1;
@@ -124,7 +123,7 @@ vspan = ylim;
 xlabel('u pix');
 ylabel('v pix');
 
-%Plot points found on figure
+%% Plot fldns that were identified
 for i=1:length(plotOrder)
     if (i==1)
         hold on;
@@ -138,7 +137,17 @@ for i=1:length(plotOrder)
     end
 end
 
-%Plot the associated plane from the fit
+%% Plot fldns that were not identified
+for i=1:length(f)
+    tmp = f(i);
+    gr = tmp.group;
+    if (gr == '-' || gr == '1' || gr == '2')
+        %Unidentified line
+        plot(tmp.u_pix,tmp.v_pix,'.:','LineWidth',2,'Color',0.9*[1 1 1]);
+    end
+end
+
+%% Plot the associated plane from the fit
 if isstruct(singlePlaneFit)
 for i=1:length(f)
     tmp = f(i);
@@ -156,6 +165,8 @@ for i=1:length(f)
             %plot(tmp.u_pix,tmp.v_pix,'.-','Color',cc);
             
             continue; %No need to write text
+        otherwise
+            continue; %This line is not recognized
     end
 
     text(min(tmp.u_pix),max(tmp.v_pix)+diff(vspan)/8,...
@@ -164,7 +175,7 @@ for i=1:length(f)
 end
 end
 
-%Plot Intercepts
+%% Plot Intercepts
 if isstruct(singlePlaneFit)
     plot(xPlaneUFunc_pix(vspan,0),vspan,'--r');
     plot(yPlaneUFunc_pix(vspan,0),vspan,'--r');

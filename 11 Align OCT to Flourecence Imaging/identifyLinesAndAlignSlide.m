@@ -72,7 +72,7 @@ switch(lower(identifyMethod))
     case 'manual'
         fprintf('vLinePositions [mm] = %s\n',sprintf('%.3f ',vLinePositions));
         fprintf('hLinePositions [mm] = %s\n',sprintf('%.3f ',hLinePositions));
-        fprintf('Please enter line groups (left to right), seperate by comma or space [can be v or h]\n');
+        fprintf('Please enter line groups (left to right), seperate by comma or space [can be v, h or - for a line that doesn''t participate]\n');
         fprintf(   'Orig Was: %s\n',sprintf('%s',[transpose([f.group]) repmat(' ',length(f),1)]'))
         gr = input('Input:    ','s');
         gr = strsplit(lower(strtrim(gr)),{',',' '});

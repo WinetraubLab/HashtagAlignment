@@ -8,6 +8,7 @@ function fdln = fdlnCreate (u,v,group,linePosition)
 %       'v' - for vertical photobleached line
 %       'h' - for horizontal photobleached line
 %       't' - for tissue interface
+%       '-' - for unclassified group, but not in use (bad line)
 %   linePosition - line relevant crossing position [mm] (optional)
 
 if ~exist('linePosition','var')
