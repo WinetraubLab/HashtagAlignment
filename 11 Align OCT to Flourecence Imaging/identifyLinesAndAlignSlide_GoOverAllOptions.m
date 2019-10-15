@@ -21,24 +21,48 @@ if ~exist('octVolumeJson','var')
     octVolumeJson = [];
 end
 
-%% Enomarate all options
 fnt = f([f.group]~='t');
+
+%% Create line id for each line: vLine, hLine and mLine (missing lines)
 nLinesSeen = length(fnt); %How many lines we have in the image
-nLinesPhotobleached = length(vLinePositions) + length(hLinePositions);
 
-P = perms(1:nLinesPhotobleached);
-P = P(:,1:nLinesSeen); %All other lines are not visible in this image
+lid_vLines = 1:length(vLinePositions); 
+lid_hLines = max(lid_vLines) + (1:length(hLinePositions)); 
 
-%Remove raws that don't exist
+
+%Missing lines can be any number that will make sure we have 6 lines present.
+%Minimum of 6 lines garuntee unique identification
+%lid_mLines = (max(lid_hLines) + 1)*ones(1,max(nLinesSeen-6,0)); %Missing lines are all the same id
+nHAndVLines = length(vLinePositions) + length(hLinePositions);
+lid_mLines = (max(lid_hLines) + 1)*ones(1,max(nLinesSeen-nHAndVLines,0)); %Missing lines are all the same id
+
+lid = [lid_vLines lid_hLines lid_mLines];
+%% Enomarate all possible line option classes
+
+%Enomorate options for which lines are seen in the image
+chooseOptions = nchoosek(lid,nLinesSeen); 
+chooseOptions = unique(chooseOptions,'rows');
+
+%Compute possible permutations for each option
+sz = size(perms(chooseOptions(1,:)));
+P = zeros(size(chooseOptions,1),sz(1),sz(2),'int8');
+
+for i=1:size(chooseOptions,1)
+    P(i,:,:) = perms(chooseOptions(i,:));
+end
+P = reshape(P,size(chooseOptions,1)*sz(1),sz(2));
 P = unique(P,'rows');
 
+%% Enomarate all options
 %Remove enumerations that are not consistant, xLines (x=h or v) should be
 %all assending or decending from left to right
 iToKeep = ones(size(P,1),1);
 for i=1:size(P)
     p=P(i,:);
     kp = 1;
-    pv = p(p<=length(vLinePositions));
+    
+    isv = ismember(p,lid_vLines); %Is p found in the v lines id
+    pv = p(isv);
     
     if (length(pv)<2) %Too few lines, cant estimate using that
         kp = 0;
@@ -50,7 +74,8 @@ for i=1:size(P)
         end
     end
     
-    ph = p(p>length(vLinePositions));
+    ish = ismember(p,lid_hLines); %Is p found in the v lines id
+    ph = p(ish);
     if (length(ph)<2) %Too few lines, cant estimate using that
         kp = 0;
     else
@@ -68,8 +93,8 @@ P = P(iToKeep==1,:);
 %% Try all options, keep score
 
 %Generate structure to loop over all options
-pos = [vLinePositions(:)'  hLinePositions(:)'];
-groupAll = char( (P<=length(vLinePositions))*'v' + (P>length(vLinePositions))*'h');
+pos = [vLinePositions(:)'  hLinePositions(:)' 0]; %m line position is 0
+groupAll = char( ismember(P,lid_vLines)*'v' + ismember(P,lid_hLines)*'h' + ismember(P,lid_mLines)*'-');
 posAll = pos(P);
 
 %Outputs
@@ -94,7 +119,7 @@ for i=1:length(scoreAll)
         uAll(:,i) = u;
         vAll(:,i) = v;
         hAll(:,i) = h;
-        scoreAll(i) = fitScore;
+        scoreAll(i) = fitScore/sqrt(sum([fdln.group]~='-'));
     catch
         scoreAll(i) = Inf;
     end
