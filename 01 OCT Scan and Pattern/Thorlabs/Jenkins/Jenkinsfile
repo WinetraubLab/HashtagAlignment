@@ -450,9 +450,11 @@ pipeline {
 						choices: ['same side as black dot','side opposite to the black dot'], 
 						description: 'On which side should histologyist cut sections: black dot side or opposite to black dot?')
                     ])
+			def calibrationFactor = 1.7 //See calibration of Histology
 			def howDeepUM = Double.valueOf(userInput.HowDeepMM) * 1000
+			def howDeepUM_ForPathology =  howDeepUM / calibrationFactor
 			def howDeepSectionSize = 25 //um
-			def howDeepNSections = Math.round(howDeepUM/howDeepSectionSize)
+			def howDeepNSections_ForPathology = Math.round(howDeepUM_ForPathology/howDeepSectionSize)
 			
 			def sideToPlaceRedDot = ""
 			def faceDirection = ""
@@ -486,6 +488,7 @@ pipeline {
 				echo ------------------- Instructions for Us ------------------------- >> histoInstructions.txt
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
 				echo + We want to cut sections at the """ + userInput.WhichSideToStartSections + """. >> histoInstructions.txt
+				echo + After full face, go in """ + howDeepUM.toString() + """ um and then take the slides. >> histoInstructions.txt
 				echo + Mark a red dot on the """ + sideToPlaceRedDot + """. >> histoInstructions.txt
 				echo + Place sample in the cassette such that red dot is facing """ + faceDirection + """. >> histoInstructions.txt
 				echo. >> histoInstructions.txt
@@ -496,14 +499,14 @@ pipeline {
 				echo + Clear paraffin, when seeing a full face. >> histoInstructions.txt
 				echo + Take one slide / section. >> histoInstructions.txt
 				echo    - Slide thickness of 5 um >> histoInstructions.txt
-				echo + Then go in """ + (howDeepNSections*howDeepSectionSize).toString() + " um," + " by cutting " + howDeepNSections.toString() + " sections of " + howDeepSectionSize.toString() + """ um each. >> histoInstructions.txt
+				echo + Then go in """ + (howDeepNSections_ForPathology*howDeepSectionSize).toString() + " um," + " by cutting " + howDeepNSections_ForPathology.toString() + " sections using slide thickness setting of " + howDeepSectionSize.toString() + """ um. >> histoInstructions.txt
 				echo + Then take 5 slides with 3 sections per slide (14 sections). >> histoInstructions.txt
 				echo    - Section interval of 10 um >> histoInstructions.txt
-				echo    - Slide thickness of 5 um >> histoInstructions.txt
+				echo    - Slide thickness setting of 5 um >> histoInstructions.txt
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
 				echo. >> histoInstructions.txt
 				echo. >> histoInstructions.txt
-				echo Note: actual section interval will be larger, we choose this specific section interval after calibrating machine settings vs our algorithm.>> histoInstructions.txt
+				echo Note: actual section interval will be larger, we choose this specific section interval setting after calibrating machine settings vs our algorithm.>> histoInstructions.txt
 				
 				echo HISTOLOGIST Instructions
 				echo ------------------------
