@@ -49,6 +49,7 @@ config.photobleach.nPasses = 2;
 config.photobleach.lineLength = 2; %[mm]
 config.photobleach.isPhotobleachEnabled = true; %Would you like to photobleach? this flag disables all photobleaching
 config.photobleach.isPhotobleachOverview = true; %Would you like to photobleach overview areas as well (extended photobleach)
+config.photobleach.photobleachOverviewBufferZone = 0.15; %See extended lines design of #, this is to prevent multiple lines appearing in the same slice 
 config.photobleach.z = -300*1e-3; %[mm] this parameter is ignored if running from jenkins - will assume provided by jenkins
     
 %Probe defenitions
@@ -123,9 +124,6 @@ if ~exist(logFolder,'dir')
 end
 
 %% Compute Photobleaching Image
-ptStart = [];
-ptEnd = [];
-
 %H & V Lines
 ptStart = [];
 ptEnd = [];
@@ -190,10 +188,25 @@ if (~config.photobleach.isPhotobleachEnabled)
     ptEnd = [];
 end
 
+%Dont photobleach in that area during overview, it is to be photobleached
+%only once
+keepPhotobleachOut = @(x,y) (...
+    (abs(x)<config.octProbeFOV(1)/2 + config.photobleach.photobleachOverviewBufferZone) & ...
+    (abs(y)<config.octProbeFOV(2)/2 + config.photobleach.photobleachOverviewBufferZone)   ...
+    ); 
+
 %Plot
+%First run
+[ptStart1plot,ptEnd1plot] = yOCTApplyEnableZone(ptStart, ptEnd, ...
+    @(x,y)(abs(x)<config.octProbeFOV(1)/2 & abs(y)<config.octProbeFOV(2)/2) , 10e-3);
+%Overview run
+[ptStart2plot,ptEnd2plot] = yOCTApplyEnableZone(ptStart, ptEnd, ...
+            @(x,y)(~keepPhotobleachOut(x,y)) , 10e-3);
+ptStartplot = [ptStart1plot ptStart2plot];
+ptEndplot =   [ptEnd1plot   ptEnd2plot];
 figure(2); subplot(1,1,1);
-for i=1:size(ptStart,2)
-    plot([ptStart(1,i) ptEnd(1,i)], [ptStart(2,i) ptEnd(2,i)]);
+for i=1:size(ptStartplot,2)
+    plot([ptStartplot(1,i) ptEndplot(1,i)], [ptStartplot(2,i) ptEndplot(2,i)]);
     if (i==1)
         hold on;
     end
@@ -296,7 +309,7 @@ if (config.overview.isScanEnabled)
     end
 end
 
-%% Actual Photobleach (second run for overview photobleaching)
+%% Actual Photobleach (second run for overview photobleaching \ extended lines)
 
 if config.photobleach.isPhotobleachOverview && config.photobleach.isPhotobleachEnabled
     %Safety warning
@@ -306,12 +319,12 @@ if config.photobleach.isPhotobleachOverview && config.photobleach.isPhotobleachE
         pause(1);
     end
     fprintf('\n');
-
+    
     yOCTPhotobleachTile(config.photobleach.ptStart,config.photobleach.ptEnd,...
         'octProbePath',config.octProbePath,'FOV',config.octProbeFOV,...
         'z',config.photobleach.z,'exposure',config.photobleach.exposure,...
         'nPasses',config.photobleach.nPasses,...
-        'enableZone',@(x,y)(~(abs(x)<config.octProbeFOV(1)/2 & abs(y)<config.octProbeFOV(2)/2))); %Photobleach the outside
+        'enableZone',@(x,y)(~keepPhotobleachOut(x,y))); %Photobleach the outside
     pause(0.5);
 
     disp('Done');
