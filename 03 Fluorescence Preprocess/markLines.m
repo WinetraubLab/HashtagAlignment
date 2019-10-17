@@ -230,14 +230,13 @@ try
     awsWriteJSON(handles.slideJson,handles.slideJsonFilePath);
     
     %Upload the PNG if successful
-    pngPath = awsModifyPathForCompetability([fileparts(handles.slideJsonFilePath) '/SlideAlignment.png']);
     if (handles.isIdentifySuccssful && exist('SlideAlignment.png','file'))
-        if (awsIsAWSPath(pngPath))
-            %Upload to AWS
-            awsCopyFileFolder('SlideAlignment.png',pngPath);
-        else
-            copyfile('SlideAlignment.png',pngPath);
-        end   
+        slideFolder = fileparts(handles.slideJsonFilePath);
+        [~,slideName] = fileparts([slideFolder '.a']);
+        logFolder = awsModifyPathForCompetability([slideFolder '/../../Log/11 Align OCT to Flourecence Imaging/']);
+        
+        %Upload / Copy
+        awsCopyFileFolder('SlideAlignment.png',[logFolder '/' slideName '_SlideAlignment.png']);
     end
     hObject.Enable = 'on';
 catch ME

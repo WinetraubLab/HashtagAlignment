@@ -15,6 +15,10 @@ lineIdentifyMethod = 'None';
 %Would you like to upload updated information to the cloud (JSON update)
 rewriteMode = true; 
 
+%If not empty, will write the overview files to Log Folder
+logFolder = awsModifyPathForCompetability([subjectFolder '/Log/11 Align OCT to Flourecence Imaging/']);
+%logFolder = [];
+
 %% Find all JSONS in folder
 awsSetCredentials(1);
 
@@ -105,13 +109,9 @@ if (isIdentifySuccssful && rewriteMode)
     disp([datestr(now) ' Saving Updated JSON & Figure']);
     awsWriteJSON(slideJson,slideJsonFilePath);
     
-    if exist('SlideAlignment.png','file')
-        if (awsIsAWSPath(slideJsonFilePath))
-            %Upload to AWS
-            awsCopyFileFolder('SlideAlignment.png',[fileparts(slideJsonFilePath) '/SlideAlignment.png']);
-        else
-            copyfile('SlideAlignment.png',[fileparts(slideJsonFilePath) '\SlideAlignment.png']);
-        end   
+    if exist('SlideAlignment.png','file') && ~isempty(logFolder)
+        %Upload / Copy
+        awsCopyFileFolder('SlideAlignment.png',[logFolder '/' slideName '_SlideAlignment.png']);
     end
 end
 

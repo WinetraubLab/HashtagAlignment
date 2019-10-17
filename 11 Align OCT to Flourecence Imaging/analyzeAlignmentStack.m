@@ -2,7 +2,11 @@
 %run this script twice to correct slide alignment based on stack trned
 
 %% Inputs
-subjectFolder =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-07/';
+subjectFolder =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-04/';
+
+%If not empty, will write the overview files to Log Folder
+logFolder = awsModifyPathForCompetability([subjectFolder '/Log/11 Align OCT to Flourecence Imaging/']);
+%logFolder = [];
 
 %% Find all JSONS
 awsSetCredentials(1);
@@ -118,7 +122,13 @@ spfPlotTopView( ...
 
 %% Plot distance to origin
 subplot(2,2,3);
-p = polyfit(sn,d_mm,1);
+
+%Fit distance to origin, in the fit remove unusual jumps
+d = abs(diff(d_mm)); md = median(d);
+isOutlyer = [d>md*3 false]; %Unusual are distances which are much bigger than expected
+p = polyfit(sn(~isOutlyer),d_mm(~isOutlyer),1);
+
+%Plot
 plot(sn,polyval(p,sn),'--r',mean(sn),polyval(p,mean(sn)),'.r');
 y = ylim;
 hold on;
@@ -132,7 +142,7 @@ grid on;
 legend(...
     sprintf('%.0f\\mum/slide \\pm%.0f\\mum',...
     abs(p(1))*1000,...
-    std(polyval(p,sn)-d_mm)*1000 ...
+    std(polyval(p,sn(~isOutlyer))-d_mm(~isOutlyer))/sqrt(sum(~isOutlyer))*1000 ...
     ),...
     sprintf('Center: %.0f\\mum',polyval(p,mean(sn))*1000), ...
     'location','north');
@@ -161,8 +171,14 @@ xlabel('Slide #');
 title(sprintf('1D Pixel Size Change: %.1f \\pm %.1f [%%]',mean(sc),std(sc)));
 grid on;
 
+%% Save to log
+if ~isempty(logFolder)
+    saveas(gcf,'StackAlignmentFigure1.png');
+    awsCopyFileFolder('StackAlignmentFigure1.png',[logFolder '/StackAlignmentFigure1.png']);
+end
+
 %% Plot top view in a new figure with enface under it
-figure();
+figure(42);
 spfPlotTopView( ...
     singlePlanes,hLinePositions,vLinePositions, ...
     'lineLength',lineLength,'planeNames',slideNames, ...
@@ -171,3 +187,9 @@ spfPlotTopView( ...
     'enfaceViewImageXLim', [min(octVolumeJson.overview.xCenters) max(octVolumeJson.overview.xCenters)] + octVolumeJson.overview.range*[-1/2 1/2],...
     'enfaceViewImageYLim', [min(octVolumeJson.overview.yCenters) max(octVolumeJson.overview.yCenters)] + octVolumeJson.overview.range*[-1/2 1/2] ...
     );
+
+%% Save to log
+if ~isempty(logFolder)
+    saveas(gcf,'StackAlignmentFigure2.png');
+    awsCopyFileFolder('StackAlignmentFigure2.png',[logFolder '/StackAlignmentFigure2.png']);
+end
