@@ -72,17 +72,28 @@ switch(lower(identifyMethod))
     case 'manual'
         fprintf('vLinePositions [mm] = %s\n',sprintf('%.3f ',vLinePositions));
         fprintf('hLinePositions [mm] = %s\n',sprintf('%.3f ',hLinePositions));
-        fprintf('Please enter line groups (left to right), seperate by comma or space [can be v, h or - for a line that doesn''t participate]\n');
+        fprintf('Please enter line groups (left to right), seperate by comma or space [can be v, h or - for a line that doesn''t participate]. Press Enter to skip.\n');
         fprintf(   'Orig Was: %s\n',sprintf('%s',[transpose([f.group]) repmat(' ',length(f),1)]'))
-        gr = input('Input:    ','s');
-        gr = strsplit(lower(strtrim(gr)),{',',' '});
-        gr(cellfun(@isempty,gr)) = [];
+        gr = strtrim(input('Input:    ','s'));
+        if (isempty(gr))
+            %Keep original group
+            gr = {f.group};
+        else
+            %Set group from input
+            gr = strsplit(lower(strtrim(gr)),{',',' '});
+            gr(cellfun(@isempty,gr)) = [];
+        end
 
-        fprintf('Please enter line positions (left to right), seperate by comma or space [in mm]\n');
+        fprintf('Please enter line positions (left to right), seperate by comma or space [in mm]. Press Enter to skip.\n');
         fprintf(    'Orig Was: %s\n',sprintf('%.3f ',[f.linePosition_mm]));  
-        pos = input('Input:    ','s');
-        pos = strsplit(strtrim(pos),{',',' '});
-        pos = cellfun(@str2double,pos);
+        pos = strtrim(input('Input:    ','s'));
+        if (isempty(pos))
+            %Keep original positions
+            pos = [f.linePosition_mm];
+        else
+            pos = strsplit(strtrim(pos),{',',' '});
+            pos = cellfun(@str2double,pos);
+        end
 
         if length(f) ~= length(pos) || length(f) ~= length(gr)
            error('Missing some lines');
