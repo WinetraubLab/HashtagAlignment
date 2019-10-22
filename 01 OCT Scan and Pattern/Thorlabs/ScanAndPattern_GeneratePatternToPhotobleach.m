@@ -6,20 +6,44 @@ ptStart = [];
 ptEnd = [];
 
 %% H & V Lines
+lshort = config.photobleach.lineLength;
+
 if (~config.photobleach.isPhotobleachOverview)
-    lx = config.photobleach.lineLength;
-    ly = config.photobleach.lineLength;
+    lx = lshort;
+    ly = lshort;
 else
     lx = config.overview.rangeAllX;
     ly = config.overview.rangeAllY;
 end
-for i=1:length(config.photobleach.vLinePositions)
-    ptStart(:,end+1) = [config.photobleach.vLinePositions(i);-ly/2]; %Start
-    ptEnd(:,end+1)   = [config.photobleach.vLinePositions(i);+ly/2]; %Ebd
+
+%v Lines
+%Photobleach overview only the 3 lines closest to origin
+vLinePositions = config.photobleach.vLinePositions;
+[~,vI] = sort(abs(vLinePositions)); vI = vI(1:3);
+for i=1:length(vLinePositions)
+    if(ismember(i,vI))
+        myl = ly/2;
+    else
+        myl = lshort/2;
+    end
+    
+    ptStart(:,end+1) = [vLinePositions(i);-myl]; %Start
+    ptEnd(:,end+1)   = [vLinePositions(i);+myl]; %Ebd
 end
-for i=1:length(config.photobleach.hLinePositions)
-    ptStart(:,end+1) = [-lx/2; config.photobleach.hLinePositions(i)]; %Start
-    ptEnd(:,end+1)   = [+lx/2; config.photobleach.hLinePositions(i)]; %Ebd
+
+%h Lines
+%Photobleach overview only the 3 lines closest to origin
+hLinePositions = config.photobleach.hLinePositions;
+[~,hI] = sort(abs(hLinePositions)); hI = hI(1:3);
+for i=1:length(hLinePositions)
+    if(ismember(i,hI))
+        myl = lx/2;
+    else
+        myl = lshort/2;
+    end
+
+    ptStart(:,end+1) = [-myl; hLinePositions(i)]; %Start
+    ptEnd(:,end+1)   = [+myl; hLinePositions(i)]; %Ebd
 end
 
 %% Tick marks 
