@@ -54,7 +54,7 @@ config.photobleach.nPasses = 2;
 config.photobleach.lineLength = 2; %[mm]
 config.photobleach.isPhotobleachEnabled = true; %Would you like to photobleach? this flag disables all photobleaching
 config.photobleach.isPhotobleachOverview = true; %Would you like to photobleach overview areas as well (extended photobleach)
-config.photobleach.photobleachOverviewBufferZone = 0.15; %See extended lines design of #, this is to prevent multiple lines appearing in the same slice 
+config.photobleach.photobleachOverviewBufferZone = 0.170; %See extended lines design of #, this is to prevent multiple lines appearing in the same slice 
 config.photobleach.z = -300*1e-3; %[mm] this parameter is ignored if running from jenkins - will assume provided by jenkins
     
 %Probe defenitions
