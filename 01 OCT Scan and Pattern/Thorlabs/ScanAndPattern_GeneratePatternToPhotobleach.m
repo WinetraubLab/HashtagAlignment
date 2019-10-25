@@ -19,7 +19,8 @@ end
 %v Lines
 %Photobleach overview only the 3 lines closest to origin
 vLinePositions = config.photobleach.vLinePositions;
-[~,vI] = sort(abs(vLinePositions)); vI = vI(1:3);
+[~,vI] = sort(abs(vLinePositions)); 
+vI = vI(1:min(length(vLinePositions),3));
 for i=1:length(vLinePositions)
     if(ismember(i,vI))
         myl = ly/2;
@@ -34,7 +35,8 @@ end
 %h Lines
 %Photobleach overview only the 3 lines closest to origin
 hLinePositions = config.photobleach.hLinePositions;
-[~,hI] = sort(abs(hLinePositions)); hI = hI(1:3);
+[~,hI] = sort(abs(hLinePositions)); 
+hI = hI(1:min(length(hLinePositions),3));
 for i=1:length(hLinePositions)
     if(ismember(i,hI))
         myl = lx/2;
