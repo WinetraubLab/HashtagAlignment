@@ -477,7 +477,6 @@ pipeline {
 			def date = new Date()
 			def todaysDateSTR = dateFormat.format(date)
 
-			echo "here"
 			//Generate Instructions to Histologist
 			bat """
 				@echo off
@@ -497,10 +496,10 @@ pipeline {
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
 				echo + Start cutting from the side opposite to the red dot. >> histoInstructions.txt
 				echo + Clear paraffin, when seeing a full face. >> histoInstructions.txt
-				echo + Take one slide / section. >> histoInstructions.txt
-				echo    - Slide thickness of 5 um >> histoInstructions.txt
+				:: NOT IN USE echo + Take one slide / section. >> histoInstructions.txt
+				:: NOT IN USE echo    - Slide thickness of 5 um >> histoInstructions.txt
 				echo + Then go in """ + (howDeepNSections_ForPathology*howDeepSectionSize).toString() + " um," + " by cutting " + howDeepNSections_ForPathology.toString() + " sections using slide thickness setting of " + howDeepSectionSize.toString() + """ um. >> histoInstructions.txt
-				echo + Then take 5 slides with 3 sections per slide (14 sections). >> histoInstructions.txt
+				echo + Then take 5 slides with 3 sections per slide (15 sections). >> histoInstructions.txt
 				echo    - Section interval of 10 um >> histoInstructions.txt
 				echo    - Slide thickness setting of 5 um >> histoInstructions.txt
 				echo ----------------------------------------------------------------- >> histoInstructions.txt
