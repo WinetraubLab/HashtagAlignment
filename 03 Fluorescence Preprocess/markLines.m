@@ -119,6 +119,9 @@ function editFileToLoad_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
+hObject.String = [s3SubjectPath('01') 'Slides/Slide01_Section01/'];
+guidata(hObject, handles);
+
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))

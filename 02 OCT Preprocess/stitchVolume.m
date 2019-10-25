@@ -1,7 +1,7 @@
 %This script stitches images aquired at different z depths 2gezer
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-00D/OCTVolumes/';
+OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
 dispersionParameterA = 6.539e07;
 
 focusSigma = 20; %When stitching along Z axis (multiple focus points), what is the size of each focus in z [pixel]

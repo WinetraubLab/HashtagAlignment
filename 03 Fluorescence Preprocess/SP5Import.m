@@ -3,7 +3,7 @@
 %% Inputs
 
 %Where to upload data
-s3Dir = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01/';
+s3Dir = s3SubjectPath('01');
 
 slideNumber = 1;
 sectionNumber = 1;

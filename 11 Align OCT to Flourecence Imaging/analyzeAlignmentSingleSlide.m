@@ -2,7 +2,7 @@
 
 %% Inputs
 
-subjectFolder =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-06/';
+subjectFolder = s3SubjectPath('01');
 slideName = 'Slide01_Section01'; %Leve empty for loading of all slides, otherwise specify 'Slide01_Section01'
 
 % How to identify the lines. Can be: 

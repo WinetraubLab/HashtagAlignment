@@ -2,7 +2,7 @@
 %run this script twice to correct slide alignment based on stack trned
 
 %% Inputs
-subjectFolder =  's3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-04/';
+subjectFolder = s3SubjectPath('01');
 
 %If not empty, will write the overview files to Log Folder
 logFolder = awsModifyPathForCompetability([subjectFolder '/Log/11 Align OCT to Flourecence Imaging/']);
@@ -135,7 +135,7 @@ hold on;
 plot(sn,d_mm,'.');
 hold off;
 ylim(y);
-ylabel('\mum');
+ylabel('mm');
 xlabel('Slide #')
 title('Distance From Origin');
 grid on;

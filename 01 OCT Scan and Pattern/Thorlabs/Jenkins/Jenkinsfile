@@ -14,13 +14,13 @@ pipeline {
 	{
 		string(
 			name: "S3_DIR",
-			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LC/",
-			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LC/",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LD/",
+			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LD/",
 			trim: true)
 		string(
 			name: "SAMPLE_ID",
-			defaultValue:"LC-00",
-			description:"Subject Id.\nExample: LC-01",
+			defaultValue:"LD-00",
+			description:"Subject Id.\nExample: LD-01",
 			trim: true)
 		string(
 			name: "Z_TO_PHTOBLEACH",
@@ -41,7 +41,7 @@ pipeline {
 		string(
 			name: "SAME_PATIENT_AS_SAMPLE_ID",
 			defaultValue:"New Patient",
-			description:"If this sample is from the same patient as another sample specify here. For example LC-01.\nIf this sample is from a patient that wasn't scanned before, leave as 'New Patient'",
+			description:"If this sample is from the same patient as another sample specify here. For example LD-01.\nIf this sample is from a patient that wasn't scanned before, leave as 'New Patient'",
 			trim: true)
 		
 		string(

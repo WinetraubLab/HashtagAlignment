@@ -1,7 +1,7 @@
 %This script stitches overview file
 
 %% Inputs
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-06/OCTVolumes/';
+OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
 dispersionParameterA = 6.539e07;
 
 %Total width covered by histological sectioning 
