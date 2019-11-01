@@ -1,7 +1,7 @@
 %This script imports H&E Images from SVS format
 
 %% Inputs
-tifInFP = '1000418.svs';
+tifInFP = 'E:\myslides\1000418.svs'; %File path to .svs file
 
 subject = 'LC-05';
 slide = '01';
