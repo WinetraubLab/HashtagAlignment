@@ -128,3 +128,7 @@ end
 awsCopyFileFolder(outputRootFolder,[subjectFolder 'Slides/']);
 
 disp('Done');
+
+%% Run alignHist
+close all;
+alignHistFM;
