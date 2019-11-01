@@ -1,21 +1,38 @@
-%This script imports H&E Images from SVS format
+function outStatus = histSVSImport(histologyFP,subjectFolder,slideSections,isDelayedUpload,tmpFolderSubjectFilePath)
+%This function imports H&E Images from SVS format
+%INPUTS:
+% - histologyFP - file path pointing to .svs
+% - subjectFolder - pointer to the cloud where the subject is
+% - slideSections - what slides and sections to upload (cell array)
+% - isDelayedUpload - would you like to the delay the upload for later?
+% - tmpDataFolderFilePath - temporary data folder to upload (mimics
+%   subjectFolder). Make sure its empty if you use it
+%EXAMPLE:
+% histSVSImport('C:\hist.svs','s3://LC/LC-01/',{'Slide01_Section01','Slide01_Section02'});
+outStatus = false;
 
-%% Inputs
-tifInFP = 'E:\myslides\1000418.svs'; %File path to .svs file
+if ~exist('isDelayedUpload','var')
+    isDelayedUpload = false;
+end
 
-subject = 'LC-05';
-slide = '01';
-subjectFolder = s3SubjectPath(subject(4:end),subject(1:2));
-sections = {'01','02','03'};
+if ~exist('tmpFolderSubjectFilePath','var')
+    tmpFolderSubjectFilePath = 'TmpOutput\';
+    
+    %Make sure the folder is empty
+    if exist(tmpFolderSubjectFilePath,'dir')
+        rmdir(tmpFolderSubjectFilePath,'s');
+    end
+    mkdir(tmpFolderSubjectFilePath);
+end
 
-
+[~,subjectName] = fileparts([subjectFolder(1:end-1) '.a']);
 %% Ask user to mark all sections
 
 %Load High Level Data
-info=imfinfo(tifInFP);
-slideInfoIm  =imread(tifInFP,'Index',6);
-wholeSlideIm =imread(tifInFP,'Index',7);
-lowResSlideIm=imread(tifInFP,'Index',2);
+info=imfinfo(histologyFP);
+slideInfoIm  =imread(histologyFP,'Index',6);
+wholeSlideIm =imread(histologyFP,'Index',7);
+lowResSlideIm=imread(histologyFP,'Index',2);
 
 %Make the main figure
 figure(1);
@@ -27,12 +44,12 @@ ax =  subplot(3,3,4:9);
 imshow(lowResSlideIm);
 s = size(lowResSlideIm); s = s(1:2);
 
-rois = zeros(length(sections),4);
-angles = zeros(length(sections),1);
-for si=1:length(sections)
+rois = zeros(length(slideSections),4);
+angles = zeros(length(slideSections),1);
+for si=1:length(slideSections)
     figure(1);
     subplot(ax);
-    title([subject ', Please select Slide' slide ' Section' sections{si} ' Press Space When Done']);
+    title([subjectName ', Please select ' strrep(slideSections{si},'_',' ') ' Press Space When Done']);
     if (~exist('roi','var'))
         h=imrect(ax,fliplr([s s]).*[0.25 0.25 0.5 0.5]);
     else
@@ -51,10 +68,10 @@ for si=1:length(sections)
     l = 4; %Layer to load the small image
     Rows=[roi(2) roi(2)+roi(4)]*info(l).Height/s(1);
     Cols=[roi(1) roi(1)+roi(3)]*info(l).Width /s(2);
-    imSmall = imread(tifInFP,'Index',l,'PixelRegion',{Rows,Cols});
+    imSmall = imread(histologyFP,'Index',l,'PixelRegion',{Rows,Cols});
     isDone = false;
     if ~exist('rot','var')
-        rot = 0;
+        rot = 90;
     end
 	while ~isDone
         figure(2);
@@ -79,25 +96,14 @@ for si=1:length(sections)
     angles(si) = rot;
 end
 
-%% Clear local folder
-outputRootFolder = 'out\';
-if exist(outputRootFolder,'dir')
-    rmdir(outputRootFolder,'s');
-end
-mkdir(outputRootFolder);
-
-%% Upload to the cloud
-s3SlidesFolder = cell(si,1);
-localRawsFolder = cell(si,1);
-disp('Generating Images...');
-for si=1:length(sections)
-    s3SlideFolder = [subjectFolder 'Slides/Slide' slide '_Section' sections{si} '/'];
-    s3SlidesFolder{si} = s3SlideFolder;
+%% Write files to disk
+disp('Writing Your Selection to Disk');
+tic;
+for si=1:length(slideSections)
     
     %Set an output directory
-    localRawFolder = [outputRootFolder 'Slide' slide '_Section' sections{si} '\Hist_Raw\'];
+    localRawFolder = [tmpFolderSubjectFilePath '\Slides\' slideSections{si} '\Hist_Raw\'];
     mkdir(localRawFolder);
-    localRawsFolder{si} = localRawFolder;
     
     rot = angles(si);
     roi = rois(si,:);
@@ -119,16 +125,18 @@ for si=1:length(sections)
     c = [roi(1) roi(1)+roi(3)]+roi(3)*0.05*[-1 1];
     Rows=r*info(l).Height/s(1);
     Cols=c*info(l).Width /s(2);
-    im = imread(tifInFP,'Index',l,'PixelRegion',{Rows,Cols});
+    im = imread(histologyFP,'Index',l,'PixelRegion',{Rows,Cols});
     im = imrotate(im,rot);
     imwrite(im,[localRawFolder '\Histo_20x.tif']);
 end
+toc;
+%% Upload to cloud if required
 
-%Upload
-awsCopyFileFolder(outputRootFolder,[subjectFolder 'Slides/']);
+if (~isDelayedUpload)
+    %Upload
+    awsCopyFileFolder(tmpFolderSubjectFilePath,subjectFolder);
+    disp('Done');
+end
 
-disp('Done');
-
-%% Run alignHist
-close all;
-alignHistFM;
+%% Finish
+outStatus = true;
