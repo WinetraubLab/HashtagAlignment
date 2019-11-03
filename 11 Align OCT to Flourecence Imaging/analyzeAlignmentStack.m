@@ -2,7 +2,7 @@
 %run this script twice to correct slide alignment based on stack trned
 
 %% Inputs
-subjectFolder = s3SubjectPath('01');
+subjectFolder = s3SubjectPath('15','LC');
 
 %If not empty, will write the overview files to Log Folder
 logFolder = awsModifyPathForCompetability([subjectFolder '/Log/11 Align OCT to Flourecence Imaging/']);
@@ -10,6 +10,8 @@ logFolder = awsModifyPathForCompetability([subjectFolder '/Log/11 Align OCT to F
 
 %% Find all JSONS
 awsSetCredentials(1);
+
+[~,subjectName] = fileparts([subjectFolder(1:end-1) '.a']);
 
 disp([datestr(now) ' Loading JSONs']);
 ds = fileDatastore(awsModifyPathForCompetability(subjectFolder),'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
@@ -21,7 +23,8 @@ octVolumeJson = jsons{octJsonI};
 
 slideJsonsI = find(cellfun(@(x)contains(x,'SlideConfig.json'),ds.Files));
 slideJsonFilePaths = ds.Files(slideJsonsI);
-slideJsons = [jsons{slideJsonsI}];
+
+slideJsons = {jsons{slideJsonsI}};
 
 %% Load Enface view if avilable 
 try
@@ -39,11 +42,11 @@ for i=1:length(slideNames)
     [~, sn] = fileparts([fileparts(slideJsonFilePaths{i}) '.tmp']);
     slideNames{i} = sn;
     
-    if isfield(slideJsons(i).FM,'singlePlaneFit')
-        singlePlanes{i} = slideJsons(i).FM.singlePlaneFit;
+    if isfield(slideJsons{i}.FM,'singlePlaneFit')
+        singlePlanes{i} = slideJsons{i}.FM.singlePlaneFit;
     end
-    if isfield(slideJsons(i).FM,'fiducialLines')
-        fs{i} = slideJsons(i).FM.fiducialLines;
+    if isfield(slideJsons{i}.FM,'fiducialLines')
+        fs{i} = slideJsons{i}.FM.fiducialLines;
     end
 end
 
@@ -98,8 +101,10 @@ for i=1:length(ii)
     d_mm(i) = sign(dot(c,n))*norm(c);
 end
 
-figure(100);
+ff=figure(100);
+set(ff,'units','normalized','outerposition',[0 0 1 1]);
 subplot(1,1,1); %Clear previuse figure
+
 %% Plot all planes on one figure
 subplot(2,2,1);
 
@@ -120,22 +125,52 @@ spfPlotTopView( ...
     'theDot',[octVolumeJson.theDotX; octVolumeJson.theDotY] ...
     );
 
+%% Plot rotations
+subplot(2,2,2);
+rot = [singlePlanes.rotation_deg];
+isRotOk = abs(rot-median(rot))<3; %Degrees, Rotation quality check
+plot(sn(isRotOk),rot(isRotOk),'.')
+hold on;
+plot(sn(~isRotOk),rot(~isRotOk),'.')
+plot(sn([1 end]),median(rot)*[1 1],'--r');
+hold off;
+ylabel('deg');
+xlabel('Slide #');
+title(sprintf('Rotation Angle: %.1f \\pm %.1f[deg]',mean(rot(isRotOk)),std(rot(isRotOk))));
+grid on;
+
+%% Plot size change 
+subplot(2,2,4);
+sc = [singlePlanes.sizeChange_precent];
+isSCOk = abs(sc-median(sc))<6;% Percent, Size change quality check
+plot(sn(isSCOk),sc(isSCOk),'.')
+hold on;
+plot(sn(~isSCOk),sc(~isSCOk),'.')
+plot(sn([1 end]),median(sc)*[1 1],'--r');
+hold off;
+ylabel('%');
+xlabel('Slide #');
+title(sprintf('1D Pixel Size Change: %.1f \\pm %.1f [%%]',mean(sc(isSCOk)),std(sc(isSCOk))));
+grid on;
+
 %% Plot distance to origin
 subplot(2,2,3);
 
 %Fit distance to origin, in the fit remove unusual jumps
 d = abs(diff(d_mm)); md = median(d);
 isOutlyer = [d>md*3 false]; %Unusual are distances which are much bigger than expected
+isOutlyer = isOutlyer | ~isRotOk | ~isSCOk;
 p = polyfit(sn(~isOutlyer),d_mm(~isOutlyer),1);
 
 %Plot
 plot(sn,polyval(p,sn),'--r',mean(sn),polyval(p,mean(sn)),'.r');
 y = ylim;
 hold on;
-plot(sn,d_mm,'.');
+plot(sn(~isOutlyer),d_mm(~isOutlyer),'.');
+plot(sn(isOutlyer),d_mm(isOutlyer),'.')
 hold off;
 ylim(y);
-ylabel('mm');
+ylabel('Distance [mm]');
 xlabel('Slide #')
 title('Distance From Origin');
 grid on;
@@ -145,31 +180,7 @@ legend(...
     std(polyval(p,sn(~isOutlyer))-d_mm(~isOutlyer))/sqrt(sum(~isOutlyer))*1000 ...
     ),...
     sprintf('Center: %.0f\\mum',polyval(p,mean(sn))*1000), ...
-    'location','north');
-
-%% Plot rotations
-subplot(2,2,2);
-rot = [singlePlanes.rotation_deg];
-plot(sn,rot,'.')
-hold on;
-plot(sn([1 end]),median(rot)*[1 1],'--');
-hold off;
-ylabel('deg');
-xlabel('Slide #');
-title(sprintf('Rotation Angle: %.1f \\pm %.1f[deg]',mean(rot),std(rot)));
-grid on;
-
-%% Plot size change 
-subplot(2,2,4);
-sc = [singlePlanes.sizeChange_precent];
-plot(sn,sc,'.')
-hold on;
-plot(sn([1 end]),median(sc)*[1 1],'--');
-hold off;
-ylabel('%');
-xlabel('Slide #');
-title(sprintf('1D Pixel Size Change: %.1f \\pm %.1f [%%]',mean(sc),std(sc)));
-grid on;
+    'location','southeast');
 
 %% Save to log
 if ~isempty(logFolder)
@@ -193,3 +204,52 @@ if ~isempty(logFolder)
     saveas(gcf,'StackAlignmentFigure2.png');
     awsCopyFileFolder('StackAlignmentFigure2.png',[logFolder '/StackAlignmentFigure2.png']);
 end
+
+%% Output Status 
+isProperStackAlignment = isRotOk & isSCOk;
+StackAlignmentResultsJSON.slideNames = slideNames;
+StackAlignmentResultsJSON.isProperStackAlignment = isProperStackAlignment;
+StackAlignmentResultsJSON.meanSlideSeperation_um = p(1)*1000;
+StackAlignmentResultsJSON.distanceBetweenCenteralSlideAndOrigin_um = polyval(p,mean(sn))*1000;
+StackAlignmentResultsJSON.XYRotationAngleMean_deg = mean(rot(isRotOk));
+StackAlignmentResultsJSON.XYRotationAngleStd_deg  = std(rot(isRotOk));
+StackAlignmentResultsJSON.pixelSizeChangeMean_precent = mean(sc(isSCOk));
+StackAlignmentResultsJSON.pixelSizeChangeStd_precent  = std(sc(isSCOk));
+
+%Make a prefield JSON
+ang = mean(rot(isRotOk));
+if (ang<0)
+    ang = ang+180;
+end
+pJSONTxt1 = sprintf('{"Table":"SamplesRunsheet","SampleID":"%s","Slide Seperation um":%.2f,"Distance from Origin um":%.2f,"XY Angle deg":%.1f,"Size Change Percent":%.1f}',...
+                                     subjectName,            p(1)*1000,              polyval(p,mean(sn))*1000,                   ang,            mean(sc(isSCOk))   ...
+	);
+
+fprintf('%s\nIs Proper Stack Alignment?\n',subjectFolder);
+pJSONTxt2 = '';
+for i=1:length(isProperStackAlignment)
+    if (isProperStackAlignment(i))
+        status = 'Yes';
+    else
+        status = 'No';
+    end
+    fprintf('%s: %s\n',slideNames{i},status);
+    
+    pJSONTxt2 = sprintf('%s,{"Table":"SlidesRunsheet","Full Slide Name":"%s-%s","Proper Alignment Wth Stack?":"%s"}', ...
+                      pJSONTxt2,                        subjectName,slideNames{i},                     status ...
+                      );
+end
+
+pJSONTxt = [ '{"Items":[' pJSONTxt1 pJSONTxt2 ']}'];
+pJSONTxt = urlencode(pJSONTxt);
+
+fprintf('\n\nSubmit Changes Online:\n %s%s\n',...
+    'https://docs.google.com/forms/d/e/1FAIpQLSc1kQcXdVBJogFOo2Tt2eCjPh3Cq6kmjCOLL2em0eQZGO8lJw/viewform?usp=pp_url&entry.1224635255=',...
+    pJSONTxt);
+
+%Upload JSON
+if ~isempty(logFolder)
+    awsWriteJSON(StackAlignmentResultsJSON,[logFolder '/StackAlignmentResults.json']);
+end
+
+
