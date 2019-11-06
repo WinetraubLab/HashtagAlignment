@@ -2,8 +2,8 @@
 
 %% Inputs
 
-subjectFolder = s3SubjectPath('01');
-slideName = 'Slide01_Section01'; %Leve empty for loading of all slides, otherwise specify 'Slide01_Section01'
+subjectFolder = s3SubjectPath('14','LC');
+slideName = 'Slide04_Section02'; %Leve empty for loading of all slides, otherwise specify 'Slide01_Section01'
 
 % How to identify the lines. Can be: 
 % - 'ByLinesRatio' - use lines ratio 
@@ -13,7 +13,7 @@ slideName = 'Slide01_Section01'; %Leve empty for loading of all slides, otherwis
 lineIdentifyMethod = 'None'; 
 
 %Would you like to upload updated information to the cloud (JSON update)
-rewriteMode = true; 
+rewriteMode = false; 
 
 %If not empty, will write the overview files to Log Folder
 logFolder = awsModifyPathForCompetability([subjectFolder '/Log/11 Align OCT to Flourecence Imaging/']);

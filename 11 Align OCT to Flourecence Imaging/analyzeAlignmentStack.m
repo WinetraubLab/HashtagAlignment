@@ -2,7 +2,7 @@
 %run this script twice to correct slide alignment based on stack trned
 
 %% Inputs
-subjectFolder = s3SubjectPath('15','LC');
+subjectFolder = s3SubjectPath('01','LD');
 
 %If not empty, will write the overview files to Log Folder
 logFolder = awsModifyPathForCompetability([subjectFolder '/Log/11 Align OCT to Flourecence Imaging/']);
