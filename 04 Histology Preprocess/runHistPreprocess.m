@@ -5,7 +5,7 @@
 %inputs
 
 %No need to change any parameter, just run
-
+tAll = tic;
 %% Prepare Environment
 close all
 awsSetCredentials();
@@ -85,3 +85,6 @@ awsCopyFileFolder(tmpFolderSubjectFilePath,subjectFolder);
 rmdir(tmpFolderSubjectFilePath,'s'); %Cleanup
 close all;
 disp('Done');
+
+t = toc(tAll);
+fprintf('\nFYI, preprocessing of this slide took you %.1f minutes start to finish\n',t/60);
