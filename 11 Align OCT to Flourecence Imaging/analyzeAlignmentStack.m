@@ -2,11 +2,14 @@
 %run this script twice to correct slide alignment based on stack trned
 
 %% Inputs
-subjectFolder = s3SubjectPath('01','LD');
+subjectFolder = s3SubjectPath('01');
 
 %If not empty, will write the overview files to Log Folder
 logFolder = awsModifyPathForCompetability([subjectFolder '/Log/11 Align OCT to Flourecence Imaging/']);
 %logFolder = [];
+
+isRotOkThreshold = 5; %[deg], allowed variance around median to account rotation angle as ok
+isSCOkThreshold  = 6; %[%], allowed variance around median to accoutn size change (in precent) as ok
 
 %% Find all JSONS
 awsSetCredentials(1);
@@ -128,7 +131,7 @@ spfPlotTopView( ...
 %% Plot rotations
 subplot(2,2,2);
 rot = [singlePlanes.rotation_deg];
-isRotOk = abs(rot-median(rot))<3; %Degrees, Rotation quality check
+isRotOk = abs(rot-median(rot))<isRotOkThreshold; %Degrees, Rotation quality check
 plot(sn(isRotOk),rot(isRotOk),'.')
 hold on;
 plot(sn(~isRotOk),rot(~isRotOk),'.')
@@ -142,7 +145,7 @@ grid on;
 %% Plot size change 
 subplot(2,2,4);
 sc = [singlePlanes.sizeChange_precent];
-isSCOk = abs(sc-median(sc))<6;% Percent, Size change quality check
+isSCOk = abs(sc-median(sc))<isSCOkThreshold;% Percent, Size change quality check
 plot(sn(isSCOk),sc(isSCOk),'.')
 hold on;
 plot(sn(~isSCOk),sc(~isSCOk),'.')
@@ -216,28 +219,61 @@ StackAlignmentResultsJSON.XYRotationAngleStd_deg  = std(rot(isRotOk));
 StackAlignmentResultsJSON.pixelSizeChangeMean_precent = mean(sc(isSCOk));
 StackAlignmentResultsJSON.pixelSizeChangeStd_precent  = std(sc(isSCOk));
 
-%Make a prefield JSON
-ang = mean(rot(isRotOk));
-if (ang<0)
-    ang = ang+180;
+%Do we have enugh good slides to compute averages?
+if(sum(isProperStackAlignment) > length(isProperStackAlignment)*0.5)
+    properStack = true;
+else
+    properStack = false;
 end
-pJSONTxt1 = sprintf('{"Table":"SamplesRunsheet","SampleID":"%s","Slide Seperation um":%.2f,"Distance from Origin um":%.2f,"XY Angle deg":%.1f,"Size Change Percent":%.1f}',...
-                                     subjectName,            p(1)*1000,              polyval(p,mean(sn))*1000,                   ang,            mean(sc(isSCOk))   ...
-	);
 
-fprintf('%s\nIs Proper Stack Alignment?\n',subjectFolder);
-pJSONTxt2 = '';
-for i=1:length(isProperStackAlignment)
-    if (isProperStackAlignment(i))
-        status = 'Yes';
-    else
-        status = 'No';
+if (properStack)
+    %Make a prefield JSON
+    ang = mean(rot(isRotOk));
+    if (ang<0)
+        ang = ang+180;
     end
-    fprintf('%s: %s\n',slideNames{i},status);
+    pJSONTxt1 = sprintf('{"Table":"SamplesRunsheet","SampleID":"%s","Slide Seperation um":%.2f,"Distance from Origin um":%.2f,"XY Angle deg":%.1f,"Size Change Percent":%.1f}',...
+                                         subjectName,            abs(p(1)*1000),              polyval(p,mean(sn))*1000,                   ang,            mean(sc(isSCOk))   ...
+        );
+
+    fprintf('%s\nIs Proper Stack Alignment?, Distance from Origin [um]\n',subjectFolder);
+    pJSONTxt2 = '';
+    for i=1:length(isProperStackAlignment)
+        if (isProperStackAlignment(i))
+            status = 'Yes';
+        else
+            status = 'No';
+        end
+        
+        do = singlePlanes(i).distanceFromOrigin_mm*1e3;
+        do = sprintf('%.0f',do);
+        
+        fprintf('%s: %s, %s\n',slideNames{i},status,do);
+
+        pJSONTxt2 = sprintf('%s,{"Table":"SlidesRunsheet","Full Slide Name":"%s-%s","Proper Alignment Wth Stack?":"%s","Distance From Origin [um]":"%s"}', ...
+                          pJSONTxt2,                        subjectName,slideNames{i},                     status ,                                 do ...
+                          );
+    end
+else
+    %No proper stack
+    pJSONTxt1 = sprintf('{"Table":"SamplesRunsheet","SampleID":"%s","Slide Seperation um":"NA","Distance from Origin um":"NA","XY Angle deg":"NA","Size Change Percent":"NA"}',...
+                                         subjectName ...
+        );
     
-    pJSONTxt2 = sprintf('%s,{"Table":"SlidesRunsheet","Full Slide Name":"%s-%s","Proper Alignment Wth Stack?":"%s"}', ...
-                      pJSONTxt2,                        subjectName,slideNames{i},                     status ...
-                      );
+    fprintf('%s\nNo Proper Stack Alignment.\n',subjectFolder);
+    pJSONTxt2 = '';
+    for i=1:length(isProperStackAlignment)
+  
+        do = singlePlanes(i).distanceFromOrigin_mm*1e3;
+        do = sprintf('%.0f',do);
+        
+        fprintf('%s: %s, %s\n',slideNames{i},"No",do);
+
+        pJSONTxt2 = sprintf('%s,{"Table":"SlidesRunsheet","Full Slide Name":"%s-%s","Proper Alignment Wth Stack?":"No","Distance From Origin [um]":"%s"}', ...
+                          pJSONTxt2,                        subjectName,slideNames{i},                                                              do ...
+                          );
+    end
+    
 end
 
 pJSONTxt = [ '{"Items":[' pJSONTxt1 pJSONTxt2 ']}'];
