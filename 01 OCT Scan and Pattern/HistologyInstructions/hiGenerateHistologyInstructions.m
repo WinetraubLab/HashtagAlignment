@@ -95,6 +95,14 @@ if isnumeric(in1)
         HI.iterationOperators(end+1) = {operatorName};
         HI.iterationDates(end+1) = {ddate};
     end  
+    
+    %Section Names
+    c = cell(size(HI.sectionDepthsRequested_um));
+    for j=1:length(c)
+        c{j} = sprintf('Slide%02d_Section%02d',ceil(j/3),mod(j-1,3)+1);
+    end
+    HI.sectionName = c;
+    
 else
     %% Text interpetatation of instructions  
     lines = split(in1,newline);
