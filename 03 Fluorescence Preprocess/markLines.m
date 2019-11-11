@@ -177,6 +177,7 @@ try
     
     %Load Stack
     ds = fileDatastore(handles.allSlidesPath,'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
+    ds.Files = ds.Files(cellfun(@(x)(contains(x,'SlideConfig')),ds.Files)); %Make sure we use only slides JSONs
     slideJsonStack = ds.readall;
     xx = cellfun(@(x)(isequaln(handles.slideJson,x)),slideJsonStack);
     if sum(xx) ~= 1
