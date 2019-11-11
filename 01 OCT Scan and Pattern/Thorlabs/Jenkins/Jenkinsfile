@@ -351,7 +351,7 @@ pipeline {
 			whoRanExperiment = whoRanExperiment.substring(0,whoRanExperiment.indexOf('@'))
 					
 			//Generate runme with data
-			bat("@echo subjectFolder_ = '" + VOLUME_OUTPUT_FOLDER() "../'; > runme.m"); 
+			bat("@echo subjectFolder_ = '" + SUBJECT_OUTPUT_FOLDER() "'; > runme.m"); 
 			bat("@echo yourName_ = '" + whoRanExperiment + "'; >> runme.m")
 			bat("@echo distanceToOCTOrigin_um_ = " + userInput. HowDeepUM + "; >> runme.m") 
 			
@@ -408,14 +408,19 @@ pipeline {
 	}
 }
 
+def SUBJECT_OUTPUT_FOLDER()
+{
+	return "${TEMP_STORAGE}\\${SAMPLE_ID}\\"
+}
+
 def LOG_OUTPUT_FOLDER()
 {
-	return  "${TEMP_STORAGE}\\${SAMPLE_ID}\\Log\\01 OCT Scan and Pattern\\"
+	return  SUBJECT_OUTPUT_FOLDER() + "Log\\01 OCT Scan and Pattern\\"
 }
 
 def VOLUME_OUTPUT_FOLDER()
 {
-	return "${TEMP_STORAGE}\\${SAMPLE_ID}\\OCTVolumes\\"
+	return SUBJECT_OUTPUT_FOLDER() + "OCTVolumes\\"
 }
 
 def BackupLogFile()
