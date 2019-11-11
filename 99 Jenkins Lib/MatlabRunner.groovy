@@ -10,7 +10,7 @@ def RunMatlabScript (scriptPath)
 	//////////////
 			
 	// copy the m file to Testers
-	bat("@copy /Y '" + scriptPath + "' Testers\\hiddenRunme.m > nooutput") 
+	bat('copy /Y "' + scriptPath + '" Testers\\hiddenRunme.m > nooutput') 
 			
 	// Type matlab file to output log
 	bat("""
