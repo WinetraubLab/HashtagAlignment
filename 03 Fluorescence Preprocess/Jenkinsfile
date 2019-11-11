@@ -3,7 +3,6 @@
 pipeline {
 	agent any
 	environment {
-        MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
     	CREDENTIALS_PATH = "..\\..\\"
 	}
 	options {
@@ -108,7 +107,7 @@ pipeline {
 			bat("@echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
 			bat("@echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
 		}}}
-		stage("Build Runme")
+		stage("Build Runme and Import")
 		{steps{script{
 			bat("@echo s3Dir_ = '%S3_DIR%/%SAMPLE_ID%/'; >> runme.m")
 			bat("@echo folderStructurePath_ = '%MAIN_FOLDER%'; >> runme.m")
@@ -116,47 +115,23 @@ pipeline {
 
 			bat("@echo run SP5Import.m  >> runme.m")
 			
-			// Move the m file to Testers
-			bat("@move runme.m Testers\\ > nooutput")
-			
-			//Type the result
-			bat("""
-				@echo off
-				echo Testers\\runme.m
-				echo ----------------
-				type Testers\\runme.m """)
-				   
+			RunMatlabRunme();
 		}}}
-		stage("Import")
-		{steps{script{
-			try
-			{
-				//Usefull links
-				echo "- Running Matlab log can be found here:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/matlablog.txt/*view*/" + "\n" +
-					 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/" + "\n" +
-					 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/" + "\n" + 
-					 "- Output image file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/output.png" + "\n"
-				
-				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
-			}
-			catch(Exception e)
-			{
-				currentBuild.result = 'FAILURE'
-				throw("Matlab Failed")
-			}
-			finally
-			{
-				//In any case, copy what we did to log folder
-				bat """
-					@echo off
-					echo ---------------------------- MATLAB LOG ----------------------------
-					echo --------------------------------------------------------------------
-					type Testers\\matlablog.txt
-					echo ------------------------------ LOG END -----------------------------
-					echo --------------------------------------------------------------------
-					"""
-			}
-		}}}
+	}
+}
+def RunMatlabRunme() //runs runme.m
+{
+	try
+	{
+		def rootDir = pwd()
+		def MatlabRunner = load "${rootDir}/99 Jenkins Lib/MatlabRunner.Groovy"
+		MatlabRunner.RunMatlabScript ("runme.m");
+		bat("@del \f runme.m");
+	}
+	catch(Exception e)
+	{
+		currentBuild.result = 'FAILURE'
+		throw("Matlab Failed")
 	}
 }
 

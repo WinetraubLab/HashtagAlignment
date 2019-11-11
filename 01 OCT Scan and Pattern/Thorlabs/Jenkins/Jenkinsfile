@@ -3,7 +3,6 @@
 pipeline {
 	agent any
 	environment {
-        MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
         TEMP_STORAGE = "F:\\Jenkins\\TempDataStorage\\"
     	CREDENTIALS_PATH = "F:\\Jenkins\\"
 	}
@@ -189,16 +188,6 @@ pipeline {
 			bat("@echo outputFolder_='" + VOLUME_OUTPUT_FOLDER() + "'; >> runme.m")
 			bat("@echo isDrawTickmarks_=%IS_PHOTOBLEACH_TICKMARKS%; >> runme.m")
 			bat("@echo run ScanAndPattern_Thorlabs.m  >> runme.m")
-			
-			// Move the m file to Testers
-			bat("@move runme.m Testers\\ > nooutput")
-			
-			//Type the result
-			bat("""
-				@echo off
-				echo Testers\\runme.m
-				echo ----------------
-				type Testers\\runme.m """)
 				
 			//Make a folder for the log
 			def folder3 = new File(LOG_OUTPUT_FOLDER())
@@ -212,7 +201,7 @@ pipeline {
 				bat('mkdir "' + VOLUME_OUTPUT_FOLDER() + '"');
 			}
 						
-			//Make not of the parameters we learned from input - Regarding the volume
+			//Make note of the parameters we learned from input - Regarding the volume
 			def str = params.WHO_TO_EMAIL_WHEN_DONE;
 			str = str.substring(0,str.indexOf('@'))
 			def file = new File(VOLUME_OUTPUT_FOLDER() + "\\ScanConfig.json")
@@ -241,14 +230,10 @@ pipeline {
 		}}}
 		stage("Scan And Photobleach")
 		{steps{script{
+		
 			try
 			{
-				//Usefull links
-				echo "- Running Matlab log can be found here:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/matlablog.txt/*view*/" + "\n" +
-					 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/" + "\n" +
-					 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/"
-				
-				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
+				RunMatlabRunme();
 			}
 			catch(Exception e)
 			{
@@ -257,23 +242,14 @@ pipeline {
 			}
 			finally
 			{
-				//In any case, copy what we did to log folder
-				bat """
-					@echo off
-					echo ---------------------------- MATLAB LOG ----------------------------
-					echo --------------------------------------------------------------------
-					type Testers\\matlablog.txt
-					echo ------------------------------ LOG END -----------------------------
-					echo --------------------------------------------------------------------
-					"""
-				
+				//Try archiving everithing
 				try
 				{
 					bat('copy Testers\\matlablog.txt "' + LOG_OUTPUT_FOLDER() + '"')
 					bat('copy Testers\\runme.m "' + LOG_OUTPUT_FOLDER() + '"')
 					bat('copy Testers\\*.png "' + LOG_OUTPUT_FOLDER() + '"')
 					
-					archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
+					archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/matlablog.txt, runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
 				}
 				catch(Exception e)
 				{
@@ -298,107 +274,26 @@ pipeline {
 			
 			//println gitFolder
 		}}}
-		stage("Build M file to Process Overview")
+		stage("Process Overview")
 		{steps{script{
 			//Cereate an m file to process the overview
 			bat ("""
 				@echo off
-				echo OCTVolumesFolder_ = '""" + VOLUME_OUTPUT_FOLDER() + """'; >> runme.m
+				echo OCTVolumesFolder_ = '""" + VOLUME_OUTPUT_FOLDER() + """'; > runme.m
 				echo isRunInAutomatedMode_ = true; >> runme.m
 				echo findFocusInBScan; >> runme.m
 				echo stitchOverview; >> runme.m
 				""")
-			
-			// Move the m file to Testers
-			bat("@move runme.m Testers\\ > nooutput")
-			
-			//Type the result
-			bat("""
-				@echo off
-				echo m file to process overview 
-				echo Testers\\runme.m
-				echo ----------------
-				type Testers\\runme.m """)
-		}}}
-		stage("Process Overview")
-		{steps{script{
-			
-			try
-			{
-				//Usefull links
-				echo "- Running Matlab log can be found here:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/matlablog.txt/*view*/" + "\n" +
-					 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/" + "\n" +
-					 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/"
 				
-				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
-			}
-			catch(Exception e)
-			{
-				currentBuild.result = 'FAILURE'
-				throw("Matlab Failed")
-			}
-			finally
-			{
-				//In any case, copy what we did to log folder
-				bat """
-					@echo off
-					echo ------------------------ Process Overview --------------------------
-					echo ---------------------------- MATLAB LOG ----------------------------
-					echo --------------------------------------------------------------------
-					type Testers\\matlablog.txt
-					echo ------------------------------ LOG END -----------------------------
-					echo --------------------------------------------------------------------
-					"""
-				
-				try
-				{
-					archiveArtifacts allowEmptyArchive: true, artifacts: 'Testers/Overview.png, Testers/runme.m', caseSensitive: true, defaultExcludes: true, fingerprint: false, onlyIfSuccessful: false
-				}
-				catch(Exception e)
-				{
-					//Do nothing, its ok if a file is missing from the archive
-				}
-			}
-		}}}
-		stage("Submit Scan to Spreadsheet") //Google spreadsheets
-		{steps{script{
-			//Cereate an m file to process the overview
+			//Create links to where to submit google spreadsheet
 			bat ("""
 				@echo off
 				echo OCTVolumesFolder_ = '""" + VOLUME_OUTPUT_FOLDER() + """'; >> runme.m
 				echo makeLinks; >> runme.m
 				""")
 			
-			// Move the m file to Testers
-			bat("@move runme.m Testers\\ > nooutput")
+			RunMatlabRunme();
 			
-			try
-			{
-				//Usefull links
-				echo "- Running Matlab log can be found here:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/matlablog.txt/*view*/" + "\n" +
-					 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/runme.m/*view*/" + "\n" +
-					 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/"
-				
-				bat("""cd Testers && "%MATLAB_PATH%" -nosplash -nodesktop -wait -r "runme_Jenkins('runme')" -logfile matlablog.txt""")
-			}
-			catch(Exception e)
-			{
-				currentBuild.result = 'FAILURE'
-				throw("Matlab Failed")
-			}
-			finally
-			{
-				//In any case, copy what we did to log folder
-				bat """
-					@echo off
-					echo ------------------------ Submit Scan To Spreadsheet ----------------
-					echo ---------------------------- MATLAB LOG ----------------------------
-					echo --------------------------------------------------------------------
-					type Testers\\matlablog.txt
-					echo ------------------------------ LOG END -----------------------------
-					echo --------------------------------------------------------------------
-					"""
-			}
 		}}}
 		stage("Ask User Input")
 		{steps{script{
@@ -604,4 +499,20 @@ def BackupLogFile()
 	lg = lg.replaceAll("@stanford.edu","");
 	def file = new File(LOG_OUTPUT_FOLDER() + "\\buildLog.txt")
 	file.write (lg)
+}
+
+def RunMatlabRunme() //runs runme.m
+{
+	try
+	{
+		def rootDir = pwd()
+		def MatlabRunner = load "${rootDir}/99 Jenkins Lib/MatlabRunner.Groovy"
+		MatlabRunner.RunMatlabScript ("runme.m");
+		bat("@del \f runme.m");
+	}
+	catch(Exception e)
+	{
+		currentBuild.result = 'FAILURE'
+		throw("Matlab Failed")
+	}
 }
