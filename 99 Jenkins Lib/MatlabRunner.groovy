@@ -4,13 +4,13 @@
 //Usually, write a script called runme.m and execute RunMatlabScript("runme.m")
 def RunMatlabScript (scriptPath) 
 {
-	def MATLAB_PATH = "C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"
+	def MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"'
 	
 	//Build M File
 	//////////////
 			
 	// copy the m file to Testers
-	bat('copy /Y "' + scriptPath + '" Testers\\hiddenRunme.m > nooutput') 
+	bat('@copy /Y "' + scriptPath + '" Testers\\hiddenRunme.m > nooutput') 
 			
 	// Type matlab file to output log
 	bat("""
@@ -30,7 +30,7 @@ def RunMatlabScript (scriptPath)
 			 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/hiddenRunme.m/*view*/" + "\n" +
 			 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/"
 		
-		bat("""cd Testers && '""" + MATLAB_PATH + """' -nosplash -nodesktop -wait -r "runme_Jenkins('hiddenRunme')" -logfile matlablog.txt""")
+		bat("""cd Testers && """ + MATLAB_PATH + """ -nosplash -nodesktop -wait -r "runme_Jenkins('hiddenRunme')" -logfile matlablog.txt""")
 	}
 	catch(Exception e)
 	{
