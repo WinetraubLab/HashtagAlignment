@@ -43,6 +43,10 @@ folders = unique(folders);
 folders(cellfun(@(x)~contains(lower(x),'slide'),folders)) = []; %Delete folders which don't have 'slide' in their name
 folders= cellfun(@(x)strrep(x,'\MetaData',''),folders,'UniformOutput',false);
 
+%% Read HistologyInstructions.json to make sure section naming is consistent with instructions
+HI = awsReadJSON([s3Dir '/Slides/HistologyInstructions.json']);
+sectionNames = HI.sectionName;
+
 %% Loop for each folder extract data
 disp(' '); disp('Looping Over All Folders');
 for i=1:length(folders)
@@ -141,8 +145,17 @@ saveas(gca,'output.png');
 
 json.FM.imageSize_pix = size(flourescenceIm);
 
+%% Check that slide naming is found in the histology instructions
+slideName = sprintf('Slide%02d_Section%02d',slideNumber,sectionNumber);
+ii = cellfun(@(x)strcmp(x,slideName),sectionNames);
+if sum(ii)~=1 
+    %Can't find this section name
+    error('Slide Name "%s" is not in the list of section names in the histology instructions. Or that name was present before',slideName);
+end
+sectionNames(ii==1) = []; %Remove this section name so it won't be repeated
+
 %% Save Output
-outputFolder = awsModifyPathForCompetability(sprintf('%s/Slides/Slide%02d_Section%02d/',s3Dir,slideNumber,sectionNumber));
+outputFolder = awsModifyPathForCompetability(sprintf('%s/Slides/%s/',s3Dir,slideName));
 json.photobleachedLinesImagePath = 'FM_PhotobleachedLinesImage.tif';
 imwrite(flourescenceIm,json.photobleachedLinesImagePath);
 
