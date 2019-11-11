@@ -132,7 +132,7 @@ for ii = 1:length(iterations)
             d = ss(1)-pos;
             n25Cuts = round(d/HI.histoKnife.a25um);
             
-            fprintf(fid,'+ Then %sgo in %.0f um%s, by cutting %.0f sections of 25 um each.%s', ...
+            fprintf(fid,'+ Then %sgo in %.0f um%s, by cutting %.0f sections using slide thickness setting of 25 um.%s', ...
                 bStart,n25Cuts*25,bEnd,n25Cuts,nl);
         else
             %No Advance is needed

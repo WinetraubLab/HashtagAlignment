@@ -101,6 +101,7 @@ else
     
     currentDepth_um = 0;
     sectionDepthsRequested_um = [];
+    isMetHistologyInstructions = false;
     %Loop over every line
     for i=1:length(lines)
         l = lines{i};
@@ -118,14 +119,19 @@ else
             side = 1;
         elseif(contains(lower(l),'we want to cut sections at the side opposite to the black dot'))
             side = -1;
-        elseif(contains(lower(l),'take one slide / section'))
+        elseif(contains(lower(l),'instructions for histology'))
+            isMetHistologyInstructions = true;
+        elseif(contains(lower(l),'take one slide / section') && isMetHistologyInstructions)
             sectionDepthsRequested_um = [sectionDepthsRequested_um currentDepth_um];
-        elseif(contains(lower(l),'go in')) && ~contains(lower(l),'we would like')
+        elseif(contains(lower(l),'go in')) && ~contains(lower(l),'we would like') && isMetHistologyInstructions
             l = l((strfind(lower(l),'go in')+5):end);
-            l = l(1:(strfind(lower(l),'um,')-1));
+            l = l(1:(strfind(lower(l),'um')-1));
             l = strtrim(l);
+            if isnan(str2double(l))
+                error('Error processing line %s',lines{i});
+            end
             currentDepth_um = currentDepth_um+str2double(l)*histoKnife.a25um/25;
-        elseif(contains(lower(l),'take') && contains(lower(l),'sections per slide'))
+        elseif(contains(lower(l),'take') && contains(lower(l),'sections per slide')) && isMetHistologyInstructions
             l = l((strfind(lower(l),'slide (')+7):end);
             l = l(1:(strfind(lower(l),' sections')-1));
             
