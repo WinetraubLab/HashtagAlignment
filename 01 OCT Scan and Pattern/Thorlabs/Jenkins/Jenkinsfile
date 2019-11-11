@@ -337,102 +337,36 @@ pipeline {
 				message: 'Please Provide Parameters', ok: 'Next',
                 parameters: [
 					string(defaultValue: '1.0',
-						name: 'HowDeepMM', 
-						description: 'How deep from tissue surface should we start cutting? [mm]\nShortest distance is better'
+						name: 'HowDeepUM', 
+						description: 'How deep from tissue surface is OCT origi? [microns]\nShortest distance is better'
 						),
                     choice(
 						name: 'WhichSideToStartSections', 
 						choices: ['same side as black dot','side opposite to the black dot'], 
 						description: 'On which side should histologyist cut sections: black dot side or opposite to black dot?')
-                    ])
-			def calibrationFactor = 1.7 //See calibration of Histology
-			def howDeepUM = Double.valueOf(userInput.HowDeepMM) * 1000
-			def howDeepUM_ForPathology =  howDeepUM / calibrationFactor
-			def howDeepSectionSize = 25 //um
-			def howDeepNSections_ForPathology = Math.round(howDeepUM_ForPathology/howDeepSectionSize)
-			
-			def sideToPlaceRedDot = ""
-			def faceDirection = ""
-			if (userInput.WhichSideToStartSections == "same side as black dot")
-			{
-				sideToPlaceRedDot = "side opposite to the black dot"
-			}
-			else
-			{
-				sideToPlaceRedDot = "same side as black dot"
-			}
-			faceDirection = "up" //Red dot allways facing up
-			
+                    ]) 
+					
 			//Get person who scanned name
 			def whoRanExperiment = params.WHO_TO_EMAIL_WHEN_DONE;
 			whoRanExperiment = whoRanExperiment.substring(0,whoRanExperiment.indexOf('@'))
+					
+			//Generate runme with data
+			bat("@echo subjectFolder_ = '" + VOLUME_OUTPUT_FOLDER() "../'; > runme.m"); 
+			bat("@echo yourName_ = '" + whoRanExperiment + "'; >> runme.m")
+			bat("@echo distanceToOCTOrigin_um_ = " + userInput. HowDeepUM + "; >> runme.m") 
 			
-			//Get todays date
-			def dateFormat = new java.text.SimpleDateFormat("MMM dd, yyyy")
-			def date = new Date()
-			def todaysDateSTR = dateFormat.format(date)
-
-			//Generate Instructions to Histologist
-			bat """
-				@echo off
-				echo Sample ID:  %SAMPLE_ID%  > histoInstructions.txt
-				echo Scanned by: """ + whoRanExperiment + """ >> histoInstructions.txt
-				echo Date: """ + todaysDateSTR + """ >> histoInstructions.txt
-				echo. >> histoInstructions.txt
-				echo ------------------- Instructions for Us ------------------------- >> histoInstructions.txt
-				echo ----------------------------------------------------------------- >> histoInstructions.txt
-				echo + We want to cut sections at the """ + userInput.WhichSideToStartSections + """. >> histoInstructions.txt
-				echo + After full face, go in """ + howDeepUM.toString() + """ um and then take the slides. >> histoInstructions.txt
-				echo + Mark a red dot on the """ + sideToPlaceRedDot + """. >> histoInstructions.txt
-				echo + Place sample in the cassette such that red dot is facing """ + faceDirection + """. >> histoInstructions.txt
-				echo. >> histoInstructions.txt
-				echo. >> histoInstructions.txt
-				echo ---------------- Instructions for Histology --------------------- >> histoInstructions.txt
-				echo ----------------------------------------------------------------- >> histoInstructions.txt
-				echo + Start cutting from the side opposite to the red dot. >> histoInstructions.txt
-				echo + Clear paraffin, when seeing a full face. >> histoInstructions.txt
-				:: NOT IN USE echo + Take one slide / section. >> histoInstructions.txt
-				:: NOT IN USE echo    - Slide thickness of 5 um >> histoInstructions.txt
-				echo + Then go in """ + (howDeepNSections_ForPathology*howDeepSectionSize).toString() + " um," + " by cutting " + howDeepNSections_ForPathology.toString() + " sections using slide thickness setting of " + howDeepSectionSize.toString() + """ um. >> histoInstructions.txt
-				echo + Then take 5 slides with 3 sections per slide (15 sections). >> histoInstructions.txt
-				echo    - Section interval of 10 um >> histoInstructions.txt
-				echo    - Slide thickness setting of 5 um >> histoInstructions.txt
-				echo ----------------------------------------------------------------- >> histoInstructions.txt
-				echo. >> histoInstructions.txt
-				echo. >> histoInstructions.txt
-				echo Note: actual section interval will be larger, we choose this specific section interval setting after calibrating machine settings vs our algorithm.>> histoInstructions.txt
-				
-				echo HISTOLOGIST Instructions
-				echo ------------------------
-				type histoInstructions.txt
-				echo ------------------------
-				"""
-			
-			bat('copy histoInstructions.txt "' + LOG_OUTPUT_FOLDER() + '"')
-			
-			//Make an HTML Version 
-			def ht = readFile(LOG_OUTPUT_FOLDER() + '\\histoInstructions.txt').trim()
-			ht = ht.replaceAll("\n","<br>")
-			ht = ht.replaceAll("Then go in","Then <span style='font-weight: bold;background-color: yellow !important;font-size: big'>go in")
-			ht = ht.replaceAll(" um, by"," um</span>, by")
-			ht = "<html><head><style>\n" +
-				"@media print {\nbody {-webkit-print-color-adjust: exact;}\n}</style></head><body>" + 
-				ht + "</body></html>"
-			def file = new File(pwd() + '\\histoInstructions.html')
-			file.write(ht)
-			
-			//Try print to PDF if chrome is installed
-			def chromePath = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\";
-			def chromeExe = new File(chromePath);
-			if(chromeExe.exists())
+			bat("@echo iteration_ = 1; >> runme.m") //First iteration
+			if (userInput.WhichSideToStartSections == "same side as black dot")
 			{
-				bat('"' + chromePath + 'chrome.exe" --headless --print-to-pdf="' + pwd() + '\\histoInstructions.pdf" "' + pwd() + '\\histoInstructions.html"');
-				bat("del /f histoInstructions.html") //Delete HTML we don't need it anymore
+				bat("@echo isCutOnDotSide_ = 1; >> runme.m")
 			}
 			else
 			{
-				echo("Cannot make a pdf file, install chrome for that. Will send you html instead")
+				bat("@echo isCutOnDotSide_ = -1; >> runme.m")
 			}
+			bat("@echo scriptGenerateHistologyInstructions; >> runme.m")
+			
+			RunMatlabRunme();
 			
 		}}}
 		stage("Save Log File")
@@ -450,7 +384,7 @@ pipeline {
 					"<b>Print instructions for Pauline from attachement</b><br>"
 					,
 				attachLog: true,
-				attachmentsPattern: "histoInstructions.html,histoInstructions.pdf",
+				attachmentsPattern: "Testers/HistologyInstructions.pdf",
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )
 		} 
 		failure {

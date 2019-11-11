@@ -4,9 +4,6 @@
 OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
 dispersionParameterA = 6.539e07;
 
-%Total width covered by histological sectioning 
-histologyVolumeThickness = 15*5*(5+1); %[um]
-
 isPlotEnface = true; %Set to true to plot enface, false to plot depth map
 
 %% Jenkins
@@ -232,8 +229,9 @@ else
     c = 'w';
 end
 
-%Draw Sweet Spot, and where sectioning should start
-st = histologyVolumeThickness/2*1e-3;%mm
+%Show distances to the origin of the lines, will help align user to the
+%right spot
+st = 0;%mm
 dst = [0 0.5 1 1.5 2];
 for i=1:2
     %Progress between the two line sets
@@ -258,9 +256,7 @@ for i=1:2
         else
             lMax = lEnd;
         end
-        if j==1
-            text(lMax(1),lMax(2),'Optimal','color',c);
-        elseif mod(j,2)==1
+        if mod(j,2)==1
             text(lMax(1),lMax(2),sprintf('+%.1fmm',abs(dst(j))),'color',c);
         end
     end
