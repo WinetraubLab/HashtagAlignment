@@ -336,7 +336,7 @@ pipeline {
 			def userInput = input( 
 				message: 'Please Provide Parameters', ok: 'Next',
                 parameters: [
-					string(defaultValue: '1.0',
+					string(defaultValue: '1500',
 						name: 'HowDeepUM', 
 						description: 'How deep from tissue surface is OCT origi? [microns]\nShortest distance is better'
 						),
