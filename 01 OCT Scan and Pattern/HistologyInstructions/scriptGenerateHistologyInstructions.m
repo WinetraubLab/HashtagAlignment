@@ -59,7 +59,7 @@ else
 end
 
 %% Build Histology Instructions
-HI = hiGenerateHistologyInstructions(whereTocut,in2,yourName,now,subjectName);
+HI = hiGenerateHistologyInstructions(whereTocut,in2,yourName,now,subjectName,distanceToOCTOrigin_um);
 
 %Upload istructions
 awsWriteJSON(HI,jsonPath);

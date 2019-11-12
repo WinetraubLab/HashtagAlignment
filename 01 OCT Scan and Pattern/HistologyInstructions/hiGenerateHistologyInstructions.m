@@ -1,4 +1,4 @@
-function HI = hiGenerateHistologyInstructions(in1,in2,operatorName,ddate,sampleID)
+function HI = hiGenerateHistologyInstructions(in1,in2,operatorName,ddate,sampleID,estimatedDepthOfOCTOrigin_um)
 %This functions will generate histology instructions structure
 %USAGE:
 %   HI = generateHistologyInstructions(histText); %For parsing histology text
@@ -6,7 +6,7 @@ function HI = hiGenerateHistologyInstructions(in1,in2,operatorName,ddate,sampleI
 %INPUTS:
 %in1 - can be
 %   1) Vector of positions as of to where to take histology sections at
-%   (request)
+%   (request) starting at 0 - full face. [um]
 %   2) Text from a histology instructions file that we will interpert
 %in2 - can be either 
 %   1) a HI structure (from previuse iteartion) or
@@ -16,6 +16,8 @@ function HI = hiGenerateHistologyInstructions(in1,in2,operatorName,ddate,sampleI
 %ddate - string or date number of the date decision was made, if empty will
 %   set to today
 %sampleID - For example 'LC-01', to keep trakc
+%estimatedDepthOfOCTOrigin_um - current best estimate of what depth
+%   (compared to full face) is OCT origin at. If doesn't exist set to 0
 %OUTPUT:
 %HI - Histology Instructions structure with the fields
 %   .sectionDepthsRequested_um - vector containing what depth each section
@@ -24,8 +26,15 @@ function HI = hiGenerateHistologyInstructions(in1,in2,operatorName,ddate,sampleI
 %       Example sectionDepthsRequested_um = [500 530 560] means:
 %       Get to full face, go in 500 microns and cut 3 sections 30 microns
 %       apart.
-%   .sectionDepthsInstructions_um - convert sectionDepthsRequested_um to
-%       instructions for pathologist, given knife calibration
+%   .estimatedDepthOfOCTOrigin_um - indication of our best estimate of
+%       what depth is OCT origin at (compared to full face). This parameter
+%       can be a vector if estimation has been modified. As a role of
+%       thumb:
+%           1st element is the manual estimation at time of sample OCT
+%           overview scan.
+%           2nd element is after looking at iteration 1 histology sections
+%           3nd element is after looking at iteration 2 histology sections
+%           etc
 %   .startAtDotSide = 1 if yes, -1 if no
 %   .histoKnife - defenitions about the histology machine
 %              .sectionsPerSlide - how many sections per slide
@@ -47,6 +56,10 @@ histoKnife.sectionsPerSlide = 3;
 histoKnife.sectionThickness_um = 5;
 histoKnife.a5um = 10;
 histoKnife.a25um = 25*1.7;
+
+if (~exist('estimatedDepthOfOCTOrigin_um','var'))
+    estimatedDepthOfOCTOrigin_um = NaN;
+end
 
 %% Process Operator Name
 if ~exist('operatorName','var')
@@ -78,6 +91,7 @@ if isnumeric(in1)
     if ~isstruct(in2)
         %Start from scratch
         HI.sectionDepthsRequested_um = in1(:);
+        HI.estimatedDepthOfOCTOrigin_um = estimatedDepthOfOCTOrigin_um;
         HI.startAtDotSide = in2;
         HI.histoKnife = histoKnife;
         HI.sectionIteration = ones(size(HI.sectionDepthsRequested_um));
@@ -92,8 +106,9 @@ if isnumeric(in1)
         
         HI.sectionDepthsRequested_um = [HI.sectionDepthsRequested_um(:);in1(:)];
         HI.sectionIteration = [HI.sectionIteration(:); ones(size(in1(:)))*nextIteration];
-        HI.iterationOperators(end+1) = {operatorName};
-        HI.iterationDates(end+1) = {ddate};
+        HI.iterationOperators(nextIteration) = {operatorName};
+        HI.iterationDates(nextIteration) = {ddate};
+        HI.estimatedDepthOfOCTOrigin_um(nextIteration) = estimatedDepthOfOCTOrigin_um;
     end  
     
     %Section Names
@@ -159,9 +174,9 @@ else
             %Add it to HI
             if ~exist('HI','var')
                 %New HI
-                HI = hiGenerateHistologyInstructions(sectionDepthsRequested_um,side,operatorName,ddate,sampleID);
+                HI = hiGenerateHistologyInstructions(sectionDepthsRequested_um,side,operatorName,ddate,sampleID,estimatedDepthOfOCTOrigin_um);
             else
-                HI = hiGenerateHistologyInstructions(sectionDepthsRequested_um,HI,operatorName,ddate);
+                HI = hiGenerateHistologyInstructions(sectionDepthsRequested_um,HI,operatorName,ddate,[],estimatedDepthOfOCTOrigin_um); %No need for sample ID
             end
             sectionDepthsRequested_um = []; %Reset depths
         else
