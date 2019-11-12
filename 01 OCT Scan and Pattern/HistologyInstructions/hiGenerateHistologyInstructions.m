@@ -98,8 +98,9 @@ if isnumeric(in1)
     
     %Section Names
     c = cell(size(HI.sectionDepthsRequested_um));
+    sps = HI.histoKnife.sectionsPerSlide;
     for j=1:length(c)
-        c{j} = sprintf('Slide%02d_Section%02d',ceil(j/3),mod(j-1,3)+1);
+        c{j} = sprintf('Slide%02d_Section%02d',ceil(j/sps),mod(j-1,sps)+1);
     end
     HI.sectionName = c;
     
