@@ -362,13 +362,13 @@ end
 jsonTxt = [ '{"Items":[' json1 json2 ']}'];
 jsonTxt = urlencode(jsonTxt);
 lk = sprintf('%s%s',...
-    'https://docs.google.com/forms/d/e/1FAIpQLSc1kQcXdVBJogFOo2Tt2eCjPh3Cq6kmjCOLL2em0eQZGO8lJw/viewform?usp=pp_url&entry.1224635255=%s',...
+    'https://docs.google.com/forms/d/e/1FAIpQLSc1kQcXdVBJogFOo2Tt2eCjPh3Cq6kmjCOLL2em0eQZGO8lJw/viewform?usp=pp_url&entry.1224635255=',...
     jsonTxt);
 
 %Create a link for user
 fprintf('\n\nSubmit Changes Online:\n %s\n',lk);
 fid = fopen('lk.txt','w');
-fprintf(fid,lk);
+fprintf(fid,'%s',lk);
 fclose(fid);
 
 d = SARS.distanceFromLastSlideToOrigin_um;

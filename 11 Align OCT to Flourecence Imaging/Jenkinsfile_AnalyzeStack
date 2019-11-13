@@ -144,7 +144,7 @@ pipeline {
 					
 				//Give instructions
 				echo "- Please review overview image and provide your input:" + "\n" +
-					 "- Image 1:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/StackAlignmentFigure1.png" + "\n"
+					 "- Image 1:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/StackAlignmentFigure1.png" + "\n" +
 					 "- Image 2:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/StackAlignmentFigure2.png" + "\n"
 
 				//Ask for input
@@ -162,7 +162,11 @@ pipeline {
 						]) 
 				
 				//Generate instructions if required
-				if (userInput.ShouldWeCut == "Yes")
+				if (userInput.ShouldWeCut == "No")
+				{
+					echo("Aborting.. See ya!")
+				}
+				else
 				{
 					def whoRanExperiment = params.WHO_TO_EMAIL_WHEN_DONE;
 					whoRanExperiment = whoRanExperiment.substring(0,whoRanExperiment.indexOf('@'))
@@ -171,7 +175,7 @@ pipeline {
 					bat("@echo yourName_ = '" + whoRanExperiment + "'; >> runme.m")
 					bat("@echo iteration_ = 2; >> runme.m")
 					bat("@echo distanceToOCTOrigin_um = "+ userInput.HowDeepUM +"; >> runme.m")
-					bat("@echo run scriptTextToHistologyInstructions.m  >> runme.m")
+					bat("@echo run scriptGenerateHistologyInstructions.m  >> runme.m")
 			
 					RunMatlabRunme();
 				}
