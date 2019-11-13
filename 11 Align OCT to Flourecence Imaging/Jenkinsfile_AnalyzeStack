@@ -1,0 +1,217 @@
+//This Jenkinsfile will preform a scan and save the results to a common storage
+//It will also create a .m file explaining how to preprocess this scan
+pipeline {
+	agent any
+	environment {
+    	CREDENTIALS_PATH = "..\\..\\"
+	}
+	options {
+		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
+  	}
+	parameters 
+	{
+		string(
+			name: "S3_SUBJECT_DIR",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LD/LD-01",
+			description:"Subject Directory.",
+			trim: true)
+		booleanParam(
+			name: 'IS_MAKE_INSTRUCTIONS_FOR_SECOND_ITERATION',
+			defaultValue:false,
+			description:"Confirm that this is for generating second iteration of histology? If set to false, will still run but will not generate instructions\nWARNING: Do not check here if this is not the 2nd iteration!")
+		string(
+			name: "WHO_TO_EMAIL_WHEN_DONE",
+			defaultValue:"@stanford.edu",
+			description:"Who should get an email with the results? Including you!\nUse comma to specify multiple emails.\nExample: me@stanford.edu, you@stanford.edu",
+			trim: true)	
+    }
+	stages{
+		stage("Parameters Check") 
+		{steps{script{
+			if (params.WHO_TO_EMAIL_WHEN_DONE == "@stanford.edu") 
+			{
+				currentBuild.result = 'ABORTED'
+				echo('Please specify email address to send a note when run is completed')
+				error('Please specify email address to send a note when run is completed')
+			}
+		}}}
+		stage("Checkout")
+		{steps{script{
+			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
+			def gitTxt
+			try
+			{
+				bat "git describe --tags --exact-match > commandResult.txt" 
+				gitTxt = readFile('commandResult.txt').trim()
+				echo gitTxt
+				if (gitTxt.contains("fatal: No tags can describe"))
+				{
+					gitTxt = "master"
+				}
+			}
+			catch(Exception e)
+			{ 
+				// Couldn't find exact match, its actually we look at the master
+				gitTxt = "master"
+			}
+			
+			branch = gitTxt
+			echo("Jenkins Build #: " + env.BUILD_NUMBER)
+			echo("Fetching: " + branch)
+			
+			//Identify where github is installed
+			def gitFolderOption1 = new File("C:\\Program Files (x86)\\Git\\cmd\\")
+			def gitFolderOption2 = new File("C:\\Program Files\\Git\\cmd\\")
+			def gitFolder = ""
+			if (gitFolderOption1.exists()) {
+				gitFolder = gitFolderOption1.absolutePath
+			} else if (gitFolderOption2.exists()) {
+				gitFolder = gitFolderOption2.absolutePath
+			} else {
+				error "Clould not find git in the known possible possitions"
+			}
+			gitFolder = gitFolder + "\\"
+			
+			//Checkout a fresh copy 
+			cleanWs()
+			bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/HashtagAlignment.git"') //Checkout HashtagAlignment
+			bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/myOCT.git"') //Checkout myOCT
+			
+			//Make note of the repository version
+			bat('@cd HashtagAlignment && @"' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			def hashtagAlignmentVer = readFile('commandResult.txt').trim()
+			bat('@cd myOCT && @"' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			def myOCTVer = readFile('commandResult.txt').trim()
+			
+			//Move files to main folder
+			bat('@xcopy /E HashtagAlignment . /Y /Q')
+			bat('@xcopy /E myOCT . /Y /Q')
+			bat('@copy "%CREDENTIALS_PATH%\\*.m" .')
+			
+			//Delete folder used for checkout
+			bat('@rmdir HashtagAlignment /S /Q')
+			bat('@rmdir myOCT /S /Q')
+			
+			//Start buidling the runme file
+			bat("@echo disp('HashtagAlignment Git Hash: " + hashtagAlignmentVer + "');  >> runme.m")
+			bat("@echo disp('myOCT Git Hash: " + myOCTVer + "');  >> runme.m")
+			bat("@echo disp('To see repository go to');  >> runme.m")
+			bat("@echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
+			bat("@echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
+		}}}
+		stage("Analyize Stack")
+		{steps{script{
+			bat("@echo subjectFolder_ = '%S3_SUBJECT_DIR%/'; >> runme.m")
+			bat("@echo run analyzeAlignmentStack.m  >> runme.m")
+			
+			RunMatlabRunme();
+		}}}
+		stage("Generate Instructions for Next Stack")
+		{steps{script{
+			if (IS_DEBUG_MODE == "true")
+			{
+				//Get the links
+				def dUM = readFile('Testers\\DistanceFromCurrentFaceToOriginUM.txt').trim()
+				def lk = readFile('Testers\\lk.txt').trim()
+			
+				//Notify user that his attention is required
+				try
+				{
+				emailext (
+					subject: "[OCTHist] Analyize Stack - Input Requested",
+					from : "Yonatan",
+					body: 
+						"Please go to Jenkins, it requests some inputs before completing<br>"+
+						"<br>"+
+						'To submit alignment the google spreadsheet folow this <a href="' + lk + '">link</a><br>' +
+						"<br>"+
+						'To view interactive log click <a href="' + env.BUILD_URL + '/console">here</a><br>' +
+						"<br>" + 
+						'Examine <a href="' + env.BUILD_URL + '/execution/node/3/ws/Testers/StackAlignmentFigure1.png">Stack Alignment Image 1</a>.<br>' +
+						'Examine <a href="' + env.BUILD_URL + '/execution/node/3/ws/Testers/StackAlignmentFigure2.png">Stack Alignment Image 2</a>.<br>' +
+						'<a href="' + env.BUILD_URL + '/input">Enter Inputs</a>.<br>' + 
+						"<br>" +
+						"Yonatan"
+						,
+					attachLog: true,
+					//attachmentsPattern: "Testers/*.png",
+					to: "$WHO_TO_EMAIL_WHEN_DONE" )
+				}
+				catch(Exception e)
+				{
+					echo ("Could not send an email notifying the person to come and check outputs, its ok, we shall wait!");
+				}
+					
+				//Give instructions
+				echo "- Please review overview image and provide your input:" + "\n" +
+					 "- Image 1:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/StackAlignmentFigure1.png" + "\n"
+					 "- Image 2:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/StackAlignmentFigure2.png" + "\n"
+
+				//Ask for input
+				def userInput = input( 
+					message: 'Please Provide Parameters', ok: 'Next',
+					parameters: [
+						string(defaultValue: dUM,
+							name: 'HowDeepUM', 
+							description: 'How deep from current cut is OCT origin? [microns]\nNegative values mean that we surpase OCT origin'
+							),
+						choice(
+							name: 'ShouldWeCut', 
+							choices: ['Yes','No'], 
+							description: 'Select Yes to generate instructions for cutting. No otherwise.\nRemember if alignment of stack is not good there is no point in cutting deeper.\nIf we surpase OCT origin, cutting further will not gain useful data')
+						]) 
+				
+				//Generate instructions if required
+				if (userInput.ShouldWeCut == "Yes")
+				{
+					def whoRanExperiment = params.WHO_TO_EMAIL_WHEN_DONE;
+					whoRanExperiment = whoRanExperiment.substring(0,whoRanExperiment.indexOf('@'))
+					
+					bat("@echo subjectFolder_ = '%S3_SUBJECT_DIR%/'; > runme.m")
+					bat("@echo yourName_ = '" + whoRanExperiment + "'; >> runme.m")
+					bat("@echo iteration_ = 2; >> runme.m")
+					bat("@echo distanceToOCTOrigin_um = "+ userInput.HowDeepUM +"; >> runme.m")
+					bat("@echo run scriptTextToHistologyInstructions.m  >> runme.m")
+			
+					RunMatlabRunme();
+				}
+				
+				//Send an email
+				try
+				{
+				emailext (
+					subject: "[OCTHist] Analyize Stack - Success",
+					from : "Yonatan",
+					body: 
+						"Instructions have been updated. See attached instructions for histology for iteration #2<br>"+
+						"<br>" +
+						"Yonatan"
+						,
+					attachLog: true,
+					attachmentsPattern: "Testers/HistologyInstructions.pdf",
+					to: "$WHO_TO_EMAIL_WHEN_DONE" )
+				}
+				catch(Exception e)
+				{
+					echo ("Could not send an email notifying files are ready");
+				}
+			}
+		}}}
+	}
+}
+def RunMatlabRunme() //runs runme.m
+{
+	try
+	{
+		def rootDir = pwd()
+		def MatlabRunner = load "${rootDir}/99 Jenkins Lib/MatlabRunner.Groovy"
+		MatlabRunner.RunMatlabScript ("runme.m");
+		bat("@del \f runme.m");
+	}
+	catch(Exception e)
+	{
+		currentBuild.result = 'FAILURE'
+		throw("Matlab Failed")
+	}
+}
+
