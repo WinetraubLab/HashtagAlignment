@@ -108,6 +108,26 @@ pipeline {
 		}}}
 		stage("Generate Instructions for Next Stack")
 		{steps{script{
+			if (IS_MAKE_INSTRUCTIONS_FOR_SECOND_ITERATION == "false")
+			{
+			emailext (
+				subject: "[OCTHist] Analyize Stack - Submit to Google Sheet",
+				from : "Yonatan",
+				body: 
+					"Please go to Jenkins, submit alignment results<br>"+
+					"<br>"+
+					'View interactive log click <a href="' + env.BUILD_URL + '/console">here</a><br>' +
+					"And click on the long script<br><br>" + 
+					'Examine <a href="' + env.BUILD_URL + '/execution/node/3/ws/Testers/StackAlignmentFigure1.png">Stack Alignment Image 1</a>.<br>' +
+					'Examine <a href="' + env.BUILD_URL + '/execution/node/3/ws/Testers/StackAlignmentFigure2.png">Stack Alignment Image 2</a>.<br>' +
+					"<br>" +
+					"Yonatan"
+					,
+				attachLog: true,
+				//attachmentsPattern: "Testers/*.png",
+				to: "$WHO_TO_EMAIL_WHEN_DONE" )	
+				
+			}
 			if (IS_MAKE_INSTRUCTIONS_FOR_SECOND_ITERATION == "true")
 			{
 				//Get the links
