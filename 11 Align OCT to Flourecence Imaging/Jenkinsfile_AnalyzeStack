@@ -123,7 +123,7 @@ pipeline {
 					body: 
 						"Please go to Jenkins, it requests some inputs before completing<br>"+
 						"<br>"+
-						'To submit alignment the google spreadsheet folow this <a href="' + lk + '">link</a><br>' +
+						'To submit alignment the google spreadsheet folow this <a href="' + env.BUILD_URL + '/console">link search for the big link and click it</a><br>' +
 						"<br>"+
 						'To view interactive log click <a href="' + env.BUILD_URL + '/console">here</a><br>' +
 						"<br>" + 
@@ -178,32 +178,32 @@ pipeline {
 					bat("@echo run scriptGenerateHistologyInstructions.m  >> runme.m")
 			
 					RunMatlabRunme();
-				}
 				
-				//Send an email
-				try
-				{
-				emailext (
-					subject: "[OCTHist] Analyize Stack - Success",
-					from : "Yonatan",
-					body: 
-						"Instructions have been updated. See attached instructions for histology for iteration #2<br>"+
-						"<br>" +
-						"Yonatan"
-						,
-					attachLog: true,
-					attachmentsPattern: "Testers/HistologyInstructions.pdf",
-					to: "$WHO_TO_EMAIL_WHEN_DONE" )
+					//Send an email
+					try
+					{
+					emailext (
+						subject: "[OCTHist] Analyize Stack - Success",
+						from : "Yonatan",
+						body: 
+							"Instructions have been updated. See attached instructions for histology for iteration #2<br>"+
+							"<br>" +
+							"Yonatan"
+							,
+						attachLog: true,
+						attachmentsPattern: "Testers/HistologyInstructions.pdf",
+						to: "$WHO_TO_EMAIL_WHEN_DONE" )
+					}
+					catch(Exception e)
+					{
+						echo ("Could not send an email notifying files are ready");
+					}
+					
+					//Histology Instructions
+					echo "- Histology instructions can be downloaded from here:" + "\n" +
+						 "\t" + env.BUILD_URL + "execution/node/3/ws/Testers/HistologyInstructions.pdf" + "\n"
+					
 				}
-				catch(Exception e)
-				{
-					echo ("Could not send an email notifying files are ready");
-				}
-				
-				//Histology Instructions
-				echo "- Histology instructions can be downloaded from here:" + "\n" +
-					 "\t" + env.BUILD_URL + "execution/node/3/ws/Testers/HistologyInstructions.pdf" + "\n"
-				
 			}
 		}}}
 	}
