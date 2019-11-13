@@ -133,11 +133,17 @@ isSCOk = abs(sc-median(sc))<isSCOkThreshold;% Percent, Size change quality check
 
 isOk = isRotOk & isSCOk;
 
+%Compute what is the last iteration that we have data for
+lastIteration = max(hiJson.sectionIteration); %Last iteration that we have data of
+if ~any(hiJson.sectionIteration(sectionIndexInStack) == lastIteration)
+    warning('There are no slides with the last stack. I will assume there is a mistake and last iteration wasnt scanned yet');
+    lastIteration = max(hiJson.sectionIteration(sectionIndexInStack));
+end
+
 %Predicted locations 
 %Notice that sectionDepthsRequested_um has origin (0) at full face, so we
 %need to convert to OCT at origin. We will use the first guess as means of
 %convertion
-lastIteration = max(hiJson.sectionIteration); %Last iteration that we have data of
 d_mmP = (hiJson.sectionDepthsRequested_um(sectionIndexInStack) - hiJson.estimatedDepthOfOCTOrigin_um(lastIteration)) ...
     /1000; 
 d_mmP = d_mmP(:)';
