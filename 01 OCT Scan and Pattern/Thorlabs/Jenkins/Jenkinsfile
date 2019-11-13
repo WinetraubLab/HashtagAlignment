@@ -330,7 +330,7 @@ pipeline {
 				
 			//Give instructions
 			echo "- Please review overview image and provide your input:" + "\n" +
-				 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/Overview.png" + "\n"
+				 "- File:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/Overview.png" + "\n"
 
 			//Ask for input
 			def userInput = input( 
@@ -338,7 +338,7 @@ pipeline {
                 parameters: [
 					string(defaultValue: '1500',
 						name: 'HowDeepUM', 
-						description: 'How deep from tissue surface is OCT origi? [microns]\nShortest distance is better'
+						description: 'How deep from tissue surface is OCT origin? [microns]\nShortest distance is better'
 						),
                     choice(
 						name: 'WhichSideToStartSections', 
