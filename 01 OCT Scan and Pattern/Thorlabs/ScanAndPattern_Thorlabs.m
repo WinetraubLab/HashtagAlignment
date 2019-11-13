@@ -44,11 +44,11 @@ base = 100/1000; %base seperation [mm]
 %config.photobleach.vLinePositions = base*[-1 0 3]; %[mm] 
 %config.photobleach.hLinePositions = base*[-1 0 2]; %[mm] 
 %LC
-%config.photobleach.vLinePositions = base*[-4  0 1 3]; %[mm] 
-%config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm]
+config.photobleach.vLinePositions = base*[-4  0 1 3]; %[mm] 
+config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm]
 %LD
-config.photobleach.vLinePositions = base*[-3 -2 0 5 6]; %[mm] 
-config.photobleach.hLinePositions = base*[-4 -3 0 4 5]; %[mm] 
+%config.photobleach.vLinePositions = base*[-3 -2 0 5 6]; %[mm] 
+%config.photobleach.hLinePositions = base*[-4 -3 0 4 5]; %[mm] 
 config.photobleach.exposure = 30/2; %[sec per line length (mm)]
 config.photobleach.nPasses = 2;
 config.photobleach.lineLength = 2; %[mm]
