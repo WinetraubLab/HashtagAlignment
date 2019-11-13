@@ -55,7 +55,7 @@ function HI = hiGenerateHistologyInstructions(in1,in2,operatorName,ddate,sampleI
 histoKnife.sectionsPerSlide = 3;
 histoKnife.sectionThickness_um = 5;
 histoKnife.a5um = 10;
-histoKnife.a25um = 25*1.7;
+histoKnife.a25um = 25*1.5;
 
 if (~exist('estimatedDepthOfOCTOrigin_um','var') || isempty(estimatedDepthOfOCTOrigin_um))
     estimatedDepthOfOCTOrigin_um = [];
