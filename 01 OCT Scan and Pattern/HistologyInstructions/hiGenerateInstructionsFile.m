@@ -130,7 +130,7 @@ for ii = 1:length(iterations)
         ss = s(sGroups == j);
         
         %Advance to where we need to go
-        if (ss(1) > pos)
+        if (ss(1) > pos+HI.histoKnife.a25um) %Make sure one cut is possible
             d = ss(1)-pos;
             n25Cuts = round(d/HI.histoKnife.a25um);
             
