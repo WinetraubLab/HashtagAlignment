@@ -2,7 +2,7 @@
 %run this script twice to correct slide alignment based on stack trned
 
 %% Inputs
-subjectFolder = s3SubjectPath('09');
+subjectFolder = s3SubjectPath('01');
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %JSON
 end
