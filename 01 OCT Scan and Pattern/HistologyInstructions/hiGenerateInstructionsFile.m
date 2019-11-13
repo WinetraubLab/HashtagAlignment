@@ -48,6 +48,8 @@ switch(lower(ext))
             ];
         headerEnd = '</body></html>';
         tab = '&nbsp;&nbsp;&nbsp;';
+    otherwise
+        error('Unknown extention %s, file path: %s',ext,outFilePath);
 end
 
 %% Generate file

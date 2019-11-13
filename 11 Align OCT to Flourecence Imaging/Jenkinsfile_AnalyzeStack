@@ -177,7 +177,7 @@ pipeline {
 							),
 						choice(
 							name: 'ShouldWeCut', 
-							choices: ['Yes','No'], 
+							choices: ['No','Yes'], 
 							description: 'Select Yes to generate instructions for cutting. No otherwise.\nRemember if alignment of stack is not good there is no point in cutting deeper.\nIf we surpase OCT origin, cutting further will not gain useful data')
 						]) 
 				

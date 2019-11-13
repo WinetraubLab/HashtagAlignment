@@ -103,7 +103,7 @@ end
 %Generate Instructions, in the log put all instructions, locally just this
 %iteration's
 if (isUpdateAWS)
-    hiGenerateInstructionsFile(jsonPath,logPath);
+    hiGenerateInstructionsFile(jsonPath,[logPath 'HistologyInstructions.pdf']);
     hiGenerateInstructionsFile(jsonPath,'HistologyInstructions.pdf',iteration);
 else
     hiGenerateInstructionsFile(HI,'HistologyInstructions.pdf',iteration);
