@@ -10,7 +10,9 @@ isCutOnDotSide = 1; %1-true, -1 - oposite side
 %Distance to OCT origin:
 %In iteration #1 - distance from full face to origin
 %In following iterations - distance from current position to origin
-distanceToOCTOrigin_um = 1000; %um, in iteration #1 distance from full face
+distanceToOCTOrigin_um = 1000; %um
+
+isUpdateAWS = false;
 
 %% Define optimal cuting scheme
 %iteration #1 is the first itration, #2 are all that follow
@@ -29,6 +31,7 @@ if exist('subjectFolder_','var')
     yourName = yourName_;
     iteration = iteration_;
     distanceToOCTOrigin_um = distanceToOCTOrigin_um_;
+    isUpdateAWS = true;
 end
 if exist('isCutOnDotSide_','var')
     isCutOnDotSide = isCutOnDotSide_;
@@ -45,6 +48,11 @@ else
 end
 whereTocut = whereTocut + distanceToOCTOrigin_um;
 
+if (min(whereTocut) < 0)
+    %Cannot cut in the past, advance
+    whereTocut = whereTocut-min(whereTocut);
+end
+
 %% Setup paths
 [~,subjectName] = fileparts([subjectFolder(1:(end-1)) '.a']);
 jsonPath = awsModifyPathForCompetability([subjectFolder '/Slides/HistologyInstructions.json']);
@@ -55,16 +63,38 @@ if (iteration > 1)
     json = awsReadJSON(jsonPath);
     in2 = json;
 else
+    isJsonExist = false;
+    try
+        json = awsReadJSON(jsonPath);
+        isJsonExist = true;
+    catch
+        %Do nothing
+    end
+    if (isJsonExist)
+        error('You say its iteration #1, but json path exists, is that ok? %s',jsonPath);
+    end
     in2 = isCutOnDotSide;
 end
 
 %% Build Histology Instructions
-HI = hiGenerateHistologyInstructions(whereTocut,in2,yourName,now,subjectName,distanceToOCTOrigin_um);
+if (iteration == 1)
+    tmp = distanceToOCTOrigin_um; %Get distance to origin from user
+else
+    tmp = []; %In followup iterations distance to origin is calculated by analyzeAlignmentStack.m, don't override their analysis
+end
+HI = hiGenerateHistologyInstructions(whereTocut,in2,yourName,now,subjectName,tmp);
 
 %Upload istructions
-awsWriteJSON(HI,jsonPath);
+if (isUpdateAWS)
+    awsWriteJSON(HI,jsonPath);
+end
 
 %Generate Instructions, in the log put all instructions, locally just this
 %iteration's
-hiGenerateInstructionsFile(jsonPath,logPath);
-hiGenerateInstructionsFile(jsonPath,'HistologyInstructions.pdf',iteration);
+if (isUpdateAWS)
+    hiGenerateInstructionsFile(jsonPath,logPath);
+    hiGenerateInstructionsFile(jsonPath,'HistologyInstructions.pdf',iteration);
+else
+    hiGenerateInstructionsFile(HI,'HistologyInstructions.pdf',iteration);
+end
+

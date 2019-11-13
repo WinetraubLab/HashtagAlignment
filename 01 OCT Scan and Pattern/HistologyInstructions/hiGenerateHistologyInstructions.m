@@ -6,7 +6,7 @@ function HI = hiGenerateHistologyInstructions(in1,in2,operatorName,ddate,sampleI
 %INPUTS:
 %in1 - can be
 %   1) Vector of positions as of to where to take histology sections at
-%   (request) starting at 0 - full face. [um]
+%   (request) starting at 0 - full face or last face if its not first iteration [um]
 %   2) Text from a histology instructions file that we will interpert
 %in2 - can be either 
 %   1) a HI structure (from previuse iteartion) or
@@ -57,8 +57,8 @@ histoKnife.sectionThickness_um = 5;
 histoKnife.a5um = 10;
 histoKnife.a25um = 25*1.7;
 
-if (~exist('estimatedDepthOfOCTOrigin_um','var'))
-    estimatedDepthOfOCTOrigin_um = NaN;
+if (~exist('estimatedDepthOfOCTOrigin_um','var') || isempty(estimatedDepthOfOCTOrigin_um))
+    estimatedDepthOfOCTOrigin_um = [];
 end
 
 %% Process Operator Name
@@ -91,7 +91,9 @@ if isnumeric(in1)
     if ~isstruct(in2)
         %Start from scratch
         HI.sectionDepthsRequested_um = in1(:);
-        HI.estimatedDepthOfOCTOrigin_um = estimatedDepthOfOCTOrigin_um;
+        if ~isempty(estimatedDepthOfOCTOrigin_um)
+            HI.estimatedDepthOfOCTOrigin_um = estimatedDepthOfOCTOrigin_um;
+        end
         HI.startAtDotSide = in2;
         HI.histoKnife = histoKnife;
         HI.sectionIteration = ones(size(HI.sectionDepthsRequested_um));
@@ -103,12 +105,20 @@ if isnumeric(in1)
         %Start from the existing structure
         HI = in2; 
         nextIteration = max(HI.sectionIteration)+1;
+        if (any(in1<0))
+            error('Cannot cut in the past!');
+        end
+        
+        in1 = in1 + max(HI.sectionDepthsRequested_um); %Advance to the position of the cut
         
         HI.sectionDepthsRequested_um = [HI.sectionDepthsRequested_um(:);in1(:)];
         HI.sectionIteration = [HI.sectionIteration(:); ones(size(in1(:)))*nextIteration];
         HI.iterationOperators(nextIteration) = {operatorName};
         HI.iterationDates(nextIteration) = {ddate};
-        HI.estimatedDepthOfOCTOrigin_um(nextIteration) = estimatedDepthOfOCTOrigin_um;
+        
+        if ~isempty(estimatedDepthOfOCTOrigin_um)
+            HI.estimatedDepthOfOCTOrigin_um(nextIteration) = estimatedDepthOfOCTOrigin_um;
+        end
     end  
     
     %Section Names
