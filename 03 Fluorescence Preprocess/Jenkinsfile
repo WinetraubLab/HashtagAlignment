@@ -1,5 +1,4 @@
-//This Jenkinsfile will preform a scan and save the results to a common storage
-//It will also create a .m file explaining how to preprocess this scan
+//This Jenkinsfile will preform prceprocess of flourecence images
 pipeline {
 	agent any
 	environment {
