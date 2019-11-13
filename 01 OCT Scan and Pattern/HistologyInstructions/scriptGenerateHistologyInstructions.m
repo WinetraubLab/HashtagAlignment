@@ -77,11 +77,11 @@ else
 end
 
 %% Check iteration #2 was not set before, if it did, override it
-if (iteration > 1)
+if (iteration > 2)
     warning('Iteration #2 exists, deleting it before adding iteration #2');
     in2.iterationDates = in2.iterationDates(1);
     in2.iterationOperators = in2.iterationOperators(1);
-    ii = in2.sectionIteration>1;
+    ii = in2.sectionIteration>=2;
     in2.sectionIteration(ii)= [];
     in2.sectionDepthsRequested_um(ii) = [];
     in2.sectionName(ii) = [];
