@@ -380,7 +380,7 @@ fprintf('Distance from current face to origin (negative number means we surpasse
 
 %Save it to a file for downstream automated usage
 fid = fopen('DistanceFromCurrentFaceToOriginUM.txt','w');
-fprintf(fid,'%.0f',d*1000);
+fprintf(fid,'%.0f',d);
 fclose(fid);
 
 %% Update data to the cloud
