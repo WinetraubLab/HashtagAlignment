@@ -194,6 +194,7 @@ ffy = n(2)*ffd + sin(median(rot)/180*pi)*lineLength/2*[1 -1];
 if (sum(isOk) < length(isOk)/3 || sum(isOk)<2)
     warning('Not enugh good samples, everything seems to be an outlier');
     isProperStackAlignmentSuccess = false;
+    hiJson.estimatedDepthOfOCTOrigin_um(lastIteration+1) = NaN;
 else
     isProperStackAlignmentSuccess = true;
 end    
@@ -201,6 +202,7 @@ end
 if (hiJson.estimatedDepthOfOCTOrigin_um(lastIteration+1)<0)
     disp('Full face is over where origin is?? that can be write, fail the alignment');
     isProperStackAlignmentSuccess = false;
+    hiJson.estimatedDepthOfOCTOrigin_um(lastIteration+1) = NaN;
 end
 
 %% Generate stack alignment results data structure
