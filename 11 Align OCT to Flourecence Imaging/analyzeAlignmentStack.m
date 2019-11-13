@@ -198,6 +198,11 @@ else
     isProperStackAlignmentSuccess = true;
 end    
 
+if (hiJson.estimatedDepthOfOCTOrigin_um(lastIteration+1)<0)
+    disp('Full face is over where origin is?? that can be write, fail the alignment');
+    isProperStackAlignmentSuccess = false;
+end
+
 %% Generate stack alignment results data structure
 SARS.sectionNames = sectionNames; %Section Names
 SARS.isProperStackAlignmentSuccess = isProperStackAlignmentSuccess;
