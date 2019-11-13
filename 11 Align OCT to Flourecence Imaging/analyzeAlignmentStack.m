@@ -2,7 +2,7 @@
 %run this script twice to correct slide alignment based on stack trned
 
 %% Inputs
-subjectFolder = s3SubjectPath('01');
+subjectFolder = s3SubjectPath('09');
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %JSON
 end
@@ -151,7 +151,7 @@ d_mmP = d_mmP(:)';
 
 %Position of the last position requested (new face)
 d_mmPLast = (...
-    max(hiJson.sectionDepthsRequested_um(hiJson.sectionIteration(sectionIndexInStack) == lastIteration)) - ...
+    max(hiJson.sectionDepthsRequested_um(hiJson.sectionIteration == lastIteration)) - ...
     hiJson.estimatedDepthOfOCTOrigin_um(lastIteration)) ...
     /1000;
 
