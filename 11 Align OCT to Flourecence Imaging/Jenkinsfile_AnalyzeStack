@@ -174,7 +174,7 @@ pipeline {
 					bat("@echo subjectFolder_ = '%S3_SUBJECT_DIR%/'; > runme.m")
 					bat("@echo yourName_ = '" + whoRanExperiment + "'; >> runme.m")
 					bat("@echo iteration_ = 2; >> runme.m")
-					bat("@echo distanceToOCTOrigin_um = "+ userInput.HowDeepUM +"; >> runme.m")
+					bat("@echo distanceToOCTOrigin_um_ = "+ userInput.HowDeepUM +"; >> runme.m")
 					bat("@echo run scriptGenerateHistologyInstructions.m  >> runme.m")
 			
 					RunMatlabRunme();
@@ -199,6 +199,11 @@ pipeline {
 				{
 					echo ("Could not send an email notifying files are ready");
 				}
+				
+				//Histology Instructions
+				echo "- Histology instructions can be downloaded from here:" + "\n" +
+					 "\t" + env.BUILD_URL + "execution/node/3/ws/Testers/HistologyInstructions.pdf" + "\n"
+				
 			}
 		}}}
 	}
