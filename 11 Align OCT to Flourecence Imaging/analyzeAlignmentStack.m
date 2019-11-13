@@ -167,11 +167,11 @@ if (abs(scale) > 1.5 || abs(scale) <1/1.5)
 end
 d_mmF = polyval(p,d_mmP); %Fit corrected values
 
-%The po
-d_mmFLast = d_mmPLast + offset;
+%The position that is up to where we cut
+d_mmFLast = polyval(p,d_mmPLast); 
 
 %Compute distance from last slide to origin
-distanceFromLastSlideToOrigin_um = abs(d_mmFLast);
+distanceFromLastSlideToOrigin_mm = abs(d_mmFLast);
 didLastSlidePassedOrigin = ~(abs(d_mmFLast) <= min(abs(d_mmF))); % 1 - we already passed origin
 
 %Update our estimate of where OCT origin is compared to full face
@@ -207,7 +207,7 @@ SARS.distanceBetweenFullFaceAndOCTOrigin_um = ...
     hiJson.estimatedDepthOfOCTOrigin_um(lastIteration+1);
 SARS.distanceBetweenFullFaceAndOCTOriginError_um = ... Error compared to prediction
     hiJson.estimatedDepthOfOCTOrigin_um(lastIteration+1) - hiJson.estimatedDepthOfOCTOrigin_um(1);
-SARS.distanceFromLastSlideToOrigin_um = distanceFromLastSlideToOrigin_um;
+SARS.distanceFromLastSlideToOrigin_um = distanceFromLastSlideToOrigin_mm*1000;
 SARS.didLastSlidePassedOrigin = didLastSlidePassedOrigin; %1 - yes
 
 %% Plot Main Figure (#1)
@@ -361,7 +361,8 @@ end
 %Generate full json
 jsonTxt = [ '{"Items":[' json1 json2 ']}'];
 jsonTxt = urlencode(jsonTxt);
-lk = sprintf('https://docs.google.com/forms/d/e/1FAIpQLSc1kQcXdVBJogFOo2Tt2eCjPh3Cq6kmjCOLL2em0eQZGO8lJw/viewform?usp=pp_url&entry.1224635255=%s',...
+lk = sprintf('%s%s',...
+    'https://docs.google.com/forms/d/e/1FAIpQLSc1kQcXdVBJogFOo2Tt2eCjPh3Cq6kmjCOLL2em0eQZGO8lJw/viewform?usp=pp_url&entry.1224635255=%s',...
     jsonTxt);
 
 %Create a link for user
@@ -375,7 +376,7 @@ if SARS.didLastSlidePassedOrigin == 1
     d = -d;
 end
 fprintf('Distance from current face to origin (negative number means we surpassed origin):\n\t%.0f [um]\n',...
-    d*1000);
+    d);
 
 %Save it to a file for downstream automated usage
 fid = fopen('DistanceFromCurrentFaceToOriginUM.txt','w');
