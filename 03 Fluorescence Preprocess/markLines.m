@@ -195,7 +195,7 @@ try
         disp('Couldn''t locate position in stack');
     end
     handles.slideJsonPositionInStack = find(xx,1,'first');
-    handles.slideJsonStack = [slideJsonStack{:}];
+    handles.slideJsonStack = slideJsonStack(:);
     
     %Load Oct Volume JSON
     folder = awsModifyPathForCompetability([handles.allSlidesPath '/../OCTVolumes/']);
