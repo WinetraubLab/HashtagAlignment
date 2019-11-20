@@ -2,9 +2,12 @@
 %run this script twice to correct slide alignment based on stack trned
 
 %% Inputs
-subjectFolder = s3SubjectPath('01');
+isUpdateCloud = false;
+
+subjectFolder = s3SubjectPath('13');
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %JSON
+    isUpdateCloud = true;
 end
 
 %If not empty, will write the overview files to Log Folder
@@ -13,6 +16,8 @@ logFolder = awsModifyPathForCompetability([subjectFolder '/Log/11 Align OCT to F
 
 isRotOkThreshold = 5; %[deg], allowed variance around median to account rotation angle as ok
 isSCOkThreshold  = 6; %[%], allowed variance around median to accoutn size change (in precent) as ok
+
+usableArea = 0.55; %mm - how close should section be to origin to be 'usable'
 
 %% Find all JSONS
 awsSetCredentials(1);
@@ -277,6 +282,8 @@ plot(sectionIndexInStack,d_mmF,'--r');
 hold on;
 plot(sectionIndexInStack(isOk),d_mm(isOk),'.');
 plot(sectionIndexInStack(~isOk),d_mm(~isOk),'.')
+plot(sectionIndexInStack([1 end]),usableArea*[1 1],'--','Color',0.1*ones(3,1));
+plot(sectionIndexInStack([1 end]),-usableArea*[1 1],'--','Color',0.1*ones(3,1));
 hold off;
 ylabel('Distance [mm]');
 xlabel('Slide #')
@@ -401,18 +408,20 @@ fprintf(fid,'%.0f',d);
 fclose(fid);
 
 %% Update data to the cloud
+if isUpdateCloud
 
-%Save images to log
-if ~isempty(logFolder)
-    saveas(fig2,'StackAlignmentFigure2.png');
-    saveas(fig1,'StackAlignmentFigure1.png');
+    %Save images to log
+    if ~isempty(logFolder)
+        saveas(fig2,'StackAlignmentFigure2.png');
+        saveas(fig1,'StackAlignmentFigure1.png');
 
-    awsCopyFileFolder('StackAlignmentFigure1.png',[logFolder '/StackAlignmentFigure1.png']);
-    awsCopyFileFolder('StackAlignmentFigure2.png',[logFolder '/StackAlignmentFigure2.png']);
+        awsCopyFileFolder('StackAlignmentFigure1.png',[logFolder '/StackAlignmentFigure1.png']);
+        awsCopyFileFolder('StackAlignmentFigure2.png',[logFolder '/StackAlignmentFigure2.png']);
+
+        %Log results
+        awsWriteJSON(SARS,[logFolder '/StackAlignmentResults.json']);
+    end
     
-    %Log results
-    awsWriteJSON(SARS,[logFolder '/StackAlignmentResults.json']);
+    %Update histology instructions with our updated guess of where OCT origin is
+    awsWriteJSON(hiJson,hiJsonFilePath);
 end
-
-%Update histology instructions with our updated guess of where OCT origin is
-awsWriteJSON(hiJson,hiJsonFilePath);
