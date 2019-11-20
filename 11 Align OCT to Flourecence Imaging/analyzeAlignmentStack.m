@@ -4,7 +4,7 @@
 %% Inputs
 isUpdateCloud = false;
 
-subjectFolder = s3SubjectPath('12');
+subjectFolder = s3SubjectPath('11');
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %JSON
     isUpdateCloud = true;
@@ -424,4 +424,6 @@ if isUpdateCloud
     
     %Update histology instructions with our updated guess of where OCT origin is
     awsWriteJSON(hiJson,hiJsonFilePath);
+    
+    disp ('Done');
 end
