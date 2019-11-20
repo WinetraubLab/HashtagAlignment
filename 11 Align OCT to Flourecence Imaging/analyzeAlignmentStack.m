@@ -4,7 +4,7 @@
 %% Inputs
 isUpdateCloud = false;
 
-subjectFolder = s3SubjectPath('13');
+subjectFolder = s3SubjectPath('12');
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %JSON
     isUpdateCloud = true;
@@ -409,7 +409,7 @@ fclose(fid);
 
 %% Update data to the cloud
 if isUpdateCloud
-
+    disp('Uploading images to cloud ...');
     %Save images to log
     if ~isempty(logFolder)
         saveas(fig2,'StackAlignmentFigure2.png');
