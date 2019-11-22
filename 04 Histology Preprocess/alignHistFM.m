@@ -136,6 +136,7 @@ for si = 1:length(slidePaths)
         awsCopyFileFolder(fp,logFolderPath);
         delete(fp);
     end
+    close(h);
     
     %% Upload Hist Image to Cloud
     HEName = 'FM_HAndE.tif';
