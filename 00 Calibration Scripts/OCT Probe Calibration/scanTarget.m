@@ -58,6 +58,12 @@ scanParameters = yOCTScanTile (...
     );
 
 %% Preprocess scan
+
+%If you would like to process a scan that is in the cloud, uncomment:
+%tmpOutputPath = s3OutputPath
+
+scanParameters = awsReadJSON([tmpOutputPath '\ScanInfo.json']);
+
 x = scanParameters.xRange*linspace(-0.5,0.5,scanParameters.nXPixels) + scanParameters.xOffset; %mm
 y = scanParameters.yRange*linspace(-0.5,0.5,scanParameters.nYPixels) + scanParameters.yOffset; %mm
 
@@ -78,10 +84,12 @@ for scanI = 1:length(scanParameters.octFolders)
     tic;
     fprintf('%s Saving Processd Scan (%d of %d)\n',datestr(datetime),scanI,length(scanParameters.octFolders));
     yOCT2Tif(log(scanAbs),[octScanPath '\scanAbs.tif']);
-    save([octScanPath 'scanAbsDimensions.mat'],'dim');
+    awsWriteJSON(dim,[octScanPath 'scanAbsMetaData.json']);
     toc;
 end
 
 %% Copy to cloud
-awsCopyFileFolder(tmpOutputPath,s3OutputPath);
-rmdir(tmpOutputPath,'s')
+if ~strcmp(tmpOutputPath,s3OutputPath)
+    awsCopyFileFolder(tmpOutputPath,s3OutputPath);
+    rmdir(tmpOutputPath,'s')
+end
