@@ -13,17 +13,14 @@ switch(1)
 end
 
 %Path to probe ini
-currentFileFolder = [fileparts(mfilename('fullpath')) '\'];
-probeIniPath = awsModifyPathForCompetability(...
-    [currentFileFolder '\..\..\01 OCT Scan and Pattern\Thorlabs\Probe - Olympus 10x.ini']);
+probeIniPath = getProbeIniPath();
 
 % Reference Scan JSON - where to get default scan parameters from
 configPath = s3SubjectPath('01');
 config = awsReadJSON([configPath 'OCTVolumes/ScanConfig.json']);
 
 % Output path 
-s3OutputPath = awsModifyPathForCompetability(...
-    [s3SubjectPath('') 'Calibratoins\' datestr(now,'yyyy-mm-dd') ' ' experimentType '/']);
+s3OutputPath = s3SubjectPath([datestr(now,'yyyy-mm-dd') ' ' experimentType],[],true);
 
 %% Preform scan
 if ~exist(probeIniPath,'file')
