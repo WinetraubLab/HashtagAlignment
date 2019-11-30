@@ -120,7 +120,7 @@ for i=1:size(ptStartplot,2)
         hold on;
     end
 end
-rectangle('Position',[-config.volume.rangeX/2 -config.volume.rangeY/2 config.volume.rangeY config.volume.rangeY]);
+rectangle('Position',[-config.volume.xRange/2 -config.volume.yRange/2 config.volume.xRange config.volume.yRange]);
 hold off;
 axis equal;
 axis ij;
