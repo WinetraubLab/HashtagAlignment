@@ -58,7 +58,7 @@ config.photobleach.photobleachOverviewBufferZone = 0.170; %See extended lines de
 config.photobleach.z = -300*1e-3; %[mm] this parameter is ignored if running from jenkins - will assume provided by jenkins
     
 %Probe defenitions
-config.octProbePath = [currentFileFolder 'Probe - Olympus 10x.ini'];
+config.octProbePath = getProbeIniPath();
 
 %Tickmarks (if required)
 config.photobleach.isDrawTickmarks = false;
