@@ -16,7 +16,7 @@ passes = 3;
 lineLength = 3; %[mm]
     
 %Probe defenitions
-octProbePath = [currentFileFolder 'Probe - Olympus 10x 2019_07_17.ini'];
+octProbePath = [currentFileFolder 'Probe - Olympus 10x.ini'];
 %Define scale and offset for fast & slow axis calibration
 offsetX = 0; %[mm]
 offsetY = 0; %[mm]

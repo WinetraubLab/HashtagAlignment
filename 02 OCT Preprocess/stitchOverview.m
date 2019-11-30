@@ -2,7 +2,7 @@
 
 %% Inputs
 OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
-dispersionParameterA = 6.539e07;
+dispersionParameterA = []; %Use default that is specified in ini probe file
 
 isPlotEnface = true; %Set to true to plot enface, false to plot depth map
 

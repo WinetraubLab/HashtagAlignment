@@ -5,6 +5,8 @@ function [ptStart_Scan, ptEnd_Scan, ptStart_Extended, ptEnd_Extended] = ScanAndP
 ptStart = [];
 ptEnd = [];
 
+ini = yOCTReadProbeIniToStruct(config.octProbePath);
+
 %% H & V Lines
 lshort = config.photobleach.lineLength;
 
@@ -84,7 +86,7 @@ end
 if ~config.photobleach.isPhotobleachOverview
     %Trim everything to one FOV if it doesn't fit
     [ptStart,ptEnd] = yOCTApplyEnableZone(ptStart, ptEnd, ...
-            @(x,y)(abs(x)<config.octProbeFOV(1)/2 & abs(y)<config.octProbeFOV(2)/2) , 10e-3);
+            @(x,y)(abs(x)<ini.RangeMaxX/2 & abs(y)<ini.RangeMaxY/2) , 10e-3);
 end
 
 if (~config.photobleach.isPhotobleachEnabled)
@@ -95,14 +97,14 @@ end
 %% Seperate Photobleaching
 
 [ptStart_Scan,ptEnd_Scan] = yOCTApplyEnableZone(ptStart, ptEnd, ...
-    @(x,y)(abs(x)<config.octProbeFOV(1)/2 & abs(y)<config.octProbeFOV(2)/2) , 10e-3);
+    @(x,y)(abs(x)<ini.RangeMaxX/2 & abs(y)<ini.RangeMaxX/2) , 10e-3);
 
 %Overview / extended
 %Dont photobleach in that area during overview, it is to be photobleached
 %only once
 keepPhotobleachOut = @(x,y) (...
-    (abs(x)<config.octProbeFOV(1)/2 + config.photobleach.photobleachOverviewBufferZone) & ...
-    (abs(y)<config.octProbeFOV(2)/2 + config.photobleach.photobleachOverviewBufferZone)   ...
+    (abs(x)<ini.RangeMaxX/2 + config.photobleach.photobleachOverviewBufferZone) & ...
+    (abs(y)<ini.RangeMaxY/2 + config.photobleach.photobleachOverviewBufferZone)   ...
     ); 
 
 [ptStart_Extended,ptEnd_Extended] = yOCTApplyEnableZone(ptStart, ptEnd, ...

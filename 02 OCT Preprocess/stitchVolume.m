@@ -2,7 +2,7 @@
 
 %OCT Data
 OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
-dispersionParameterA = 6.539e07;
+dispersionParameterA = []; %Use default that is specified in ini probe file
 
 focusSigma = 20; %When stitching along Z axis (multiple focus points), what is the size of each focus in z [pixel]
 outputFileFormat = 'tif'; %Can be 'tif' or 'mat' for debug
