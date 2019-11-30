@@ -14,10 +14,10 @@ outputFolder = [outputFolder '\'];
 
 %OCT scan defenitions (scan is centered along (0,0)
 config.volume.isScanEnabled = true; %Enable/Disable regular scan
-config.volume.rangeX = 1; %[mm]
-config.volume.rangeY = 1; %[mm]
-config.volume.nPixelsX = 1000; %How many pixels in x direction
-config.volume.nPixelsY = 1000; %How many pixels in y direction
+config.volume.xRange = 1; %[mm]
+config.volume.yRange = 1; %[mm]
+config.volume.nXPixels = 1000; %How many pixels in x direction
+config.volume.nYPixels = 1000; %How many pixels in y direction
 config.volume.nBScanAvg = 1;
 
 %Depth Defenitions
@@ -33,8 +33,8 @@ config.tissueRefractiveIndex = 1.4;
 config.overview.isScanEnabled = false; %Do you want to scan overview volume? When running on Jenkins, will allways run overview 
 config.overview.rangeAllX = 8;%[mm] Total tiles range
 config.overview.rangeAllY = 7;%[mm] Total tiles range
-config.overview.range = config.volume.rangeX;%[mm] x=y range of each tile
-config.overview.nPixels = max(config.volume.nPixelsX/20,50); %same for x and y, number of pixels in each tile
+config.overview.range = config.volume.xRange;%[mm] x=y range of each tile
+config.overview.nPixels = max(config.volume.nXPixels/20,50); %same for x and y, number of pixels in each tile
 config.overview.nZToScan = 3; %How many different depths to scan in overview to provide coverage
 
 %Photobleaching defenitions
@@ -81,8 +81,8 @@ if (isRunningOnJenkins())
 	
 	if (exist('isDebugFastMode_','var') && isDebugFastMode_ == true) %Debug mode, make a faster scan
 		disp('Entering debug mode!');
-		config.volume.nPixelsX = 100; 
-		config.volume.nPixelsY = 100; 
+		config.volume.nXPixels = 100; 
+		config.volume.nYPixels = 100; 
 		config.overview.rangeAllX = 2;
         config.overview.rangeAllY = 1;
         config.photobleach.vLinePositions = base*[0]; %[mm] 
@@ -162,15 +162,14 @@ scanParameters = yOCTScanTile (...
     'tissueRefractiveIndex', config.tissueRefractiveIndex, ...
     'xOffset', 0, ...
     'yOffset', 0, ... 
-    'xRange', config.volume.rangeX, ...
-    'yRange', config.volume.rangeY, ...
-    'nXPixels', config.volume.nPixelsX, ...
-    'nYPixels', config.volume.nPixelsY, ...
+    'xRange', config.volume.xRange, ...
+    'yRange', config.volume.yRange, ...
+    'nXPixels', config.volume.nXPixels, ...
+    'nYPixels', config.volume.nYPixels, ...
     'nBScanAvg', config.volume.nBScanAvg, ...
     'zDepths',    config.zToScan, ... [mm]
     'v',true  ...
     );
-config.volume = rmfield(config.volume,{'nPixelsX','nPixelsY','nBScanAvg'});
 for fn = fieldnames(scanParameters)'
     config.volume.(fn{1}) = scanParameters.(fn{1});
 end
