@@ -54,8 +54,8 @@ if isfield(json.volume,'zDepths')
     fp = sprintf('%sData%02d/',OCTVolumesFolderVolume,frameI);
     
     %Define range
-    rangeX = json.volume.rangeX;
-    rangeY = json.volume.rangeY;
+    xRange = json.volume.xRange;
+    yRange = json.volume.yRange;
 
 elseif isfield(json.overview,'zDepths')
     findFocusByUsing = 'overview';
@@ -69,16 +69,16 @@ elseif isfield(json.overview,'zDepths')
     fp = sprintf('%sData%02d/',OCTVolumesFolderVolume,frameI);
     
     %Define range
-    rangeX = json.overview.range;
-    rangeY = json.overview.range;
+    xRange = json.overview.range;
+    yRange = json.overview.range;
 end
 
 %% Get peak data
 %Get Dimensions of one reference volume
 dim = yOCTLoadInterfFromFile(fp,'peakOnly',true);
 dim.x.units = 'microns';
-dim.x.values = 1000* linspace(-rangeX/2,rangeX/2,length(dim.x.values));
-dim.y.values = 1000* linspace(-rangeY/2,rangeY/2,length(dim.y.values));
+dim.x.values = 1000* linspace(-xRange/2,xRange/2,length(dim.x.values));
+dim.y.values = 1000* linspace(-yRange/2,yRange/2,length(dim.y.values));
 dim.y.units = 'microns';
 
 %Load a few y slices
