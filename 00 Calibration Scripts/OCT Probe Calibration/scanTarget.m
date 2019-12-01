@@ -76,16 +76,16 @@ for scanI = 1:length(scanParameters.octFolders)
     [scanAbs,dim] = yOCTProcessScan(octScanPath, 'meanAbs', 'n', scanParameters.tissueRefractiveIndex, ...
         'runProcessScanInParallel', true, 'dispersionParameterA', ini.DefaultDispersionParameterA);
         
-    dim.x.values = x*1e3;
-    dim.y.values = y*1e3;
+    dim.x.values = x*1e3+scanParameters.gridXcc(scanI)*1e3;
+    dim.y.values = y*1e3+scanParameters.gridYcc(scanI)*1e3;
     dim.x.units = 'microns';
     dim.y.units = 'microns';
+    dim.z.values = dim.z.values+scanParameters.gridZcc(scanI)*1e3;
 
     %Save
     tic;
     fprintf('%s Saving Processd Scan (%d of %d)\n',datestr(datetime),scanI,length(scanParameters.octFolders));
-    yOCT2Tif(log(scanAbs),[octScanPath '\scanAbs.tif']);
-    awsWriteJSON(dim,[octScanPath 'scanAbsMetaData.json']);
+    yOCT2Tif(mag2db(scanAbs),[octScanPath '\scanAbs.tif'],[],dim);
     toc;
 end
 
