@@ -10,9 +10,10 @@ switch(1)
         %Imaging a flat surface target but placing it on motorized stage so
         %we can take multiple images at different depths.
         %Notice that motorized stage might not be as 'horizontal' as an
-        %optic table, which may introduce errors
+        %optic table, which may introduce errors. Make sure to focus towrds
+        %the bottom of the dish
         experimentType = 'Imaging Flat Surface On Motorized Stage';
-        zDepths = [0 -0.25 -0.5];
+        zDepths = [0 0.25 0.5];
     case 2
         %Similar experiment as motorized stage, but on a flat optic table
         experimentType = 'Imaging Flat Surface On Optic Table';
