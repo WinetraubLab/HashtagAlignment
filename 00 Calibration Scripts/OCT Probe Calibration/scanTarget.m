@@ -12,7 +12,7 @@ switch(1)
         %Notice that motorized stage might not be as 'horizontal' as an
         %optic table, which may introduce errors
         experimentType = 'Imaging Flat Surface On Motorized Stage';
-        zDepths = [0 -0.5];
+        zDepths = [0 -0.25 -0.5];
     case 2
         %Similar experiment as motorized stage, but on a flat optic table
         experimentType = 'Imaging Flat Surface On Optic Table';
