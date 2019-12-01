@@ -7,9 +7,19 @@
 % What are we imaging
 switch(1)
     case 1
-        experimentType = 'Imaging Flat Surface';
+        %Imaging a flat surface target but placing it on motorized stage so
+        %we can take multiple images at different depths.
+        %Notice that motorized stage might not be as 'horizontal' as an
+        %optic table, which may introduce errors
+        experimentType = 'Imaging Flat Surface On Motorized Stage';
+        zDepths = [0 -0.5];
     case 2
-        experimentType = 'Imaging 25um Trenches';
+        %Similar experiment as motorized stage, but on a flat optic table
+        experimentType = 'Imaging Flat Surface On Optic Table';
+        zDepths = 0;
+    case 3
+        experimentType = 'Imaging 25um Trenches On Optic Table';
+        zDepths = 0;
 end
 
 %Path to probe ini
@@ -44,7 +54,7 @@ scanParameters = yOCTScanTile (...
     'nXPixels', config.volume.nXPixels, ...
     'nYPixels', config.volume.nYPixels, ...
     'nBScanAvg', 1, ...
-    'zDepths',  [0 -0.5], ... [mm]
+    'zDepths',  zDepths, ... [mm]
     'v',true  ...
     );
 
