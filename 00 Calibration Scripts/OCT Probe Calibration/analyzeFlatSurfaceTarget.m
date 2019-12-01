@@ -2,6 +2,7 @@
 %Be sure to scan a flat surface using scanTarget function
 
 %% Inputs
+%experimentPath = s3SubjectPath('2019-11-30 Imaging Flat Surface On Motorized Stage','LD',true);
 experimentPath = s3SubjectPath('2019-11-30 Imaging Flat Surface On Optic Table','LD',true);
 
 json = awsReadJSON([experimentPath 'ScanInfo.json']);
@@ -195,17 +196,22 @@ awsCopyFileFolder('interfaceZPositions_CompareToProbeCalibration.png',experiment
 if length(json.octFolders) > 1
     fprintf('%s Compare Between different Depth In Calibration... \n',datestr(datetime));
 
-    interfZ = zeros(size(xx),size(yy),length(json.octFolders));
+    interfZ = zeros(size(xx,1),size(xx,2),length(json.octFolders));
     for sI = 1:length(json.octFolders)
-        octPath = awsModifyPathForCompetability([experimentPath json.octFolders{1} '/']);
+        octPath = awsModifyPathForCompetability([experimentPath json.octFolders{sI} '/']);
         pf = awsReadJSON([octPath 'interfaceZPositions_PolyFit.json']);
         p = pf.p;
         
         interfZ(:,:,sI) = mdl(xx,yy,p);
     end
     
-    interfZSpan = max(interfZ,[],3)-min(interfZ,[],3);
+    %Compute mean and deviation from the mean
     m = squeeze(mean(mean(interfZ,2),1));
+    interfZ_NoMean = zeros(size(interfZ));
+    for i=1:length(m)
+        interfZ_NoMean(:,:,i) = interfZ(:,:,i)-m(i);
+    end
+    interfZSpan = max(interfZ_NoMean,[],3) - min(interfZ_NoMean,[],3);
     
     f=figure(101);
     set(f,'units','normalized','outerposition',[0 0 1 1]);
@@ -214,16 +220,16 @@ if length(json.octFolders) > 1
     axis equal;
     xlabel('x[\mum]');
     ylabel('y[\mum]');
-    title('Differene between Different Depths [\mum]');
+    title('Differene between Different Depths After Removing Mean [\mum]');
     colorbar;
     grid on;
     subplot(1,2,2);
     z = json.gridZcc*1e3;
     p = polyfit(z,m,1);
-    plot(z,m,'o',z,polyval(p,z));
-    xlabel('Depth, Z [\mum]');
+    plot(z,m-p(2),'o',z,polyval(p,z)-p(2),'--');
+    xlabel('Depth, Z [\mum], Compared to Focus position (z=0)');
     ylabel('Mean Difference Between Calibrations [\mum]');
-    legend('Data',sprintf('%.1f+%2f\\cdotz',p(1),p(2)),'Location','South')
+    legend('Data',sprintf('=%.3f\\cdotz',p(1)),'Location','South')
     grid on;
     
     saveas(f,'interfaceZPositions_CompareToEachother.png');
