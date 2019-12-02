@@ -131,7 +131,7 @@ end
 
 %% Part #2, Compute U,V,H & stats
 if (isIdentifySuccssful)
-    singlePlaneFit = alignSignlePlane(f,slideJson.FM.pixelSize_um);
+    singlePlaneFit = spfCreateFromFiducialLines(f,slideJson.FM.pixelSize_um);
 else
     singlePlaneFit = NaN;
 end

@@ -140,7 +140,7 @@ for j=1:length(fdln)
 end
 
 if isstruct(octVolumeJson)
-    singlePlaneFit = alignSignlePlane(fdln,pixelSize_um);
+    singlePlaneFit = spfCreateFromFiducialLines(fdln,pixelSize_um);
     plotSignlePlane(singlePlaneFit,fdln,histologyFluorescenceIm,octVolumeJson,false)
 else
     break; %Just use the best fit, user didn't give us any plotting info
