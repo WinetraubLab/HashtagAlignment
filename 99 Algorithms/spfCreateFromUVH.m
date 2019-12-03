@@ -1,8 +1,14 @@
-function singlePlaneFit = spfCreateFromUVH (u,v,h)
+function singlePlaneFit = spfCreateFromUVH (u,v,h,v_)
 %This function creates a single plane fit structure from u,v,h inputs
 %Single plane structure contains some statistics on the plane.
 %INPUTS: 
 %   u,v,h ar 3D vectors defining the plane as u*U+v*V+h. units: mm
+%   v_  [optional] - typical value for v (pixels) for the top of the picture, it is used for
+%       estimating a top view for spf. If not defined, will use NaN
+
+if ~exist('v_','var')
+    v_ = NaN;
+end
 
 %% Notes
 singlePlaneFit.notes = sprintf([...
@@ -29,10 +35,6 @@ singlePlaneFit.h = h;
 n = cross(u/norm(u),v/norm(v)); %Compute norm vector to the plane
 singlePlaneFit.normal = n;
 singlePlaneFit.d = dot(n,h);
-
-vspan = [min(cellfun(@min,{f.v_pix})) max(cellfun(@max,{f.v_pix}))];
-v_ = mean(vspan);
-
 
 %% Top plane approximation
 pt1 = 0*u+v_*v+h;
@@ -70,3 +72,7 @@ yOfYIntercept = xPlaneUFunc_pix(v_,0)*u(2)+v_*v(2)+h(2);
 xOfXIntercept = yPlaneUFunc_pix(v_,0)*u(1)+v_*v(1)+h(1);
 singlePlaneFit.xIntercept_mm = [xOfXIntercept;0];
 singlePlaneFit.yIntercept_mm = [0;yOfYIntercept];
+
+%% Other parameters
+singlePlaneFit.fitScore = []; %Not used by all structures
+singlePlaneFit.version = 1.1;

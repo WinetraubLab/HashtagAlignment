@@ -12,9 +12,13 @@ if (sum(gr == 'v') < 2) || (sum(gr == 'h') < 2)
     return; %Failed to align
 end
 
+%% Typical values
+vspan = [min(cellfun(@min,{f.v_pix})) max(cellfun(@max,{f.v_pix}))];
+v_ = mean(vspan);
+
 %% Compute fit & create fiducial line structure
 [u,v,h] = fdlnEstimateUVHSinglePlane(f); %u,v,h in mm
-singlePlaneFit = spfCreateFromUVH(u,v,h);
+singlePlaneFit = spfCreateFromUVH(u,v,h,v_);
 
 %% Compute additional statistics
 
