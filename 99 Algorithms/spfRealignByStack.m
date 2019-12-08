@@ -4,7 +4,7 @@ function [spfsOut,isOutlier] = spfRealignByStack(spfs, speculatedDistanceToOrigi
 % stack
 %
 % INPUTS:
-%    spfs - array of single plane fits
+%    spfs - array of single plane fits (or cell array if they are not all identical)
 %    speculatedDistanceToOrigin - array of speculated distance from origin
 %        in [mm]. This is the best guess position of each plane. A good
 %        guess is according to the histology instructions, where we asked to
@@ -14,14 +14,27 @@ function [spfsOut,isOutlier] = spfRealignByStack(spfs, speculatedDistanceToOrigi
 %    isOutlier - for each of spfs, was it use in the calculation or
 %        considered outlier?
 
+%% Input checks
+if iscell(spfs)
+    %Some of spfs are not identical / empty find them
+    emptySPFsIndex = cellfun(@isempty,spfs);
+    spfs = [spfs{~emptySPFsIndex}];
+    
+    speculatedDistanceToOrigin = speculatedDistanceToOrigin(~emptySPFsIndex);
+    isSPFCell = true;
+else
+    isSPFCell = false;
+end
+
+spfs = spfs(:);
+speculatedDistanceToOrigin = speculatedDistanceToOrigin(:)';
+
 %% Refresh spfs if version is wrong
 if ~isfield(spfs,'version') || spfs(1).version < 1.1
     spfs_ = arrayfun(@(x)(spfCreateFromUVH(x.u,x.v,x.h)),spfs);
 else
     spfs_ = spfs;
 end
-
-speculatedDistanceToOrigin = speculatedDistanceToOrigin(:)';
 
 %% Concatinate data from all single plane fits
 
@@ -84,7 +97,7 @@ isOk = ~isOutlier;
 if (sum(isOk) < length(isOk)/3 || sum(isOk)<2)
     warning('Not enugh good samples, everything seems to be an outlier');
     isOutlier = boolean(ones(size(isOutlier)));
-    spfsOut = spfs;
+    spfsOut = makeSPFOut(spfs,isSPFCell,emptySPFsIndex);
     return;
 end
 
@@ -115,7 +128,7 @@ unormRefitted = mean(unorms(isOk));
 vnormRefitted = mean(vnorms(isOk));
 
 %% Update individual planes according to the stack alignment
-spfsOut = repmat(struct(),size(spfs));
+clear spfsOut;
 project = @(vect)(vect - dot(vect,n)*n);
 for i=1:length(spfs)
     spf = spfs(i);
@@ -126,10 +139,35 @@ for i=1:length(spfs)
     u = u*unormRefitted/norm(u);
     v = v*vnormRefitted/norm(v);
     
-    %For h, replace the component prepandicular to the palne with the
-    %corrected component
+    % For h, replace the component prepandicular to the palne with the
+    % corrected component
     h = project(spf.h) + n*distanceToOriginRefitted(i);
     
-    %Generate a new structure
-    spfsOut(i) = spfCreateFromUVH(u,v,h);
+    % Generate a new structure
+    s = spfCreateFromUVH(u,v,h);
+    
+    % Save to array
+    if (i>1)
+        spfsOut(i) = s;  %#ok<AGROW>
+    else
+        spfsOut = repmat(s,size(spfs));
+    end
+end
+
+spfsOut = makeSPFOut(spfsOut,isSPFCell,emptySPFsIndex);
+
+function spfsOut = makeSPFOut(spfsOut,isSPFCell,emptySPFsIndex)
+%Modify output to be compatible with input
+if (isSPFCell)
+    spfsOutCell = cell(size(emptySPFsIndex));
+    
+    j=1;
+    for i=1:length(spfsOutCell)
+        if(~emptySPFsIndex)
+            spfsOutCell(i) = {spfsOut(j)};
+            j = j+1;
+        end
+    end
+    
+    spfsOut = spfsOutCell;
 end
