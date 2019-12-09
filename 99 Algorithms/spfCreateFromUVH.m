@@ -32,7 +32,8 @@ singlePlaneFit.u = u;
 singlePlaneFit.v = v;
 singlePlaneFit.h = h;
 
-n = cross(u/norm(u),v/norm(v)); %Compute norm vector to the plane
+n = cross(u,v); %Compute norm vector to the plane
+n = n/norm(n);
 singlePlaneFit.normal = n;
 singlePlaneFit.d = dot(n,h);
 
