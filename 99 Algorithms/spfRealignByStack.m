@@ -23,9 +23,11 @@ if iscell(spfs)
     speculatedDistanceToOrigin = speculatedDistanceToOrigin(~emptySPFsIndex);
     isSPFCell = true;
 else
+    emptySPFsIndex = boolean(zeros(size(spfs)));
     isSPFCell = false;
 end
 
+emptySPFsIndex = emptySPFsIndex(:);
 spfs = spfs(:);
 speculatedDistanceToOrigin = speculatedDistanceToOrigin(:)';
 
@@ -101,7 +103,7 @@ isOk = ~isOutlier;
 if (sum(isOk) < length(isOk)/3 || sum(isOk)<2)
     warning('Not enugh good samples, everything seems to be an outlier');
     isOutlier = boolean(ones(size(isOutlier)));
-    spfsOut = makeSPFOut(spfs,isSPFCell,emptySPFsIndex);
+    [spfsOut,isOutlier] = makeOutput(spfs,isSPFCell,isOutlier,emptySPFsIndex);
     return;
 end
 
@@ -117,7 +119,7 @@ distanceToOrigin = dot(repmat(n,[1 size(hs,2)]),hs);
 p = polyfit(speculatedDistanceToOrigin(isOk), distanceToOrigin(isOk),1);
 scale = p(1);
 
-if (abs(scale) > 1.5 || abs(scale) < 0.5)
+if (abs(scale) > 1.4 || abs(scale) < 1-0.5)
     warning('Scale fit is out of proportion %.2f, expecting value to be 1+-0.5. Correcting scale to 1',abs(scale));
     
     %Refit
@@ -166,17 +168,19 @@ for i=1:length(spfs)
     end
 end
 
-spfsOut = makeSPFOut(spfsOut,isSPFCell,emptySPFsIndex);
+[spfsOut,isOutlier] = makeOutput(spfsOut,isSPFCell,isOutlier,emptySPFsIndex);
 
-function spfsOut = makeSPFOut(spfsOut,isSPFCell,emptySPFsIndex)
+function [spfsOut,isOutlierOut] = makeOutput(spfsOut,isSPFCell,isOutlier,emptySPFsIndex)
 %Modify output to be compatible with input
 if (isSPFCell)
     spfsOutCell = cell(size(emptySPFsIndex));
+    isOutlierOut = boolean(ones(size(emptySPFsIndex)));
     
     j=1;
     for i=1:length(spfsOutCell)
-        if(~emptySPFsIndex)
+        if(~emptySPFsIndex(i))
             spfsOutCell(i) = {spfsOut(j)};
+            isOutlierOut(i) = isOutlier(j);
             j = j+1;
         end
     end
