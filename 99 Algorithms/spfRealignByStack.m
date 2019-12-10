@@ -47,6 +47,10 @@ ns = cell2mat(...
 unorms = cellfun(@(x)(norm(x)),{spfs_(:).u}); 
 vnorms = cellfun(@(x)(norm(x)),{spfs_(:).v});
 
+% U and V General Direction
+umedian = median([spfs_(:).u],2);
+vmedian = median([spfs_(:).v],2);
+
 % h vectors
 hs = cell2mat(...
     cellfun(@(x)(x(:)),{spfs_(:).h},'UniformOutput',false)...
@@ -113,12 +117,12 @@ distanceToOrigin = dot(repmat(n,[1 size(hs,2)]),hs);
 p = polyfit(speculatedDistanceToOrigin(isOk), distanceToOrigin(isOk),1);
 scale = p(1);
 
-if (abs(scale) > 1.5 || abs(scale) <1/1.5)
-    warning('Scale fit is out of proportion %.2f, expecting value to be 1+-50%%. Correcting scale to 1',scale);
+if (abs(scale) > 1.5 || abs(scale) < 0.5)
+    warning('Scale fit is out of proportion %.2f, expecting value to be 1+-0.5. Correcting scale to 1',abs(scale));
     
     %Refit
-    scale = 1;
-    offset = median(distanceToOrigin(isOk)-speculatedDistanceToOrigin(isOk));
+    scale = 1*sign(scale);
+    offset = median(distanceToOrigin(isOk)-speculatedDistanceToOrigin(isOk)*sign(scale));
     p = [scale offset];
 end
 distanceToOriginRefitted = polyval(p,speculatedDistanceToOrigin); %Fit corrected values
@@ -133,11 +137,19 @@ project = @(vect)(vect - dot(vect,n)*n);
 for i=1:length(spfs)
     spf = spfs(i);
     
-    %Project u,v to the new plane, correct them to preserve norm
+    % Project u,v to the new plane, correct them to preserve norm
     u = project(spf.u);
     v = project(spf.v);
     u = u*unormRefitted/norm(u);
     v = v*vnormRefitted/norm(v);
+    
+    % Make sure u & v direction makes scense
+    if (dot(umedian,u) < 0)
+        u = -u;
+    end
+    if (dot(vmedian,v) < 0)
+        v = -v;
+    end
     
     % For h, replace the component prepandicular to the palne with the
     % corrected component
