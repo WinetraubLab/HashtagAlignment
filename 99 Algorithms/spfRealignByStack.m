@@ -165,6 +165,11 @@ for i=1:length(spfs)
     % Generate a new structure
     s = spfCreateFromUVH(u,v,h);
     
+    % Make sure d is specified, its important
+    if (isnan(s.d))
+        s.d = distanceToOriginRefitted(i);
+    end
+    
     % Save to array
     if (i>1)
         spfsOut(i) = s;  %#ok<AGROW>
