@@ -2,9 +2,11 @@
 %run this script twice to correct slide alignment based on stack trned
 
 %% Inputs
-isUpdateCloud = false;
+%Set to true if you would like these results to be saved to the cloud,
+%false if saved locally only
+isUpdateCloud = false; 
 
-subjectFolder = s3SubjectPath('11');
+subjectFolder = s3SubjectPath('03');
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %JSON
     isUpdateCloud = true;
@@ -14,74 +16,68 @@ end
 logFolder = awsModifyPathForCompetability([subjectFolder '/Log/11 Align OCT to Flourecence Imaging/']);
 %logFolder = [];
 
-isRotOkThreshold = 5; %[deg], allowed variance around median to account rotation angle as ok
-isSCOkThreshold  = 6; %[%], allowed variance around median to accoutn size change (in precent) as ok
-
 usableArea = 0.55; %mm - how close should section be to origin to be 'usable'
 
 %% Find all JSONS
 awsSetCredentials(1);
-
+subjectFolder = awsModifyPathForCompetability(subjectFolder);
 [~,subjectName] = fileparts([subjectFolder(1:end-1) '.a']);
 
 disp([datestr(now) ' Loading JSONs']);
-ds = fileDatastore(awsModifyPathForCompetability(subjectFolder),'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
-jsons = ds.readall();
 
 %OCT
-octJsonI = [find(cellfun(@(x)contains(x,'/ScanConfig.json'),ds.Files)); find(cellfun(@(x)contains(x,'\ScanConfig.json'),ds.Files))];
-octVolumeJsonFilePath = ds.Files{octJsonI};
-octVolumeJson = jsons{octJsonI};
+octVolumeJsonFilePath = awsModifyPathForCompetability([subjectFolder '/OCTVolumes/ScanConfig.json']);
+octVolumeJson = awsReadJSON(octVolumeJsonFilePath);
 
 %Sections
-sectionJsonsI = find(cellfun(@(x)contains(x,'SlideConfig.json'),ds.Files));
-sectionJsonFilePaths = ds.Files(sectionJsonsI);
-sectionJsons = {jsons{sectionJsonsI}};
+sectionJsonFilePaths = s3GetAllSlidesOfSubject(subjectFolder);
+sectionJsonFilePaths = cellfun(@(x)([x 'SlideConfig.json']),sectionJsonFilePaths,'UniformOutput',false);
+sectionJsons = cell(size(sectionJsonFilePaths));
+for i=1:length(sectionJsons)
+    sectionJsons{i} = awsReadJSON(sectionJsonFilePaths{i});
+end
 
 %Histology Instructions
-hiJsonI = find(cellfun(@(x)contains(x,'HistologyInstructions.json'),ds.Files));
-hiJsonFilePath = ds.Files{hiJsonI(1)};
-hiJson = jsons{hiJsonI};
+hiJsonFilePath = awsModifyPathForCompetability([subjectFolder '/Slides/HistologyInstructions.json']);
+hiJson = awsReadJSON(hiJsonFilePath);
 
-%% Load Enface view if avilable 
-try
-    ds = fileDatastore([subjectFolder '/OCTVolumes/OverviewScanAbs_Enface.tif'],'ReadFcn',@yOCTFromTif,'FileExtensions','.tif','IncludeSubfolders',true);
+%% Load enface view if avilable 
+disp([datestr(now) ' Loading Enface View']);
+
+enfaceFilePath = awsModifyPathForCompetability( ...
+    [subjectFolder '/OCTVolumes/OverviewScanAbs_Enface.tif']);
+if awsExist(enfaceFilePath,'file')
+    ds = fileDatastore(enfaceFilePath,'ReadFcn',@yOCTFromTif);
     enfaceView = ds.read();
-catch
+else
     enfaceView = [];
 end
 
-%%  Figure out slide names & other parameters
-sectionNames = cell(size(sectionJsonFilePaths));
-sectionIndexInStack = zeros(size(sectionJsonFilePaths));
-singlePlanes = cell(size(sectionJsonFilePaths)); %Single plane fits
-fs = sectionNames;
-for i=1:length(sectionNames)
-    [~, sn] = fileparts([fileparts(sectionJsonFilePaths{i}) '.tmp']);
-    sectionNames{i} = sn;
+%% General data
+disp([datestr(now) ' Computing...']);
+
+sectionNames = hiJson.sectionName;
+singlePlaneFits = cell(size(sectionNames));
+for i=1:length(singlePlaneFits)
+    jsonIndex = find(cellfun(@(x)(contains(x,sectionNames{i})), ...
+        sectionJsonFilePaths));
     
-    if isfield(sectionJsons{i}.FM,'singlePlaneFit')
-        singlePlanes{i} = sectionJsons{i}.FM.singlePlaneFit;
-    end
-    if isfield(sectionJsons{i}.FM,'fiducialLines')
-        fs{i} = sectionJsons{i}.FM.fiducialLines;
+    if (length(jsonIndex) > 1)
+        error('Too many hits in find planes');
     end
     
-    sectionIndexInStack(i) = find(cellfun(@(x)(contains(x,sn)),hiJson.sectionName)==1,1,'first');
+    if ~isempty(jsonIndex)
+        %Found json, see if it was analyized
+        if isfield(sectionJsons{jsonIndex}.FM,'singlePlaneFit')
+            singlePlaneFits{jsonIndex} = ...
+                sectionJsons{jsonIndex}.FM.singlePlaneFit;
+        end
+    end
 end
 
-%Non empty options
-ii = find(~cellfun(@isempty,singlePlanes) & ~cellfun(@isempty,fs));
-singlePlanes = singlePlanes(ii);
-singlePlanes = [singlePlanes{:}];
-sectionNames = sectionNames(ii);
-sectionIndexInStack = sectionIndexInStack(ii);
-sectionIndexInStack = sectionIndexInStack(:)';
-fs = fs(ii);
+pixelsSize_um = sectionJsons{1}.FM.pixelSize_um;
 
-%% For every section compute key parameters
-plans_x = zeros(2,length(ii)); %(Start & Finish, n)
-plans_y = plans_x; 
+%Get H&V lines positions
 if isfield(octVolumeJson,'version') && octVolumeJson.version == 2
     vLinePositions = octVolumeJson.photobleach.vLinePositions;
     hLinePositions = octVolumeJson.photobleach.hLinePositions;
@@ -92,145 +88,48 @@ else
     lineLength = octVolumeJson.lineLength;
 end
 
-for i=1:length(ii)
+%% Fit stack (by iteration)
+nIterations = max(hiJson.sectionIteration);
+singlePlaneFits_Realigned = cell(size(singlePlaneFits));
+singlePlaneFits_IsOutlier = zeros(size(singlePlaneFits));
+singlePlaneFits_IsUsableSlide = zeros(size(singlePlaneFits)); %In case there is an outlier, but still we can use this
+for i=1:nIterations
+    ii = hiJson.sectionIteration == i;
+    [singlePlaneFits_Realigned(ii),singlePlaneFits_IsOutlier(ii)] = ...
+        spfRealignByStack(singlePlaneFits(ii), ...
+        hiJson.sectionDepthsRequested_um(ii)/1000);
     
-    %Extract data
-    sp = singlePlanes(i);
-    f = fs{i};
-    
-    c = mean([sp.xIntercept_mm sp.yIntercept_mm],2);
-    slopeV = [1; sp.m];
-    slopeV = slopeV/norm(slopeV);
-    
-    plans_x(:,i) = c(1)+slopeV(1)*lineLength/2*[1 -1];
-    plans_y(:,i) = c(2)+slopeV(2)*lineLength/2*[1 -1];
+    if (sum(singlePlaneFits_IsOutlier(ii)) == sum(ii))
+        %All planes are outliers, the alignment failed, this is not usable
+        singlePlaneFits_IsUsableSlide(ii) = false;
+    else
+        singlePlaneFits_IsUsableSlide(ii) = true;
+    end
 end
 
-d_mm = zeros(1,length(ii));%Directional distance
-slideCenter_mm = zeros(2,length(ii)); %Center position of the slide (x/y,n)
-
-%Compute prepandicular direction to the slides
-xm = mean(plans_x,1);
-ym = mean(plans_y,1);
-px = polyfit(sectionIndexInStack,xm,1);
-py = polyfit(sectionIndexInStack,ym,1);
-n = [px(1);py(1)]; n = n/norm(n);
-
-for i=1:length(ii)
-    
-    %Extract data
-    sp = singlePlanes(i);
-    
-    c = mean([sp.xIntercept_mm sp.yIntercept_mm],2); 
-    slideCenter_mm(:,i) = c;
-    d_mm(i) = sign(dot(c,n))*norm(c);
-end
-
-%% Compute sample-wide fits
-
-%Rotation on x-y plane [deg]
-rot = [singlePlanes.rotation_deg];
-isRotOk = abs(rot-median(rot))<isRotOkThreshold; %Degrees, Rotation quality check
-
-%Size change [%]
-sc = [singlePlanes.sizeChange_precent];
-isSCOk = abs(sc-median(sc))<isSCOkThreshold;% Percent, Size change quality check
-
-isOk = isRotOk & isSCOk;
-
-%Compute what is the last iteration that we have data for
-lastIteration = max(hiJson.sectionIteration); %Last iteration that we have data of
-if ~any(hiJson.sectionIteration(sectionIndexInStack) == lastIteration)
-    warning('There are no slides with the last stack. I will assume there is a mistake and last iteration wasnt scanned yet');
-    lastIteration = max(hiJson.sectionIteration(sectionIndexInStack));
-end
-
-%Predicted locations 
-%Notice that sectionDepthsRequested_um has origin (0) at full face, so we
-%need to convert to OCT at origin. We will use the first guess as means of
-%convertion
-d_mmP = (hiJson.sectionDepthsRequested_um(sectionIndexInStack) - hiJson.estimatedDepthOfOCTOrigin_um(lastIteration)) ...
-    /1000; 
-d_mmP = d_mmP(:)';
-%d_mm  -actual locatios
-
-%Position of the last position requested (new face)
-d_mmPLast = (...
-    max(hiJson.sectionDepthsRequested_um(hiJson.sectionIteration == lastIteration)) - ...
-    hiJson.estimatedDepthOfOCTOrigin_um(lastIteration)) ...
-    /1000;
-
-%Try to estimate which d_mm are outliers by comparing their distance from
-%expectation
-tmp = d_mmP-d_mm; tmp = tmp-median(tmp);
-isOk = isOk & (abs(tmp)<100e-3);
-
-%Predicted vs actual locations. Offset and scale: d_mm = (d_mmP - offset)*scale
-p = polyfit(d_mmP(isOk),d_mm(isOk),1);
-scale = p(1);
-offset = p(2)/scale;
-
-if (abs(scale) > 1.5 || abs(scale) <1/1.5)
-    warning('scale fit is out of proportion %.2f, expecting value to be 1+-10%%. Correcting scale to 1',scale);
-    
-    %Refit
-    scale = 1;
-    offset = median(d_mm(isOk)-d_mmP(isOk));
-    p = [scale offset];
-end
-d_mmF = polyval(p,d_mmP); %Fit corrected values
-
-%The position that is up to where we cut
-d_mmFLast = polyval(p,d_mmPLast); 
-
-%Compute distance from last slide to origin
-distanceFromLastSlideToOrigin_mm = abs(d_mmFLast);
-didLastSlidePassedOrigin = ~(abs(d_mmFLast) <= min(abs(d_mmF))); % 1 - we already passed origin
-
-%Update our estimate of where OCT origin is compared to full face
-%Update estimate for lastIteration+1
-hiJson.estimatedDepthOfOCTOrigin_um(lastIteration+1) = ...
-    hiJson.estimatedDepthOfOCTOrigin_um(lastIteration) - offset*1000;
-
-%Compute full face position
-ffd = -hiJson.estimatedDepthOfOCTOrigin_um(:)/1000;
-ffx = n(1)*ffd + cos(median(rot)/180*pi)*lineLength/2*[1 -1]; 
-ffy = n(2)*ffd + sin(median(rot)/180*pi)*lineLength/2*[1 -1];
-
-%Check if we have enugh datapoints
-if (sum(isOk) < length(isOk)/3 || sum(isOk)<2)
-    warning('Not enugh good samples, everything seems to be an outlier');
-    isProperStackAlignmentSuccess = false;
-    hiJson.estimatedDepthOfOCTOrigin_um(lastIteration+1) = NaN;
-else
-    isProperStackAlignmentSuccess = true;
-end    
-
-if (hiJson.estimatedDepthOfOCTOrigin_um(lastIteration+1)<0)
-    disp('Full face is over where origin is?? that can be write, fail the alignment');
-    isProperStackAlignmentSuccess = false;
-    hiJson.estimatedDepthOfOCTOrigin_um(lastIteration+1) = NaN;
-end
-
-%% Generate stack alignment results data structure
-SARS.sectionNames = sectionNames; %Section Names
-SARS.isProperStackAlignmentSuccess = isProperStackAlignmentSuccess;
-SARS.isOk = isOk; %isProperStackAlignment
-SARS.XYRotMean_deg = mean(rot(isRotOk));
-SARS.XYRotStd_deg  = std(rot(isRotOk));
-SARS.sizeChangeMean_precent = mean(sc(isSCOk));
-SARS.sizeChangeStd_precent  = std(sc(isSCOk));
-SARS.meanSlideSeperation_um = abs(scale)*median(diff(hiJson.sectionDepthsRequested_um));
-SARS.meanSlideSeperationSEM_um = ...
-    std(d_mmF(isOk)-d_mm(isOk))/sqrt(sum(isOk))*1000; %Standard error of mean
-SARS.distanceBetweenFullFaceAndOCTOrigin_um = ...
-    hiJson.estimatedDepthOfOCTOrigin_um(lastIteration+1);
-SARS.distanceBetweenFullFaceAndOCTOriginError_um = ... Error compared to prediction
-    hiJson.estimatedDepthOfOCTOrigin_um(lastIteration+1) - hiJson.estimatedDepthOfOCTOrigin_um(1);
-SARS.distanceFromLastSlideToOrigin_um = distanceFromLastSlideToOrigin_mm*1000;
-SARS.didLastSlidePassedOrigin = didLastSlidePassedOrigin; %1 - yes
+noFit = cellfun(@isempty,singlePlaneFits);
+goodFit  = ~singlePlaneFits_IsOutlier & singlePlaneFits_IsUsableSlide & ~noFit;
+maybeFit =  singlePlaneFits_IsOutlier & singlePlaneFits_IsUsableSlide & ~noFit;
+badFit   = ~singlePlaneFits_IsUsableSlide & ~noFit;
 
 %% Plot Main Figure (#1)
+
+%Get data required for the plot
+index = 1:length(singlePlaneFits);
+rot = NaN*zeros(size(singlePlaneFits));
+rot(~noFit) = cellfun(@(x)(x.rotation_deg),singlePlaneFits(~noFit));
+rot_realigned = NaN*zeros(size(singlePlaneFits));
+rot_realigned(~noFit) = cellfun(@(x)(x.rotation_deg),singlePlaneFits_Realigned(~noFit));
+sc = NaN*zeros(size(singlePlaneFits));
+sc(~noFit) = cellfun(@(x)(norm(x.u)),singlePlaneFits(~noFit))*1e3; %um
+sc = 100*(pixelsSize_um./sc - 1);
+sc_realigned = NaN*zeros(size(singlePlaneFits));
+sc_realigned(~noFit)  = cellfun(@(x)(norm(x.u)),singlePlaneFits_Realigned(~noFit))*1e3; %um
+sc_realigned = 100*(pixelsSize_um./sc_realigned - 1);
+d = NaN*zeros(size(singlePlaneFits));
+d(~noFit) = cellfun(@(x)(dot(cross(x.u,x.v)/(norm(x.u)*norm(x.v)),x.h)),singlePlaneFits(~noFit)); %mm
+d_realigned = NaN*zeros(size(singlePlaneFits));
+d_realigned(~noFit)  = cellfun(@(x)(x.d),singlePlaneFits_Realigned(~noFit)); %mm
 
 %Reset figure
 fig1=figure(100);
@@ -240,65 +139,71 @@ subplot(1,1,1); %Clear previuse figure
 %Plot Photobleached lines
 subplot(2,2,1);
 spfPlotTopView( ...
-    singlePlanes,hLinePositions,vLinePositions, ...
+    singlePlaneFits,hLinePositions,vLinePositions, ...
     'lineLength',lineLength,'planeNames',sectionNames, ...
     'theDot',[octVolumeJson.theDotX; octVolumeJson.theDotY] ...
     );
-if(SARS.isProperStackAlignmentSuccess)
-    tmp = ', Alignment Success';
-else
-    tmp = ', Failed to Stack Align';
-end
-title([subjectName tmp]);
+title([subjectName]);
 
 % Plot rotations
+s = sqrt(mean( ( rot(goodFit) - rot_realigned(goodFit) ).^2));
 subplot(2,2,2);
-plot(sectionIndexInStack(isRotOk),rot(isRotOk),'.')
+plot(index(goodFit),rot(goodFit),'.');
 hold on;
-plot(sectionIndexInStack(~isRotOk),rot(~isRotOk),'.')
-plot(sectionIndexInStack([1 end]),SARS.XYRotMean_deg*[1 1],'--r');
+plot(index(maybeFit | badFit),  rot(maybeFit | badFit),'.');
+plot(index(goodFit | maybeFit), rot_realigned(goodFit | maybeFit), '--r');
 hold off;
 ylabel('deg');
 xlabel('Slide #');
-title(sprintf('Rotation Angle: %.1f \\pm %.1f[deg]',SARS.XYRotMean_deg,SARS.XYRotStd_deg));
+title(sprintf('Rotation Angle: %.1f \\pm %.1f[deg]',nanmean(rot_realigned),s));
 grid on;
 
 %Plot size change 
+s = sqrt(mean( ( sc(goodFit) - sc_realigned(goodFit) ).^2));
 subplot(2,2,4);
-plot(sectionIndexInStack(isSCOk),sc(isSCOk),'.')
+plot(index(goodFit),sc(goodFit),'.');
 hold on;
-plot(sectionIndexInStack(~isSCOk),sc(~isSCOk),'.')
-plot(sectionIndexInStack([1 end]),SARS.sizeChangeMean_precent*[1 1],'--r');
+plot(index(maybeFit | badFit),  sc(maybeFit | badFit),'.');
+plot(index(goodFit | maybeFit), sc_realigned(goodFit | maybeFit), '--r');
 hold off;
 ylabel('%');
 xlabel('Slide #');
 title(sprintf('1D Pixel Size Change: %.1f \\pm %.1f [%%]', ...
-    SARS.sizeChangeMean_precent,SARS.sizeChangeStd_precent));
+    nanmean(sc_realigned),s));
 grid on;
 
 %Plot distance to origin
+s = sqrt(nanmean( ( d(goodFit) - d_realigned(goodFit) ).^2));
+f = (d_realigned(1) > 0)*(-2)+1;
 subplot(2,2,3);
-plot(sectionIndexInStack,d_mmF,'--r');
+plot(index(goodFit),d(goodFit)*f,'.');
 hold on;
-plot(sectionIndexInStack(isOk),d_mm(isOk),'.');
-plot(sectionIndexInStack(~isOk),d_mm(~isOk),'.')
-plot(sectionIndexInStack([1 end]),usableArea*[1 1],'--','Color',0.1*ones(3,1));
-plot(sectionIndexInStack([1 end]),-usableArea*[1 1],'--','Color',0.1*ones(3,1));
+plot(index(maybeFit | badFit),  d(maybeFit | badFit)*f,'.');
+plot(index(goodFit | maybeFit), d_realigned(goodFit | maybeFit)*f, '--r');
 hold off;
 ylabel('Distance [mm]');
-xlabel('Slide #')
-title('Distance From Origin');
+xlabel('Slide #');
+title(sprintf('Distance From Origin, SEM %.1f[\\mum], Section Size: %.1f[\\mum]',s*1e3/sqrt(sum(goodFit)),...
+    nanmedian(diff(d_realigned*f))*1e3 ));
 grid on;
-legend(...
-    sprintf('%.0f\\mum/slide \\pm%.0f\\mum',...
-    SARS.meanSlideSeperation_um, ...
-    SARS.meanSlideSeperationSEM_um ...
-    ),...
-    'location','southeast');
-title(sprintf('FF->OCT Origin Distance:\nInitial Guess: %.0fum, Latest Guess: %.0fum, Diff: %.1fum',...
-    SARS.distanceBetweenFullFaceAndOCTOrigin_um - SARS.distanceBetweenFullFaceAndOCTOriginError_um, ...
-    SARS.distanceBetweenFullFaceAndOCTOrigin_um, ...
-    SARS.distanceBetweenFullFaceAndOCTOriginError_um));
+
+%If transision between iteration #1 and #2 exist, say what it is
+last1 = find(hiJson.sectionIteration==1,1,'last');
+if (sum(badFit(hiJson.sectionIteration==1))>0)
+    last1 = [];
+end
+first2 = find(hiJson.sectionIteration==2,1,'first');
+if (sum(badFit(hiJson.sectionIteration==2))>0)
+    first2 = [];
+end
+if ~isempty(last1) && ~isempty(first2) 
+    ii = [last1 first2];
+    text(...
+        mean(ii), ...
+        mean(d_realigned(ii))+0.2, ...
+        sprintf('Section Jump: %.0f\\mum',abs(diff(d_realigned(ii)))*1e3) ...
+        );
+end
 
 %% Plot Main Figure (#2)
 
@@ -307,7 +212,7 @@ fig2=figure(42);
 set(fig2,'units','normalized','outerposition',[0 0 1 1]);
 subplot(1,1,1); %Clear previuse figure
 spfPlotTopView( ...
-    singlePlanes,hLinePositions,vLinePositions, ...
+    singlePlaneFits,hLinePositions,vLinePositions, ...
     'lineLength',lineLength,'planeNames',sectionNames, ...
     'theDot',[octVolumeJson.theDotX; octVolumeJson.theDotY],...
     'enfaceViewImage',enfaceView, ...
@@ -315,40 +220,35 @@ spfPlotTopView( ...
     'enfaceViewImageYLim', [min(octVolumeJson.overview.yCenters) max(octVolumeJson.overview.yCenters)] + octVolumeJson.overview.range*[-1/2 1/2] ...
     );
 
-%Plot full face plane
-hold on;
-h = plot(ffx',ffy','--w','LineWidth',2);
-for i=1:size(ffx,1)
-   text(ffx(i,1),ffy(i,1),sprintf('Guess #%d',i-1),'Color','w');
-end
 %set(h, {'color'}, num2cell(winter(size(ffx,1)),2)); %Set multiple colors
 hold off;
 
 %% Print a report for user & google doc
-disTextum = arrayfun(@(x)sprintf('%.0f',x),abs(d_mmF*1000),'UniformOutput',false);
-disTextum(isnan(d_mmF)) = {'""'};
-if (SARS.isProperStackAlignmentSuccess)
+disTextum = arrayfun(@(x)sprintf('%.0f',x),abs(d_realigned*1000),'UniformOutput',false);
+disTextum(isnan(d_realigned)) = {'""'};
+isProperStackAlignmentSuccess = sum(~badFit) > 1; %Alignment succeeded if at least one slide is aligned
+if (isProperStackAlignmentSuccess)
     %% Print a report for user & google doc - alignment success case
     %Information about the stack
-    ang = SARS.XYRotMean_deg;
+    ang = mean(rot_realigned);
     if (ang<0)
         ang = ang+180;
     end
     json1 = sprintf(['{"Table":"SamplesRunsheet","SampleID":"%s",' ...
         '"Slide Seperation um":%.2f,' ...
-        '"FF to Origin Initial Guess um":%.1f,"FF to Origin Updated Guess um":%.1f,' ...
         '"XY Angle deg":%.1f,"Size Change Percent":%.1f}'],...
         subjectName, ...
-        SARS.meanSlideSeperation_um, ...
-        SARS.distanceBetweenFullFaceAndOCTOrigin_um - SARS.distanceBetweenFullFaceAndOCTOriginError_um, SARS.distanceBetweenFullFaceAndOCTOrigin_um, ...
-        ang,SARS.sizeChangeMean_precent ...
+        abs(median(diff(d_realigned)))*1e3, ...
+        ang,mean(sc_realigned) ...
         );
     
     %Loop over each slide
     json2 = '';
-    for i=1:length(SARS.isOk)
-        if (SARS.isOk(i))
+    for i=1:length(goodFit)
+        if (goodFit(i))
             status = 'Yes';
+        elseif maybeFit(i)
+            status = 'Maybe';
         else
             status = 'No';
         end
@@ -395,12 +295,14 @@ fid = fopen('lk.txt','w');
 fprintf(fid,'%s',lk);
 fclose(fid);
 
-d = SARS.distanceFromLastSlideToOrigin_um;
-if SARS.didLastSlidePassedOrigin == 1
-    d = -d;
+d_lastSlide = abs(d_realigned(end));
+direction = sign(median(diff(d_realigned)));
+if (sign(d_realigned(end)) == sign(direction))
+    %Cutting more slices will increase our position - we passed origin
+    d_lastSlide = -d_lastSlide;
 end
 fprintf('Distance from current face to origin (negative number means we surpassed origin):\n\t%.0f [um]\n',...
-    d);
+    d_lastSlide*1e3);
 
 %Save it to a file for downstream automated usage
 fid = fopen('DistanceFromCurrentFaceToOriginUM.txt','w');
@@ -418,12 +320,10 @@ if isUpdateCloud
         awsCopyFileFolder('StackAlignmentFigure1.png',[logFolder '/StackAlignmentFigure1.png']);
         awsCopyFileFolder('StackAlignmentFigure2.png',[logFolder '/StackAlignmentFigure2.png']);
 
-        %Log results
-        awsWriteJSON(SARS,[logFolder '/StackAlignmentResults.json']);
     end
     
     %Update histology instructions with our updated guess of where OCT origin is
-    awsWriteJSON(hiJson,hiJsonFilePath);
+    %awsWriteJSON(hiJson,hiJsonFilePath); %TBD
     
     disp ('Done');
 end
