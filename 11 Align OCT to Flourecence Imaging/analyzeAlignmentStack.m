@@ -184,7 +184,7 @@ hold off;
 ylabel('Distance [mm]');
 xlabel('Slide #');
 title(sprintf('Distance From Origin, SEM %.1f[\\mum], Section Size: %.1f[\\mum]',s*1e3/sqrt(sum(goodFit)),...
-    nanmedian(diff(d_realigned*f))*1e3 ));
+    abs(nanmedian(diff(d_realigned*f))*1e3) ));
 grid on;
 
 %If transision between iteration #1 and #2 exist, say what it is
