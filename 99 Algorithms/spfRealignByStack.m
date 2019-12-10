@@ -116,7 +116,8 @@ n = n/norm(n);
 
 % Fit plane's distance from orign
 distanceToOrigin = dot(repmat(n,[1 size(hs,2)]),hs);
-p = polyfit(speculatedDistanceToOrigin(isOk), distanceToOrigin(isOk),1);
+isOk2 = ~isnan(distanceToOrigin) & isOk; %Spacial version of isOk, that makes sure h is not nan
+p = polyfit(speculatedDistanceToOrigin(isOk2), distanceToOrigin(isOk2),1);
 scale = p(1);
 
 if (abs(scale) > 1.4 || abs(scale) < 1-0.5)
@@ -124,7 +125,7 @@ if (abs(scale) > 1.4 || abs(scale) < 1-0.5)
     
     %Refit
     scale = 1*sign(scale);
-    offset = median(distanceToOrigin(isOk)-speculatedDistanceToOrigin(isOk)*sign(scale));
+    offset = median(distanceToOrigin(isOk2)-speculatedDistanceToOrigin(isOk2)*sign(scale));
     p = [scale offset];
 end
 distanceToOriginRefitted = polyval(p,speculatedDistanceToOrigin); %Fit corrected values
