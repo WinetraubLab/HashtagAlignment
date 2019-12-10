@@ -130,9 +130,13 @@ if (abs(scale) > 1.4 || abs(scale) < 1-0.5)
 end
 distanceToOriginRefitted = polyval(p,speculatedDistanceToOrigin); %Fit corrected values
 
-%Compute size
+% Compute size
 unormRefitted = mean(unorms(isOk));
 vnormRefitted = mean(vnorms(isOk));
+
+% Update median size to fit the mean
+umedian = umedian/norm(umedian)*unormRefitted;
+vmedian = vmedian/norm(vmedian)*vnormRefitted;
 
 %% Update individual planes according to the stack alignment
 clear spfsOut;
@@ -146,12 +150,12 @@ for i=1:length(spfs)
     u = u*unormRefitted/norm(u);
     v = v*vnormRefitted/norm(v);
     
-    % Make sure u & v direction makes scense
-    if (dot(umedian,u) < 0)
-        u = -u;
+    % U and V are so off, just use median no point in fixing them
+    if (dot(umedian/norm(umedian),u/norm(u)) < cos(45*pi/180))
+        u = umedian;
     end
-    if (dot(vmedian,v) < 0)
-        v = -v;
+    if (dot(vmedian/norm(umedian),v/norm(v)) < cos(45*pi/180))
+        v = vmedian;
     end
     
     % For h, replace the component prepandicular to the palne with the
