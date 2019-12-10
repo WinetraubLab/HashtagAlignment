@@ -152,10 +152,10 @@ for i=1:length(spfs)
     
     % U and V are so off, just use median no point in fixing them
     if (dot(umedian/norm(umedian),u/norm(u)) < cos(45*pi/180))
-        u = umedian;
+        u = project(umedian);
     end
     if (dot(vmedian/norm(umedian),v/norm(v)) < cos(45*pi/180))
-        v = vmedian;
+        v = project(vmedian);
     end
     
     % For h, replace the component prepandicular to the palne with the
