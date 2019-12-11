@@ -144,11 +144,11 @@ for ii = 1:length(iterations)
         nSections = length(ss);
         if (nSections == 1)
             %Only one section
-            fprintf(fid,'+ Take one slide / section.%s',nl); 
+            fprintf(fid,'+ Take %sone slide%s / section.%s',bStart,bEnd,nl); 
         else
             nSlides = ceil(nSections/HI.histoKnife.sectionsPerSlide);
-            fprintf(fid,'+ Then take %.0f slides with %.0f sections per slide (%.0f sections).%s',...
-                nSlides,HI.histoKnife.sectionsPerSlide,nSections,nl);
+            fprintf(fid,'+ Then take %s%.0f slides%s with %.0f sections per slide (%.0f sections).%s',...
+                bStart,nSlides,bEnd,HI.histoKnife.sectionsPerSlide,nSections,nl);
             
             interval = diff(ss(1:2)) / HI.histoKnife.a5um*5 - HI.histoKnife.sectionThickness_um;
             fprintf(fid,'%s- Section interval of %.0f um.%s',tab,interval,nl);
