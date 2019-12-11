@@ -173,7 +173,7 @@ pipeline {
 					parameters: [
 						string(defaultValue: dUM,
 							name: 'HowDeepUM', 
-							description: 'How far is OCT orign from last section's cut face? [microns]\nNegative values mean that we passed OCT origin\nIt is recommended to cut at least 500um to avoide concave area as well as to make sure center of next iteration is at OCT center, but if you set this number to less, that is OK too (you will get less usable slides)'
+							description: 'How far is OCT orign from last section cut face? [microns]\nNegative values mean that we passed OCT origin\nIt is recommended to cut at least 500um to avoide concave area as well as to make sure center of next iteration is at OCT center, but if you set this number to less, that is OK too (you will get less usable slides)'
 							),
 						choice(
 							name: 'ShouldWeCut', 
