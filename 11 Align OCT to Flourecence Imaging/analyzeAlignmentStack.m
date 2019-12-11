@@ -231,7 +231,7 @@ isProperStackAlignmentSuccess = sum(~badFit) > 1; %Alignment succeeded if at lea
 if (isProperStackAlignmentSuccess)
     %% Print a report for user & google doc - alignment success case
     %Information about the stack
-    ang = mean(rot_realigned);
+    ang = nanmean(rot_realigned);
     if (ang<0)
         ang = ang+180;
     end
