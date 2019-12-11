@@ -22,8 +22,8 @@ whereToCut_um_Iteration1 = (0:(2*3-1))*30; %2 slide, 3 sections
 whereToCut_um_Iteration2 = (0:(5*3-1))*30; %5 slide, 3 sections
 
 %Position of the center slide for each iteration compared to OCT origin
-offset_um_Iteration1 = -200; %um, this iteration is undershooting the center
-offset_um_Iteration2 = 0;    %um, this iteration should be centered around origin
+iteration1CenterOffset = -200; %um, this iteration is undershooting the center
+iteration2CenterOffset = 0;    %um, this iteration should be centered around origin
 
 %% Jenkins
 if exist('subjectFolder_','var')
@@ -38,8 +38,8 @@ if exist('isCutOnDotSide_','var')
 end
 
 %% Decide where to cut
-whereToCut_um_Iteration1 = whereToCut_um_Iteration1-mean(whereToCut_um_Iteration1) + offset_um_Iteration1;
-whereToCut_um_Iteration2 = whereToCut_um_Iteration2-mean(whereToCut_um_Iteration2) + offset_um_Iteration2;
+whereToCut_um_Iteration1 = whereToCut_um_Iteration1-mean(whereToCut_um_Iteration1) + iteration1CenterOffset;
+whereToCut_um_Iteration2 = whereToCut_um_Iteration2-mean(whereToCut_um_Iteration2) + iteration2CenterOffset;
 
 if (iteration == 1)
     whereTocut = whereToCut_um_Iteration1;
