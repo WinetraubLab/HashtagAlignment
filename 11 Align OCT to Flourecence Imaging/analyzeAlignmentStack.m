@@ -109,8 +109,8 @@ end
 
 noFit = cellfun(@isempty,singlePlaneFits);
 goodFit  = ~singlePlaneFits_IsOutlier & singlePlaneFits_IsUsableSlide & ~noFit;
-maybeFit =  singlePlaneFits_IsOutlier & singlePlaneFits_IsUsableSlide & ~noFit;
-badFit   = ~singlePlaneFits_IsUsableSlide & ~noFit;
+maybeFit =  singlePlaneFits_IsOutlier & singlePlaneFits_IsUsableSlide;
+badFit   = ~singlePlaneFits_IsUsableSlide;
 
 %% Plot Main Figure (#1)
 
@@ -118,19 +118,17 @@ badFit   = ~singlePlaneFits_IsUsableSlide & ~noFit;
 index = 1:length(singlePlaneFits);
 rot = NaN*zeros(size(singlePlaneFits));
 rot(~noFit) = cellfun(@(x)(x.rotation_deg),singlePlaneFits(~noFit));
-rot_realigned = NaN*zeros(size(singlePlaneFits));
-rot_realigned(~noFit) = cellfun(@(x)(x.rotation_deg),singlePlaneFits_Realigned(~noFit));
+rot_realigned = cellfun(@(x)(x.rotation_deg),singlePlaneFits_Realigned);
 sc = NaN*zeros(size(singlePlaneFits));
 sc(~noFit) = cellfun(@(x)(norm(x.u)),singlePlaneFits(~noFit))*1e3; %um
 sc = 100*(pixelsSize_um./sc - 1);
-sc_realigned = NaN*zeros(size(singlePlaneFits));
-sc_realigned(~noFit)  = cellfun(@(x)(norm(x.u)),singlePlaneFits_Realigned(~noFit))*1e3; %um
+sc_realigned = cellfun(@(x)(norm(x.u)),singlePlaneFits_Realigned)*1e3; %um
 sc_realigned = 100*(pixelsSize_um./sc_realigned - 1);
 d = NaN*zeros(size(singlePlaneFits));
 d(~noFit) = cellfun(@(x)(dot(cross(x.u,x.v)/(norm(x.u)*norm(x.v)),x.h)),singlePlaneFits(~noFit)); %mm
-d_realigned = NaN*zeros(size(singlePlaneFits));
-d_realigned(~noFit)  = cellfun(@(x)(x.d),singlePlaneFits_Realigned(~noFit)); %mm
-% Notice, some nan values exist for slides with no data
+d_realigned  = cellfun(@(x)(x.d),singlePlaneFits_Realigned); %mm
+% Notice, some nan values exist for slides with no data but only before the
+% fit
 
 %Reset figure
 fig1=figure(100);
@@ -152,11 +150,11 @@ subplot(2,2,2);
 plot(index(goodFit),rot(goodFit),'.');
 hold on;
 plot(index(maybeFit | badFit),  rot(maybeFit | badFit),'.');
-plot(index(goodFit | maybeFit), rot_realigned(goodFit | maybeFit), '--r');
+plot(index, rot_realigned, '--r');
 hold off;
 ylabel('deg');
 xlabel('Slide #');
-title(sprintf('Rotation Angle: %.1f \\pm %.1f[deg]',nanmean(rot_realigned),s));
+title(sprintf('Rotation Angle: %.1f \\pm %.1f[deg]',mean(rot_realigned),s));
 grid on;
 
 %Plot size change 
@@ -165,12 +163,12 @@ subplot(2,2,4);
 plot(index(goodFit),sc(goodFit),'.');
 hold on;
 plot(index(maybeFit | badFit),  sc(maybeFit | badFit),'.');
-plot(index(goodFit | maybeFit), sc_realigned(goodFit | maybeFit), '--r');
+plot(index, sc_realigned, '--r');
 hold off;
 ylabel('%');
 xlabel('Slide #');
 title(sprintf('1D Pixel Size Change: %.1f \\pm %.1f [%%]', ...
-    nanmean(sc_realigned),s));
+    mean(sc_realigned),s));
 grid on;
 
 %Plot distance to origin
@@ -180,12 +178,12 @@ subplot(2,2,3);
 plot(index(goodFit),d(goodFit)*f,'.');
 hold on;
 plot(index(maybeFit | badFit),  d(maybeFit | badFit)*f,'.');
-plot(index(goodFit | maybeFit), d_realigned(goodFit | maybeFit)*f, '--r');
+plot(index, d_realigned*f, '--r');
 hold off;
 ylabel('Distance [mm]');
 xlabel('Slide #');
 title(sprintf('Distance From Origin, SEM %.1f[\\mum], Section Size: %.1f[\\mum]',s*1e3/sqrt(sum(goodFit)),...
-    abs(nanmedian(diff(d_realigned*f))*1e3) ));
+    abs(median(diff(d_realigned*f))*1e3) ));
 grid on;
 
 %If transision between iteration #1 and #2 exist, say what it is
@@ -231,7 +229,7 @@ isProperStackAlignmentSuccess = sum(~badFit) > 1; %Alignment succeeded if at lea
 if (isProperStackAlignmentSuccess)
     %% Print a report for user & google doc - alignment success case
     %Information about the stack
-    ang = nanmean(rot_realigned);
+    ang = mean(rot_realigned);
     if (ang<0)
         ang = ang+180;
     end
@@ -239,8 +237,8 @@ if (isProperStackAlignmentSuccess)
         '"Slide Seperation um":%.2f,' ...
         '"XY Angle deg":%.1f,"Size Change Percent":%.1f}'],...
         subjectName, ...
-        abs(nanmedian(diff(d_realigned)))*1e3, ...
-        ang,nanmean(sc_realigned) ...
+        abs(median(diff(d_realigned)))*1e3, ...
+        ang,mean(sc_realigned) ...
         );
     
     %Loop over each slide
@@ -307,7 +305,7 @@ fprintf('Distance from current face to origin (negative number means we surpasse
 
 %Save it to a file for downstream automated usage
 fid = fopen('DistanceFromCurrentFaceToOriginUM.txt','w');
-fprintf(fid,'%.0f',d);
+fprintf(fid,'%.0f',d_lastSlide*1e3);
 fclose(fid);
 
 %% Update data to the cloud

@@ -1,4 +1,4 @@
-function [spfsOut,isOutlier] = spfRealignByStack(spfs, speculatedDistanceToOrigin)
+function [spfsOut,isOutlierOut] = spfRealignByStack(spfs, speculatedDistanceToOrigin)
 % This function takes an array of Single Plane Fits (spfs) and rectify them
 % as they should all have the same alignment, as they are from the same
 % stack
@@ -15,6 +15,7 @@ function [spfsOut,isOutlier] = spfRealignByStack(spfs, speculatedDistanceToOrigi
 %        considered outlier?
 
 %% Input checks
+spfsInLength = length(spfs);
 if iscell(spfs)
     %Some of spfs are not identical / empty find them
     emptySPFsIndex = cellfun(@isempty,spfs);
@@ -103,7 +104,7 @@ isOk = ~isOutlier;
 if (sum(isOk) < length(isOk)/3 || sum(isOk)<2)
     warning('Not enugh good samples, everything seems to be an outlier');
     isOutlier = boolean(ones(size(isOutlier)));
-    [spfsOut,isOutlier] = makeOutput(spfs,isSPFCell,isOutlier,emptySPFsIndex);
+    [spfsOut,isOutlierOut] = makeOutput(spfs,isSPFCell,isOutlier,emptySPFsIndex);
     return;
 end
 
@@ -140,31 +141,48 @@ vmedian = vmedian/norm(vmedian)*vnormRefitted;
 
 %% Update individual planes according to the stack alignment
 clear spfsOut;
+isOutlierOut = zeros(spfsInLength,1);
 project = @(vect)(vect - dot(vect,n)*n);
-for i=1:length(spfs)
-    spf = spfs(i);
-    
-    % Project u,v to the new plane, correct them to preserve norm
-    u = project(spf.u);
-    v = project(spf.v);
-    u = u*unormRefitted/norm(u);
-    v = v*vnormRefitted/norm(v);
-    
-    % U and V are so off, just use median no point in fixing them
-    if (dot(umedian/norm(umedian),u/norm(u)) < cos(45*pi/180))
+j=1;
+for i=1:spfsInLength
+    if (emptySPFsIndex(i))
+        % Empty spf, start from scratch
         u = project(umedian);
-    end
-    if (dot(vmedian/norm(umedian),v/norm(v)) < cos(45*pi/180))
         v = project(vmedian);
+        
+        sectionI = 1:spfsInLength;
+        pp = polyfit(sectionI(~emptySPFsIndex),distanceToOriginRefitted,1);
+        h = n*polyval(pp,i);
+        isOutlierOut(i) = true; %This is an outlier as is not fit
+    else
+        % Some data is in single plane fit, use it!
+        spf = spfs(j);
+
+        % Project u,v to the new plane, correct them to preserve norm
+        u = project(spf.u);
+        v = project(spf.v);
+        u = u*unormRefitted/norm(u);
+        v = v*vnormRefitted/norm(v);
+
+        % U and V are so off, just use median no point in fixing them
+        if (dot(umedian/norm(umedian),u/norm(u)) < cos(45*pi/180))
+            u = project(umedian);
+        end
+        if (dot(vmedian/norm(umedian),v/norm(v)) < cos(45*pi/180))
+            v = project(vmedian);
+        end
+
+        % For h, replace the component prepandicular to the palne with the
+        % corrected component
+        h = project(spf.h) + n*distanceToOriginRefitted(j);
+        
+        isOutlierOut(i) = isOutlier(j);
+        j = j + 1;
     end
-    
-    % For h, replace the component prepandicular to the palne with the
-    % corrected component
-    h = project(spf.h) + n*distanceToOriginRefitted(i);
     
     % Generate a new structure
     s = spfCreateFromUVH(u,v,h);
-    
+
     % Make sure d is specified, its important
     if (isnan(s.d))
         s.d = distanceToOriginRefitted(i);
@@ -174,11 +192,11 @@ for i=1:length(spfs)
     if (i>1)
         spfsOut(i) = s;  %#ok<AGROW>
     else
-        spfsOut = repmat(s,size(spfs));
+        spfsOut = repmat(s,[spfsInLength 1]);
     end
 end
 
-[spfsOut,isOutlier] = makeOutput(spfsOut,isSPFCell,isOutlier,emptySPFsIndex);
+[spfsOut,isOutlierOut] = makeOutput(spfsOut,isSPFCell,isOutlierOut,emptySPFsIndex*0);
 
 function [spfsOut,isOutlierOut] = makeOutput(spfsOut,isSPFCell,isOutlier,emptySPFsIndex)
 %Modify output to be compatible with input
