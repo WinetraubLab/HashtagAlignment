@@ -12,8 +12,8 @@ pipeline {
 	{
 		string(
 			name: "SUBJECT_FOLDER_PATH",
-			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-01/",
-			description:"Subject Directory\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LC/LC-01/",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LE/LE-01/",
+			description:"Subject Directory\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LE/LE-01/",
 			trim: true)
 		string(
 			name: "WHO_TO_EMAIL_WHEN_DONE",

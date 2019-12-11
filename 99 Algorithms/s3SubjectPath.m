@@ -8,7 +8,7 @@ function p=s3SubjectPath(subject,lib,isCalibrationFolder)
 if (~exist('lib','var') || isempty(lib))
     %Before releasing a new libary, update lib. Don't forget to search Jenkins
     %file for the same library update
-    lib = 'LD'; 
+    lib = 'LE'; 
 end
 
 if ~exist('isCalibrationFolder','var')
