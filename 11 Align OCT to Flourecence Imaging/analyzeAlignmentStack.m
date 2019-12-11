@@ -41,6 +41,15 @@ end
 hiJsonFilePath = awsModifyPathForCompetability([subjectFolder '/Slides/HistologyInstructions.json']);
 hiJson = awsReadJSON(hiJsonFilePath);
 
+%% Check Histology Instructions for consistency
+l1 = length(hiJson.sectionName);
+l2 = length(hiJson.sectionDepthsRequested_um);
+l3 = length(hiJson.sectionIteration);
+
+if (std([l1 l2 l3]) ~= 0)
+    error('Expecting Histology Instuctions to match between number of slides in: sectionName, sectionIteration, sectionDepthsRequested_um');
+end
+
 %% Load enface view if avilable 
 disp([datestr(now) ' Loading Enface View']);
 
