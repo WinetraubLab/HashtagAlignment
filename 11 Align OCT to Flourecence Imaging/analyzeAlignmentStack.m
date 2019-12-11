@@ -118,17 +118,21 @@ badFit   = ~singlePlaneFits_IsUsableSlide;
 index = 1:length(singlePlaneFits);
 rot = NaN*zeros(size(singlePlaneFits));
 rot(~noFit) = cellfun(@(x)(x.rotation_deg),singlePlaneFits(~noFit));
-rot_realigned = cellfun(@(x)(x.rotation_deg),singlePlaneFits_Realigned);
+rot_realigned = NaN*zeros(size(singlePlaneFits));
+rot_realigned(~badFit) = cellfun(@(x)(x.rotation_deg),singlePlaneFits_Realigned(~badFit));
 sc = NaN*zeros(size(singlePlaneFits));
 sc(~noFit) = cellfun(@(x)(norm(x.u)),singlePlaneFits(~noFit))*1e3; %um
 sc = 100*(pixelsSize_um./sc - 1);
-sc_realigned = cellfun(@(x)(norm(x.u)),singlePlaneFits_Realigned)*1e3; %um
+sc_realigned = NaN*zeros(size(singlePlaneFits));
+sc_realigned(~badFit) = cellfun(@(x)(norm(x.u)),singlePlaneFits_Realigned(~badFit))*1e3; %um
 sc_realigned = 100*(pixelsSize_um./sc_realigned - 1);
 d = NaN*zeros(size(singlePlaneFits));
 d(~noFit) = cellfun(@(x)(dot(cross(x.u,x.v)/(norm(x.u)*norm(x.v)),x.h)),singlePlaneFits(~noFit)); %mm
-d_realigned  = cellfun(@(x)(x.d),singlePlaneFits_Realigned); %mm
-% Notice, some nan values exist for slides with no data but only before the
-% fit
+d_realigned = NaN*zeros(size(singlePlaneFits));
+d_realigned(~badFit)  = cellfun(@(x)(x.d),singlePlaneFits_Realigned(~badFit)); %mm
+% Notice, some nan values exist for 
+%   - slides with no data but only before the fit
+%   - in case fit failed for some slides
 
 %Reset figure
 fig1=figure(100);
@@ -154,7 +158,7 @@ plot(index, rot_realigned, '--r');
 hold off;
 ylabel('deg');
 xlabel('Slide #');
-title(sprintf('Rotation Angle: %.1f \\pm %.1f[deg]',mean(rot_realigned),s));
+title(sprintf('Rotation Angle: %.1f \\pm %.1f[deg]',nanmean(rot_realigned),s));
 grid on;
 
 %Plot size change 
@@ -168,7 +172,7 @@ hold off;
 ylabel('%');
 xlabel('Slide #');
 title(sprintf('1D Pixel Size Change: %.1f \\pm %.1f [%%]', ...
-    mean(sc_realigned),s));
+    nanmean(sc_realigned),s));
 grid on;
 
 %Plot distance to origin
@@ -183,7 +187,7 @@ hold off;
 ylabel('Distance [mm]');
 xlabel('Slide #');
 title(sprintf('Distance From Origin, SEM %.1f[\\mum], Section Size: %.1f[\\mum]',s*1e3/sqrt(sum(goodFit)),...
-    abs(median(diff(d_realigned*f))*1e3) ));
+    abs(nanmedian(diff(d_realigned*f))*1e3) ));
 grid on;
 
 %If transision between iteration #1 and #2 exist, say what it is
@@ -229,7 +233,7 @@ isProperStackAlignmentSuccess = sum(~badFit) > 1; %Alignment succeeded if at lea
 if (isProperStackAlignmentSuccess)
     %% Print a report for user & google doc - alignment success case
     %Information about the stack
-    ang = mean(rot_realigned);
+    ang = nanmean(rot_realigned);
     if (ang<0)
         ang = ang+180;
     end
@@ -237,8 +241,8 @@ if (isProperStackAlignmentSuccess)
         '"Slide Seperation um":%.2f,' ...
         '"XY Angle deg":%.1f,"Size Change Percent":%.1f}'],...
         subjectName, ...
-        abs(median(diff(d_realigned)))*1e3, ...
-        ang,mean(sc_realigned) ...
+        abs(nanmedian(diff(d_realigned)))*1e3, ...
+        ang,nanmean(sc_realigned) ...
         );
     
     %Loop over each slide
@@ -271,7 +275,7 @@ else
         subjectName ...
         );
     json2 = '';
-    for i=1:length(SARS.isOk)
+    for i=1:length(goodFit)
         json2 = sprintf(['%s,{"Table":"SlidesRunsheet",' ...
             '"Full Slide Name":"%s-%s",' ...
             '"Proper Alignment Wth Stack?":"No","Distance From Origin [um]":%s}'], ...
