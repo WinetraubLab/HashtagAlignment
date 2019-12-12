@@ -197,10 +197,12 @@ if length(json.octFolders) > 1
     fprintf('%s Compare Between different Depth In Calibration... \n',datestr(datetime));
 
     interfZ = zeros(size(xx,1),size(xx,2),length(json.octFolders));
+    yPeakIs = zeros(length(json.octFolders),1);
     for sI = 1:length(json.octFolders)
         octPath = awsModifyPathForCompetability([experimentPath json.octFolders{sI} '/']);
         pf = awsReadJSON([octPath 'interfaceZPositions_PolyFit.json']);
         p = pf.p;
+        yPeakIs(sI) = pf.yPeakI;
         
         interfZ(:,:,sI) = mdl(xx,yy,p);
     end
@@ -215,7 +217,7 @@ if length(json.octFolders) > 1
     
     f=figure(101);
     set(f,'units','normalized','outerposition',[0 0 1 1]);
-    subplot(1,2,1);
+    subplot(2,2,1);
     imagesc(interfZSpan);
     axis equal;
     xlabel('x[\mum]');
@@ -223,14 +225,40 @@ if length(json.octFolders) > 1
     title('Differene between Different Depths After Removing Mean [\mum]');
     colorbar;
     grid on;
-    subplot(1,2,2);
-    z = json.gridZcc*1e3;
-    p = polyfit(z,m,1);
-    plot(z,m-p(2),'o',z,polyval(p,z)-p(2),'--');
-    xlabel('Depth, Z [\mum], Compared to Focus position (z=0)');
+    subplot(2,2,2);
+    zTmp = json.gridZcc*1e3;
+    p = polyfit(zTmp,m,1);
+    plot(zTmp,m-p(2),'o',zTmp,polyval(p,zTmp)-p(2),'--');
+    xlabel('Relative Focus Position Depth [\mum]');
     ylabel('Mean Difference Between Calibrations [\mum]');
     legend('Data',sprintf('=%.3f\\cdotz',p(1)),'Location','South')
     grid on;
+    axis ij
+    
+    pause(0.1);
+    subplot(2,2,[3 4]);
+    %% Compute a side by side comparison of all 3 slides
+    % Find interface to zoom on to
+    mi = min(min(interfZ(:,median(yPeakIs),:)))-50; %um
+    mx = max(max(interfZ(:,median(yPeakIs),:)))+50; %um
+    span = round((mx-mi)/diff(z(1:2)));
+    scanYs = zeros(span,length(x),length(json.octFolders));
+    for sI = 1:length(json.octFolders)
+        % Load slides
+        octPath = awsModifyPathForCompetability([experimentPath json.octFolders{sI} '/']);
+        [scanY,dim] = yOCTFromTif([octPath 'scanAbs.tif'],median(yPeakIs));
+        
+        [~,ziStart] = min(abs(dim.z.values-mi));
+        scanYs(:,:,sI) = scanY(ziStart+(0:(span-1)),:);
+    end
+    
+    imagesc([],linspace(mi,mx,span),reshape(scanYs,span,[]))
+    ylabel('OCT Scan Z Depth [\mum]');
+    grid on;
+    set(gca,'Color','none','XColor','none');
+    title('Images Aquired at Different Focal Position');
+
+    %% Save figure
     
     saveas(f,'interfaceZPositions_CompareToEachother.png');
     awsCopyFileFolder('interfaceZPositions_CompareToEachother.png',experimentPath);
