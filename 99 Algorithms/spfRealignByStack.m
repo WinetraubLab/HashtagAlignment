@@ -1,4 +1,4 @@
-function [spfsOut,isOutlierOut] = spfRealignByStack(spfs, speculatedDistanceToOrigin)
+function [spfsOut,isOutlierOut,n,sectionDistanceToOrigin] = spfRealignByStack(spfs, speculatedDistanceToOrigin)
 % This function takes an array of Single Plane Fits (spfs) and rectify them
 % as they should all have the same alignment, as they are from the same
 % stack
@@ -13,6 +13,8 @@ function [spfsOut,isOutlierOut] = spfRealignByStack(spfs, speculatedDistanceToOr
 %    spfsOut - re-aligned single plane fits
 %    isOutlier - for each of spfs, was it use in the calculation or
 %        considered outlier?
+%    n - normal unit vertor to origin
+%    sectionDistanceToOrigin - fitted section distance to origin [mm]
 
 %% Input checks
 spfsInLength = length(spfs);
@@ -105,6 +107,8 @@ if (sum(isOk) < length(isOk)/3 || sum(isOk)<2)
     warning('Not enugh good samples, everything seems to be an outlier');
     isOutlier = boolean(ones(size(isOutlier)));
     [spfsOut,isOutlierOut] = makeOutput(spfs,isSPFCell,isOutlier,emptySPFsIndex);
+    n=NaN;
+    sectionDistanceToOrigin = NaN;
     return;
 end
 
@@ -145,6 +149,7 @@ isOutlierOut = zeros(spfsInLength,1);
 project = @(vect)(vect - dot(vect,n)*n);
 j=1;
 for i=1:spfsInLength
+    thisSectionDistanceToOriginRefitted = NaN;
     if (emptySPFsIndex(i))
         % Empty spf, start from scratch
         u = project(umedian);
@@ -152,7 +157,8 @@ for i=1:spfsInLength
         
         sectionI = 1:spfsInLength;
         pp = polyfit(sectionI(~emptySPFsIndex),distanceToOriginRefitted,1);
-        h = n*polyval(pp,i);
+        thisSectionDistanceToOriginRefitted = polyval(pp,i);
+        h = n*thisSectionDistanceToOriginRefitted;
         isOutlierOut(i) = true; %This is an outlier as is not fit
     else
         % Some data is in single plane fit, use it!
@@ -174,6 +180,7 @@ for i=1:spfsInLength
 
         % For h, replace the component prepandicular to the palne with the
         % corrected component
+        thisSectionDistanceToOriginRefitted = distanceToOriginRefitted(j);
         h = project(spf.h) + n*distanceToOriginRefitted(j);
         
         isOutlierOut(i) = isOutlier(j);
@@ -185,7 +192,7 @@ for i=1:spfsInLength
 
     % Make sure d is specified, its important
     if (isnan(s.d))
-        s.d = distanceToOriginRefitted(i);
+        s.d = thisSectionDistanceToOriginRefitted;
     end
     
     % Save to array
@@ -196,7 +203,10 @@ for i=1:spfsInLength
     end
 end
 
+sectionDistanceToOrigin = [spfsOut(:).d];
+sectionDistanceToOrigin = sectionDistanceToOrigin(:);
 [spfsOut,isOutlierOut] = makeOutput(spfsOut,isSPFCell,isOutlierOut,emptySPFsIndex*0);
+
 
 function [spfsOut,isOutlierOut] = makeOutput(spfsOut,isSPFCell,isOutlier,emptySPFsIndex)
 %Modify output to be compatible with input
