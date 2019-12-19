@@ -95,8 +95,8 @@ end
 % Criteria for outlier
 isOutlier = ...
 	abs(ang) >  8       | ... Angle to the mean normal, above threshold [deg]
-	sizeChangeU > 0.06  | ... Pixel size change above threshold [%]
-	sizeChangeV > 0.06  | ... Pixel size change above threshold [%]
+	sizeChangeU > 0.10  | ... Pixel size change above threshold [%]
+	sizeChangeV > 0.10  | ... Pixel size change above threshold [%]
     distanceError > 0.3 | ... Plane position compared to guess above threshold [mm]
     isnan(distanceError) ...
     ;
