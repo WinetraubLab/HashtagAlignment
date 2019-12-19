@@ -33,7 +33,8 @@ f = slideJson.FM.fiducialLines;
 f = fdlnSortLines(f); %Sort lines such that they are organized by position, left to right
     
 %% Part #1, identify lines (x-y)
-if isfield(octVolumeJson,'version') && octVolumeJson.version == 2
+if isfield(octVolumeJson,'version') && ...
+        (octVolumeJson.version == 2 || octVolumeJson.version == 2.1)
     vLinePositions = octVolumeJson.photobleach.vLinePositions;
     hLinePositions = octVolumeJson.photobleach.hLinePositions;
 else

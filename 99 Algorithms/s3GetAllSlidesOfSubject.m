@@ -1,8 +1,8 @@
-function [slidePaths, slideNames, slidesRootFolder] = s3GetAllSlidesOfSubject(subjectPath)
+function [sectionPaths, sectionNames, sectionRootFolder] = s3GetAllSlidesOfSubject(subjectPath)
 %This function returns all slides owned by a subject
 
-slidesRootFolder = awsModifyPathForCompetability([subjectPath '/Slides/']);
-[slideNames, slidePaths] = awsls(slidesRootFolder);
-isFolder = cellfun(@(x)(contains(x,'/')),slideNames);
-slideNames = slideNames(isFolder);
-slidePaths = slidePaths(isFolder);
+sectionRootFolder = awsModifyPathForCompetability([subjectPath '/Slides/']);
+[sectionNames, sectionPaths] = awsls(sectionRootFolder);
+isFolder = cellfun(@(x)(contains(x,'/')),sectionNames);
+sectionNames = sectionNames(isFolder);
+sectionPaths = sectionPaths(isFolder);

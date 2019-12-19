@@ -6,7 +6,7 @@
 %false if saved locally only
 isUpdateCloud = false; 
 
-subjectFolder = s3SubjectPath('03');
+subjectFolder = s3SubjectPath('01');
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %JSON
     isUpdateCloud = true;
@@ -87,7 +87,8 @@ end
 pixelsSize_um = sectionJsons{1}.FM.pixelSize_um;
 
 %Get H&V lines positions
-if isfield(octVolumeJson,'version') && octVolumeJson.version == 2
+if isfield(octVolumeJson,'version') && ...
+        (octVolumeJson.version == 2 || octVolumeJson.version == 2.1)
     vLinePositions = octVolumeJson.photobleach.vLinePositions;
     hLinePositions = octVolumeJson.photobleach.hLinePositions;
     lineLength = octVolumeJson.photobleach.lineLength;
