@@ -137,7 +137,12 @@ sc_realigned = NaN*zeros(size(singlePlaneFits));
 sc_realigned(~badFit) = cellfun(@(x)(norm(x.u)),singlePlaneFits_Realigned(~badFit))*1e3; %um
 sc_realigned = 100*(pixelsSize_um./sc_realigned - 1);
 d = NaN*zeros(size(singlePlaneFits));
-d(~noFit) = cellfun(@(x)(dot(cross(x.u,x.v)/(norm(x.u)*norm(x.v)),x.h)),singlePlaneFits(~noFit)); %mm
+for i=1:length(noFit)
+    if ~noFit(i)
+        d(i) = dot(singlePlaneFits_Realigned{i}.normal,singlePlaneFits{i}.h);
+        %d(i) = dot(singlePlaneFits{i}.normal,singlePlaneFits{i}.h);
+    end
+end
 d_realigned = NaN*zeros(size(singlePlaneFits));
 d_realigned(~badFit)  = cellfun(@(x)(x.d),singlePlaneFits_Realigned(~badFit)); %mm
 % Notice, some nan values exist for 

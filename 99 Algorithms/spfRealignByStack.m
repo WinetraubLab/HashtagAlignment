@@ -83,10 +83,10 @@ distanceToOrigin = dot(repmat(n,[1 size(hs,2)]),hs);
 % Try both directions as we don't know if the way n is pointed is good
 % Distance error is in mm
 distanceError1 = distanceToOrigin - speculatedDistanceToOrigin;
-distanceError1 = abs(distanceError1-median(distanceError1));
+distanceError1 = abs(distanceError1-nanmedian(distanceError1));
 distanceError2 = -distanceToOrigin - speculatedDistanceToOrigin;
-distanceError2 = abs(distanceError2-median(distanceError2));
-if (mean(distanceError1)<mean(distanceError2))
+distanceError2 = abs(distanceError2-nanmedian(distanceError2));
+if (nanmean(distanceError1)<nanmean(distanceError2))
     distanceError = distanceError1;
 else
     distanceError = distanceError2;
@@ -94,10 +94,11 @@ end
 
 % Criteria for outlier
 isOutlier = ...
-	abs(ang) >  5       | ... Angle to the mean normal, above threshold [deg]
+	abs(ang) >  8       | ... Angle to the mean normal, above threshold [deg]
 	sizeChangeU > 0.06  | ... Pixel size change above threshold [%]
 	sizeChangeV > 0.06  | ... Pixel size change above threshold [%]
-    distanceError > 0.1    ... Plane position compared to guess above threshold [mm]
+    distanceError > 0.3 | ... Plane position compared to guess above threshold [mm]
+    isnan(distanceError) ...
     ;
 isOk = ~isOutlier;
 

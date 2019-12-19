@@ -242,6 +242,23 @@ end
 hObject.Enable = 'off';
 try
     awsSetCredentials(1);
+    
+    % Update interface z position of tissue
+    zInterface = handles.octVolumeJson.VolumeOCTDimensions.z.values(...
+        handles.octVolumeJson.focusPositionInImageZpix); %[um]
+    zInterface = zInterface/1000; %[mm]
+    grT = [handles.slideJson.FM.fiducialLines.group] == 't';
+    grTi = find(grT);
+    for i=grTi
+        handles.slideJson.FM.fiducialLines(i).linePosition_mm = zInterface;
+    end
+    
+    % One last update of fdln in case something changed
+    handles.slideJson.FM.singlePlaneFit = ...
+        spfCreateFromFiducialLines( ...
+        handles.slideJson.FM.fiducialLines, ...
+        handles.slideJson.FM.pixelSize_um);
+    
     awsWriteJSON(handles.slideJson,handles.slideJsonFilePath);
     
     %Upload the PNG if successful
