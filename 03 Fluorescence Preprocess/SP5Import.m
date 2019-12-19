@@ -186,6 +186,11 @@ else
     json.beadsImagePath = '';
 end
 
+if awsExist([outputFolder '/' json.photobleachedLinesImagePath],'file')
+    error('%s already exist, will not upload again.', ...
+        [outputFolder '/' json.photobleachedLinesImagePath]);
+end
+
 awsWriteJSON(json,[outputFolder '/SlideConfig.json']);
 awsCopyFileFolder(json.photobleachedLinesImagePath,outputFolder);
 
