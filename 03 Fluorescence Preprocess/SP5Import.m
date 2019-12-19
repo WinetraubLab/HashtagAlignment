@@ -10,7 +10,7 @@ sectionNumber = 1;
 
 %Pointer to the folder structure, expecting [folderStructurePath '\slideX\section Y']
 %In each section we will need to have the tif, and MetaData xml
-folderStructurePath = '\\171.65.17.174\MATLAB_Share\Yonatan\Edwin SP5\LB\S1\';
+folderStructurePath = '\\171.65.17.174\e\Caroline\OCT-Histology\LE\LE-01\slide 1\sec 1\';
 
 %Fluorescence Image Path of one og
 %fp = '\\171.65.17.174\MATLAB_Share\Yonatan\Edwin SP5\LB\S1\slide 1\sec 1\Experiment_TileScan_005_Merging001_z0_ch01.tif';
@@ -18,6 +18,7 @@ folderStructurePath = '\\171.65.17.174\MATLAB_Share\Yonatan\Edwin SP5\LB\S1\';
 %Chanel
 flourescenceChanel = 0;
 brightfieldChanel = 1;
+beadsChanel = 2; % set to [] if no beads chanel exists
 
 angRotate = 180;
 
@@ -96,10 +97,18 @@ flourescenceImagePath = flourescenceImagePath{:};
    
 brightfieldImagePath = files(cellfun(@(x)(contains(x,sprintf('ch%02d',brightfieldChanel))),files));
 if length(brightfieldImagePath) ~= 1
-    warning('Could not find one file with _ch%02d',brightfieldChanel);
+    warning('Could not find one file with _ch%02d (bright field)',brightfieldChanel);
     brightfieldImagePath = '';
 else
     brightfieldImagePath = brightfieldImagePath{:};
+end
+
+beadsImagePath = files(cellfun(@(x)(contains(x,sprintf('ch%02d',beadsChanel))),files));
+if length(beadsImagePath) ~= 1
+    warning('Could not find one file with _ch%02d (beads channel)',beadsChanel);
+    beadsImagePath = '';
+else
+    beadsImagePath = beadsImagePath{:};
 end
 
 %% Read pixel size from meta data
@@ -138,6 +147,9 @@ flourescenceIm = imrotate(imread(flourescenceImagePath),angRotate);
 if ~isempty(brightfieldImagePath)
     brightfieldIm = imrotate(imread(brightfieldImagePath),angRotate);
 end
+if ~isempty(beadsImagePath)
+    beadsIm = imrotate(imread(beadsImagePath),angRotate);
+end
 
 imshow(flourescenceIm);
 title(sprintf('Are the lines at the top of the flourescence image?, Pixel Size %.2f%s',json.FM.pixelSize_um,'[um]'));
@@ -155,6 +167,7 @@ end
 sectionNames(ii==1) = []; %Remove this section name so it won't be repeated
 
 %% Save Output
+fprintf('%s Uploading output..\n',datetime)
 outputFolder = awsModifyPathForCompetability(sprintf('%s/Slides/%s/',s3Dir,slideName));
 json.photobleachedLinesImagePath = 'FM_PhotobleachedLinesImage.tif';
 imwrite(flourescenceIm,json.photobleachedLinesImagePath);
@@ -165,12 +178,21 @@ if ~isempty(brightfieldImagePath)
 else
     json.brightFieldImagePath = '';
 end
+if ~isempty(beadsImagePath)
+    json.beadsImagePath = 'FM_BeadsImage.tif';
+    imwrite(beadsIm,json.beadsImagePath);
+else
+    json.beadsImagePath = '';
+end
 
 awsWriteJSON(json,[outputFolder '/SlideConfig.json']);
 awsCopyFileFolder(json.photobleachedLinesImagePath,outputFolder);
 
 if ~isempty(brightfieldImagePath)
     awsCopyFileFolder(json.brightFieldImagePath,outputFolder);
+end
+if ~isempty(beadsImagePath)
+    awsCopyFileFolder(json.beadsImagePath,outputFolder);
 end
 
 ds = fileDatastore(folder,'ReadFcn',@(x)(x),'IncludeSubfolders',true);
@@ -181,4 +203,5 @@ for i=1:length(files)
     awsCopyFileFolder(files{i},[outputFolder '/FM_Raw/']);
 end
 
+fprintf('%s Uploading complete.\n',datetime)
 end
