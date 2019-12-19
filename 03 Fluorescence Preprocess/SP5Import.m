@@ -5,8 +5,9 @@
 %Where to upload data
 s3Dir = s3SubjectPath('01');
 
-slideNumber = 1;
-sectionNumber = 1;
+% Not used, algorithm figures out itself
+%slideNumber = 1;
+%sectionNumber = 1;
 
 %Pointer to the folder structure, expecting [folderStructurePath '\slideX\section Y']
 %In each section we will need to have the tif, and MetaData xml
