@@ -41,6 +41,21 @@ else
     spfs_ = spfs;
 end
 
+%Check that we have data to work with
+if (isempty(spfs_))
+    %Nothing to do
+    warning('No samples, nothing to do');
+    isOutlier = boolean(ones(size(emptySPFsIndex)));
+    [spfsOut,isOutlierOut] = makeOutput(spfs,isSPFCell,isOutlier,emptySPFsIndex);
+    nOut=NaN;
+    sectionDistanceToOriginOut = NaN;
+    return;
+end
+
+%% 0th pass, weed out obvious outliers
+isOk0 = ...
+    [spfs_.sizeChange_precent] > -70 & [spfs_.sizeChange_precent] < 50 ... %Size change too dramatic
+    ;
 %% Concatinate data from all single plane fits
 
 % Normal vectors
@@ -53,8 +68,8 @@ unorms = cellfun(@(x)(norm(x)),{spfs_(:).u});
 vnorms = cellfun(@(x)(norm(x)),{spfs_(:).v});
 
 % U and V General Direction
-umedian = median([spfs_(:).u],2);
-vmedian = median([spfs_(:).v],2);
+umedian = median([spfs_(isOk0).u],2);
+vmedian = median([spfs_(isOk0).v],2);
 
 % h vectors
 hs = cell2mat(...
@@ -65,27 +80,27 @@ hs = cell2mat(...
 
 % Assuming all planes are relatively close, we can take the median, then
 % renormalize
-n = median(ns,2); 
+n = median(ns(:,isOk0),2); 
 n = n/norm(n);
 
 % Compute angle between each plane and n
-ang = acos(dot(repmat(n,[1 size(ns,2)]),ns))*180/pi; %[deg]
+angs = acos(dot(repmat(n,[1 size(ns,2)]),ns))*180/pi; %[deg]
 
 % Compute the size change for each u and v
-sizeChangeU = abs(unorms./median(unorms)-1);
-sizeChangeV = abs(vnorms./median(vnorms)-1);
+sizeChangeUs = abs(unorms./median(unorms(isOk0))-1);
+sizeChangeVs = abs(vnorms./median(vnorms(isOk0))-1);
 
 % Compute plane positions compared to n
-distanceToOrigin = dot(repmat(n,[1 size(hs,2)]),hs);
+distancesToOrigin = dot(repmat(n,[1 size(hs,2)]),hs);
 
 % Fit distances to speculatedDistanceToOrigin, see if they are close
 % Will ignore systematic bias in this case
 % Try both directions as we don't know if the way n is pointed is good
 % Distance error is in mm
-distanceError1 = distanceToOrigin - speculatedDistanceToOrigin;
-distanceError1 = abs(distanceError1-nanmedian(distanceError1));
-distanceError2 = -distanceToOrigin - speculatedDistanceToOrigin;
-distanceError2 = abs(distanceError2-nanmedian(distanceError2));
+distanceError1 = distancesToOrigin - speculatedDistanceToOrigin;
+distanceError1 = abs(distanceError1-nanmedian(distanceError1(isOk0)));
+distanceError2 = -distancesToOrigin - speculatedDistanceToOrigin;
+distanceError2 = abs(distanceError2-nanmedian(distanceError2(isOk0)));
 if (nanmean(distanceError1)<nanmean(distanceError2))
     distanceError = distanceError1;
 else
@@ -94,10 +109,11 @@ end
 
 % Criteria for outlier
 isOutlier = ...
-	abs(ang) >  8       | ... Angle to the mean normal, above threshold [deg]
-	sizeChangeU > 0.10  | ... Pixel size change above threshold [%]
-	sizeChangeV > 0.10  | ... Pixel size change above threshold [%]
-    distanceError > 0.3 | ... Plane position compared to guess above threshold [mm]
+    (~isOk0)             | ... Didn't pass original test
+	abs(angs) >  8       | ... Angle to the mean normal, above threshold [deg]
+	sizeChangeUs > 0.10  | ... Pixel size change above threshold [%]
+	sizeChangeVs > 0.10  | ... Pixel size change above threshold [%]
+    distanceError > 0.3  | ... Plane position compared to guess above threshold [mm]
     isnan(distanceError) ...
     ;
 isOk = ~isOutlier;
@@ -108,7 +124,7 @@ if (sum(isOk) < length(isOk)/3 || sum(isOk)<2)
     warning('Not enugh good samples, everything seems to be an outlier');
     isOutlier = boolean(ones(size(isOutlier)));
     [spfsOut,isOutlierOut] = makeOutput(spfs,isSPFCell,isOutlier,emptySPFsIndex);
-    n=NaN;
+    nOut=NaN;
     sectionDistanceToOriginOut = NaN;
     return;
 end
@@ -121,9 +137,9 @@ n = mean(ns(:,isOk),2);
 n = n/norm(n);
 
 % Fit plane's distance from orign
-distanceToOrigin = dot(repmat(n,[1 size(hs,2)]),hs);
-isOk2 = ~isnan(distanceToOrigin) & isOk; %Spacial version of isOk, that makes sure h is not nan
-p = polyfit(speculatedDistanceToOrigin(isOk2), distanceToOrigin(isOk2),1);
+distancesToOrigin = dot(repmat(n,[1 size(hs,2)]),hs);
+isOk2 = ~isnan(distancesToOrigin) & isOk; %Spacial version of isOk, that makes sure h is not nan
+p = polyfit(speculatedDistanceToOrigin(isOk2), distancesToOrigin(isOk2),1);
 scale = p(1);
 
 if (abs(scale) > 1.4 || abs(scale) < 1-0.5)
@@ -131,7 +147,7 @@ if (abs(scale) > 1.4 || abs(scale) < 1-0.5)
     
     %Refit
     scale = 1*sign(scale);
-    offset = median(distanceToOrigin(isOk2)-speculatedDistanceToOrigin(isOk2)*sign(scale));
+    offset = median(distancesToOrigin(isOk2)-speculatedDistanceToOrigin(isOk2)*sign(scale));
     p = [scale offset];
 end
 distanceToOriginRefitted = polyval(p,speculatedDistanceToOrigin); %Fit corrected values
