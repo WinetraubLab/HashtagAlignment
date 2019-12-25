@@ -86,7 +86,7 @@ for scanI = 1:length(scanParameters.octFolders)
     %Save
     tic;
     fprintf('%s Saving Processd Scan (%d of %d)\n',datestr(datetime),scanI,length(scanParameters.octFolders));
-    yOCT2Tif(mag2db(scanAbs),[octScanPath '\scanAbs.tif'],[],dim);
+    yOCT2Tif(mag2db(scanAbs),[octScanPath '\scanAbs.tif'],'metadata',dim);
     toc;
 end
 
