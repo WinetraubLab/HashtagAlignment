@@ -5,8 +5,8 @@
     s3GetAllSubjectsInLib('LC'); %Set lib (LC, LD etc, or leave empty for latest lib)
 
 %Do you wish to run on subjects or slides?
-isRunOnSubjects = false; 
-isRunOnSlides = true;
+isRunOnSubjects = true; 
+isRunOnSlides = false;
 
 %% Loop Over all subjects and make the change (subject related)
 if isRunOnSubjects
@@ -16,6 +16,57 @@ if isRunOnSubjects
         disp(['Processing ' subjectsName{si}]);
 
         %% Make the change <--HERE-->
+        jsonFiles = {...
+            [subjectPath '/OCTVolumes/Volume/ScanInfo.json'], ...
+            [subjectPath '/OCTVolumes/Overview/ScanInfo.json'], ...
+            };
+        ini = yOCTReadProbeIniToStruct('Y:\Work\_de la Zerda Lab Scripts\HashtagAlignmentRepo\01 OCT Scan and Pattern\Thorlabs\Probe - Olympus 10x.ini');
+        
+        for i=1:length(jsonFiles)
+            json = awsReadJSON(jsonFiles{i});
+            
+            ini.DynamicFactorX = json.xRange;
+            ini.DynamicOffsetX = json.xOffset;
+            json.xRange = 1;
+            json.xOffset = 0;
+            json.version = 1.1;
+            
+            if (isfield(json,'lensWorkingDistance'))
+                json = rmfield(json,'lensWorkingDistance');
+            end
+            json.octProbeIni = ini;
+           
+            awsWriteJSON(json,jsonFiles{i});
+        end
+        
+        jsonFiles = [subjectPath 'OCTVolumes/ScanConfig.json'];
+        json = awsReadJSON(jsonFiles);
+        
+        if (isfield(json,'lensWorkingDistance'))
+            json = rmfield(json,'lensWorkingDistance');
+        end
+        if (isfield(json,'octProbeLensWorkingDistance'))
+            json = rmfield(json,'octProbeLensWorkingDistance');
+        end
+        if (isfield(json,'octProbeFOV'))
+            json = rmfield(json,'octProbeFOV');
+        end
+        
+        json = rmfield(json,'scaleX');
+        json = rmfield(json,'scaleY');
+        json = rmfield(json,'offsetX');
+        json = rmfield(json,'offsetY');
+        json.version = 2.1;
+        
+        is1 = json.volume.isScanEnabled;
+        json.volume = awsReadJSON(jsonFiles{1});
+        json.volume.isScanEnabled = is1;
+        
+        is1 = json.overview.isScanEnabled;
+        json.overview = awsReadJSON(jsonFiles{2});
+        json.overview.isScanEnabled = is1;
+        
+        awsWriteJSON(json,jsonFiles);
         
         %Do nothing
     end

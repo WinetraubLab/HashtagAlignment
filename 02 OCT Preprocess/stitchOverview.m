@@ -51,23 +51,22 @@ if ~isAlreadyProcessed
     setupParpolOCTPreprocess();
     yOCTProcessTiledScan(...
         [OCTVolumesFolder 'Overview\'], ... Input
-        output3DOverviewVolume,...
-        'debugFolder',[logFolder 'OverviewDebug\'],...
-        'saveYs',2*(length(json.overview.zDepths)>1),... Save some raw data ys if there are multiple depths
+        {output3DOverviewVolumeAll output3DOverviewVolume},...
         'focusPositionInImageZpix',focusPositionInImageZpix,... No Z scan filtering
         'dispersionParameterA',dispersionParameterA,...
+		'yPlanesOutputFolder',[logFolder 'OverviewDebug\'],...
+        'howManyYPlanes',2*(length(json.overview.zDepths)>1),... Save some raw data ys if there are multiple depths
         'v',true);
 end
 
 %% Read processed volume and create an enface view
 if (~isAlreadyProcessed)
-    overviewVol = yOCTFromTif(output3DOverviewVolumeAll); %Dimentions (z,x,y)
+    [overviewVol, dim] = yOCTFromTif(output3DOverviewVolumeAll); %Dimentions (z,x,y)
 end
-processedJson = awsReadJSON([output3DOverviewVolume 'processedScanConfig.json']);
 
-xOverview = processedJson.xAllmm;
-yOverview = processedJson.yAllmm;
-zOverview = processedJson.zAllmm;
+xOverview = dim.x.values;
+yOverview = dim.y.values;
+zOverview = dim.z.values;
 
 %Enface projection in Matlab prefers to work with matrix which is (y,x). So
 %change dimentions to fit
