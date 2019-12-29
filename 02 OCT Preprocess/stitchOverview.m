@@ -40,8 +40,14 @@ end
 
 %Figure out if we already processed this volume, if so, no need to redo it
 try
-	overviewVol = yOCTFromTif(output3DOverviewVolumeAll); 
-    isAlreadyProcessed = true;
+	[overviewVol, dim] = yOCTFromTif(output3DOverviewVolumeAll); 
+    
+    if ~isempty(dim)
+        isAlreadyProcessed = true;
+    else
+        % Dim is empty, meaning this is a depriciated version, reprocess.
+        isAlreadyProcessed = false;
+    end
 catch
     isAlreadyProcessed = false;
 end
