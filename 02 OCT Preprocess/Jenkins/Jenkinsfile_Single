@@ -104,7 +104,7 @@ pipeline {
 			
 			try
 			{
-				RunMatlabRunme()
+				RunMatlabRunme(params.AWS_PARALLEL_COMPUTING)
 				currentBuild.result = 'SUCCESS'
 			}
 			catch(Exception e)
@@ -154,13 +154,13 @@ pipeline {
 		}}}
 	}
 }
-def RunMatlabRunme() //runs runme.m
+def RunMatlabRunme(isConnectToCluster=false)  //runs runme.m
 {
 	try
 	{
 		def rootDir = pwd()
 		def MatlabRunner = load "${rootDir}/99 Jenkins Lib/MatlabRunner.Groovy"
-		MatlabRunner.RunMatlabScript ("runme.m");
+		MatlabRunner.RunMatlabScript ("runme.m",isConnectToCluster);
 		bat("@del \f runme.m");
 	}
 	catch(Exception e)
