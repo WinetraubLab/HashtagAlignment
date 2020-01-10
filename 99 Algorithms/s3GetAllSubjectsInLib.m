@@ -5,7 +5,13 @@ if ~exist('lib','var')
     lib = '';
 end
 
+% Get all subfolders, each folder is a subject
 rootPath = s3SubjectPath('',lib);
 [subjectNames, subjectPaths] = awsls(rootPath);
 subjectNames = cellfun(@(x)(strrep(x,'/','')),...
     subjectNames,'UniformOutput',false);
+
+% Remove calibration, this is no a subject
+isRemove = cellfun(@(sn)(strcmpi(sn,'calibratoins')),subjectNames);
+subjectPaths(isRemove) = [];
+subjectNames(isRemove) = [];
