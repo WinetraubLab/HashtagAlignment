@@ -106,8 +106,6 @@ for sI = 1:length(json.octFolders)
         'location','south')
 
     subplot(2,2,2);
-    xlabel('y[\mum]');
-    ylabel('z[\mum]');
     plot(x,interfaceZ(:,xPeakI),'b+');
     hold on;
     plot(x,mdl(x(xPeakI),y,a),'k','LineWidth',3);
@@ -116,6 +114,8 @@ for sI = 1:length(json.octFolders)
     grid on;
     axis ij;
     title('Peak Point X Direction Snapshot');
+    xlabel('y[\mum]');
+    ylabel('z[\mum]');
     legend('Data','Fit');
 
     subplot(2,2,4);
@@ -138,8 +138,6 @@ for sI = 1:length(json.octFolders)
         scanY = yOCTFromTif([octPath 'scanAbs.tif'],yPeakI);
     end
     imagesc(x,z,scanY);
-    xlabel('x[\mum]');
-    ylabel('z[\mum]');
     hold on;
     plot(x,interfaceZ(yPeakI,:),'b+');
     plot(x,mdl(x,y(yPeakI),a),'k','LineWidth',3);
@@ -147,6 +145,8 @@ for sI = 1:length(json.octFolders)
     hold off
     grid on;
     title('Peak Point Y Direction Snapshot');
+    xlabel('x[\mum]');
+    ylabel('z[\mum]');
     pause(0.1);
     
     saveas(f,'interfaceZPositions_PolyFit.png');
