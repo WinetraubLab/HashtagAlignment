@@ -2,8 +2,8 @@
 %Be sure to scan a flat surface using scanTarget function
 
 %% Inputs
-%experimentPath = s3SubjectPath('2019-11-30 Imaging Flat Surface On Motorized Stage','LD',true);
-experimentPath = s3SubjectPath('2019-11-30 Imaging Flat Surface On Optic Table','LD',true);
+%experimentPath = s3SubjectPath('2019-11-30 Imaging Flat Surface On Motorized Stage','',true);
+experimentPath = s3SubjectPath('2020-01-09 Imaging Flat Surface On Optic Table','',true);
 
 json = awsReadJSON([experimentPath 'ScanInfo.json']);
 %% Pre-processing #1 compute interface position
@@ -80,7 +80,7 @@ for sI = 1:length(json.octFolders)
     fit.xPeakI = xPeakI;
     fit.yPeak = yPeak;
     fit.yPeakI = yPeakI;
-    awsWriteJSON(fit,[octPath 'interfaceZPositions_PolyFit.json']);
+    awsWriteJSON(fit,[experimentPath 'interfaceZPositions_PolyFit.json']);
     
     %% Plot fit & save
     f = figure(sI);
@@ -150,7 +150,7 @@ for sI = 1:length(json.octFolders)
     pause(0.1);
     
     saveas(f,'interfaceZPositions_PolyFit.png');
-    awsCopyFileFolder('interfaceZPositions_PolyFit.png',octPath);
+    awsCopyFileFolder('interfaceZPositions_PolyFit.png',experimentPath);
 end
 
 %% Compate oct probe calibration
