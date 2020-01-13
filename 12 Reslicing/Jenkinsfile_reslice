@@ -126,7 +126,7 @@ pipeline {
 				try
 				{
 				emailext ( //Using ext-email plugin
-					subject: "[OCTHist] Processing Completed ${currentBuild.result} #$BUILD_NUMBER",
+					subject: "[OCTHist] Reslicing Completed ${currentBuild.result} #$BUILD_NUMBER",
 					from : "Yonatan",
 					body: 
 					"Hi,<br>" +
