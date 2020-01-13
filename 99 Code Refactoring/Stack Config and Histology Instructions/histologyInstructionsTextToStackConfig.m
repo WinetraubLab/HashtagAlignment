@@ -90,7 +90,7 @@ for i=1:length(lines)
 end
 
 %% Finalize
-scGenerateHistologyInstructionsFile(sc,[logPath 'HistologyInstructions.pdf']);
+scGenerateHistologyInstructionsFile(sc,[logsFloder 'HistologyInstructions.pdf']);
 
 % Cleanup
 if (deleteOriginalFileWhenDone)
