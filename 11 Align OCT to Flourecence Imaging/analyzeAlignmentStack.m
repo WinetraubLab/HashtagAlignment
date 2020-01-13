@@ -38,16 +38,16 @@ for i=1:length(sectionJsons)
 end
 
 %Histology Instructions
-hiJsonFilePath = awsModifyPathForCompetability([subjectFolder '/Slides/HistologyInstructions.json']);
-hiJson = awsReadJSON(hiJsonFilePath);
+stackConfigFilePath = awsModifyPathForCompetability([subjectFolder '/Slides/StackConfig.json']);
+scJson = awsReadJSON(stackConfigFilePath);
 
 %% Check Histology Instructions for consistency
-l1 = length(hiJson.sectionName);
-l2 = length(hiJson.sectionDepthsRequested_um);
-l3 = length(hiJson.sectionIteration);
+l1 = length(scJson.sections.names);
+l2 = length(scJson.sections.iterations);
+l3 = length([stackConfig.histologyInstructions.iterations.sectionDepthsRequested_um]);
 
 if (std([l1 l2 l3]) ~= 0)
-    error('Expecting Histology Instuctions to match between number of slides in: sectionName, sectionIteration, sectionDepthsRequested_um');
+    error('Expecting Histology Instuctions to match between number of slides in: sections.names, sections.iterations, histologyInstructions.iterations.sectionDepthsRequested_um');
 end
 
 %% Load enface view if avilable 
@@ -65,7 +65,7 @@ end
 %% General data
 disp([datestr(now) ' Computing...']);
 
-sectionNames = hiJson.sectionName;
+sectionNames = scJson.sections.names;
 singlePlaneFits = cell(size(sectionNames));
 for i=1:length(singlePlaneFits)
     jsonIndex = find(cellfun(@(x)(contains(x,sectionNames{i})), ...
@@ -99,15 +99,15 @@ else
 end
 
 %% Fit stack (by iteration)
-nIterations = max(hiJson.sectionIteration);
+nIterations = length(scJson.histologyInstructions.iterations);
 singlePlaneFits_Realigned = cell(size(singlePlaneFits));
 singlePlaneFits_IsOutlier = zeros(size(singlePlaneFits));
 singlePlaneFits_IsUsableSlide = zeros(size(singlePlaneFits)); %In case there is an outlier, but still we can use this
 for i=1:nIterations
-    ii = hiJson.sectionIteration == i;
+    ii = scJson.sections.iterations == i;
     [singlePlaneFits_Realigned(ii),singlePlaneFits_IsOutlier(ii)] = ...
         spfRealignByStack(singlePlaneFits(ii), ...
-        hiJson.sectionDepthsRequested_um(ii)/1000);
+        scJson.histologyInstructions.iterations(i).sectionDepthsRequested_um/1000);
     
     if (sum(singlePlaneFits_IsOutlier(ii)) == sum(ii))
         %All planes are outliers, the alignment failed, this is not usable
@@ -206,12 +206,12 @@ title(sprintf('Distance From Origin, SEM %.1f[\\mum], Section Size: %.1f[\\mum]'
 grid on;
 
 %If transision between iteration #1 and #2 exist, say what it is
-last1 = find(hiJson.sectionIteration==1,1,'last');
-if (sum(badFit(hiJson.sectionIteration==1))>0)
+last1 = find(scJson.sections.iterations==1,1,'last');
+if (sum(badFit(scJson.sections.iterations==1))>0)
     last1 = [];
 end
-first2 = find(hiJson.sectionIteration==2,1,'first');
-if (sum(badFit(hiJson.sectionIteration==2))>0)
+first2 = find(scJson.sections.iterations==2,1,'first');
+if (sum(badFit(scJson.sections.iterations==2))>0)
     first2 = [];
 end
 if ~isempty(last1) && ~isempty(first2) 

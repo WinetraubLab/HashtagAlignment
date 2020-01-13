@@ -45,9 +45,9 @@ folders = unique(folders);
 folders(cellfun(@(x)~contains(lower(x),'slide'),folders)) = []; %Delete folders which don't have 'slide' in their name
 folders= cellfun(@(x)strrep(x,'\MetaData',''),folders,'UniformOutput',false);
 
-%% Read HistologyInstructions.json to make sure section naming is consistent with instructions
-HI = awsReadJSON([s3Dir '/Slides/HistologyInstructions.json']);
-sectionNames = HI.sectionName;
+%% Read StackConfig.json to make sure section naming is consistent with instructions
+StackConfig = awsReadJSON([s3Dir '/Slides/StackConfig.json']);
+sectionNames = stackConfig.sections.names;
 
 %% Loop for each folder extract data
 disp(' '); disp('Looping Over All Folders');
