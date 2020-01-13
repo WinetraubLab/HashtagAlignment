@@ -46,7 +46,7 @@ folders(cellfun(@(x)~contains(lower(x),'slide'),folders)) = []; %Delete folders 
 folders= cellfun(@(x)strrep(x,'\MetaData',''),folders,'UniformOutput',false);
 
 %% Read StackConfig.json to make sure section naming is consistent with instructions
-StackConfig = awsReadJSON([s3Dir '/Slides/StackConfig.json']);
+stackConfig = awsReadJSON([s3Dir '/Slides/StackConfig.json']);
 sectionNames = stackConfig.sections.names;
 
 %% Loop for each folder extract data
