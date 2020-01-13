@@ -94,5 +94,7 @@ scGenerateHistologyInstructionsFile(sc,[logPath 'HistologyInstructions.pdf']);
 
 % Cleanup
 if (deleteOriginalFileWhenDone)
-    awsRmFile([logPath 'histoInstructions.txt']);
+    awsCopyFileFolder([logsFloder 'histoInstructions.txt'], ...
+        [subjectPath 'Log/00 Depreciated Files Dont Use/histoInstructions.txt']);
+    awsRmFile([logsFloder 'histoInstructions.txt']);
 end

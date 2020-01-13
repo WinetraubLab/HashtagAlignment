@@ -13,8 +13,8 @@ end
 
 if ~isstruct(stackConfig)
     %Load
-    stackConfig = awsReadJSON(stackConfig);
     scInputFP = stackConfig;
+    stackConfig = awsReadJSON(stackConfig);
 else
     scInputFP = 'json file';
 end

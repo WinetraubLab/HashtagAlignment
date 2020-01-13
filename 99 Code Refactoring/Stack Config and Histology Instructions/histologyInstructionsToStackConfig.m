@@ -76,6 +76,9 @@ end
 %% Save output & delete original version.
 awsWriteJSON(stackConfig,[slidesFolder 'StackConfig.json']);
 
+% Cleanup
 if (deleteOriginalFileWhenDone)
+    awsCopyFileFolder([slidesFolder 'HistologyInstructions.json'], ...
+        [subjectPath 'Log/00 Depreciated Files Dont Use/HistologyInstructions.json']);
     awsRmFile([slidesFolder 'HistologyInstructions.json']);
 end
