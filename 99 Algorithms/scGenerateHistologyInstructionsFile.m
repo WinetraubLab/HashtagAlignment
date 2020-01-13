@@ -1,6 +1,6 @@
-function hiGenerateInstructionsFile(hiInput,outFilePath,iterations)
+function scGenerateHistologyInstructionsFile(stackConfig,outFilePath,iterations)
 %INPUTS:
-%   hiInput - can be HI structure, or file path to hiInput
+%   stackConfig - can be stackConfig structure, or file path to stackConfig
 %   outFilePath - where to save file, file format can be pdf or txt
 %   iterations - optional, specify which iteration of sending the sample to
 %       output, keep empty for all iteration
@@ -11,17 +11,16 @@ if (awsIsAWSPath(outFilePath))
     awsSetCredentials(1); %we will need to upload files there
 end
 
-if ~isstruct(hiInput)
+if ~isstruct(stackConfig)
     %Load
-    HI = awsReadJSON(hiInput);
-    hiInputFP = hiInput;
+    stackConfig = awsReadJSON(stackConfig);
+    scInputFP = stackConfig;
 else
-    HI = hiInput;
-    hiInputFP = 'json file';
+    scInputFP = 'json file';
 end
 
 if ~exist('iterations','var') || isempty(iterations)
-    iterations = unique(HI.sectionIteration);
+    iterations = 1:length(stackConfig.histologyInstructions.iterations);
 end
 
 %Using extension of output file, determine header and how to bold
@@ -55,7 +54,7 @@ end
 %% Generate file
 fid = fopen(['tmp' ext],'w');
 fprintf(fid,'%s',headerStart);
-fprintf(fid,'Sample ID: %s%s',HI.sampleID,nl);
+fprintf(fid,'Sample ID: %s%s',stackConfig.sampleID,nl);
 
 for ii = 1:length(iterations)
     it = iterations(ii);
@@ -67,20 +66,20 @@ for ii = 1:length(iterations)
     
     
     %Title
-    fprintf(fid,'Scanned by: %s%s',HI.iterationOperators{it},nl) ;
-    fprintf(fid,'Date: %s%s',HI.iterationDates{it},nl);
+    fprintf(fid,'Scanned by: %s%s',stackConfig.histologyInstructions.iterations(it).operator,nl) ;
+    fprintf(fid,'Date: %s%s',stackConfig.histologyInstructions.iterations(it).date,nl);
     fprintf(fid,'%s',nl);
     
     %First iteration header
     if (ii == 1)
         fprintf(fid,'* This file contains the post calibration instructions.%s',nl);
-        fprintf(fid,'* To view original values, see %s%s',hiInputFP,nl);
+        fprintf(fid,'* To view original values, see %s%s',scInputFP,nl);
         fprintf(fid,'%s',nl);
     end
     if(it == 1)
         fprintf(fid,'%s%s%s%s',titleTxt('Instructions for Us'),nl,titleTxt(),nl);
         
-        if (HI.startAtDotSide == 1)
+        if (stackConfig.histologyInstructions.iterations(it).startCuttingAtDotSide == 1)
             fprintf(fid,'+ We want to cut sections at the same side as black dot.%s',nl);
             fprintf(fid,'+ Mark a red dot on the side opposite to the black dot. %s',nl);
         else
@@ -97,19 +96,14 @@ for ii = 1:length(iterations)
     
     if (it==1)
         fprintf(fid,'+ Start cutting from the side opposite to the red dot.%s',nl);
-        fprintf(fid,'+ Clear paraffin, when seeing a full face.%s',nl);
-        
-        %Figure out what is current knife position
-        pos = 0 ; %We start from full face
+        fprintf(fid,'+ Clear paraffin, when seeing a full face.%s',nl);    
     else
-        fprintf(fid,'+ Continue cutting from the cut face.%s',nl);
-        
-        %Figure out what is current knife position
-        pos = max(HI.sectionDepthsRequested_um(HI.sectionIteration==(it-1))); %We start from where we left off
+        fprintf(fid,'+ Continue cutting from the cut face.%s',nl);   
     end
     
     %Loop over all sections to cut
-    s = HI.sectionDepthsRequested_um(HI.sectionIteration == it);
+    s = stackConfig.histologyInstructions.iterations(it).sectionDepthsRequested_um;
+    pos = 0; % Current knife position compared to the full face.
     
     %Devide sections to cut to groups
     sGroups = zeros(size(s));
@@ -130,9 +124,9 @@ for ii = 1:length(iterations)
         ss = s(sGroups == j);
         
         %Advance to where we need to go
-        if (ss(1) > pos+HI.histoKnife.a25um) %Make sure one cut is possible
+        if (ss(1) > pos+stackConfig.histologyInstructions.histoKnife.thicknessOf25umSlice_um) %Make sure one cut is possible
             d = ss(1)-pos;
-            n25Cuts = round(d/HI.histoKnife.a25um);
+            n25Cuts = round(d/stackConfig.histologyInstructions.histoKnife.thicknessOf25umSlice_um);
             
             fprintf(fid,'+ Then %sgo in %.0f um%s, by cutting %.0f sections using slide thickness setting of 25 um.%s', ...
                 bStart,n25Cuts*25,bEnd,n25Cuts,nl);
@@ -146,14 +140,14 @@ for ii = 1:length(iterations)
             %Only one section
             fprintf(fid,'+ Take %sone slide%s / section.%s',bStart,bEnd,nl); 
         else
-            nSlides = ceil(nSections/HI.histoKnife.sectionsPerSlide);
+            nSlides = ceil(nSections/stackConfig.histologyInstructions.histoKnife.sectionsPerSlide);
             fprintf(fid,'+ Then take %s%.0f slides%s with %.0f sections per slide (%.0f sections).%s',...
-                bStart,nSlides,bEnd,HI.histoKnife.sectionsPerSlide,nSections,nl);
+                bStart,nSlides,bEnd,stackConfig.histologyInstructions.histoKnife.sectionsPerSlide,nSections,nl);
             
-            interval = diff(ss(1:2)) / HI.histoKnife.a5um*5 - HI.histoKnife.sectionThickness_um;
+            interval = diff(ss(1:2)) / stackConfig.histologyInstructions.histoKnife.thicknessOf5umSlice_um*5 - stackConfig.histologyInstructions.histoKnife.sectionThickness_um;
             fprintf(fid,'%s- Section interval of %.0f um.%s',tab,interval,nl);
         end
-        fprintf(fid,'%s- Slide thickness of %.0f um.%s',tab,HI.histoKnife.sectionThickness_um,nl);
+        fprintf(fid,'%s- Slide thickness of %.0f um.%s',tab,stackConfig.histologyInstructions.histoKnife.sectionThickness_um,nl);
         
         pos = ss(end);
     end

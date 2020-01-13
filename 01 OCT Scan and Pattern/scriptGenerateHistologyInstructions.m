@@ -55,57 +55,53 @@ end
 
 %% Setup paths
 [~,subjectName] = fileparts([subjectFolder(1:(end-1)) '.a']);
-jsonPath = awsModifyPathForCompetability([subjectFolder '/Slides/HistologyInstructions.json']);
+jsonPath = awsModifyPathForCompetability([subjectFolder '/Slides/StackConfig.json']);
 logPath = awsModifyPathForCompetability([subjectFolder '/Log/01 OCT Scan and Pattern/']);
 
 %If this is not the first iteration, load JSON to tell him
 if (iteration > 1)
-    json = awsReadJSON(jsonPath);
-    in2 = json;
+    stackConfig = awsReadJSON(jsonPath);
+    
+    % Check iteration #2 was not set before, if it did, override it
+    if (iteration > 2)
+        warning('Iteration #2 exists, deleting it before adding iteration #2');
+        stackConfig = scDeleteIterationsFromStackConfig(stackConfig, ...
+            2:length(stackConfig.histologyInstructions.iterations));
+    end
+    
+    inputs = {'appendToSC', stackConfig};
 else
-    isJsonExist = false;
-    try
-        json = awsReadJSON(jsonPath);
-        isJsonExist = true;
-    catch
-        %Do nothing
-    end
-    if (isJsonExist)
+    
+    if awsExist(jsonPath,'file')
         error('You say its iteration #1, but json path exists, is that ok? %s',jsonPath);
-    end
-    in2 = isCutOnDotSide;
-end
-
-%% Check iteration #2 was not set before, if it did, override it
-if (iteration > 2)
-    warning('Iteration #2 exists, deleting it before adding iteration #2');
-    in2.iterationDates = in2.iterationDates(1);
-    in2.iterationOperators = in2.iterationOperators(1);
-    ii = in2.sectionIteration>=2;
-    in2.sectionIteration(ii)= [];
-    in2.sectionDepthsRequested_um(ii) = [];
-    in2.sectionName(ii) = [];
+    end 
+    
+    inputs = {'startCuttingAtDotSide', isCutOnDotSide};
 end
 
 %% Build Histology Instructions
-if (iteration == 1)
-    tmp = distanceToOCTOrigin_um; %Get distance to origin from user
-else
-    tmp = []; %In followup iterations distance to origin is calculated by analyzeAlignmentStack.m, don't override their analysis
-end
-HI = hiGenerateHistologyInstructions(whereTocut,in2,yourName,now,subjectName,tmp);
+inputs = [inputs {...
+    'sampleID', subjectName, ...
+    'iterationNumber', iteration, ...
+    'sectionDepthsRequested_um', whereTocut, ...
+    'estimatedDistanceFromFullFaceToOCTOrigin_um', distanceToOCTOrigin_um,...
+    'operator', yourName, ...
+    'date', now, ...
+    }];
+
+stackConfig = scGenerateStackConfig(inputs);
 
 %Upload istructions
 if (isUpdateAWS)
-    awsWriteJSON(HI,jsonPath);
+    awsWriteJSON(stackConfig,jsonPath);
 end
 
 %Generate Instructions, in the log put all instructions, locally just this
 %iteration's
 if (isUpdateAWS)
-    hiGenerateInstructionsFile(jsonPath,[logPath 'HistologyInstructions.pdf']);
-    hiGenerateInstructionsFile(jsonPath,'HistologyInstructions.pdf',iteration);
+    scGenerateHistologyInstructionsFile(jsonPath,[logPath 'HistologyInstructions.pdf']);
+    scGenerateHistologyInstructionsFile(jsonPath,'HistologyInstructions.pdf',iteration);
 else
-    hiGenerateInstructionsFile(HI,'HistologyInstructions.pdf',iteration);
+    scGenerateHistologyInstructionsFile(stackConfig,'HistologyInstructions.pdf',iteration);
 end
 
