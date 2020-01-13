@@ -6,12 +6,14 @@
 
 isReProcessOCT = false;
 whichIterationsToReslice = 2;
+runningOnJenkins = false;
 
-subjectFolder = s3SubjectPath('01');
+subjectFolder = s3SubjectPath('02');
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %Jenkins
     isReProcessOCT = isReProcessOCT_;
     whichIterationsToReslice = whichIterationsToReslice_;
+    runningOnJenkins = true;
 end
 
 % If not empty, will write the overview files to Log Folder
@@ -25,8 +27,7 @@ subjectFolder = awsModifyPathForCompetability(subjectFolder);
 [~,subjectName] = fileparts([subjectFolder(1:end-1) '.a']);
 
 % OCT
-octVolumeJsonFilePath = awsModifyPathForCompetability([OCTVolumesFolder 'ScanConfig.json']);
-octVolumeJson = awsReadJSON(octVolumeJsonFilePath);
+[~, dimensions] = yOCTFromTif([OCTVolumesFolder 'VolumeScanAbs/'],[]);
 
 % Stack Config
 scJsonFilePath = awsModifyPathForCompetability([subjectFolder '/Slides/StackConfig.json']);
@@ -57,16 +58,21 @@ for sI = 1:length(whichIterationsToReslice)
     end
     
     % Dimensions of the stack to slice
-    xSpan = sqrt(octVolumeJson.volume.xRange^2 + octVolumeJson.volume.yRange^2);
-    x = (-xSpan/2):0.001:(xSpan/2); %mm
-    y = ((min(d_um)-30):1:(max(d_um)+30))/1000; %mm, take some buffer on both ends
-    z = min(octVolumeJson.volume.zDepths):0.001:max(octVolumeJson.volume.zDepths);
+    xRange = max(dimensions.x.values) - min(dimensions.x.values);
+    yRange = max(dimensions.y.values) - min(dimensions.y.values);
+    jumpXY = diff(dimensions.x.values(1:2));
+    xSpan = sqrt(xRange^2 + yRange^2);
+    x = (-xSpan/2):jumpXY:(xSpan/2); %mm
+    y = ((min(d_um)-30):(jumpXY*1e3):(max(d_um)+30))/1000; %mm, take some buffer on both ends
+    z = dimensions.z.values;
 
     outputFileName = sprintf('%sStackVolume_Iteration%d',OCTVolumesFolder,whichIterationsToReslice(sI));
     outputFileName = { [outputFileName '_All.tif'], [outputFileName '/']}';
 
     % Do the reslice, hopefully in the cloud
-    setupParpolOCTPreprocess();
+    if (runningOnJenkins)
+        setupParpolOCTPreprocess();
+    end
     yOCTReslice(...
         [OCTVolumesFolder 'VolumeScanAbs'], ...
         n,x,y,z, ...

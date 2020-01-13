@@ -7,9 +7,12 @@ dispersionParameterA = []; %Use default that is specified in ini probe file
 focusSigma = 20; %When stitching along Z axis (multiple focus points), what is the size of each focus in z [pixel]
 outputFileFormat = 'tif'; %Can be 'tif' or 'mat' for debug
 
+isRunOnJenkins = false;
+
 %% Jenkins
 if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
+    isRunOnJenkins = true;
 end
 
 %% Directories 
@@ -26,11 +29,13 @@ if ~isfield(json,'focusPositionInImageZpix')
     error('Please run findFocusInBScan first');
 end
 
-setupParpolOCTPreprocess();
+if isRunOnJenkins
+    setupParpolOCTPreprocess();
+end
 yOCTProcessTiledScan(...
         [OCTVolumesFolder 'Volume\'], ... Input
         {outputFolder [outputFolder(1:(end-1)) '_All.tif']},...
-        'focusPositionInImageZpix',focusPositionInImageZpix,... No Z scan filtering
+        'focusPositionInImageZpix',json.focusPositionInImageZpix,... No Z scan filtering
 		'focusSigma',focusSigma,...
         'dispersionParameterA',dispersionParameterA,...
 		'yPlanesOutputFolder',[logFolder 'Debug\'],...

@@ -6,7 +6,7 @@ function histologyInstructionsToStackConfig(subjectPath)
 %sp = s3GetAllSubjectsInLib();
 %subjectPath = sp{1};
 
-deleteOriginalFileWhenDone = false;
+deleteOriginalFileWhenDone = true;
 
 %% Figure out if this subject has the older version of histology instructions as we expect.
 slidesFolder = [subjectPath '/Slides/'];

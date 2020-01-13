@@ -6,7 +6,7 @@ function histologyInstructionsTextToStackConfig(subjectPath)
 %sp = s3GetAllSubjectsInLib('LC');
 %subjectPath = sp{2};
 
-deleteOriginalFileWhenDone = false;
+deleteOriginalFileWhenDone = true;
 
 %% Figure out if this subject has the older version of histology instructions as we expect.
 logsFloder = awsModifyPathForCompetability([subjectPath '/Log/01 OCT Scan and Pattern/']);
