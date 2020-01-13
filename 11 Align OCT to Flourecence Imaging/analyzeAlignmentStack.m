@@ -44,7 +44,9 @@ scJson = awsReadJSON(stackConfigFilePath);
 %% Check Histology Instructions for consistency
 l1 = length(scJson.sections.names);
 l2 = length(scJson.sections.iterations);
-l3 = length([stackConfig.histologyInstructions.iterations.sectionDepthsRequested_um]);
+tmp = {scJson.histologyInstructions.iterations.sectionDepthsRequested_um};
+tmp = cellfun(@(x)(x(:)'),tmp,'UniformOutput',false);
+l3 = length([tmp{:}]);
 
 if (std([l1 l2 l3]) ~= 0)
     error('Expecting Histology Instuctions to match between number of slides in: sections.names, sections.iterations, histologyInstructions.iterations.sectionDepthsRequested_um');
@@ -105,16 +107,22 @@ singlePlaneFits_IsOutlier = zeros(size(singlePlaneFits));
 singlePlaneFits_IsUsableSlide = zeros(size(singlePlaneFits)); %In case there is an outlier, but still we can use this
 for i=1:nIterations
     ii = scJson.sections.iterations == i;
-    [singlePlaneFits_Realigned(ii),singlePlaneFits_IsOutlier(ii)] = ...
+    [singlePlaneFits_Realigned(ii),singlePlaneFits_IsOutlier(ii),nOut,sectionDistanceToOriginOut] = ...
         spfRealignByStack(singlePlaneFits(ii), ...
         scJson.histologyInstructions.iterations(i).sectionDepthsRequested_um/1000);
     
     if (sum(singlePlaneFits_IsOutlier(ii)) == sum(ii))
-        %All planes are outliers, the alignment failed, this is not usable
+        % All planes are outliers, the alignment failed, this is not usable
         singlePlaneFits_IsUsableSlide(ii) = false;
+        nOut = [];
+        sectionDistanceToOriginOut = NaN*zeros(sum(ii),1);
     else
         singlePlaneFits_IsUsableSlide(ii) = true;
     end
+    
+    % Update stack config to show stack alignment result
+    scJson.stackAlignment(i).planeNormal = nOut;
+    scJson.stackAlignment(i).planeDistanceFromOCTOrigin_um = sectionDistanceToOriginOut*1000;
 end
 
 noFit = cellfun(@isempty,singlePlaneFits);
@@ -340,8 +348,8 @@ if isUpdateCloud
 
     end
     
-    %Update histology instructions with our updated guess of where OCT origin is
-    %awsWriteJSON(hiJson,hiJsonFilePath); %TBD
+    % Update stack config
+    awsWriteJSON(scJson,stackConfigFilePath);
     
     disp ('Done');
 end
