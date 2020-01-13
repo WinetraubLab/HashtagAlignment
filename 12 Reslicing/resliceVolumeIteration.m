@@ -35,7 +35,8 @@ scJson = awsReadJSON(scJsonFilePath);
 
 %% Pre-process volume (if needed)
 if isReProcessOCT
-   preprocessVolume(OCTVolumesFolder);
+    fprintf('%s Re-pre-processing first.\n',datestr(now));
+    preprocessVolume(OCTVolumesFolder);
 end
 
 %% Reslice 
