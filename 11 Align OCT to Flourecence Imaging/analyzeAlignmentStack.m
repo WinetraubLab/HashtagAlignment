@@ -8,7 +8,7 @@ isUpdateCloud = false;
 
 subjectFolder = s3SubjectPath('01');
 if exist('subjectFolder_','var')
-    subjectFolder = subjectFolder_; %JSON
+    subjectFolder = subjectFolder_; %Jenkins
     isUpdateCloud = true;
 end
 
