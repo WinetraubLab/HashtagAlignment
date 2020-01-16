@@ -26,9 +26,6 @@ OCTVolumesFolder = awsModifyPathForCompetability([subjectFolder '/OCTVolumes/'])
 subjectFolder = awsModifyPathForCompetability(subjectFolder);
 [~,subjectName] = fileparts([subjectFolder(1:end-1) '.a']);
 
-% OCT
-[~, dimensions] = yOCTFromTif([OCTVolumesFolder 'VolumeScanAbs/'],[]);
-
 % Stack Config
 scJsonFilePath = awsModifyPathForCompetability([subjectFolder '/Slides/StackConfig.json']);
 scJson = awsReadJSON(scJsonFilePath);
@@ -38,6 +35,28 @@ if isReProcessOCT
     fprintf('%s Re-pre-processing first.\n',datestr(now));
     preprocessVolume(OCTVolumesFolder);
 end
+
+%% Copy files locally if processing locally
+tifVolumePath = [OCTVolumesFolder 'VolumeScanAbs/'];
+poolobj = gcp('nocreate');
+isDeleteVolumeAtCleanup = false;
+if awsIsAWSPath(OCTVolumesFolder) && ...
+    (...
+        isempty(poolobj) && strcmp(parallel.defaultClusterProfile,'local') || ... No pool opened, so determine if will run locally using default cluster
+        strcmp(poolobj.Cluster.Profile,'local') ... Cluster, is open, figure out if its local cluster
+    )
+    fprintf('%s Copying data to local folder for faster processing time...\n',datestr(now));
+
+    tifVolumePath = [tempname '\Volume.tif']; % Single big tif file is better for processing locally
+    awsCopyFileFolder(...
+        [OCTVolumesFolder 'VolumeScanAbs_All.tif'], tifVolumePath);
+    isDeleteVolumeAtCleanup = true;
+    
+    fprintf('%s Done.\n',datestr(datetime));
+end        
+
+% Load OCT Dimensions
+[~, dimensions] = yOCTFromTif(tifVolumePath,'isLoadMetadataOnly',true);
 
 %% Reslice 
 for sI = 1:length(whichIterationsToReslice)
@@ -75,7 +94,7 @@ for sI = 1:length(whichIterationsToReslice)
         setupParpolOCTPreprocess();
     end
     yOCTReslice(...
-        [OCTVolumesFolder 'VolumeScanAbs'], ...
+        tifVolumePath, ...
         n,x,y,z, ...
         'outputFileOrFolder', outputFileName, ...
         'verbose', true ...
@@ -83,6 +102,11 @@ for sI = 1:length(whichIterationsToReslice)
 end
 fprintf('%s Done!\n',datestr(now));
 
+%% Cleanup
+if isDeleteVolumeAtCleanup
+    fprintf('%s Deleting temporary volume from storage...\n',datestr(now));
+    rmdir(tifVolumePath,'s');
+end
 
 %% Run pre-process of volume in protected memory
 function preprocessVolume(OCTVolumesFolder)

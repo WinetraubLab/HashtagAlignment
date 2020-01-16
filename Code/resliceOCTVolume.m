@@ -64,7 +64,7 @@ for i=1:length(YiToLoadStart)
     end
     
     %% Load subset of OCT
-    scanAbs = yOCTFromTif(OCTVolumeFile,YiToLoadStart(i):YiToLoadEnd(i));
+    scanAbs = yOCTFromTif(OCTVolumeFile,'yI',YiToLoadStart(i):YiToLoadEnd(i));
     
     %Smooth image around
     scanAbs = log(imgaussfilt3(exp(scanAbs),1));

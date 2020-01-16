@@ -135,7 +135,7 @@ for sI = 1:length(json.octFolders)
     
     subplot(2,2,3);
     if ~exist('scanY','var') || true
-        scanY = yOCTFromTif([octPath 'scanAbs.tif'],yPeakI);
+        scanY = yOCTFromTif([octPath 'scanAbs.tif'],'yI',yPeakI);
     end
     imagesc(x,z,scanY);
     hold on;
@@ -246,7 +246,7 @@ if length(json.octFolders) > 1
     for sI = 1:length(json.octFolders)
         % Load slides
         octPath = awsModifyPathForCompetability([experimentPath json.octFolders{sI} '/']);
-        [scanY,dim] = yOCTFromTif([octPath 'scanAbs.tif'],median(yPeakIs));
+        [scanY,dim] = yOCTFromTif([octPath 'scanAbs.tif'],'yI',median(yPeakIs));
         
         [~,ziStart] = min(abs(dim.z.values-mi));
         scanYs(:,:,sI) = scanY(ziStart+(0:(span-1)),:);
