@@ -118,7 +118,7 @@ if isProcessLocallyBeforeUploading
     awsCopyFileFolder(tifResliceVolumePath,OCTVolumesFolder);
    
     fprintf('%s Deleting temporary volume from storage...\n',datestr(now));
-    rmdir(tifVolumePath,'s');
+    rmdir(baseTmpFolder,'s');
 end
 
 %% Run pre-process of volume in protected memory
