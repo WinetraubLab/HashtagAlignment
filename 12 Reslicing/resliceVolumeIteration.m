@@ -115,7 +115,10 @@ fprintf('%s Done!\n',datestr(now));
 %% Cleanup
 if isProcessLocallyBeforeUploading
     fprintf('%s Uploading resliced volume to cloud...\n',datestr(now));
-    awsCopyFileFolder(tifResliceVolumePath,OCTVolumesFolder);
+    l = awsls(tifResliceVolumePath);
+    for i=1:length(l)
+        awsCopyFileFolder([tifResliceVolumePath l{i}],[OCTVolumesFolder l{i}]);
+    end
    
     fprintf('%s Deleting temporary volume from storage...\n',datestr(now));
     rmdir(baseTmpFolder,'s');
