@@ -36,23 +36,27 @@ if isReProcessOCT
     preprocessVolume(OCTVolumesFolder);
 end
 
-%% Copy files locally if processing locally
 tifVolumePath = [OCTVolumesFolder 'VolumeScanAbs/'];
+%% Copy files locally if processing locally
 poolobj = gcp('nocreate');
-isDeleteVolumeAtCleanup = false;
+isProcessLocallyBeforeUploading = false;
 if awsIsAWSPath(OCTVolumesFolder) && ...
     (...
         isempty(poolobj) && strcmp(parallel.defaultClusterProfile,'local') || ... No pool opened, so determine if will run locally using default cluster
         strcmp(poolobj.Cluster.Profile,'local') ... Cluster, is open, figure out if its local cluster
     )
+    isProcessLocallyBeforeUploading = true;
+    
     fprintf('%s Copying data to local folder for faster processing time...\n',datestr(now));
 
-    tifVolumePath = [tempname '\Volume.tif']; % Single big tif file is better for processing locally
+    baseTmpFolder = [tempname '\'];
+    tifVolumePath = [baseTmpFolder 'Volume.tif']; % Single big tif file is better for processing locally
     awsCopyFileFolder(...
         [OCTVolumesFolder 'VolumeScanAbs_All.tif'], tifVolumePath);
-    isDeleteVolumeAtCleanup = true;
-    
+   
     fprintf('%s Done.\n',datestr(datetime));
+    
+    tifResliceVolumePath = [baseTmpFolder 'ReslicedVolume\'];
 end        
 
 % Load OCT Dimensions
@@ -86,7 +90,13 @@ for sI = 1:length(whichIterationsToReslice)
     y = ((min(d_um)-30):(jumpXY*1e3):(max(d_um)+30))/1000; %mm, take some buffer on both ends
     z = dimensions.z.values;
 
-    outputFileName = sprintf('%sStackVolume_Iteration%d',OCTVolumesFolder,whichIterationsToReslice(sI));
+    % Determine where output files will be.
+    if isProcessLocallyBeforeUploading
+        baseFolder = tifResliceVolumePath;
+    else
+        baseFolder = OCTVolumesFolder;
+    end
+    outputFileName = sprintf('%sStackVolume_Iteration%d',baseFolder,whichIterationsToReslice(sI));
     outputFileName = { [outputFileName '_All.tif'], [outputFileName '/']}';
 
     % Do the reslice, hopefully in the cloud
@@ -103,7 +113,10 @@ end
 fprintf('%s Done!\n',datestr(now));
 
 %% Cleanup
-if isDeleteVolumeAtCleanup
+if isProcessLocallyBeforeUploading
+    fprintf('%s Uploading resliced volume to cloud...\n',datestr(now));
+    awsCopyFileFolder(tifResliceVolumePath,OCTVolumesFolder);
+   
     fprintf('%s Deleting temporary volume from storage...\n',datestr(now));
     rmdir(tifVolumePath,'s');
 end

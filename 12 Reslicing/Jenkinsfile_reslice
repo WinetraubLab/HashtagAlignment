@@ -26,7 +26,7 @@ pipeline {
 			trim: true)
 		booleanParam(
 			name: 'AWS_PARALLEL_COMPUTING',
-			defaultValue:true,
+			defaultValue:false,
 			description:"1. Check this box if you would like to use cloud computing (AWS).\n2. Make sure your files are uploaded to Amazon cloud (s3) to be able to use this function.\n3. Please note: 1hr cloud computing is about 1USD.")
 		booleanParam(
 			name: 'IS_REPREPROCESS_SCAN',
