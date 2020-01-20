@@ -152,6 +152,10 @@ for ii = 1:length(iterations)
         pos = ss(end);
     end
     
+    %Right before you are done, say how to mark the slides
+    fprintf(fid,'First slide taken in this iteration is %s%s%s.%s', ...
+        bStart,stackConfig.sections.names{find (stackConfig.sections.iterations == it,1,'first')},bEnd,nl);
+    
     %End of iteration
     fprintf(fid,'%s%s%s%s',titleTxt(),nl,nl,nl);
 end
