@@ -44,7 +44,7 @@ if awsIsAWSPath(OCTVolumesFolder) && ...
     (...
         isempty(poolobj) && strcmp(parallel.defaultClusterProfile,'local') || ... No pool opened, so determine if will run locally using default cluster
         strcmp(poolobj.Cluster.Profile,'local') ... Cluster, is open, figure out if its local cluster
-    )
+    ) && runningOnJenkins
     isProcessLocallyBeforeUploading = true;
     
     fprintf('%s Copying data to local folder for faster processing time...\n',datestr(now));
@@ -84,11 +84,11 @@ for sI = 1:length(whichIterationsToReslice)
     % Dimensions of the stack to slice
     xRange = max(dimensions.x.values) - min(dimensions.x.values);
     yRange = max(dimensions.y.values) - min(dimensions.y.values);
-    jumpXY = diff(dimensions.x.values(1:2));
+    jumpXYZ = 1e-3; % mm diff(dimensions.x.values(1:2));
     xSpan = sqrt(xRange^2 + yRange^2);
-    x = (-xSpan/2):jumpXY:(xSpan/2); %mm
-    y = ((min(d_um)-30):(jumpXY*1e3):(max(d_um)+30))/1000; %mm, take some buffer on both ends
-    z = dimensions.z.values;
+    x = (-xSpan/2):jumpXYZ:(xSpan/2); %mm
+    y = ((min(d_um)-30):(jumpXYZ*1e3):(max(d_um)+30))/1000; %mm, take some buffer on both ends
+    z = (min(dimensions.z.values)):jumpXYZ:(max(dimensions.z.values));
 
     % Determine where output files will be.
     if isProcessLocallyBeforeUploading
