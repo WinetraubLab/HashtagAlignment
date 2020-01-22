@@ -1,4 +1,4 @@
-function [spfsOut,isOutlierOut,nOut,sectionDistanceToOriginOut] = spfRealignByStack(spfs, speculatedDistanceToOrigin)
+function [spfsOut,isOutlierOut,nOut,sectionDistanceToOriginOut,averagePixelSize_um] = spfRealignByStack(spfs, speculatedDistanceToOrigin)
 % This function takes an array of Single Plane Fits (spfs) and rectify them
 % as they should all have the same alignment, as they are from the same
 % stack
@@ -15,6 +15,7 @@ function [spfsOut,isOutlierOut,nOut,sectionDistanceToOriginOut] = spfRealignBySt
 %        considered outlier?
 %    n - normal unit vertor to origin
 %    sectionDistanceToOrigin - fitted section distance to origin [mm]
+%    averagePixelSize_um - medain pixel size (average of |u| and |v|)
 
 %% Input checks
 spfsInLength = length(spfs);
@@ -221,9 +222,10 @@ for i=1:spfsInLength
     end
 end
 
+%% Generate Output
 [spfsOut,isOutlierOut] = makeOutput(spfsOut,isSPFCell,isOutlierOut,emptySPFsIndex*0);
 nOut = n;
-
+averagePixelSize_um = mean([unormRefitted vnormRefitted])*1e3;
 function [spfsOut,isOutlierOut] = makeOutput(spfsOut,isSPFCell,isOutlier,emptySPFsIndex)
 %Modify output to be compatible with input
 if (isSPFCell)

@@ -107,7 +107,7 @@ singlePlaneFits_IsOutlier = zeros(size(singlePlaneFits));
 singlePlaneFits_IsUsableSlide = zeros(size(singlePlaneFits)); %In case there is an outlier, but still we can use this
 for i=1:nIterations
     ii = scJson.sections.iterations == i;
-    [singlePlaneFits_Realigned(ii),singlePlaneFits_IsOutlier(ii),nOut,sectionDistanceToOriginOut] = ...
+    [singlePlaneFits_Realigned(ii),singlePlaneFits_IsOutlier(ii),nOut,sectionDistanceToOriginOut,averagePixelSize_um] = ...
         spfRealignByStack(singlePlaneFits(ii), ...
         scJson.histologyInstructions.iterations(i).sectionDepthsRequested_um/1000);
     
@@ -120,9 +120,19 @@ for i=1:nIterations
         singlePlaneFits_IsUsableSlide(ii) = true;
     end
     
+    % Compute scale factor
+    FM_pixelSize_um = mean(cellfun(@(x)(x.FM.pixelSize_um),sectionJsons));
+    scaleFactor = FM_pixelSize_um/averagePixelSize_um;
+    
     % Update stack config to show stack alignment result
     scJson.stackAlignment(i).planeNormal = nOut;
     scJson.stackAlignment(i).planeDistanceFromOCTOrigin_um = sectionDistanceToOriginOut*1000;
+    scJson.stackAlignment(i).scaleFactor = scaleFactor;
+    scJson.stackAlignment(i).notes = sprintf([ ...
+        'planeNormal - average unit vector normal to the plane, norm direction is parallel to u*v\n' ...
+        'planeDistanceFromOCTOrigin_um - for each plane what it''s distance along normal from OCT (0,0,0) point\n' ...
+        'scaleFactor - 1um in OCT frame, how many microns is it in fluorescence microscope image? Scale factor <1 means sample shrank\n' ...
+        ]);
 end
 
 noFit = cellfun(@isempty,singlePlaneFits);
