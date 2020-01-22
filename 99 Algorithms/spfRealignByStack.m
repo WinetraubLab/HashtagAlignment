@@ -128,6 +128,7 @@ if (sum(isOk) < length(isOk)/3 || sum(isOk)<2)
     [spfsOut,isOutlierOut] = makeOutput(spfs,isSPFCell,isOutlier,emptySPFsIndex);
     nOut=NaN;
     sectionDistanceToOriginOut = NaN;
+    averagePixelSize_um = NaN;
     return;
 end
 
