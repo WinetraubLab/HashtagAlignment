@@ -73,13 +73,8 @@ for sI = 1:length(whichIterationsToReslice)
     stackAlignment = scJson.stackAlignment(whichIterationsToReslice(sI));
     
     % Figure out how to slice on y' direction (new y direction)
-    n = stackAlignment.planeNormal;
+    n = stackAlignment.planeNormal; % Normal to plane, make sure not to flip it otherwise image will be fliped!
     d_um = stackAlignment.planeDistanceFromOCTOrigin_um;
-    if (d_um(1) > d_um(end))
-        % Sort backwards
-        n = -n;
-        d_um = -d_um;
-    end
     
     % Dimensions of the stack to slice
     xRange = max(dimensions.x.values) - min(dimensions.x.values);
