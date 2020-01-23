@@ -14,6 +14,8 @@ function spfPlotTopView(varargin)
 %   planeULim - n by 2 (n as number of planes) for each of the planes what u start and end will be. If non are set will draw a lineLength slide. 
 %   planeNames - cell array with names of planes to be presented
 %   theDot - x,y position of the dot (if exist)
+%   isStartCuttingFromDotSide - 1 for start cutting from dot side, -1
+%       otherwise. Set to empty if you would like not to draw it.
 
 %% Input Parameters
 p = inputParser;
@@ -29,6 +31,7 @@ addParameter(p,'enfaceViewImageYLim',[1 1]);
 addParameter(p,'planeULim',[]);
 addParameter(p,'planeNames',{});
 addParameter(p,'theDot',[]);
+addParameter(p,'isStartCuttingFromDotSide',[]);
 
 parse(p,varargin{:});
 
@@ -159,6 +162,16 @@ theDot = in.theDot;
 if (~isempty(theDot))
     theDot = theDot/norm(theDot)*lineLength/2;
     plot(theDot(1),theDot(2),'bo','MarkerSize',10,'MarkerFaceColor','b');
+end
+
+%% Plot Where User Requested to cut (direction)
+isStartCuttingFromDotSide = in.isStartCuttingFromDotSide;
+if ~isempty(theDot) && ~isempty(isStartCuttingFromDotSide)
+    x = theDot(1) * [1.3 0.6]*isStartCuttingFromDotSide;
+    y = theDot(2) * [1.3 0.6]*isStartCuttingFromDotSide;
+    drawArrow = @(x,y) quiver( x(1),y(1),x(2)-x(1),y(2)-y(1),0,...
+        'MaxHeadSize',50,'LineWidth',2);
+    drawArrow(x,y);
 end
 
 %% Finalize figure
