@@ -354,6 +354,7 @@ pipeline {
 			bat("@echo subjectFolder_ = '" + SUBJECT_OUTPUT_FOLDER() + "'; > runme.m"); 
 			bat("@echo yourName_ = '" + whoRanExperiment + "'; >> runme.m")
 			bat("@echo distanceToOCTOrigin_um_ = " + userInput. HowDeepUM + "; >> runme.m") 
+            bat("@echo isOverrideExistingInstructions_ = false; >> runme.m") 
 			
 			bat("@echo iteration_ = 1; >> runme.m") //First iteration
 			if (userInput.WhichSideToStartSections == "same side as black dot")
