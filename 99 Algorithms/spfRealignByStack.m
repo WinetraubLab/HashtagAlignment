@@ -13,8 +13,9 @@ function [spfsOut,isOutlierOut,nOut,sectionDistanceToOriginOut,averagePixelSize_
 %    spfsOut - re-aligned single plane fits
 %    isOutlier - for each of spfs, was it use in the calculation or
 %        considered outlier?
-%    n - normal unit vertor to origin
+%    nOut - normal unit vertor to origin
 %    sectionDistanceToOrigin - fitted section distance to origin [mm]
+%       (positive numbers are further along nOut)
 %    averagePixelSize_um - medain pixel size (average of |u| and |v|)
 
 %% Input checks

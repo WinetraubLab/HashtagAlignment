@@ -106,6 +106,8 @@ singlePlaneFits_Realigned = cell(size(singlePlaneFits));
 singlePlaneFits_IsOutlier = zeros(size(singlePlaneFits));
 singlePlaneFits_IsUsableSlide = zeros(size(singlePlaneFits)); %In case there is an outlier, but still we can use this
 for i=1:nIterations
+    fprintf('Computing iteration %d ...\n',i);
+    
     ii = scJson.sections.iterations == i;
     [singlePlaneFits_Realigned(ii),singlePlaneFits_IsOutlier(ii),nOut,sectionDistanceToOriginOut,averagePixelSize_um] = ...
         spfRealignByStack(singlePlaneFits(ii), ...
@@ -124,21 +126,42 @@ for i=1:nIterations
     FM_pixelSize_um = mean(cellfun(@(x)(x.FM.pixelSize_um),sectionJsons));
     scaleFactor = FM_pixelSize_um/averagePixelSize_um;
     
+    % Is plane normal in the same direction as the histology cutting 
+    % (doesn't have to be this way!)
+    if ~isempty(nOut)
+        cutDirection = [octVolumeJson.theDotX; octVolumeJson.theDotY; 0] * ...
+            (-scJson.histologyInstructions.iterations(i).startCuttingAtDotSide);
+        isPlaneNormalSameDirectionAsCuttingDirection = sign(dot(cutDirection,nOut));
+    else
+        isPlaneNormalSameDirectionAsCuttingDirection = [];
+    end
+    
     % Update stack config to show stack alignment result
     scJson.stackAlignment(i).planeNormal = nOut;
+    scJson.stackAlignment(i).isPlaneNormalSameDirectionAsCuttingDirection = isPlaneNormalSameDirectionAsCuttingDirection;
     scJson.stackAlignment(i).planeDistanceFromOCTOrigin_um = sectionDistanceToOriginOut*1000;
     scJson.stackAlignment(i).scaleFactor = scaleFactor;
     scJson.stackAlignment(i).notes = sprintf([ ...
         'planeNormal - average unit vector normal to the plane, norm direction is parallel to u*v\n' ...
+        'isPlaneNormalSameDirectionAsCuttingDirection - 1 if plane normal is pointed at the same direction as histology cutting, -1 otherwise\n' ...
         'planeDistanceFromOCTOrigin_um - for each plane what it''s distance along normal from OCT (0,0,0) point\n' ...
         'scaleFactor - 1um in OCT frame, how many microns is it in fluorescence microscope image? Scale factor <1 means sample shrank\n' ...
         ]);
 end
+fprintf('Done!\n');
 
 noFit = cellfun(@isempty,singlePlaneFits);
 goodFit  = ~singlePlaneFits_IsOutlier & singlePlaneFits_IsUsableSlide & ~noFit;
 maybeFit =  singlePlaneFits_IsOutlier & singlePlaneFits_IsUsableSlide;
 badFit   = ~singlePlaneFits_IsUsableSlide;
+
+% We would like the drawing to be from 'lower numbers' growing so flip axis if needed
+tmp = [scJson.stackAlignment(:).isPlaneNormalSameDirectionAsCuttingDirection];
+if ~isempty(tmp)
+    isPlaneNormalSameDirectionAsCuttingDirection = median(tmp); 
+else
+    isPlaneNormalSameDirectionAsCuttingDirection = 1;
+end
 
 %% Plot Main Figure (#1)
 
@@ -179,7 +202,7 @@ spfPlotTopView( ...
     'lineLength',lineLength,'planeNames',sectionNames, ...
     'theDot',[octVolumeJson.theDotX; octVolumeJson.theDotY], ...
     'isStartCuttingFromDotSide',scJson.histologyInstructions.iterations(1).startCuttingAtDotSide);
-title([subjectName]);
+title(subjectName);
 
 % Plot rotations
 s = sqrt(mean( ( rot(goodFit) - rot_realigned(goodFit) ).^2));
@@ -210,18 +233,29 @@ grid on;
 
 %Plot distance to origin
 s = sqrt(nanmean( ( d(goodFit) - d_realigned(goodFit) ).^2));
-f = (d_realigned(1) > 0)*(-2)+1;
+
+isStartCuttingFromDotSide = scJson.histologyInstructions.iterations(1).startCuttingAtDotSide;
 subplot(2,2,3);
-plot(index(goodFit),d(goodFit)*f,'.');
+plot(index(goodFit),d(goodFit),'.');
 hold on;
-plot(index(maybeFit | badFit),  d(maybeFit | badFit)*f,'.');
-plot(index, d_realigned*f, '--r');
+plot(index(maybeFit | badFit),  d(maybeFit | badFit),'.');
+plot(index, d_realigned, '--r');
 hold off;
 ylabel('Distance [mm]');
 xlabel('Slide #');
 title(sprintf('Distance From Origin, SEM %.1f[\\mum], Section Size: %.1f[\\mum]',s*1e3/sqrt(sum(goodFit)),...
-    abs(nanmedian(diff(d_realigned*f))*1e3) ));
+    abs(nanmedian(diff(d_realigned*isPlaneNormalSameDirectionAsCuttingDirection))*1e3) ));
 grid on;
+if isPlaneNormalSameDirectionAsCuttingDirection == 1
+    set(gca, 'YDir','reverse');
+else
+    set(gca, 'YDir','normal');
+end
+%if isStartCuttingFromDotSide == 1
+%    set(gca, 'XDir','normal');
+%else
+%    set(gca, 'XDir','reverse');
+%end
 
 %If transision between iteration #1 and #2 exist, say what it is
 last1 = find(scJson.sections.iterations==1,1,'last');
@@ -236,7 +270,7 @@ if ~isempty(last1) && ~isempty(first2)
     ii = [last1 first2];
     text(...
         mean(ii), ...
-        f*(mean(d_realigned(ii))+0.2), ...
+        mean(d_realigned(ii))+0.2, ...
         sprintf('Section Jump: %.0f\\mum',abs(diff(d_realigned(ii)))*1e3) ...
         );
 end
@@ -332,12 +366,13 @@ fid = fopen('lk.txt','w');
 fprintf(fid,'%s',lk);
 fclose(fid);
 
-d_lastSlide = abs(d_realigned(end));
-direction = sign(median(diff(d_realigned)));
-if (sign(d_realigned(end)) == sign(direction))
-    %Cutting more slices will increase our position - we passed origin
-    d_lastSlide = -d_lastSlide;
-end
+% Measure distance from last slide to origin.
+% We would like this number to be positive if we didn't surpass origin yet,
+% negative if we surpased. This means d_lastSlide is computed in the
+% anti-parallel direction to the cuting direction.
+% Comparing the anti-parallel to cutting with the normal to plane to the
+% histology cuts is: (-isPlaneNormalSameDirectionAsCuttingDirection)
+d_lastSlide = (-isPlaneNormalSameDirectionAsCuttingDirection) * d_realigned(end);
 fprintf('Distance from current face to origin (negative number means we surpassed origin):\n\t%.0f [um]\n',...
     d_lastSlide*1e3);
 
