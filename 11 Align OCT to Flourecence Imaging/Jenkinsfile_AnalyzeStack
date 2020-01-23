@@ -16,14 +16,24 @@ pipeline {
 			description:"Subject Directory.",
 			trim: true)
 		booleanParam(
-			name: 'IS_MAKE_INSTRUCTIONS_FOR_SECOND_ITERATION',
+			name: 'IS_MAKE_INSTRUCTIONS',
 			defaultValue:false,
 			description:"Confirm that this is for generating second iteration of histology? If set to false, will still run but will not generate instructions\nWARNING: Do not check here if you dont want to generate instructions for 2nd histology iteration!")
 		string(
 			name: "WHO_TO_EMAIL_WHEN_DONE",
 			defaultValue:"@stanford.edu",
 			description:"Who should get an email with the results? Including you!\nUse comma to specify multiple emails.\nExample: me@stanford.edu, you@stanford.edu",
+			trim: true)
+		string(
+			name: "WHAT_ITERATION",
+			defaultValue:"2",
+			description:"Which iteration is the instructions for. Set to 2 for second iteration.",
 			trim: true)	
+        booleanParam(
+			name: 'OVERRIDE_EXISTING_INSTRUCTIONS',
+			defaultValue:false,
+			description:"Set to true if you already generated instructions in the past for <WHAT_ITERATION> and would like to override it.")
+
     }
 	stages{
 		stage("Parameters Check") 
@@ -108,7 +118,7 @@ pipeline {
 		}}}
 		stage("Generate Instructions for Next Stack")
 		{steps{script{
-			if (IS_MAKE_INSTRUCTIONS_FOR_SECOND_ITERATION == "false")
+			if (IS_MAKE_INSTRUCTIONS == "false")
 			{
 			emailext (
 				subject: "[OCTHist] Analyize Stack - Submit to Google Sheet",
@@ -128,7 +138,7 @@ pipeline {
 				to: "$WHO_TO_EMAIL_WHEN_DONE" )	
 				
 			}
-			if (IS_MAKE_INSTRUCTIONS_FOR_SECOND_ITERATION == "true")
+			if (IS_MAKE_INSTRUCTIONS == "true")
 			{
 				//Get the links
 				def dUM = readFile('Testers\\DistanceFromCurrentFaceToOriginUM.txt').trim()
@@ -193,7 +203,8 @@ pipeline {
 					
 					bat("@echo subjectFolder_ = '%S3_SUBJECT_DIR%/'; > runme.m")
 					bat("@echo yourName_ = '" + whoRanExperiment + "'; >> runme.m")
-					bat("@echo iteration_ = 2; >> runme.m")
+					bat("@echo iteration_ = %WHAT_ITERATION%; >> runme.m")
+                    bat("@echo isOverrideExistingInstructions_ = %OVERRIDE_EXISTING_INSTRUCTIONS%; >> runme.m")
 					bat("@echo distanceToOCTOrigin_um_ = "+ userInput.HowDeepUM +"; >> runme.m")
 					bat("@echo run scriptGenerateHistologyInstructions.m  >> runme.m")
 			

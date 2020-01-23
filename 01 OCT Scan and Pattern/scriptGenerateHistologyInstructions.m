@@ -13,6 +13,7 @@ isCutOnDotSide = 1; %1-true, -1 - oposite side
 distanceToOCTOrigin_um = 1000; %um
 
 isUpdateAWS = false;
+isOverrideExistingInstructions = false; %If instructions exist for iteration already, don't override them - provide an error.
 
 %% Define optimal cuting scheme
 %iteration #1 is the first itration, #2 are all that follow
@@ -31,6 +32,7 @@ if exist('subjectFolder_','var')
     yourName = yourName_;
     iteration = iteration_;
     distanceToOCTOrigin_um = distanceToOCTOrigin_um_;
+    isOverrideExistingInstructions = isOverrideExistingInstructions_;
     isUpdateAWS = true;
 end
 if exist('isCutOnDotSide_','var')
@@ -58,25 +60,35 @@ end
 jsonPath = awsModifyPathForCompetability([subjectFolder '/Slides/StackConfig.json']);
 logPath = awsModifyPathForCompetability([subjectFolder '/Log/01 OCT Scan and Pattern/']);
 
-%If this is not the first iteration, load JSON to tell him
-if (iteration > 1)
-    stackConfig = awsReadJSON(jsonPath);
-    
-    % Check iteration #2 was not set before, if it did, override it
-    if (iteration > 2)
-        warning('Iteration #2 exists, deleting it before adding iteration #2');
+%% Check that iteration been added is the correct one
+isStackConfigFileExist = awsExist(jsonPath,'file');
+isIterationAlreadyExist = false;
+
+if (iteration == 1 && isStackConfigFileExist)
+    isIterationAlreadyExist = true;
+elseif iteration > 1
+    stackConfig = awsReadJSON(jsonPath);    
+    isIterationAlreadyExist = any(stackConfig.sections.iterations == iteration);
+end
+
+if isIterationAlreadyExist && ~isOverrideExistingInstructions
+    error('User wanted to update iteration %d but it already exist. Please set isOverrideExistingInstructions to true to allow override.',iteration);
+elseif isIterationAlreadyExist && isOverrideExistingInstructions
+    if iteration == 1
+        % Start over instructions
+        inputs = {'startCuttingAtDotSide', isCutOnDotSide};
+    elseif iteration > 1
+        % Delete last iteration.
         stackConfig = scDeleteIterationsFromStackConfig(stackConfig, ...
-            2:length(stackConfig.histologyInstructions.iterations));
+            iteration);
+        inputs = {'appendToSC', stackConfig};
     end
-    
-    inputs = {'appendToSC', stackConfig};
-else
-    
-    if awsExist(jsonPath,'file')
-        error('You say its iteration #1, but json path exists, is that ok? %s',jsonPath);
-    end 
-    
-    inputs = {'startCuttingAtDotSide', isCutOnDotSide};
+else % Iteration doesn't exist
+    if iteration == 1
+        inputs = {'startCuttingAtDotSide', isCutOnDotSide};
+    elseif iteration > 1
+        inputs = {'appendToSC', stackConfig};
+    end
 end
 
 %% Build Histology Instructions

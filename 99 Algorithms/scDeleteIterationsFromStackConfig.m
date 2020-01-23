@@ -2,6 +2,18 @@ function stackConfig = scDeleteIterationsFromStackConfig(stackConfig, iterations
 % This function deletes iterations from stack config. enter which
 % iterations you would like to delete
 
+%% Input Checks
+if (length(iterationsToDelete) > 1)
+    error('Cannot delete more than one iteration at a time');
+end
+
+lastIteration = max(stackConfig.sections.iterations);
+if iterationsToDelete ~= lastIteration
+    error('Can only delete last iteration');
+end
+
+%% Delete
+
 % Delete iterations from histology instructions.
 stackConfig.histologyInstructions.iterations(iterationsToDelete) = [];
 
