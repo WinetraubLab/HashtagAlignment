@@ -3,6 +3,9 @@
 %   1) 01 OCT Preprocess - pre-process volume (optional, this script can
 %       reprocess)
 %   2) 11 Align OCT to Flourecence Imaging - alignment was calculated
+% NOTICE: Y DIRECTION AT THE RESLICED VOLUME IS NOT ALONG THE CUTTING
+% DIRECITON! ITS JUST PREPANDICULAR TO U,V WHICH MAY BE ANTI-PARALLEL WITH
+% HISTOLOGY CUTTING DIRECTION!
 
 isReProcessOCT = false;
 whichIterationsToReslice = 2;
