@@ -18,7 +18,9 @@ function [tform, isHistImageFlipped] = HistFM_xcorr(imFM, imPB, imHist)
 % - tform
 % - isHistImageFlipped
 
-SP52Hist_scale = 0.7;
+pxielSize_FM = 0.720915041080197;
+pixelSize_Histology = 0.503661377589388;
+SP52Hist_scale = pixelSize_Histology / pxielSize_FM;
 he_background = 20;
 
 %% Section 0 - read imgs
@@ -43,6 +45,7 @@ bf0(isnan(bf0)) = 255;
 fl0(isnan(fl0)) = 0;
 
 % find background level of brightfiled images using fluorescence image
+% assumes that fluorescent image has gel facing towards top of image
 mask = imfill(medfilt2(fl0,[4,4])> prctile(fl0(:),80),'holes');
 CC = bwconncomp(mask);
 numPixels = cellfun(@numel,CC.PixelIdxList);

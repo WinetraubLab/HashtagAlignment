@@ -13,6 +13,7 @@ whichIterationsToReslice = 2;
 runningOnJenkins = false;
 
 subjectFolder = s3SubjectPath('02');
+subjectFolder = 'S:\Users\OCTHistologyLibrary\LE\LE-01';
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %Jenkins
     isReProcessOCT = isReProcessOCT_;
@@ -76,7 +77,7 @@ for sI = 1:length(whichIterationsToReslice)
     end
     stackAlignment = scJson.stackAlignment(whichIterationsToReslice(sI));
     
-    % Figure out how to slice on y' direction (new y direction)
+    % Figure out how to slice ony' direction (new y direction)
     n = stackAlignment.planeNormal; % Normal to plane, make sure not to flip it otherwise image will be fliped!
     d_um = stackAlignment.planeDistanceFromOCTOrigin_um;
     

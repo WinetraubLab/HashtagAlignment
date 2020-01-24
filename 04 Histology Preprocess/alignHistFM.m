@@ -9,6 +9,8 @@ function alignHistFM(slidePaths,histRawPaths,isDelayedUpload,tmpFolderSubjectFil
 % - tmpDataFolderFilePath - temporary data folder to upload (mimics
 %   subjectFolder). Make sure its empty if you use it
 
+isRunAutomatic = true; %use cross-correlation automatic registration
+
 persistent isItFirstTimeRunningThisFunction
 if isempty(isItFirstTimeRunningThisFunction)
     isItFirstTimeRunningThisFunction = true;
@@ -63,7 +65,7 @@ for si=1:length(slideNames)
 end
 
 for si = 1:length(slidePaths)
-    %% Load Histology & FM images, JSON as well
+    %% Load H&E, Brightfield, and Fluorescence images, JSON as well
     slideJson = awsReadJSON([slidePaths{si} 'SlideConfig.json']);
     a=yOCTFromTif([slidePaths{si} slideJson.brightFieldImagePath]);
     p = prctile(a(:),[2 98]);
@@ -76,8 +78,35 @@ for si = 1:length(slidePaths)
     ds=fileDatastore(awsModifyPathForCompetability([histRawPaths{si} 'Histo_*']),'ReadFcn',@imread);
     imHist=ds.read();
         
-    %% Prompt user to select some points
-    [tform, isHistImageFlipped] = HistFM_xcorr(imFM, imPB, imHist);
+    %% Compute tform either automatically or using points
+    % Run automatic cross correlation
+    if isRunAutomatic
+        [tform, isHistImageFlipped] = HistFM_xcorr(imFM, imPB, imHist);
+    % Run registration by points
+    else
+        isHistImageFlipped = true;
+        while true
+            imHist1 = imHist;
+            if(isHistImageFlipped)
+                imHist1 = fliplr(imHist);
+            end
+
+            [selectedImHistPoints,selectedImFMPoints] = cpselect(...
+                imHist1, ... Moved
+                imFM, ... Bright field
+                'Wait',true);
+
+            if  isempty(selectedImHistPoints)
+                %Try again with the flipped version
+                isHistImageFlipped = ~isHistImageFlipped;
+            else
+                %We are done
+                break;
+            end
+        end
+         
+        tform = fitgeotrans(selectedImHistPoints,selectedImFMPoints,'nonreflectivesimilarity');
+    end
     
     %Do the final flip if requried
     if(isHistImageFlipped)
@@ -91,6 +120,28 @@ for si = 1:length(slidePaths)
     %% Generate Log Figure of What We Have Done
     h=figure(1);
     set(h,'units','normalized','outerposition',[0 0 1 1]);
+    subplot(2,2,1);
+    imshow(imHist);
+    hold on;
+    if ~isRunAutomatic
+        plot(selectedImHistPoints(:,1),selectedImHistPoints(:,2),'dk','markerFaceColor','k');
+    end
+    hold off;
+    if (~isHistImageFlipped)
+        title('Histology Image');
+    else
+        title('Histology Image, Flipped');
+    end
+    subplot(2,2,2);
+    imshow(imFM);
+    hold on;
+    if ~isRunAutomatic
+        plot(selectedImFMPoints(:,1),selectedImFMPoints(:,2),'o','markerFaceColor','b');
+    end
+    hold off;
+    title('FM Image');
+    
+    subplot(2,2,[3 4]);
     imshowpair(rgb2gray(imHistRegistered),imFM)
     title('Registered Image');
     
@@ -103,18 +154,7 @@ for si = 1:length(slidePaths)
         awsCopyFileFolder(fp,logFolderPath);
         delete(fp);
     end
-    
-    %% Upload Hist Image to Cloud
-    HEName = 'FM_HAndE.tif';
-    disp('Saving Histology Image');
-    if (isDelayedUpload)
-        imwrite(imHistRegistered,[tmpFolderSubjectFilePath 'Slides\' slideNames{si} '\' HEName]);
-    else
-        fp = [tmpFolderSubjectFilePath HEName];
-        imwrite(imHistRegistered,fp);
-        awsCopyFileFolder(fp,slidePaths{si});
-        delete(fp);
-    end
+    close(h);
     
     %% Update JSON
     slideJson.histologyImageFilePath = HEName;
