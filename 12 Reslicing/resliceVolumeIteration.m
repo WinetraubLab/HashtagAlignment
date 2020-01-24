@@ -3,9 +3,10 @@
 %   1) 01 OCT Preprocess - pre-process volume (optional, this script can
 %       reprocess)
 %   2) 11 Align OCT to Flourecence Imaging - alignment was calculated
-% NOTICE: Y DIRECTION AT THE RESLICED VOLUME IS NOT ALONG THE CUTTING
-% DIRECITON! ITS JUST PREPANDICULAR TO U,V WHICH MAY BE ANTI-PARALLEL WITH
-% HISTOLOGY CUTTING DIRECTION!
+
+appendToDimensions.note = [...
+    'Y direction at the resliced volume is not along the cutting direction!\n' ...
+    'Its just prepandicular to u and v which may be anti-parallel to histology cutting direction.\n'];
 
 isReProcessOCT = false;
 whichIterationsToReslice = 2;
@@ -105,7 +106,8 @@ for sI = 1:length(whichIterationsToReslice)
         tifVolumePath, ...
         n,x,y,z, ...
         'outputFileOrFolder', outputFileName, ...
-        'verbose', true ...
+        'verbose', true, ...
+        'appendToDimensions',appendToDimensions
         );
 end
 fprintf('%s Done!\n',datestr(now));
