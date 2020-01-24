@@ -1,4 +1,4 @@
-function alignHistFM(slidePaths,histRawPaths,isDelayedUpload,tmpFolderSubjectFilePath)
+function alignHistFM_old(slidePaths,histRawPaths,isDelayedUpload,tmpFolderSubjectFilePath)
 %This function alignes histology slices with flourecence microscopy images
 %INPUTS:
 % - slidePaths - cell array of s3 path of the slides
@@ -48,7 +48,7 @@ end
 %% Main Job
 awsSetCredentials();
 
-if (isDelayedUpload)        
+if (isDelayedUpload)
     logFolderPath = awsModifyPathForCompetability([tmpFolderSubjectFilePath '\Log\04 Histology Preprocess\']);
     if ~exist(logFolderPath,'dir')
         mkdir(logFolderPath);
@@ -68,16 +68,30 @@ for si = 1:length(slidePaths)
     a=yOCTFromTif([slidePaths{si} slideJson.brightFieldImagePath]);
     p = prctile(a(:),[2 98]);
     imFM = uint8((a-p(1))/diff(p)*255);
-    
-    b=yOCTFromTif([slidePaths{si} slideJson.photobleachedLinesImagePath]);
-    p = prctile(b(:),[2 98]);
-    imPB = uint8((b-p(1))/diff(p)*255);
-    
     ds=fileDatastore(awsModifyPathForCompetability([histRawPaths{si} 'Histo_*']),'ReadFcn',@imread);
     imHist=ds.read();
         
     %% Prompt user to select some points
-    [tform, isHistImageFlipped] = HistFM_xcorr(imFM, imPB, imHist);
+    isHistImageFlipped = true;
+    while true
+        imHist1 = imHist;
+        if(isHistImageFlipped)
+            imHist1 = fliplr(imHist);
+        end
+        
+        [selectedImHistPoints,selectedImFMPoints] = cpselect(...
+            imHist1, ... Moved
+            imFM, ... Bright field
+            'Wait',true);
+        
+        if  isempty(selectedImHistPoints)
+            %Try again with the flipped version
+            isHistImageFlipped = ~isHistImageFlipped;
+        else
+            %We are done
+            break;
+        end
+    end
     
     %Do the final flip if requried
     if(isHistImageFlipped)
@@ -85,12 +99,31 @@ for si = 1:length(slidePaths)
     end
     
     %Compute transfrom histo->FM
+    tform = fitgeotrans(selectedImHistPoints,selectedImFMPoints,'nonreflectivesimilarity');
     FMCoordinates = imref2d(size(imFM)); %relate intrinsic and world coordinates
     imHistRegistered = imwarp(imHist,tform,'OutputView',FMCoordinates);
     
     %% Generate Log Figure of What We Have Done
     h=figure(1);
     set(h,'units','normalized','outerposition',[0 0 1 1]);
+    subplot(2,2,1);
+    imshow(imHist);
+    hold on;
+    plot(selectedImHistPoints(:,1),selectedImHistPoints(:,2),'dk','markerFaceColor','k');
+    hold off;
+    if (~isHistImageFlipped)
+        title('Histology Image');
+    else
+        title('Histology Image, Flipped');
+    end
+    subplot(2,2,2);
+    imshow(imFM);
+    hold on;
+    plot(selectedImFMPoints(:,1),selectedImFMPoints(:,2),'o','markerFaceColor','b');
+    hold off;
+    title('FM Image');
+    
+    subplot(2,2,[3 4]);
     imshowpair(rgb2gray(imHistRegistered),imFM)
     title('Registered Image');
     
@@ -103,6 +136,7 @@ for si = 1:length(slidePaths)
         awsCopyFileFolder(fp,logFolderPath);
         delete(fp);
     end
+    close(h);
     
     %% Upload Hist Image to Cloud
     HEName = 'FM_HAndE.tif';
