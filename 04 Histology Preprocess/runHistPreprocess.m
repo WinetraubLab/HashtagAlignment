@@ -12,7 +12,7 @@ awsSetCredentials();
 
 %This is a temporary folder for saving data for upload, make sure you have
 %write permisions. This folder mimics subject folder
-tmpFolderSubjectFilePath = 'TmpOutput\'; 
+tmpFolderSubjectFilePath = [tempname([ pwd '\']) '\']; 
 
 %Make sure tmpFolderRoot is empty
 disp('Creating a temporary folder to save output');
