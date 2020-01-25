@@ -156,6 +156,18 @@ for si = 1:length(slidePaths)
     end
     close(h);
     
+    %% Upload Hist Image to Cloud
+    HEName = 'FM_HAndE.tif';
+    disp('Saving Histology Image');
+    if (isDelayedUpload)
+        imwrite(imHistRegistered,[tmpFolderSubjectFilePath 'Slides\' slideNames{si} '\' HEName]);
+    else
+        fp = [tmpFolderSubjectFilePath HEName];
+        imwrite(imHistRegistered,fp);
+        awsCopyFileFolder(fp,slidePaths{si});
+        delete(fp);
+    end
+    
     %% Update JSON
     slideJson.histologyImageFilePath = HEName;
     slideJson.FMHistologyAlignment.isHistologyFlipedLR = isHistImageFlipped;
