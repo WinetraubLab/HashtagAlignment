@@ -11,6 +11,7 @@ jj = awsReadJSON(slideConfigJsonPath);
 %% Reverse engineer the parameters.
 if ~isfield(jj.FM,'singlePlaneFit')
     disp('Skipping this slide, not single plane fit.');
+    return;
 end
 
 singlePlaneFit = jj.FM.singlePlaneFit;
