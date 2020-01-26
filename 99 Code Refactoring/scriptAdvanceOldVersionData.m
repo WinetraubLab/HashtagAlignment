@@ -10,13 +10,13 @@
     s3GetAllSubjectsInLib('LE'); %Set lib (LC, LD etc, or leave empty for latest lib)
 
 % Will the script run on subjects or slides?
-runOn = 'subjects'; % Can be 'subjects' or 'slides'
+runOn = 'slides'; % Can be 'subjects' or 'slides'
 
 % Function to run for each subject / slide
 % Function handle interface is func(rootFolder) where root folder will be
 % either the subject folder or the slide folder acording to runOn.
 %funcToRun = @(rootFolder)(rootFolder);
-funcToRun = @recomputeStackAlignment;
+funcToRun = @recomputeSlideAlignment; %recomputeStackAlignment
 
 %% Loop Over all subjects and make the change (subject related)
 if strcmpi(runOn,'subjects')
