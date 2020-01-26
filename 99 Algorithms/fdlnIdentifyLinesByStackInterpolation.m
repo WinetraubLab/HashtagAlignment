@@ -52,7 +52,7 @@ end
 %Compute stack average direction
 uStack = median(us,2);
 vStack = median(vs,2);
-n = cross(uStack,vStack); n = n / norm(n);
+n = -cross(uStack,vStack); n = n / norm(n);
 
 %Compute h component prepandicular to the plane
 hdotn = dot(hs,repmat(n,[1 size(hs,2)]));
