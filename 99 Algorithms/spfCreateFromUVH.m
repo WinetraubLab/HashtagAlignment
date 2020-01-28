@@ -1,13 +1,19 @@
-function singlePlaneFit = spfCreateFromUVH (u,v,h,v_)
+function singlePlaneFit = spfCreateFromUVH (u,v,h,v_,pixelSize_um)
 %This function creates a single plane fit structure from u,v,h inputs
 %Single plane structure contains some statistics on the plane.
 %INPUTS: 
 %   u,v,h ar 3D vectors defining the plane as u*U+v*V+h. units: mm
 %   v_  [optional] - typical value for v (pixels) for the top of the picture, it is used for
 %       estimating a top view for spf. If not defined, will use NaN
+%   pixelSize_um - pixel size of the imaage used by u,v - if exists will
+%       compute size change
 
-if ~exist('v_','var')
+if ~exist('v_','var') || isempty(v_)
     v_ = NaN;
+end
+
+if ~exist('pixelSize_um','var') || isempty(pixelSize_um)
+    pixelSize_um = NaN;
 end
 
 %% Notes
@@ -26,6 +32,7 @@ singlePlaneFit.notes = sprintf([...
     ' * m,n - equation that defines the plane\n' ...
     ' * xFunctionOfU - 2vector (to be used by polyvar) converts u coordinates to x\n'...
     ' * vTypical - tyical value for v (in pixels) to multiply by the vector v\n' ... 
+    'sizeChange_precent - if negative value, isotropic shrinkage of the histology compared to OCT. If positive, expansion [%]\n' ...
     ]);
 
 %% Plane parameters
@@ -50,6 +57,10 @@ singlePlaneFit.n = nl;
 singlePlaneFit.vTypical = v_;
 singlePlaneFit.xFunctionOfU = polyfit([0,1],[pt1(1) pt2(1)],1);
 singlePlaneFit.xFunctionOfU = singlePlaneFit.xFunctionOfU(:);
+
+%% Size Change
+sizeChange = 100*(( pixelSize_um / ((norm(u)+norm(v))/2*1e3)  )-1); 
+singlePlaneFit.sizeChange_precent = sizeChange;
 
 %% Compute general gemoetry
 tilt = asin(n(3))*180/pi; %[deg]

@@ -7,7 +7,7 @@
 
 % Which library to run on
 [subjectsPath,subjectsName] = ...
-    s3GetAllSubjectsInLib('LE'); %Set lib (LC, LD etc, or leave empty for latest lib)
+    s3GetAllSubjectsInLib('LD'); %Set lib (LC, LD etc, or leave empty for latest lib)
 
 % Will the script run on subjects or slides?
 runOn = 'slides'; % Can be 'subjects' or 'slides'
@@ -16,7 +16,7 @@ runOn = 'slides'; % Can be 'subjects' or 'slides'
 % Function handle interface is func(rootFolder) where root folder will be
 % either the subject folder or the slide folder acording to runOn.
 %funcToRun = @(rootFolder)(rootFolder);
-funcToRun = @recomputeSlideAlignment; %recomputeStackAlignment
+funcToRun = @recomputeSlideAlignment; %recomputeStackAlignment, recomputeSlideAlignment
 
 %% Loop Over all subjects and make the change (subject related)
 if strcmpi(runOn,'subjects')
@@ -37,7 +37,7 @@ if strcmpi(runOn,'slides')
         disp(['Processing ' subjectsName{si}]);
         tic;
         try
-            slidesPath = s3GetAllSlidesOfSubject(subjectPath);
+            [slidesPath,sectionNames] = s3GetAllSlidesOfSubject(subjectPath);
         catch
             disp('Skipping this subject, no slides');
             continue;
@@ -45,7 +45,8 @@ if strcmpi(runOn,'slides')
 
         for sli = 1:length(slidesPath)
             slidePath = slidesPath{sli};
-            
+            disp(['  Processing ' sectionNames{sli}]);
+
             funcToRun(slidePath);
         end
         toc;

@@ -12,22 +12,17 @@ if (sum(gr == 'v') < 2) || (sum(gr == 'h') < 2)
     return; %Failed to align
 end
 
+if ~exist('pixelSize_um','var')
+    pixelSize_um = NaN;
+end
+
 %% Typical values
 vspan = [min(cellfun(@min,{f.v_pix})) max(cellfun(@max,{f.v_pix}))];
 v_ = mean(vspan);
 
 %% Compute fit & create fiducial line structure
 [u,v,h] = fdlnEstimateUVHSinglePlane(f); %u,v,h in mm
-singlePlaneFit = spfCreateFromUVH(u,v,h,v_);
-
-%% Compute additional statistics
-
-if exist('pixelSize_um','var')
-    sizeChange = 100*(( pixelSize_um / ((norm(u)+norm(v))/2*1e3)  )-1); 
-else
-    sizeChange = NaN;
-end
-singlePlaneFit.sizeChange_precent = sizeChange;
+singlePlaneFit = spfCreateFromUVH(u,v,h,v_,pixelSize_um);
 
 %% Compute Fit Score, lower is better
 xPlaneUFunc_pix = @(vint,c)(-v(1)/u(1)*vint-h(1)/u(1)+c/u(1)); %x=c
@@ -50,6 +45,5 @@ singlePlaneFit.fitScore = scores(:);
 
 %% Append notes
 singlePlaneFit.notes = sprintf(['%s' ...
-    'sizeChange_precent - if negative value, isotropic shrinkage of the histology compared to OCT. If positive, expansino [%%]\n' ...
     'fitScore - lower is better, distance between photobleached feducial lines to the approximation [pix]\n' ...
     ],singlePlaneFit.notes);
