@@ -28,11 +28,12 @@ if isfield(slideConfigJson.FM,'singlePlaneFit')
     u_ = u/norm(u);
     v = slideConfigJson.FM.singlePlaneFit.v;
     v_ = v/norm(v);
+    n_ = slideConfigJson.FM.singlePlaneFit.normal;
     % Get the direction in which 
     
     % Coordinate system projection from the original 
     M_OctStack2OriginalVolume = stackVolumeIterationConfig_um.new2OriginalAffineTransform(1:3,1:3);
-    M_UVSlide2OriginalVolume = [-u_ cross(u_,v_) v_];
+    M_UVSlide2OriginalVolume = [u_ n_ v_];
     
     % Convert from slide to stack coordinate system
     M_Slide2Stack = M_OctStack2OriginalVolume^-1*M_UVSlide2OriginalVolume;
