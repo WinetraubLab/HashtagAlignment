@@ -26,6 +26,11 @@ he_background = 20;
 %% Section 0 - read imgs
 % read he images
 he0 = imHist;
+
+% set black artifact in HE scan to background level
+M = repmat(all(~he0,3),[1 1 3]); %mask black parts
+he0(M) = 255 - he_background; %turn them white
+
 he0 = imresize(he0, SP52Hist_scale);
 he = he0;
 he = mean(he,3);
@@ -64,7 +69,9 @@ for j=1:size(mask,2)
     end
 end
 
-background = mean(mean(bf0(logical(background_mask)),1),2);
+% lower background  by 0.6 factor to ensure removal - leads to more robust
+% results
+background = 0.6*mean(mean(bf0(logical(background_mask)),1),2);
 
 % normalize bf image
 bf = double(bf0)*255/background;
@@ -123,6 +130,9 @@ end
 offsety_c = peaky - size(he_new2,1);
 offsetx_c = peakx - size(he_new2,2);
 rot_angle_c = angles(peakr);
+
+% for debugging
+%figure; imagesc(imfuse(imtranslate(imrotate(bf_new2,rot_angle_c ,'crop'),[-offsetx_c,-offsety_c]),he_fine));
 %% fine registration
 upsample = 1;
 
