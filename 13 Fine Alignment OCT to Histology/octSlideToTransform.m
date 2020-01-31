@@ -11,7 +11,8 @@ function histologyToOCTT = octSlideToTransform(...
 %       corresponding to 'h', the origin of the histology image.
 %   scale_umperpix - from the stack average.
 %   octScale_umperpix - stack OCT scale (microns per pixel).
-
+%OUTPUT:
+%   histologyToOCTT - left multiplication transform v*Transform
 
 % Step #1, express u,v,h in the new, resliced coordiate system
 u_R = new2OriginalAffineTransform(1:3,1:3)^-1*umm(:);

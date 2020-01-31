@@ -5,7 +5,7 @@ function [scale_umperpix,rotation_deg,xTranslation_um,zTranslation_um] = transfo
 
 %% Invert MicronsToOCT
 MicronsToOCT = [octScale_umperpix 0 0; 0 octScale_umperpix 0; 0 0 1];
-Tall = histologyToOCTT * MicronsToOCT^-1;
+Tall = histologyToOCTT * MicronsToOCT;
 
 %% Extract Translation
 xTranslation_um = Tall(3,1);

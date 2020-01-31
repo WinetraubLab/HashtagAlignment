@@ -16,7 +16,7 @@ R = [c s 0; -s c 0; 0 0 1];
 T = [1 0 0; 0 1 0; xTranslation_um zTranslation_um 1];
 
 %% Scale to OCT
-MicronsToOCT = [octScale_umperpix 0 0; 0 octScale_umperpix 0; 0 0 1];
+MicronsToOCT = [1/octScale_umperpix 0 0; 0 1/octScale_umperpix 0; 0 0 1];
 
 %% Overall transformation
 % Notice that the oder of operations is flipped from what we are used to,
