@@ -3,9 +3,12 @@
 
 %% Inputs
 %experimentPath = s3SubjectPath('2019-11-30 Imaging Flat Surface On Motorized Stage','',true);
-experimentPath = s3SubjectPath('2020-01-09 Imaging Flat Surface On Optic Table','',true);
+experimentPath = s3SubjectPath('2020-01-24 Imaging Flat Surface On Optic Table','',true);
 
 json = awsReadJSON([experimentPath 'ScanInfo.json']);
+
+isLoadOCTVolumeToPresentUser = true; % Set to false for faster execution, without loading OCT volume.
+
 %% Pre-processing #1 compute interface position
 for sI = 1:length(json.octFolders)
     octPath = awsModifyPathForCompetability([experimentPath json.octFolders{sI} '/']);
@@ -134,16 +137,20 @@ for sI = 1:length(json.octFolders)
     pause(0.1);
     
     subplot(2,2,3);
-    if ~exist('scanY','var') || true
-        scanY = yOCTFromTif([octPath 'scanAbs.tif'],'yI',yPeakI);
+    if isLoadOCTVolumeToPresentUser
+        if ~exist('scanY','var') || true
+            scanY = yOCTFromTif([octPath 'scanAbs.tif'],'yI',yPeakI);
+        end
+        imagesc(x,z,scanY);
+        hold on;
     end
-    imagesc(x,z,scanY);
-    hold on;
     plot(x,interfaceZ(yPeakI,:),'b+');
+    hold on;
     plot(x,mdl(x,y(yPeakI),a),'k','LineWidth',3);
     ylim([min(interfaceZ2(:)) max(interfaceZ2(:))]+50*[-1 1]);
     hold off
     grid on;
+    axis ij;
     title('Peak Point Y Direction Snapshot');
     xlabel('x[\mum]');
     ylabel('z[\mum]');
@@ -166,7 +173,7 @@ if ~exist('xx','var')
 end
 
 %Compute difference
-pf = awsReadJSON([octPath 'interfaceZPositions_PolyFit.json']);
+pf = awsReadJSON([octPath '../interfaceZPositions_PolyFit.json']);
 p = pf.p;
 p_ref = json.octProbe.OpticalPathCorrectionPolynomial;
 d = mdl(xx,yy,p) - mdl(xx,yy,[0;p_ref]);
