@@ -83,10 +83,20 @@ for i=1:length(singlePlaneFits)
             singlePlaneFits{jsonIndex} = ...
                 sectionJsons{jsonIndex}.FM.singlePlaneFit;
         end
+        
+        pixelsSize_um = sectionJsons{jsonIndex}.FM.pixelSize_um;
     end
 end
+isAnyAlignedSections = ~isempty(sectionJsons);
+if ~isAnyAlignedSections
+    % No way to aligned.
+    disp('No alignable slides. exiting');
+    
+    % Write data to file as well for downstream
+    leaveJsonData ('',NaN);
+    return;
+end
 
-pixelsSize_um = sectionJsons{1}.FM.pixelSize_um;
 
 %Get H&V lines positions
 if isfield(octVolumeJson,'version') && ...
@@ -372,9 +382,6 @@ lk = sprintf('%s%s',...
 
 %Create a link for user
 fprintf('\n\nSubmit Changes Online:\n %s\n',lk);
-fid = fopen('lk.txt','w');
-fprintf(fid,'%s',lk);
-fclose(fid);
 
 % Measure distance from last slide to origin.
 % We would like this number to be positive if we didn't surpass origin yet,
@@ -386,10 +393,8 @@ d_lastSlide = (-isPlaneNormalSameDirectionAsCuttingDirection) * d_realigned(end)
 fprintf('Distance from current face to origin (negative number means we surpassed origin):\n\t%.0f [um]\n',...
     d_lastSlide*1e3);
 
-%Save it to a file for downstream automated usage
-fid = fopen('DistanceFromCurrentFaceToOriginUM.txt','w');
-fprintf(fid,'%.0f',d_lastSlide*1e3);
-fclose(fid);
+% Write data to file as well for downstream
+leaveJsonData (lk,d_lastSlide)
 
 %% Update data to the cloud
 if isUpdateCloud
@@ -408,4 +413,20 @@ if isUpdateCloud
     awsWriteJSON(scJson,stackConfigFilePath);
     
     disp ('Done');
+end
+
+
+%% Helper function to generate Json handles
+function leaveJsonData (lk,d_lastSlide_mm)
+% lk - link for submitting changes online
+
+%Create a link for user
+fid = fopen('lk.txt','w');
+fprintf(fid,'%s',lk);
+fclose(fid);
+
+%Save distance from current face to origion.
+fid = fopen('DistanceFromCurrentFaceToOriginUM.txt','w');
+fprintf(fid,'%.0f',d_lastSlide_mm*1e3);
+fclose(fid);
 end
