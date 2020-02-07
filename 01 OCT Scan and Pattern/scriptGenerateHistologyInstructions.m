@@ -23,7 +23,8 @@ whereToCut_um_Iteration1 = (0:(2*3-1))*30; %2 slide, 3 sections
 whereToCut_um_Iteration2 = (0:(5*3-1))*30; %5 slide, 3 sections
 
 %Position of the center slide for each iteration compared to OCT origin
-iteration1CenterOffset = -250; %um, this iteration is undershooting the center
+iteration1CenterOffset = -250 ... %um, this iteration is undershooting the center
+    + 250; % Analysis shows that we constantly undershoot by too much, so add overshooting to solve that issue.
 iteration2CenterOffset = 0;    %um, this iteration should be centered around origin
 
 %% Jenkins
