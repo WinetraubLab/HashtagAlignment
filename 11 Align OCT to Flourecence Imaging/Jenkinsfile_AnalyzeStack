@@ -185,6 +185,10 @@ pipeline {
 							name: 'HowDeepUM', 
 							description: 'How far is OCT orign from last section cut face? [microns]\nNegative values mean that we passed OCT origin\nIt is recommended to cut at least 500um to avoide concave area as well as to make sure center of next iteration is at OCT center, but if you set this number to less, that is OK too (you will get less usable slides)'
 							),
+                        string(defaultValue: 'NaN',
+							name: 'HowManySlides', 
+							description: 'How many slides would you like to cut? Set to NaN to use the default for this iteration.'
+							),
 						choice(
 							name: 'ShouldWeCut', 
 							choices: ['No','Yes'], 
@@ -206,6 +210,7 @@ pipeline {
 					bat("@echo iteration_ = %WHAT_ITERATION%; >> runme.m")
                     bat("@echo isOverrideExistingInstructions_ = %OVERRIDE_EXISTING_INSTRUCTIONS%; >> runme.m")
 					bat("@echo distanceToOCTOrigin_um_ = "+ userInput.HowDeepUM +"; >> runme.m")
+                    bat("@echo numberOfSlidesToCut_ = "+ userInput.HowManySlides +"; >> runme.m")
 					bat("@echo run scriptGenerateHistologyInstructions.m  >> runme.m")
 			
 					RunMatlabRunme();

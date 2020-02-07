@@ -38,25 +38,34 @@ end
 if exist('isCutOnDotSide_','var')
     isCutOnDotSide = isCutOnDotSide_;
 end
+if exist('numberOfSlidesToCut_','var') && ~isnan(numberOfSlidesToCut_)
+    numberOfSlidesToCut = numberOfSlidesToCut_;
+else
+    % Select number of sections based on iteration
+    if (iteration == 1)
+        numberOfSlidesToCut = 2;
+    else
+        numberOfSlidesToCut = 5;
+    end
+end
 
 %% Decide where to cut
-whereToCut_um_Iteration1 = whereToCut_um_Iteration1-mean(whereToCut_um_Iteration1) + iteration1CenterOffset;
-whereToCut_um_Iteration2 = whereToCut_um_Iteration2-mean(whereToCut_um_Iteration2) + iteration2CenterOffset;
-
+whereToCut_um = (0:(numberOfSlidesToCut*3-1))*30;
+whereToCut_um = whereToCut_um - mean(whereToCut_um);
 if (iteration == 1)
-    whereTocut = whereToCut_um_Iteration1;
+    whereToCut_um = whereToCut_um + iteration1CenterOffset;
 else
-    whereTocut = whereToCut_um_Iteration2;
+    whereToCut_um = whereToCut_um + iteration2CenterOffset;
 end
-whereTocut = whereTocut + distanceToOCTOrigin_um;
+whereToCut_um = whereToCut_um + distanceToOCTOrigin_um;
 
-if (min(whereTocut) < 0)
+if (min(whereToCut_um) < 0)
     %Cannot cut in the past, advance
-    whereTocut = whereTocut-min(whereTocut);
+    whereToCut_um = whereToCut_um-min(whereToCut_um);
 end
 
 %% Setup paths
-[~,subjectName] = fileparts([subjectFolder(1:(end-1)) '.a']);
+subjectName = s3GetSubjectName(subjectFolder);
 jsonPath = awsModifyPathForCompetability([subjectFolder '/Slides/StackConfig.json']);
 logPath = awsModifyPathForCompetability([subjectFolder '/Log/01 OCT Scan and Pattern/']);
 
@@ -95,7 +104,7 @@ end
 inputs = [inputs {...
     'sampleID', subjectName, ...
     'iterationNumber', iteration, ...
-    'sectionDepthsRequested_um', whereTocut, ...
+    'sectionDepthsRequested_um', whereToCut_um, ...
     'estimatedDistanceFromFullFaceToOCTOrigin_um', distanceToOCTOrigin_um,...
     'operator', yourName, ...
     'date', now, ...
