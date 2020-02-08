@@ -32,7 +32,7 @@ grid on;
 title('OCT');
 
 subplot(2,2,2);
- image('XData',x,'YData',z,'CData',histologyIm);
+image('XData',x,'YData',z,'CData',histologyIm);
 xlabel('x[mm]');
 ylabel('z[mm]');
 axis equal;
