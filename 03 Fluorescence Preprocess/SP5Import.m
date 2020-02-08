@@ -19,7 +19,7 @@ folderStructurePath = '\\171.65.17.174\e\Caroline\OCT-Histology\LE\LE-01\slide 1
 %Chanel
 flourescenceChanel = 0;
 brightfieldChanel = 1;
-beadsChanel = 2; % set to [] if no beads chanel exists
+beadsChanel = []; % set to [] if no beads chanel exists, 2 if it does.
 
 angRotate = 180;
 
