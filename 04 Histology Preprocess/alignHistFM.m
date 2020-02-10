@@ -1,4 +1,4 @@
-function alignHistFM(slidePaths,histRawPaths,isDelayedUpload,tmpFolderSubjectFilePath)
+function alignHistFM(slidePaths,histRawPaths,isDelayedUpload,tmpFolderSubjectFilePath, isRunAutomatic)
 %This function alignes histology slices with flourecence microscopy images
 %INPUTS:
 % - slidePaths - cell array of s3 path of the slides
@@ -9,7 +9,7 @@ function alignHistFM(slidePaths,histRawPaths,isDelayedUpload,tmpFolderSubjectFil
 % - tmpDataFolderFilePath - temporary data folder to upload (mimics
 %   subjectFolder). Make sure its empty if you use it
 
-isRunAutomatic = true; %use cross-correlation automatic registration
+%isRunAutomatic = true; %use cross-correlation automatic registration
 
 persistent isItFirstTimeRunningThisFunction
 if isempty(isItFirstTimeRunningThisFunction)

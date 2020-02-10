@@ -65,6 +65,12 @@ fld = cellfun(@fileparts,fd.Files,'UniformOutput',false); %Get folders
 fld = unique(fld);
 slideSections = cellfun(@(x)(strrep(x,sprintf('%sSlides/',subjectFolder),'')),fld,'UniformOutput',false);
 
+%% Choose which slides to upload
+[indx,~] = listdlg('PromptString',{'Select one or more files to run.',...
+                    'Hold shift to select multiple.',''},...
+                    'ListString',{slideSections{1},slideSections{2},slideSections{3}});
+slideSections = slideSections([indx],:);
+
 %% Import & Crop
 close all;
 outStatus = histSVSImport(histologyFP,subjectFolder,slideSections,true,tmpFolderSubjectFilePath);
@@ -77,11 +83,11 @@ close all;
 %Generate Input
 slideS3Path = cell(length(slideSections),1);
 histLocalPath = cell(length(slideSections),1);
-for i=1:length(slideS3Path)
+for i=1:length(slideSections)
     slideS3Path{i} = awsModifyPathForCompetability([subjectFolder 'Slides/' slideSections{i} '/']);
     histLocalPath{i} = awsModifyPathForCompetability([tmpFolderSubjectFilePath 'Slides/' slideSections{i} '/Hist_Raw/']);
 end
-alignHistFM(slideS3Path,histLocalPath,true,tmpFolderSubjectFilePath,true);
+alignHistFM(slideS3Path,histLocalPath,true,tmpFolderSubjectFilePath,false);
 
 %% Upload 
 disp('Uploading Everything To The Cloud');
