@@ -34,7 +34,13 @@ end
 %% Figure out slide information
 
 %Open slide info tiff
-slideInfoIm  = imread(histologyFP,'Index',6);
+info=imfinfo(histologyFP);
+if length(info) == 7
+    slideInfoIm  = imread(histologyFP,'Index',6);
+else
+    slideInfoIm  = imread(histologyFP,'Index',5);    
+end
+    
 imshow(slideInfoIm);
 title('Do you see slide information?');
 [out] = inputdlg({'Library:','Subject Number:','Slide Number:'},'Slide Info',[1 35],{'LC','01','01'});

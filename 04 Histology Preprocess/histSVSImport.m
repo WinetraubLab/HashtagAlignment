@@ -30,10 +30,15 @@ end
 
 %Load High Level Data
 info=imfinfo(histologyFP);
-slideInfoIm  =imread(histologyFP,'Index',6);
-wholeSlideIm =imread(histologyFP,'Index',7);
 lowResSlideIm=imread(histologyFP,'Index',2);
-
+slideInfoIm  =imread(histologyFP,'Index',6);
+if length(info) == 7
+    slideInfoIm  =imread(histologyFP,'Index',6);
+    wholeSlideIm =imread(histologyFP,'Index',7);
+else
+    slideInfoIm  =imread(histologyFP,'Index',5);
+    wholeSlideIm =imread(histologyFP,'Index',6);
+end
 %Make the main figure
 figure(1);
 subplot(3,3,1);
