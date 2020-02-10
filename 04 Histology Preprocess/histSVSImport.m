@@ -31,7 +31,7 @@ end
 %Load High Level Data
 info=imfinfo(histologyFP);
 lowResSlideIm=imread(histologyFP,'Index',2);
-slideInfoIm  =imread(histologyFP,'Index',6);
+% slide info vs whole slide depends on how many slides in the stack.
 if length(info) == 7
     slideInfoIm  =imread(histologyFP,'Index',6);
     wholeSlideIm =imread(histologyFP,'Index',7);

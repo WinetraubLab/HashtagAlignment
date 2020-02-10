@@ -35,6 +35,7 @@ end
 
 %Open slide info tiff
 info=imfinfo(histologyFP);
+% Depends on how many slides in the stack.
 if length(info) == 7
     slideInfoIm  = imread(histologyFP,'Index',6);
 else
