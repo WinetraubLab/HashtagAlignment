@@ -1,4 +1,4 @@
-function [OCTToHistologyTransform] = fineAlignUsingSurface(rOCT, imBF, markedline, fastmode)
+function [OCTToHistologyTransform] = fineAlignUsingSurface(rOCT, imBF, markedline, fastmode, OCTToHistologyTransformInitialGuess)
 %This functions aligns a resliced OCT image with a brightfield image,
 %based on their segmented surfaces.  It first segments out their respective
 %surfaces and then aligns for translation in x-y [20 pixel increments] and 
@@ -18,6 +18,8 @@ function [OCTToHistologyTransform] = fineAlignUsingSurface(rOCT, imBF, markedlin
 %                 brightfield image, with NaNs everywhere else.
 % - fastmode - when set to true performs bruteforce alignment with coarser step size pf 100
 %              pixels
+% - OCTToHistologyTransformInitialGuess - Initial guess of the transform
+%   (from user)
 %OUTPUTS:
 % - OCTToHistologyTransform - rigid transformation of imBF to rOCT, spatial transformation
 %           stucture, OCTToHistologyTransform.T is a matrix of 3x3
