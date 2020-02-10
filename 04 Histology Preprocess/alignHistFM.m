@@ -8,7 +8,11 @@ function alignHistFM(slidePaths,histRawPaths,isDelayedUpload,tmpFolderSubjectFil
 % - isDelayedUpload - would you like to the delay the upload for later?
 % - tmpDataFolderFilePath - temporary data folder to upload (mimics
 %   subjectFolder). Make sure its empty if you use it
+% - isRunAutomatic - when set to true (default) use cross-correlation automatic registration
 
+if ~exisT('isRunAutomatic','var')
+	isRunAutomatic = true;
+end
 %isRunAutomatic = true; %use cross-correlation automatic registration
 
 persistent isItFirstTimeRunningThisFunction
