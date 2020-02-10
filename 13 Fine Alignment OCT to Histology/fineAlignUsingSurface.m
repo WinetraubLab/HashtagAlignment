@@ -1,4 +1,4 @@
-function tform = fineAlignUsingSurface(rOCT, imBF, markedline, fastmode)
+function [OCTToHistologyTransform] = fineAlignUsingSurface(rOCT, imBF, markedline, fastmode)
 %This functions aligns a resliced OCT image with a brightfield image,
 %based on their segmented surfaces.  It first segments out their respective
 %surfaces and then aligns for translation in x-y [20 pixel increments] and 
@@ -19,8 +19,24 @@ function tform = fineAlignUsingSurface(rOCT, imBF, markedline, fastmode)
 % - fastmode - when set to true performs bruteforce alignment with coarser step size pf 100
 %              pixels
 %OUTPUTS:
-% - tform - rigid transformation of imBF to rOCT, spatial transformation
-%           stucture, with a matrix of 3x3
+% - OCTToHistologyTransform - rigid transformation of imBF to rOCT, spatial transformation
+%           stucture, OCTToHistologyTransform.T is a matrix of 3x3
+%% Make images same size
+rOCT(isnan(rOCT)) = 0;
+
+if size(imBF,1)>size(rOCT,1)
+    rOCT = padarray(rOCT,[size(imBF,1)-size(rOCT,1),0],0,'post');
+else
+    imBF = padarray(imBF,[size(rOCT,1)-size(imBF,1),0],0,'post');
+end
+
+if size(imBF,2)>size(rOCT,2)
+    rOCT = padarray(rOCT,[0,size(imBF,2)-size(rOCT,2)],0,'post');
+else
+    imBF = padarray(imBF,[0,size(rOCT,2)-size(imBF,2)],0,'post');
+end
+
+
 
 %% 7. Segment surface of OCT image
 %%% oct_surface - surface of reslice2 
@@ -242,18 +258,48 @@ optimized = brute_force(1:3);
 %hold on; plot(x,bf_surface3)
 
 % Debug
-%optimized_img = imtranslate(imrotate(rOCT(:,:,oct_index), -optimized(3),'crop'),[optimized(1),optimized(2)]);
+optimized_img = imtranslate(imrotate(rOCT, -optimized(3),'crop'),[optimized(1),optimized(2)]);
 %figure; imagesc(imfuse(optimized_img,imBF))
+%figure; imagesc(imfuse(rOCT,imtranslate(imrotate(imBF, optimized(3),'crop'),([cosd(-optimized(3)) -sind(-optimized(3))  ; sind(-optimized(3)) cosd(-optimized(3))]* [-optimized(1);-optimized(2)])')))
 
 % Rigid matrix   
-fixed = imtranslate(imrotate(rOCT, -optimized(3),'crop'),[optimized(1),optimized(2)]);
-moving = rOCT;
-[optimizer, metric] = imregconfig('monomodal');
-tform_oct = imregtform(moving, fixed, 'rigid', optimizer, metric);
-tform = invert(tform_oct);
+%fixed = imtranslate(imrotate(rOCT, -optimized(3),'crop'),[optimized(1),optimized(2)]);
+%moving = rOCT;
+%[optimizer, metric] = imregconfig('monomodal');
+%tform_oct = imregtform(moving, fixed, 'rigid', optimizer, metric);
+%tform = invert(tform_oct);
+
+%output
+angle = optimized(3);
+
+%calculate angle and radius to center point of image
+radius = sqrt((size(imBF,1)/2)^2 + (size(imBF,2)/2)^2);
+angle0 = atand((size(imBF,1))/(size(imBF,2)));
+
+%shift needed due to rotating from upper left corner instead of center
+x_rotation = radius*cosd(angle0-angle) - radius*cosd(angle0);
+z_rotation = radius*sind(angle0-angle) - radius*sind(angle0);
+R_ = [cosd(-optimized(3)) -sind(-optimized(3))  ; sind(-optimized(3)) cosd(-optimized(3))];
+optimized_rot =  -R_ * optimized(1:2)';
+
+%rotation 
+c = cosd(angle);
+s = sind(angle);
+R = [c -s 0; s c 0; 0 0 1];
+
+% add shift due to rotating from upper left corner and shift calculated
+% from brute force
+xtranslation_pix = optimized_rot(1) - x_rotation;
+ztranslation_pix = optimized_rot(2) - z_rotation;
+
+%Combine Matrices
+T = [1 0 0; 0 1 0; xtranslation_pix ztranslation_pix 1];
+OCTToHistologyTransform = R*T; % order applied is right to left
+OCTToHistologyTransform = affine2d(OCTToHistologyTransform);
+
 
 % Debug
-%imHistRegistered = imwarp(imBF,tform,'OutputView',imref2d(size(fixed)));
+imHistRegistered = imwarp(imBF,OCTToHistologyTransform,'OutputView',imref2d(size(rOCT)));
 %figure; imagesc(imfuse(rOCT,imHistRegistered))
 %% function declaration
 
