@@ -23,6 +23,17 @@ function [OCTToHistologyTransform] = fineAlignUsingSurface(rOCT, imBF, markedlin
 %OUTPUTS:
 % - OCTToHistologyTransform - rigid transformation of imBF to rOCT, spatial transformation
 %           stucture, OCTToHistologyTransform.T is a matrix of 3x3
+%% Calculate  scale from initial guess
+scale = sqrt(OCTToHistologyTransformInitialGuess(1,1)^2 + OCTToHistologyTransformInitialGuess(1,2)^2); 
+imBF0 = imBF;
+
+% resize BF image based on scale
+imBF = imresize(imBF,scale,'bicubic');
+
+% change markedline to appropriate length
+residual = size(imBF,2) - floor((length(markedline))*scale); % extra padding if necessary to make same length as imBF
+markedline = scale*interp1([1:length(markedline)],markedline,[1:(1/scale):length(markedline)+(1/scale)*residual]);
+
 %% Make images same size
 rOCT(isnan(rOCT)) = 0;
 
@@ -260,7 +271,7 @@ optimized = brute_force(1:3);
 %hold on; plot(x,bf_surface3)
 
 % Debug
-optimized_img = imtranslate(imrotate(rOCT, -optimized(3),'crop'),[optimized(1),optimized(2)]);
+%optimized_img = imtranslate(imrotate(rOCT, -optimized(3),'crop'),[optimized(1),optimized(2)]);
 %figure; imagesc(imfuse(optimized_img,imBF))
 %figure; imagesc(imfuse(rOCT,imtranslate(imrotate(imBF, optimized(3),'crop'),([cosd(-optimized(3)) -sind(-optimized(3))  ; sind(-optimized(3)) cosd(-optimized(3))]* [-optimized(1);-optimized(2)])')))
 
@@ -288,6 +299,7 @@ optimized_rot =  -R_ * optimized(1:2)';
 c = cosd(angle);
 s = sind(angle);
 R = [c -s 0; s c 0; 0 0 1];
+scale_mat = [scale 0 0; 0 scale 0; 0 0 1];
 
 % add shift due to rotating from upper left corner and shift calculated
 % from brute force
@@ -296,12 +308,12 @@ ztranslation_pix = optimized_rot(2) - z_rotation;
 
 %Combine Matrices
 T = [1 0 0; 0 1 0; xtranslation_pix ztranslation_pix 1];
-OCTToHistologyTransform = R*T; % order applied is right to left
+OCTToHistologyTransform = scale_mat*R*T; % order applied is right to left
 OCTToHistologyTransform = affine2d(OCTToHistologyTransform);
 
 
 % Debug
-imHistRegistered = imwarp(imBF,OCTToHistologyTransform,'OutputView',imref2d(size(rOCT)));
+imHistRegistered = imwarp(imBF0,OCTToHistologyTransform,'OutputView',imref2d(size(rOCT)));
 %figure; imagesc(imfuse(rOCT,imHistRegistered))
 %% function declaration
 
