@@ -43,7 +43,7 @@ base = 100/1000; %base seperation [mm]
 %LA,LB
 %config.photobleach.vLinePositions = base*[-1 0 3]; %[mm] 
 %config.photobleach.hLinePositions = base*[-1 0 2]; %[mm] 
-%LC, LE
+%LC, LE, LF
 config.photobleach.vLinePositions = base*[-4  0 1 3]; %[mm] 
 config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm]
 %LD
