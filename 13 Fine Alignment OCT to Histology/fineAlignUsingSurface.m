@@ -34,17 +34,6 @@ imBF = imresize(imBF,scale,'bicubic');
 residual = size(imBF,2) - length(1:(1/scale):length(markedline)); % extra padding if necessary to make same length as imBF
 markedline = scale*interp1([1:length(markedline)],markedline,[1:(1/scale):length(markedline)+(1/scale)*residual]);
 
-%% Calculate  scale from initial guess
-scale = sqrt(OCTToHistologyTransformInitialGuess(1,1)^2 + OCTToHistologyTransformInitialGuess(1,2)^2); 
-imBF0 = imBF;
-
-% resize BF image based on scale
-imBF = imresize(imBF,scale,'bicubic');
-
-% change markedline to appropriate length
-residual = size(imBF,2) - floor((length(markedline))*scale); % extra padding if necessary to make same length as imBF
-markedline = scale*interp1([1:length(markedline)],markedline,[1:(1/scale):length(markedline)+(1/scale)*residual]);
-
 %% Make images same size
 rOCT(isnan(rOCT)) = 0;
 
