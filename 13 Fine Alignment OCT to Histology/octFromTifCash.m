@@ -11,6 +11,12 @@ if isempty(gFilePath) || ~strcmp(filePath,gFilePath)
     gFilePath = filePath;
 end
 
+%% Is index exist
+if (yI <= 0)
+    dat = [];
+    return;
+end
+
 %% Is this index in cash?
 if (yI <= length(gCashData) && ~isempty(gCashData{yI}))
     % Cashed, do nothing
