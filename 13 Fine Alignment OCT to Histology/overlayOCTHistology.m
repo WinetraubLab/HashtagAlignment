@@ -18,6 +18,7 @@ else
     imHistologyOut = imHistology;
     
     ref = imref2d([size(imHistology,1), size(imHistology,2), 1]);
+    imOCT(isnan(imOCT)) = 0; % For plotting
     imOCTOut = imwarp(imOCT,...
         invert(affine2d(histologyToOCTT)),'OutputView',ref);
 end
