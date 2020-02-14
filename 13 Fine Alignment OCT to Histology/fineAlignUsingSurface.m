@@ -1,4 +1,4 @@
-function [OCTToHistologyTransform] = fineAlignUsingSurface(rOCT, imBF, markedline, fastmode, OCTToHistologyTransformInitialGuess)
+function [OCTToHistologyTransformMatrix] = fineAlignUsingSurface(rOCT, imBF, markedline, fastmode, OCTToHistologyTransformInitialGuess)
 %This functions aligns a resliced OCT image with a brightfield image,
 %based on their segmented surfaces.  It first segments out their respective
 %surfaces and then aligns for translation in x-y [20 pixel increments] and 
@@ -22,7 +22,7 @@ function [OCTToHistologyTransform] = fineAlignUsingSurface(rOCT, imBF, markedlin
 %   (from user)
 %OUTPUTS:
 % - OCTToHistologyTransform - rigid transformation of imBF to rOCT, spatial transformation
-%           stucture, OCTToHistologyTransform.T is a matrix of 3x3
+%           stucture, OCTToHistologyTransform is a matrix of 3x3
 %% Calculate  scale from initial guess
 scale = sqrt(OCTToHistologyTransformInitialGuess(1,1)^2 + OCTToHistologyTransformInitialGuess(1,2)^2); 
 imBF0 = imBF;
@@ -308,12 +308,12 @@ ztranslation_pix = optimized_rot(2) - z_rotation;
 
 %Combine Matrices
 T = [1 0 0; 0 1 0; xtranslation_pix ztranslation_pix 1];
-OCTToHistologyTransform = scale_mat*R*T; % order applied is right to left
-OCTToHistologyTransform = affine2d(OCTToHistologyTransform);
+OCTToHistologyTransformMatrix = scale_mat*R*T; % order applied is right to left
 
 
 % Debug
-imHistRegistered = imwarp(imBF0,OCTToHistologyTransform,'OutputView',imref2d(size(rOCT)));
+%OCTToHistologyTransform = affine2d(OCTToHistologyTransformMatrix);
+%imHistRegistered = imwarp(imBF0,OCTToHistologyTransform,'OutputView',imref2d(size(rOCT)));
 %figure; imagesc(imfuse(rOCT,imHistRegistered))
 %% function declaration
 
