@@ -1,5 +1,6 @@
 function updateSlideInS3(octIm,histologyIm,octOutputPath,histologyOutputPath, ...
-    logImageOut, octMetadata, planeDistanceFromOrigin_mm)
+    logImageOut, octMetadata, planeDistanceFromOrigin_mm,linesIm)
+% Lines Im if exists
 
 % Find which plane to save
 d_um = planeDistanceFromOrigin_mm*1e3 - octMetadata.y.values;
@@ -42,8 +43,6 @@ title('Histology');
 
 subplot(2,2,3);
 imagesc(x,z,octIm);
-xlabel('x[mm]');
-ylabel('z[mm]');
 colormap gray;
 hold on;
 image('XData',x,'YData',z,...
@@ -57,6 +56,20 @@ axis equal;
 axis ij;
 grid on;
 title('Combined');
+
+if exist('linesIm','var')
+    subplot(2,2,4);
+    image('XData',x,'YData',z,...
+          'CData',linesIm);
+    hold off;
+    xlabel('x[mm]');
+    ylabel('z[mm]');
+    colormap gray;
+    axis equal;
+    axis ij;
+    grid on;
+    title('Lines');
+end
 
 % Save
 saveas(fig1,'tmp.png');
