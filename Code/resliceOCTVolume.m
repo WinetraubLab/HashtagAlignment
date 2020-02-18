@@ -59,7 +59,7 @@ for i=1:length(YiToLoadStart)
     i
     
     % Skip if YiToLoadStart greater than image size
-    if YiToLoadStart(i) > length(info)
+    if YiToLoadStart(i) > length(info) | length(YiToLoadStart(i):YiToLoadEnd(i))<2;
         continue
     end
     
