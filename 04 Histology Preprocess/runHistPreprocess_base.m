@@ -71,7 +71,7 @@ slideSections = cellfun(@(x)(strrep(x,sprintf('%sSlides/',subjectFolder),'')),fl
 if runAutomatic == false
     [indx,~] = listdlg('PromptString',{'Select one or more files to run.',...
                         'Hold shift to select multiple.',''},...
-                        'ListString',{slideSections{1},slideSections{2},slideSections{3}});
+                        'ListString',slideSections);
     slideSections = slideSections([indx],:);
 end
 %% Import & Crop
