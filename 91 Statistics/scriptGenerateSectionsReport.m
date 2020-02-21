@@ -3,10 +3,18 @@
 libraryNames = {'LE'};
 
 %% Which are the finished sections
-[sectionPathsOut, subjectPathsOut] = ...
-    s3GetAllGoodSectionsInLibrary(libraryNames);
+st = generateStatusReportByLibrary(libraryNames);
 
-subjectNames = cellfun(@s3GetSubjectName,subjectPathsOut,'UniformOutput',false);
+%% Re organize data
+subjectPathsOut = st.subjectPahts; 
+subjectNamesOut = st.subjectNames;
+isGoodSections = st.isHistologyImageUploaded;
+areaOfQualityData_mm2 = st.areaOfQualityData_mm2;
+
+subjectPathsOut = subjectPathsOut(isGoodSections);
+subjectNamesOut = subjectNamesOut(isGoodSections);
+areaOfQualityData_mm2 = areaOfQualityData_mm2(isGoodSections);
+
 uniqueSubjectPaths = unique(subjectPathsOut);
 uniqueSubjectNames = cellfun(@s3GetSubjectName,uniqueSubjectPaths,'UniformOutput',false);
 
@@ -35,9 +43,10 @@ for i=1:length(uniqueSubjectNames)
     end
     dt.fitzpatrickSkinType  = str2double(json.fitzpatrickSkinType);
     dt.sampleLocation = json.sampleLocation;
-    dt.numberOfSamples = sum(cellfun(...
-        @(x)(strcmpi(x,uniqueSubjectNames{i})),...
-        subjectNames));
+    samplesInThisSubject = cellfun(@(x)(strcmpi(x,uniqueSubjectNames{i})),...
+                                        subjectNamesOut);
+    dt.numberOfSamples = sum(samplesInThisSubject);
+    dt.areaOfQualityData_mm2 = nansum(areaOfQualityData_mm2(samplesInThisSubject));
     
     % Save data
     if strcmpi(json.samePatientAsSampleWithId,'New Patient')
@@ -66,9 +75,9 @@ dataPerSubject(isToDeleteUniqueSubject) = [];
 fig1 = figure(1);
 set(fig1,'units','normalized','outerposition',[0 0 1 1]);
 myDraw(dataPerSubject,'Sections');
-saveas(fig1,'SectionsStats.png');
+saveas(fig1,'Stats_NumberOfSections.png');
 
-%% Draw - Sample Statistics
+%% Draw - Patient Statistics
 dataPerSubject1 = dataPerSubject;
 for i=1:length(dataPerSubject1)
     dataPerSubject1{i}.numberOfSamples = 1;
@@ -77,7 +86,7 @@ end
 fig1 = figure(1);
 set(fig1,'units','normalized','outerposition',[0 0 1 1]);
 myDraw(dataPerSubject1,'Patients');
-saveas(fig1,'PatientsStats.png');
+saveas(fig1,'Stats_NumberOfPatient.png');
 
 %% Helper function to do the actual drawing
 function myDraw(dataPerSubject,prefix)
@@ -100,7 +109,7 @@ end
 
 subplot(2,3,[1 4]);
 drawStatisticsOnBody(sampleLocations,numberOfSections);
-title(sprintf('Total %s: %d',prefix, sum(numberOfSections)));
+title(sprintf('Total %s: %d\nDot location doesn''t reflect laterality',prefix, sum(numberOfSections)));
 
 subplot(2,3,2);
 bar([ ...
