@@ -87,7 +87,10 @@ for sI = 1:length(whichIterationsToReslice)
     jumpXYZ = 1e-3; % mm diff(dimensions.x.values(1:2));
     xSpan = sqrt(xRange^2 + yRange^2);
     x = (-xSpan/2):jumpXYZ:(xSpan/2); %mm
-    y = ((min(d_um)-30):(jumpXYZ*1e3):(max(d_um)+30))/1000; %mm, take some buffer on both ends
+    bufferSize_um = 50; % take some buffer on both ends.
+    y = (...
+        (min(d_um)-bufferSize_um):(jumpXYZ*1e3):(max(d_um)+bufferSize_um)...
+        )/1000; %mm 
     z = (min(dimensions.z.values)):jumpXYZ:(max(dimensions.z.values));
 
     % Determine where output files will be.
