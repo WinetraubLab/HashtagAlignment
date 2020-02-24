@@ -20,7 +20,7 @@ end
 dlgTitle2 = 'Histology Image';
 in2 = {... Question, default answer
     'Is Overall Image Quality Good? (Yes/No)' 'Yes'; ...
-    'Is There Visible Cell Cluster In Dermis? (Yes/No)' 'No'; ...
+    'Are There Visible Cell Clusters In Dermis? (Yes/No)' 'No'; ...
     sprintf('Was Gel Detached From Tissue?\nEyeball, Precentages Reflect OCT/Histology Overlap Area.\n(0%% - Not at all, 50%% - Half of interface was detached, 100%% - All of it)') '0%'; ...
     'Was Tissue Folded? (Yes/No)' 'No';
     'Any Notes?' ''; ...
@@ -32,7 +32,7 @@ end
 
 dlgTitle3 = 'Alignment';
 in3 = {... Question, default answer
-    'Is Overall Alignment Good? (Yes/No)' 'Yes'; ...
+    'Overall Alignment Quality? (3 - Almost Perfect, 2 - Fair, 1 - Poor)' '3'; ...
     'Are Features In Tissue Identifying Alignment As Unique? (Yes/No. For example if tissue is very flat with no unique features mark as no)' 'Yes'; ...
     'Any Notes?' ''; ...
     };
@@ -66,8 +66,10 @@ for i=1:length(qs)
         a = false;
     elseif isempty(a)
         a = '';
+    elseif ~isempty(str2double(a))
+        a = str2double(a);
     elseif ~isempty(str2double(a(1:(end-1)))) && a(end) == '%'
-        a  =str2double(a(1:(end-1)))/100;
+        a  = str2double(a(1:(end-1)))/100;
     elseif contains(lower(q),'notes')
         %Do nothing
     else
