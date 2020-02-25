@@ -114,7 +114,8 @@ else
 end
 
 subplot(2,3,[1 4]);
-drawStatisticsOnBody(sampleLocations,numberOfSections);
+[regionNames, regionNumberOfDataPoints] = ...
+    drawStatisticsOnBody(sampleLocations,numberOfSections);
 title(sprintf('Total %s: %d\nDot location doesn''t reflect laterality',prefix, sum(numberOfSections)));
 
 subplot(2,3,2);
@@ -144,11 +145,13 @@ xticks([1 2 3 4 5]);
 grid on;
 
 subplot(2,3,6);
-histogram(library,(0:6)-0.5,'FaceAlpha',0.6);
-title([prefix ' by Library']);
+nRegions = 6;
+bar(0:(nRegions-1),regionNumberOfDataPoints(1:nRegions), ...
+    'FaceAlpha',0.6);
+title([prefix ' by Region']);
 ylabel(['# of ' prefix]);
-xticks([0 1 2 3 4 5]);
-xticklabels({'LA' 'LB' 'LC' 'LD' 'LE' 'LF'});
+xticks(0:(nRegions-1));
+xticklabels(regionNames(1:nRegions));
 grid on;
 
 end

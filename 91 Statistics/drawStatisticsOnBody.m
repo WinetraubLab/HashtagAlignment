@@ -1,4 +1,4 @@
-function drawStatisticsOnBody (bodyPartsNames, numberOfDataPoints)
+function [regionNames, regionNumberOfDataPoints] = drawStatisticsOnBody (bodyPartsNames, numberOfDataPoints)
 % Inputs:
 %   bodyPartsNames - cell of strings with body parts names
 %   numberOfDataPoints - number of points per body part, optional. Will
@@ -45,7 +45,7 @@ bodyX = linspace(-1,1,size(imBody,2));
 bodyY = linspace(0,size(imBody,1)/size(imBody,2)*2,size(imBody,1));
 
 %% Fill in positions
-p = zeros(size(positions,1),1);
+p = zeros(size(positions,1),1); %Points per position
 for i=1:length(bodyPartsNames)
     bp = bodyPartsNames{i};
     ndp = numberOfDataPoints(i);
@@ -121,3 +121,7 @@ ltxt = ['legend(' sprintf('''%.0f'',',sizeScale) '''location'',''south'',''orien
 % Text for unknown
 isUnknown = cellfun(@(x)(strcmpi(x,'unknown')),positions);
 text(positions{isUnknown,3},positions{isUnknown,4},'  Unknown');
+
+[~,i] = sort(p,'descend');
+regionNames = positions(i,1);
+regionNumberOfDataPoints = p(i);
