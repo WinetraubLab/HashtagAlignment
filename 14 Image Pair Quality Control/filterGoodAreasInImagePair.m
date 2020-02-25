@@ -1,6 +1,6 @@
 % Compute quality control on all images of a subject
 
-subjectPath_ = s3SubjectPath('01');
+subjectPath_ = s3SubjectPath('01','LE');
 [~,sectionNames] = s3GetAllSlidesOfSubject(subjectPath_);
 
 %% Run on all subjects in a loop
