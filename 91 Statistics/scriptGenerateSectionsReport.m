@@ -2,13 +2,19 @@
 
 libraryNames = {'LE'};
 
+% What to lookfor when applying statistics
+mode = 'isHistologyImageUploaded'; % Will only consider slides with histology uploaded for plot
+
+
 %% Which are the finished sections
-st = generateStatusReportByLibrary(libraryNames);
+if ~exist('st','var')
+    st = generateStatusReportByLibrary(libraryNames);
+end
 
 %% Re organize data
 subjectPathsOut = st.subjectPahts; 
 subjectNamesOut = st.subjectNames;
-isGoodSections = st.isHistologyImageUploaded;
+isGoodSections = st.(mode);
 areaOfQualityData_mm2 = st.areaOfQualityData_mm2;
 
 subjectPathsOut = subjectPathsOut(isGoodSections);
