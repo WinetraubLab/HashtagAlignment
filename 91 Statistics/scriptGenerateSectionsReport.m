@@ -5,7 +5,6 @@ libraryNames = {'LE'};
 % What to lookfor when applying statistics
 mode = 'isHistologyImageUploaded'; % Will only consider slides with histology uploaded for plot
 
-
 %% Which are the finished sections
 if ~exist('st','var')
     st = generateStatusReportByLibrary(libraryNames);

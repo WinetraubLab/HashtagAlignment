@@ -17,8 +17,8 @@ if ~isempty(QA)
         answer1 = QA.OCTImageQuality;
     end
     
-    if isfield(QA,'HandEImageQuality')
-        answer2 = QA.HandEImageQuality;
+    if isfield(QA,'HandEImageQuality_InOverlapArea')
+        answer2 = QA.HandEImageQuality_InOverlapArea;
     end
     
     if isfield(QA,'AlignmentQuality')
@@ -39,11 +39,11 @@ if isempty(answer1)
     return;
 end
 
-dlgTitle2 = 'Histology Image';
+dlgTitle2 = 'Histology Image - Only the Part that Overlaps with OCT';
 in2 = {... Question, default answer
     'Is Overall Image Quality Good? (Yes/No)' 'Yes'; ...
     'Are There Visible Cell Clusters In Dermis? (Yes/No)' 'No'; ...
-    sprintf('Was Gel Detached From Tissue?\nEyeball, Precentages Reflect OCT/Histology Overlap Area.\n(0%% - Not at all, 50%% - Half of interface was detached, 100%% - All of it)') '0%'; ...
+    sprintf('Was Gel Detached From Tissue?\n(Eyeball 0%% - Not at all, 50%% - Half of interface was detached, 100%% - All of it)') '0%'; ...
     'Was Tissue Folded? (Yes/No)' 'No';
     'Any Notes?' ''; ...
     };
@@ -55,7 +55,7 @@ end
 dlgTitle3 = 'Alignment';
 in3 = {... Question, default answer
     'Overall Alignment Quality? (3 - Almost Perfect, 2 - Fair, 1 - Poor)' '3'; ...
-    'Are Features In Tissue Identifying Alignment As Unique? (Yes/No. For example if tissue is very flat with no unique features mark as no)' 'Yes'; ...
+    sprintf('Y Axis Tolerance Microns?\n(How many microns can you transvers along Y axis on each side from best alignments and features still match between OCT and histology, capped by 100 microns).\nExample: if you can go +-25um from best alignment, write: 25') '20'; ...
     'Any Notes?' ''; ...
     };
 answer3 = askQuestions(in3,dlgTitle3,answer3);
@@ -63,8 +63,9 @@ if isempty(answer3)
     return;
 end
 %% Process Answers
+QA = [];
 QA.OCTImageQuality = processAnsers(in1(:,1),answer1);
-QA.HandEImageQuality = processAnsers(in2(:,1),answer2);
+QA.HandEImageQuality_InOverlapArea = processAnsers(in2(:,1),answer2);
 QA.AlignmentQuality = processAnsers(in3(:,1),answer3);
 
 function answer = askQuestions(in,dlgtitle,defaultAnswers)
@@ -85,7 +86,7 @@ for i=1:size(in,1)
                in{i,2} = sprintf('%.0f%%',defaultAnswers.(q)*100);
            otherwise
                 if isnumeric(defaultAnswers.(q))
-                    in{i,2} = sprintf('%f',defaultAnswers.(q));
+                    in{i,2} = sprintf('%.1f',defaultAnswers.(q));
                 else
                     in{i,2} = defaultAnswers.(q);
                 end
@@ -94,7 +95,7 @@ for i=1:size(in,1)
 end
 
 % Present dialog
-dims = [1 50];
+dims = [1 80];
 answer = inputdlg(in(:,1)',dlgtitle,dims,in(:,2)');
 
 function y = processAnsers(qs,answes)
