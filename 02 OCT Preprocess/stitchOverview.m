@@ -2,7 +2,7 @@
 
 %% Inputs
 OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
-dispersionParameterA = []; %Use default that is specified in ini probe file
+dispersionQuadraticTerm = []; %Use default that is specified in ini probe file
 
 isPlotEnface = true; %Set to true to plot enface, false to plot depth map
 
@@ -59,7 +59,7 @@ if ~isAlreadyProcessed
         [OCTVolumesFolder 'Overview\'], ... Input
         {output3DOverviewVolumeAll output3DOverviewVolume},...
         'focusPositionInImageZpix',focusPositionInImageZpix,... No Z scan filtering
-        'dispersionParameterA',dispersionParameterA,...
+        'dispersionQuadraticTerm',dispersionQuadraticTerm,...
 		'yPlanesOutputFolder',[logFolder 'OverviewDebug\'],...
         'howManyYPlanes',2*(length(json.overview.zDepths)>1),... Save some raw data ys if there are multiple depths
         'v',true);

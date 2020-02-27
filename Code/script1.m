@@ -67,7 +67,7 @@ OCTVolumePosition = [-1e-3     -1e-3      0; ...     %x,y,z position [m] of the 
 OCTVolumePosition = OCTVolumePosition - [5.493e-6 0 0; 5.493e-6 0 0]';
 OCTVolumePosition(1,2) = (OCTVolumePosition(1,2)- OCTVolumePosition(1,1))*1.026049 + OCTVolumePosition(1,1);
        
-dispersionParameterA = 9.592e-02;  %Use this dispersion Parameter for air-water interface - Wasatch
+dispersionQuadraticTerm = 9.592e-02;  %Use this dispersion Parameter for air-water interface - Wasatch
 
 %Plotting
 %plot after step #     1     2     3
@@ -191,7 +191,7 @@ if ~exist(OCTVolumeFile,'file')
     %Load OCT
     meanAbs = yOCTProcessScan(OCTVolumeFolder, 'meanAbs', ...
         'OCTSystem', 'Wasatch', ...
-        'dispersionParameterA', dispersionParameterA);
+        'dispersionQuadraticTerm', dispersionQuadraticTerm);
     
     meanAbs = log(meanAbs);
     

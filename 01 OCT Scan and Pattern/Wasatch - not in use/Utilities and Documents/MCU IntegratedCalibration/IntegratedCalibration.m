@@ -35,7 +35,7 @@ verticalFastDataPath = ''; % TODO
 horizontalSlowDataPath = ''; % TODO
 horizontalFastDataPath = ''; % TODO
 OCTSystem = 'Wasatch';
-dispersionParameterA = 100; % Use Demo_DispersionCorrection to find the term
+dispersionQuadraticTerm = 100; % Use Demo_DispersionCorrection to find the term
 
 %% Analysis Settings
 
@@ -120,11 +120,11 @@ end
 % Description:
 %
 function meanAbs = loadSlice(folderDirectory, octSystem)
-    dispersionParameterA = 100; %Use Demo_DispersionCorrection to find the term
+    dispersionQuadraticTerm = 100; %Use Demo_DispersionCorrection to find the term
     [interf,dimensions] = yOCTLoadInterfFromFile(folderDirectory,'OCTSystem', octSystem);
 
     %Generate BScans
-    scanCpx = yOCTInterfToScanCpx(interf,dimensions,'dispersionParameterA', dispersionParameterA);
+    scanCpx = yOCTInterfToScanCpx(interf,dimensions,'dispersionQuadraticTerm', dispersionQuadraticTerm);
     meanAbs = mean(mean(abs(scanCpx, 3)), 1);
 end
 
@@ -132,11 +132,11 @@ end
 % Description:
 %
 function meanAbs = loadTopDown(folderDirectory, octSystem)
-    dispersionParameterA = 100;
+    dispersionQuadraticTerm = 100;
     OCTVolumeFile = [folderDirectory '\scanAbs.tif'];
     if ~exist(OCTVolumeFile,'file')
         % Load OCT
-        meanAbs = yOCTProcessScan(folderDirectory, 'meanAbs', 'OCTSystem', octSystem, 'dispersionParameterA', dispersionParameterA);
+        meanAbs = yOCTProcessScan(folderDirectory, 'meanAbs', 'OCTSystem', octSystem, 'dispersionQuadraticTerm', dispersionQuadraticTerm);
         % Saves for later
         yOCT2Tif(meanAbs,OCTVolumeFile); 
     else

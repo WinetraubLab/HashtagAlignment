@@ -75,7 +75,7 @@ for scanI = 1:length(scanParameters.octFolders)
     fprintf('%s Processing Scan... (%d of %d)\n',datestr(datetime),scanI,length(scanParameters.octFolders));
 
     [scanAbs,dim] = yOCTProcessScan(octScanPath, 'meanAbs', 'n', scanParameters.tissueRefractiveIndex, ...
-        'runProcessScanInParallel', true, 'dispersionParameterA', ini.DefaultDispersionParameterA);
+        'runProcessScanInParallel', true, 'dispersionQuadraticTerm', ini.DefaultDispersionQuadraticTerm);
         
     dim.x.values = x*1e3+scanParameters.gridXcc(scanI)*1e3;
     dim.y.values = y*1e3+scanParameters.gridYcc(scanI)*1e3;

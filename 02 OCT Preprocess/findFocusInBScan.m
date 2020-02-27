@@ -6,7 +6,7 @@ disp('Looking For Focus Position...');
 
 %OCT Data
 OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-02D/OCTVolumes/';
-reconstructConfig = {'dispersionParameterA',6.539e07}; %Configuration for processing OCT Volume
+reconstructConfig = {'dispersionQuadraticTerm',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
 focusSigma = 20; %Sigma size of focus [pixel]
