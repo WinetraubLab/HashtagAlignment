@@ -12,6 +12,8 @@ subjectNames = cellfun(@(x)(strrep(x,'/','')),...
     subjectNames,'UniformOutput',false);
 
 % Remove calibration, this is no a subject
-isRemove = cellfun(@(sn)(strcmpi(sn,'calibratoins')),subjectNames);
+isRemove = cellfun(@(sn)(strcmpi(sn,'0calibratoins')),subjectNames) | ...
+    cellfun(@(sn)(strcmpi(sn,'0librarystatistics')),subjectNames);
+
 subjectPaths(isRemove) = [];
 subjectNames(isRemove) = [];

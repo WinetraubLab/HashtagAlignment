@@ -18,7 +18,7 @@ end
 p = ['s3://delazerdamatlab/Users/OCTHistologyLibrary/' lib '/'];
 
 if (isCalibrationFolder)
-    p = [p 'Calibratoins/' subject '/'];
+    p = [p '0Calibratoins/' subject '/'];
 elseif ~isempty(subject)
     p = [p lib '-' subject '/'];
 end

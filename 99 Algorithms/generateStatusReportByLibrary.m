@@ -126,17 +126,25 @@ for i=1:length(sectionPathsOut)
     
     % Stack alignment plane position, stack alignment can happen even if
     % nothing is known about this slide except it was requested from histology.
-    planeDistanceFromOCTOrigin_um = ...
-        cellfun(@(x)(x(:)'),{stackConfigJson.stackAlignment.planeDistanceFromOCTOrigin_um},'UniformOutput',false);
-    planeDistanceFromOCTOrigin_um = [planeDistanceFromOCTOrigin_um{:}];
-    planeDistanceFromOCTOrigin_um = planeDistanceFromOCTOrigin_um(st.sectionNumber(i));
-    
-    % Is section part of aligned stack and what is its distance
-    if ~isnan(planeDistanceFromOCTOrigin_um)
-        st.isSectionPartOfAlingedStack(i) = true;
-        st.stackDistanceFromOCTOrigin1_um(i) = planeDistanceFromOCTOrigin_um;
+    if isfield(stackConfigJson,'stackAlignment')
+        planeDistanceFromOCTOrigin_um = ...
+            cellfun(@(x)(x(:)'),{stackConfigJson.stackAlignment.planeDistanceFromOCTOrigin_um},'UniformOutput',false);
+        planeDistanceFromOCTOrigin_um = [planeDistanceFromOCTOrigin_um{:}];
+        if i<length(planeDistanceFromOCTOrigin_um)
+            planeDistanceFromOCTOrigin_um = planeDistanceFromOCTOrigin_um(st.sectionNumber(i));
+        else
+            planeDistanceFromOCTOrigin_um = nan; % No stack alignment data for this section.
+        end
+
+        % Is section part of aligned stack and what is its distance
+        if ~isnan(planeDistanceFromOCTOrigin_um)
+            st.isSectionPartOfAlingedStack(i) = true;
+            st.stackDistanceFromOCTOrigin1_um(i) = planeDistanceFromOCTOrigin_um;
+        end
+        % isSectionProperlyAlingedWithStack - TBD HERE!
+    else
+        % No stack alignment calculated yet, do nothing.
     end
-    % isSectionProperlyAlingedWithStack - TBD HERE!
     
     % Photobleached lines image uploaded
     if isfield(slideConfigJson,'photobleachedLinesImagePath')
