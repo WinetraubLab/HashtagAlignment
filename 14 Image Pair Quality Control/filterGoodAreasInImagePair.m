@@ -11,3 +11,4 @@ for i=1:length(sectionNames)
     filterGoodAreasInImagePair_SingleSection; 
 end
 disp('Done');
+close all;
