@@ -150,7 +150,7 @@ for i=1:nIterations
     scJson.stackAlignment(i).planeNormal = nOut;
     scJson.stackAlignment(i).isPlaneNormalSameDirectionAsCuttingDirection = isPlaneNormalSameDirectionAsCuttingDirection;
     scJson.stackAlignment(i).planeDistanceFromOCTOrigin_um = sectionDistanceToOriginOut*1000;
-    scJson.stackAlignment(i).wasSectionUsedInComputingStackAlignment = ~singlePlaneFits_IsOutlier;
+    scJson.stackAlignment(i).wasSectionUsedInComputingStackAlignment = ~singlePlaneFits_IsOutlier(ii);
     scJson.stackAlignment(i).scaleFactor = scaleFactor;
     scJson.stackAlignment(i).notes = sprintf([ ...
         'planeNormal - unit vector, parallel to the average normal of the slide planes. Each slide plane norm is -u X v.\n' ...
