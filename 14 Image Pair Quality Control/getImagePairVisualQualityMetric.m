@@ -11,6 +11,7 @@ end
 answer1 = []; 
 answer2 = [];
 answer3 = [];
+answer4 = [];
 if ~isempty(QA)
     
     if isfield(QA,'OCTImageQuality')
@@ -23,6 +24,10 @@ if ~isempty(QA)
     
     if isfield(QA,'AlignmentQuality')
         answer3 = QA.AlignmentQuality;
+    end
+    
+    if isfield(QA,'VisibleObjectsInBothImages')
+        answer4 = QA.VisibleObjectsInBothImages;
     end
 end
 
@@ -42,7 +47,6 @@ end
 dlgTitle2 = 'Histology Image - Only the Part that Overlaps with OCT';
 in2 = {... Question, default answer
     'Is Overall Image Quality Good? (Yes/No)' 'Yes'; ...
-    'Are There Visible Cell Clusters In Dermis? (Yes/No)' 'No'; ...
     sprintf('Was Gel Detached From Tissue?\n(Eyeball 0%% - Not at all, 50%% - Half of interface was detached, 100%% - All of it)') '0%'; ...
     'Was Tissue Folded? (Yes/No)' 'No';
     'Any Notes?' ''; ...
@@ -64,11 +68,24 @@ answer3 = askQuestions(in3,dlgTitle3,answer3);
 if isempty(answer3)
     return;
 end
+
+dlgTitle4 = 'Objects Visible In Both OCT and Histology';
+in4 = {... Question, default answer
+    'Hair Follicles? (Yes/No, can be seen in both OCT and histology)' 'No'; ...
+    'Clusters Of Cells Inside Dermis? (Yes/No, can be seen in both OCT and histology)' 'No'; ...
+    'Clumps In Gel? (Yes/No, can be seen in both OCT and histology)' 'No'; ...
+    'Other Objects Or Comments?' ''; ...
+    };
+answer4 = askQuestions(in4,dlgTitle4,answer4);
+if isempty(answer4)
+    return;
+end
 %% Process Answers
 QA = [];
 QA.OCTImageQuality = processAnsers(in1(:,1),answer1);
 QA.HandEImageQuality_InOverlapArea = processAnsers(in2(:,1),answer2);
 QA.AlignmentQuality = processAnsers(in3(:,1),answer3);
+QA.VisibleObjectsInBothImages = processAnsers(in4(:,1),answer4);
 
 function answer = askQuestions(in,dlgtitle,defaultAnswers)
 
