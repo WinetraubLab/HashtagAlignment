@@ -75,7 +75,7 @@ st.areFiducialLinesMarked = zeros(size(st.sectionNames),'logical');
 st.nOfFiducialLinesMarked =  zeros(size(st.sectionNames))*NaN;
 st.sectionDistanceFromOCTOrigin2SectionAlignment_um = zeros(size(st.sectionNames))*NaN;
 st.isRanStackAlignment = zeros(size(st.sectionNames),'logical');
-st.isSectionProperlyAlingedWithStack = zeros(size(st.sectionNames),'logical');
+st.wasSectionUsedInComputingStackAlignment = zeros(size(st.sectionNames),'logical');
 st.isSectionPartOfAlingedStack = zeros(size(st.sectionNames),'logical');
 st.sectionDistanceFromOCTOrigin3StackAlignment_um = zeros(size(st.sectionNames))*NaN;
 st.isHistologyImageUploaded = zeros(size(st.sectionNames),'logical');
@@ -98,7 +98,7 @@ st.notes = sprintf([ ...
     'nOfFiducialLinesMarked - number of marked lines for each section. Set to nan if no lines were marked.\n' ...
     'sectionDistanceFromOCTOrigin2SectionAlignment_um - distance between section to OCT origin in microns, single plane fit of this section. Nan if doesn''t exist.\n' ...
     'isRanStackAlignment - is stack alignment algroithm ran on this section?\n' ...
-    'isSectionProperlyAlingedWithStack - is section aligned with its iteration stack, was it used to generate stack alignment? If set to false it was an outlier.\n' ...
+    'wasSectionUsedInComputingStackAlignment - is section aligned with its iteration stack? Was it used to generate stack alignment? If set to false it was an outlier.\n' ...
     'isSectionPartOfAlingedStack - is stack iteration associated with this section aligned, even if this section itself not alignable.\n' ...
     'sectionDistanceFromOCTOrigin3StackAlignment_um - distance between section to OCT origin in microns according to stack alignment. Nan if doesn''t exist.\n' ...
     'isHistologyImageUploaded - was H&E image uploaded.\n' ...
@@ -141,6 +141,8 @@ for i=1:length(sectionPathsOut)
     % Stack alignment plane position, stack alignment can happen even if
     % nothing is known about this slide except it was requested from histology.
     if isfield(stackConfigJson,'stackAlignment')
+        
+        % planeDistanceFromOCTOrigin_um
         planeDistanceFromOCTOrigin_um = ...
             cellfun(@(x)(x(:)'),{stackConfigJson.stackAlignment.planeDistanceFromOCTOrigin_um},'UniformOutput',false);
         planeDistanceFromOCTOrigin_um = [planeDistanceFromOCTOrigin_um{:}];
@@ -155,7 +157,21 @@ for i=1:length(sectionPathsOut)
             st.isSectionPartOfAlingedStack(i) = true;
             st.sectionDistanceFromOCTOrigin3StackAlignment_um(i) = planeDistanceFromOCTOrigin_um;
         end
-        % isSectionProperlyAlingedWithStack - TBD HERE!
+        
+        % wasSectionUsedInComputingStackAlignment
+        wasSectionUsedInComputingStackAlignment = ...
+            cellfun(@(x)(x(:)'),{stackConfigJson.stackAlignment.wasSectionUsedInComputingStackAlignment},'UniformOutput',false);
+        wasSectionUsedInComputingStackAlignment = [wasSectionUsedInComputingStackAlignment{:}];
+        if i<length(wasSectionUsedInComputingStackAlignment)
+            wasSectionUsedInComputingStackAlignment = wasSectionUsedInComputingStackAlignment(st.sectionNumber(i));
+        else
+            wasSectionUsedInComputingStackAlignment = nan; % No stack alignment data for this section.
+        end
+        
+        % Is section part of aligned stack and what is its distance
+        if ~isnan(wasSectionUsedInComputingStackAlignment)
+            st.wasSectionUsedInComputingStackAlignment(i) = wasSectionUsedInComputingStackAlignment;
+        end
     else
         % No stack alignment calculated yet, do nothing.
     end
