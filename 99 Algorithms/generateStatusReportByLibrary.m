@@ -134,9 +134,14 @@ for i=1:length(sectionPathsOut)
     dist_um = arrayfun(@(hi)((-hi.estimatedDistanceFromFullFaceToOCTOrigin_um+hi.sectionDepthsRequested_um)'),...
         stackConfigJson.histologyInstructions.iterations,'UniformOutput',false);
     dist_um = [dist_um{:}];
-    dirFlip = [stackConfigJson.stackAlignment.isPlaneNormalSameDirectionAsCuttingDirection];
+    if isfield(stackConfigJson,'stackAlignment')
+        dirFlip = [stackConfigJson.stackAlignment.isPlaneNormalSameDirectionAsCuttingDirection];
+        dirFlip(st.iteration(i))
+    else
+        dirFlip = 1;
+    end
     st.sectionDistanceFromOCTOrigin1HistologyInstructions_um(i) = ...
-        dist_um(st.sectionNumber(i)).* dirFlip(st.iteration(i));
+        dist_um(st.sectionNumber(i)).* dirFlip;
     
     % Stack alignment plane position, stack alignment can happen even if
     % nothing is known about this slide except it was requested from histology.
