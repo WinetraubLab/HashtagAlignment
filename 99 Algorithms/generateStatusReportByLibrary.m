@@ -134,9 +134,10 @@ for i=1:length(sectionPathsOut)
     dist_um = arrayfun(@(hi)((-hi.estimatedDistanceFromFullFaceToOCTOrigin_um+hi.sectionDepthsRequested_um)'),...
         stackConfigJson.histologyInstructions.iterations,'UniformOutput',false);
     dist_um = [dist_um{:}];
-    if isfield(stackConfigJson,'stackAlignment')
-        dirFlip = [stackConfigJson.stackAlignment.isPlaneNormalSameDirectionAsCuttingDirection];
-        dirFlip(st.iteration(i))
+    if isfield(stackConfigJson,'stackAlignment') && ... Ran stack alignment
+            ~isempty(stackConfigJson.stackAlignment(st.iteration(i)).planeNormal) % and stack alignment succeed for this iteration
+        dirFlip = ...
+            stackConfigJson.stackAlignment(st.iteration(i)).isPlaneNormalSameDirectionAsCuttingDirection;
     else
         dirFlip = 1;
     end
@@ -193,7 +194,11 @@ for i=1:length(sectionPathsOut)
         st.areFiducialLinesMarked(i) =  true;
         st.nOfFiducialLinesMarked(i) = sum([slideConfigJson.FM.fiducialLines.group] ~= 't');
         st.fluorescenceImagingDate{i} = slideConfigJson.FM.imagedAt;
-        st.sectionDistanceFromOCTOrigin2SectionAlignment_um(i) = slideConfigJson.FM.singlePlaneFit.d*1e3;
+        
+        % Did single plane fit ran? / succeed
+        if ~isempty(slideConfigJson.FM.singlePlaneFit)
+            st.sectionDistanceFromOCTOrigin2SectionAlignment_um(i) = slideConfigJson.FM.singlePlaneFit.d*1e3;
+        end
     else
         continue;
     end
@@ -201,7 +206,7 @@ for i=1:length(sectionPathsOut)
     % Was stack alignment ran?
     if (isfield(stackConfigJson,'stackAlignment') && ...
             st.iteration(i) <= length(stackConfigJson.stackAlignment))
-        st.isRanStackAlignment(i) = true;
+        st.isRanStackAlignment(i) = true;   
     else
         continue;
     end

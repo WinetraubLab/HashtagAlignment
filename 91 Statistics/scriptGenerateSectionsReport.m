@@ -1,13 +1,15 @@
 % This script generates a status report of all the finish sections
 
-libraryNames = {'LE'};
+libraryNames = {'LE','LF'};
 
 % What to lookfor when applying statistics
 mode = 'isHistologyImageUploaded'; % Will only consider slides with histology uploaded for plot
 
 %% Which are the finished sections
-if ~exist('st','var')
+if false % Generate report
     st = generateStatusReportByLibrary(libraryNames);
+else % Read report that was generated before
+    st = loadStatusReportByLibrary(libraryNames);
 end
 
 %% Re organize data
