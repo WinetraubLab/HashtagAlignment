@@ -28,7 +28,7 @@ for i=1:length(libraryNames)
     if isempty(st)
         st = st1;
     else
-        fn = fieldnames(a);
+        fn = fieldnames(st);
         for j=1:length(fn)            
             val = st.(fn{i});
             val = val(:);
