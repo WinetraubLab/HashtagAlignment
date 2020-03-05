@@ -67,8 +67,9 @@ st.sectionNames = sectionNameOut;
 st.sectionPahts = sectionPathsOut;
 st.iteration = sectionIterationOut;
 st.sectionNumber = sectionNumberOut;
-st.fluorescenceImagingDate = cell(size(st.sectionNames));
+st.isOCTVolumeProcessed = zeros(size(st.sectionNames),'logical');
 st.isHistologyInstructionsPrepared = ones(size(st.sectionNames),'logical'); %If its on this list, it has histology instructions
+st.fluorescenceImagingDate = cell(size(st.sectionNames));
 st.sectionDistanceFromOCTOrigin1HistologyInstructions_um = zeros(size(st.sectionNames))*NaN;
 st.isFluorescenceImageUploaded = zeros(size(st.sectionNames),'logical');
 st.areFiducialLinesMarked = zeros(size(st.sectionNames),'logical');
@@ -92,6 +93,7 @@ st.notes = sprintf([ ...
     'sectionNumber - section''s number in subject\n' ...
     'fluorescenceImagingDate - section scan date - time string.\n' ...
     'isHistologyInstructionsPrepared - was histology instructions exist for this section.\n' ... 
+    'isOCTVolumeProcessed - was OCT volume processed to generate a tif file.\n' ...
     'sectionDistanceFromOCTOrigin1HistologyInstructions_um - distance between section to OCT origin in microns, best guess according to the time histology instructions were made.' ...
     'isFluorescenceImageUploaded - was fluorescence image scanned and uploaded for this section.\n' ...
     'areFiducialLinesMarked - are fiducial lines marked in fluorescence image?\n' ...
@@ -114,6 +116,14 @@ fprintf('Processing %d sections, wait for 20 starts [ ',length(sectionPathsOut))
 for i=1:length(sectionPathsOut)
     if mod(i,round(length(sectionPathsOut)/20)) == 0
         fprintf('* ');
+    end
+    
+    % Was OCT Volume Tif generated
+    if i==1 || ~strcmp(st.subjectPahts{i},st.subjectPahts{i-1})
+        st.isOCTVolumeProcessed(i) = awsExist([st.subjectPahts{i} '/OCTVolumes/VolumeScanAbs/TifMetadata.json'],'file');
+    else
+        %Its the same subject, so use the same value.
+        st.isOCTVolumeProcessed(i) = st.isOCTVolumeProcessed(i-1);
     end
     
     slideConfigFilePath = awsModifyPathForCompetability(...
