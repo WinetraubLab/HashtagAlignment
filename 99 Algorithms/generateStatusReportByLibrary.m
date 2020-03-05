@@ -42,6 +42,10 @@ for i=1:length(subjectPaths)
     end
     
     % Load subject's stack
+    if ~awsExist([subjectPaths{i} 'Slides/StackConfig.json'],'file')
+        warning('Cannot find file %s, skipping subject.',[subjectPaths{i} 'Slides/StackConfig.json'])
+        continue;
+    end
     stackConfigJson = awsReadJSON([subjectPaths{i} 'Slides/StackConfig.json']);
     
     % Get section name and path
