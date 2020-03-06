@@ -1,5 +1,5 @@
 function histologyToOCTT = octSlideToTransform(...
-    umm,vmm,hmm,new2OriginalAffineTransform,topLeftCornerXmm,topLeftCornerZmm,scale_umperpix,octScale_umperpix)
+    umm,vmm,hmm,new2OriginalAffineTransform,topLeftCornerXmm,topLeftCornerZmm,histologyScale_umperpix,octScale_umperpix)
 % Using slide data, what is the appropriate 2d transform.
 % INPUTS:
 %   u,v,h of the slide (in milimiters)
@@ -9,7 +9,8 @@ function histologyToOCTT = octSlideToTransform(...
 %   topLeftCornerXmm, topLeftCornerZmm - top left corner position in new
 %       resliced coordinate system of the resliced volume. This point is
 %       corresponding to 'h', the origin of the histology image.
-%   scale_umperpix - from the stack average.
+%   scale_umperpix - pixel size of histology image (not accounting for
+%   shrinkage, that will come in u,v,h size.
 %   octScale_umperpix - stack OCT scale (microns per pixel).
 %OUTPUT:
 %   histologyToOCTT - left multiplication transform v*Transform
@@ -34,4 +35,5 @@ rotation_deg = 180/pi * atan2(u_2D(2),u_2D(1));
 
 % Finally, compute transform.
 histologyToOCTT = knobesToTransform( ...
-    scale_umperpix,rotation_deg,xTranslation_um,zTranslation_um, octScale_umperpix);
+    (histologyScale_umperpix/(norm(umm)*1e3)-1)*100,rotation_deg,xTranslation_um,zTranslation_um,...
+    histologyScale_umperpix, octScale_umperpix);

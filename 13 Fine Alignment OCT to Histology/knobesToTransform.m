@@ -1,9 +1,13 @@
 function histologyToOCTT = knobesToTransform( ...
-    scale_umperpix,rotation_deg,xTranslation_um,zTranslation_um, octScale_umperpix)
+    scale_percent,rotation_deg,xTranslation_um,zTranslation_um, histologyScale_umperpix, octScale_umperpix)
 % For explanation about the tranformation see website:
+% scale_percent  - negative is shrinkage
+% histologyScale_umperpix - size of histology image scanned,
+% octScale_umperpix - size of OCT image.
 % https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html
 
 %% Scale
+scale_umperpix = histologyScale_umperpix/(scale_percent/100+1);
 HistToMicrons = [scale_umperpix 0 0; 0 scale_umperpix 0; 0 0 1];
 
 %% Rotate

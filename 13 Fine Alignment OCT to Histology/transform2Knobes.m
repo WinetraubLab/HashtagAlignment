@@ -1,5 +1,7 @@
-function [scale_umperpix,rotation_deg,xTranslation_um,zTranslation_um] = transform2Knobes (histologyToOCTT,octScale_umperpix)
-
+function [ExpansionorShrinkagePercent,rotation_deg,xTranslation_um,zTranslation_um] = transform2Knobes (histologyToOCTT,histologyScale_umperpix,octScale_umperpix)
+% histologyScale_umperpix - size of histology image pixels,
+% octScale_umperpix - size of oct image pixels
+% ExpansionorShrinkagePercent - expansion, - shrinkage
 % histologyToOCTT = HistToMicrons -> Rotate -> Translate -> MicronsToOCT
 % So we will invert them one by one
 
@@ -20,10 +22,12 @@ s = sin(rotation_deg*pi/180);
 R = [c s 0; -s c 0; 0 0 1];
 
 Tall = Tall * R^-1;
-%% Extract scale
-scale_umperpix = mean([Tall(1,1), Tall(2,2)]);
-HistToMicrons = [scale_umperpix 0 0; 0 scale_umperpix 0; 0 0 1];
+%% Extract pixel size of the new image & scale factor
+pixelSize_um = mean([Tall(1,1), Tall(2,2)]);
+HistToMicrons = [pixelSize_um 0 0; 0 pixelSize_um 0; 0 0 1];
 Tall = Tall * HistToMicrons^-1;
+
+ExpansionorShrinkagePercent = (histologyScale_umperpix/pixelSize_um - 1)*100;
 
 %% Check nothing is left
 if (norm(diag([1 1 1]) - Tall) > 1e-3)

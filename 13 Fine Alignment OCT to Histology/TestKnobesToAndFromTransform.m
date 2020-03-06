@@ -2,40 +2,47 @@
 
 %% Basic tests
 
-% 2 microns per pixel, no rotation, x translation of 10 microns
-T = knobesToTransform(2,0,10,0,1);
+% 2 microns per pixel, no rotation, no shrinkage, x translation of 10 microns
+T = knobesToTransform(0,0,10,0,2,1);
 assert(all([0 0 1]*T==[10 0 1]),'Baseline translation');
 assert(all([1 0 1]*T==[12 0 1]),'1 pixel translation x');
 assert(all([0 1 1]*T==[10 2 1]),'1 pixel translation z');
 
-% 2 microns per pixel, 90 degrees rotation, x translation of 10 microns
-T = knobesToTransform(2,90,10,0,1);
+% 2 microns per pixel, 90 degrees rotation, x translation of 10 microns, no
+% shrinkage
+T = knobesToTransform(0,90,10,0,2,1);
 assert(all([0 0 1]*T==[10 0 1]),'Baseline translation');
 assert(all(abs([1 0 1]*T-[10 2 1])<1e-3),'1 pixel translation x');
 assert(all(abs([0 1 1]*T-[8 0 1])<1e-3),'1 pixel translation z');
 
+% 2 microns per pixel, no rotation, 50% shrinkage (which means image in OCT frame is doubled), x translation of 10 microns
+T = knobesToTransform(-50,0,10,0,2,1);
+assert(all([0 0 1]*T==[10 0 1]),'Baseline translation');
+assert(all([1 0 1]*T==[14 0 1]),'1 pixel translation x');
+assert(all([0 1 1]*T==[10 4 1]),'1 pixel translation z');
+
 %% Consistancy
-knobes = (2*rand(1,5)-1).*[1 180 100 100 1];
-knobes([1 5]) = abs(knobes([1 5]));
-knobes = [0.5 90 10 10 0.7]; %Image scale um/pix, rotation,xTranslation,zTranslation,octScanle
-T = knobesToTransform(knobes(1),knobes(2),knobes(3),knobes(4),knobes(5));
-[knobes_(1),knobes_(2),knobes_(3),knobes_(4)] = transform2Knobes (T,knobes(5));
-knobes_(5) = knobes(5);
+knobes = (2*rand(1,6)-1).*[50 180 100 100 1 1];
+knobes([5 6]) = abs(knobes([5 6]));
+knobes = [10 90 10 10 0.7 1]; %Image scale %, rotation,xTranslation,zTranslation, histology pixel size, oct pixel size
+T = knobesToTransform(knobes(1),knobes(2),knobes(3),knobes(4),knobes(5), knobes(6));
+[knobes_(1),knobes_(2),knobes_(3),knobes_(4)] = transform2Knobes (T,knobes(5),knobes(6));
+knobes_(5:6) = knobes(5:6);
 assert(all(abs(knobes-knobes_)<1e-3),'Back and forth consistancy');
 
 %% u,v,h to transform
 
 % Simplest transform
-u = [1 0 0];
-v = [0 0 1];
-h = [0 0 0];
+u = [1 0 0]/1e3;
+v = [0 0 1]/1e3;
+h = [0 0 0]/1e3;
 T = octSlideToTransform(u,v,h,diag([1 1 1]),0,0,1,1);
 assert(all(all(abs(T-diag([1 1 1]))<1e-3)),'Simplist transform');
 
 % Translation
-u = [1 0 0];
-v = [0 0 1];
-h = [-0.5 0 0];
+u = [1 0 0]/1e3;
+v = [0 0 1]/1e3;
+h = [-500 0 0]/1e3;
 T = octSlideToTransform(u,v,h,diag([1 1 1]),-1,0,1,1);
 Tref = [1 0 0; 0 1 0; 500 0 1];
 assert(all(all(abs(T-Tref)<1e-3)),'Small translation transform');
@@ -73,9 +80,9 @@ planeDistanceFromOrigin_mm = tmp(2);
 octScale_umperpix = rand(1);
 topLeftCornerXmm = rand(1);
 topLeftCornerZmm = rand(1);
-scale_umperpix = norm(u)*1e3;
+histology_umperpix = rand(1);
 
-T = octSlideToTransform(u,v,h,new2OriginalAffineTransform,topLeftCornerXmm,topLeftCornerZmm,scale_umperpix,octScale_umperpix);
+T = octSlideToTransform(u,v,h,new2OriginalAffineTransform,topLeftCornerXmm,topLeftCornerZmm,histology_umperpix,octScale_umperpix);
 
 [u_,v_,h_] = transformToOctSlide(...
     T,new2OriginalAffineTransform,topLeftCornerXmm,topLeftCornerZmm,octScale_umperpix, planeDistanceFromOrigin_mm);
