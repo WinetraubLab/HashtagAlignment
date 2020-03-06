@@ -103,3 +103,34 @@ disp('Done');
 
 t = toc(tAll);
 fprintf('\nFYI, preprocessing of this slide took you %.1f minutes start to finish\n',t/60);
+
+%% Ask user one more time, did alignment succeeded?
+for i=1:length(slideS3Path)
+    % Read Json from file
+    slideJson = awsReadJSON([slideS3Path{i} '/SlideConfig.json']);
+    if ~isfield(slideJson,'FMHistologyAlignment')
+        continue; % Wasn't aligned
+    end
+    
+    % Present registration overview to user
+    [~,slideName] = fileparts([slideS3Path{i}(1:end-1) '.a']);
+    logFolderPath = awsModifyPathForCompetability([slideS3Path{i} '../../Log/04 Histology Preprocess/']);
+    fileName = [logFolderPath slideName '_HistFMRegistration.png'];
+    ds = fileDatastore(fileName,'ReadFcn',@imread);
+    im = ds.read;
+    imshow(im);
+    
+    % Ask 'the' question
+    answer = questdlg('Did Histology Aligned to Brightfield?','Question','Yes','No','No');
+    if strcmp(answer,'Yes')
+        slideJson.FMHistologyAlignment.wasAlignmentSuccessful = true;
+    else
+        slideJson.FMHistologyAlignment.wasAlignmentSuccessful = false;
+    end
+    
+    % Upload Json
+    awsWriteJSON(slideJson,[slideS3Path{i} '/SlideConfig.json']);
+end
+        
+        
+        

@@ -3,8 +3,9 @@ function histologyInstructionsTextToStackConfig(subjectPath)
 % (used by LC and some LD) Written at Jan 10, 2020.
 %%
 
-%sp = s3GetAllSubjectsInLib('LC');
-%subjectPath = sp{2};
+if ~exist('subjectPath')
+    subjectPath = s3SubjectPath('08','LF');
+end
 
 deleteOriginalFileWhenDone = true;
 
@@ -73,7 +74,10 @@ for i=1:length(lines)
         sectionDepthsRequested_um = [sectionDepthsRequested_um (currentDepth_um+n*interval_um)];
         currentDepth_um = max(sectionDepthsRequested_um);
         
-        inputs = [inputs {'sectionDepthsRequested_um',sectionDepthsRequested_um}];
+        estimatedDistanceFromFullFaceToOCTOrigin_um = mean(sectionDepthsRequested_um);
+        
+        inputs = [inputs {'sectionDepthsRequested_um',sectionDepthsRequested_um, ...
+            'estimatedDistanceFromFullFaceToOCTOrigin_um', estimatedDistanceFromFullFaceToOCTOrigin_um}];
 
         %Add it to HI
         if ~exist('sc','var')
@@ -90,6 +94,8 @@ for i=1:length(lines)
 end
 
 %% Finalize
+% Write stack config json file and read from that
+awsWriteJSON(sc,[slidesFolder '/StackConfig.json']);
 scGenerateHistologyInstructionsFile(sc,[logsFloder 'HistologyInstructions.pdf']);
 
 % Cleanup
