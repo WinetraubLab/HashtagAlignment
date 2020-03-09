@@ -184,6 +184,26 @@ else
     isPlaneNormalSameDirectionAsCuttingDirection = 1;
 end
 
+%% Plot Main Figure (#2)
+
+%Plot top view in a new figure with enface under it
+fig2=figure(42);
+set(fig2,'units','normalized','outerposition',[0 0 1 1]);
+subplot(1,1,1); %Clear previuse figure
+spfPlotTopView( ...
+    singlePlaneFits,hLinePositions,vLinePositions, ...
+    'lineLength',lineLength,'planeNames',sectionNames, ...
+    'theDot',[octVolumeJson.theDotX; octVolumeJson.theDotY],...
+    'isStartCuttingFromDotSide',scJson.histologyInstructions.iterations(1).startCuttingAtDotSide, ...
+    'enfaceViewImage',enfaceView, ...
+    'enfaceViewImageXLim', [min(octVolumeJson.overview.xCenters) max(octVolumeJson.overview.xCenters)] + octVolumeJson.overview.range*[-1/2 1/2],...
+    'enfaceViewImageYLim', [min(octVolumeJson.overview.yCenters) max(octVolumeJson.overview.yCenters)] + octVolumeJson.overview.range*[-1/2 1/2] ...
+    );
+title(subjectName);
+
+%set(h, {'color'}, num2cell(winter(size(ffx,1)),2)); %Set multiple colors
+hold off;
+
 %% Plot Main Figure (#1)
 
 %Get data required for the plot
@@ -211,6 +231,8 @@ d_realigned(~badFit)  = cellfun(@(x)(x.d),singlePlaneFits_Realigned(~badFit)); %
 %   - slides with no data but only before the fit
 %   - in case fit failed for some slides
 
+sectionIterations = scJson.sections.iterations;
+
 %Reset figure
 fig1=figure(100);
 set(fig1,'units','normalized','outerposition',[0 0 1 1]);
@@ -228,9 +250,12 @@ title(subjectName);
 % Plot rotations
 s = sqrt(mean( ( rot(goodFit) - rot_realigned(goodFit) ).^2));
 subplot(2,2,2);
-plot(index(goodFit),rot(goodFit),'.');
+plotPerIteration(index,rot,sectionIterations,goodFit,'#0072BD');
 hold on;
-plot(index(maybeFit | badFit),  rot(maybeFit | badFit),'.');
+plotPerIteration(index,rot,sectionIterations,maybeFit | badFit,'#D95319');
+hold on;
+plotPerIteration(index,rot_realigned,sectionIterations, noFit,'k');
+hold on;
 plot(index, rot_realigned, '--r');
 hold off;
 ylabel('deg');
@@ -241,9 +266,14 @@ grid on;
 %Plot size change 
 s = sqrt(mean( ( sc(goodFit) - sc_realigned(goodFit) ).^2));
 subplot(2,2,4);
-plot(index(goodFit),sc(goodFit),'.');
+plot(NaN, [NaN NaN],'.'); hold on; plot(NaN,NaN,'.k'); plot(NaN,NaN,'o','Color','#0072BD','MarkerSize',4); % For Lengend
 hold on;
-plot(index(maybeFit | badFit),  sc(maybeFit | badFit),'.');
+plotPerIteration(index,sc,sectionIterations,goodFit,'#0072BD');
+hold on;
+plotPerIteration(index,sc,sectionIterations,maybeFit | badFit,'#D95319');
+hold on;
+plotPerIteration(index,sc_realigned,sectionIterations, noFit,'k');
+hold on;
 plot(index, sc_realigned, '--r');
 hold off;
 ylabel('%');
@@ -251,15 +281,19 @@ xlabel('Slide #');
 title(sprintf('1D Pixel Size Change: %.1f \\pm %.1f [%%]', ...
     nanmean(sc_realigned),s));
 grid on;
+legend('Good Alignment (1^{st} Iteration)','Bad Alignment','No Alignment, Set to Default','2^{nd} Iteration');
+
 
 %Plot distance to origin
 s = sqrt(nanmean( ( d(goodFit) - d_realigned(goodFit) ).^2));
-
 isStartCuttingFromDotSide = scJson.histologyInstructions.iterations(1).startCuttingAtDotSide;
 subplot(2,2,3);
-plot(index(goodFit),d(goodFit),'.');
+plotPerIteration(index,d,sectionIterations,goodFit,'#0072BD');
 hold on;
-plot(index(maybeFit | badFit),  d(maybeFit | badFit),'.');
+plotPerIteration(index,d,sectionIterations,maybeFit | badFit,'#D95319');
+hold on;
+plotPerIteration(index,d_realigned,sectionIterations, noFit,'k');
+hold on;
 plot(index, d_realigned, '--r');
 hold off;
 ylabel('Distance [mm]');
@@ -295,26 +329,6 @@ if ~isempty(last1) && ~isempty(first2)
         sprintf('Section Jump: %.0f\\mum',abs(diff(d_realigned(ii)))*1e3) ...
         );
 end
-
-%% Plot Main Figure (#2)
-
-%Plot top view in a new figure with enface under it
-fig2=figure(42);
-set(fig2,'units','normalized','outerposition',[0 0 1 1]);
-subplot(1,1,1); %Clear previuse figure
-spfPlotTopView( ...
-    singlePlaneFits,hLinePositions,vLinePositions, ...
-    'lineLength',lineLength,'planeNames',sectionNames, ...
-    'theDot',[octVolumeJson.theDotX; octVolumeJson.theDotY],...
-    'isStartCuttingFromDotSide',scJson.histologyInstructions.iterations(1).startCuttingAtDotSide, ...
-    'enfaceViewImage',enfaceView, ...
-    'enfaceViewImageXLim', [min(octVolumeJson.overview.xCenters) max(octVolumeJson.overview.xCenters)] + octVolumeJson.overview.range*[-1/2 1/2],...
-    'enfaceViewImageYLim', [min(octVolumeJson.overview.yCenters) max(octVolumeJson.overview.yCenters)] + octVolumeJson.overview.range*[-1/2 1/2] ...
-    );
-title(subjectName);
-
-%set(h, {'color'}, num2cell(winter(size(ffx,1)),2)); %Set multiple colors
-hold off;
 
 %% Print a report for user & google doc
 disTextum = arrayfun(@(x)sprintf('%.0f',x),abs(d_realigned*1000),'UniformOutput',false);
@@ -431,4 +445,14 @@ fclose(fid);
 fid = fopen('DistanceFromCurrentFaceToOriginUM.txt','w');
 fprintf(fid,'%.0f',d_lastSlide_mm*1e3);
 fclose(fid);
+end
+
+%% Helper function to plot different iterations in different dot shape
+function plotPerIteration(xAxis,yAxis,iterations,isPlotThatPoint,color)
+
+plot(xAxis(isPlotThatPoint & iterations==1),yAxis(isPlotThatPoint & iterations==1),'.','Color',color);
+hold on;
+plot(xAxis(isPlotThatPoint & iterations==2),yAxis(isPlotThatPoint & iterations==2),'o','Color',color,'MarkerSize',4);
+plot(xAxis(isPlotThatPoint & iterations==3),yAxis(isPlotThatPoint & iterations==3),'d','Color',color,'MarkerSize',4);
+hold off;
 end
