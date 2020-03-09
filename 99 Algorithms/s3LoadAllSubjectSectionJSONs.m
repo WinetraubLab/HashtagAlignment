@@ -38,7 +38,8 @@ if isempty(sectionName)
     % Remove section related jsons
     json = loadSingleJSON('', 'sectionIterationConfig', json);
     json = loadSingleJSON('', 'slideConfig', json);
-    json.sectionIndexInStack = [];
+    json.sectionIndexInStack = NaN;
+    json.sectionIteration = NaN;
     return; % We are done!
 end
 
@@ -53,17 +54,17 @@ if ~isempty(json.stackConfig.data)
         if sum(isThisSection) ~= 1
             error('Multiple sections with the same name, doesnt make sense');
         end
-        iteration = json.stackConfig.data.sections.iterations(isThisSection);
+        json.sectionIteration = json.stackConfig.data.sections.iterations(isThisSection);
         sectionIndexInStack = find(isThisSection);
     else
         %Unknown iteration
-        iteration = NaN;
+        json.sectionIteration = NaN;
     end
 end
 
-if ~isnan(iteration)
+if ~isnan(json.sectionIteration)
     iterationPath = sprintf('%s/OCTVolumes/StackVolume_Iteration%d/TifMetadata.json',...
-        subjectPath,iteration);
+        subjectPath,json.sectionIteration);
 else
     iterationPath = '';
 end
