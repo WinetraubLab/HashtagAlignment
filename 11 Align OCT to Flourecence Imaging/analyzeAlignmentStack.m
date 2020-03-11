@@ -69,7 +69,7 @@ disp([datestr(now) ' Computing...']);
 
 sectionNames = scJson.sections.names;
 singlePlaneFits = cell(size(sectionNames));
-for i=1:length(singlePlaneFits)
+for i=1:length(sectionNames)
     jsonIndex = find(cellfun(@(x)(contains(x,sectionNames{i})), ...
         sectionJsonFilePaths));
     
@@ -80,7 +80,7 @@ for i=1:length(singlePlaneFits)
     if ~isempty(jsonIndex)
         %Found json, see if it was analyized
         if isfield(sectionJsons{jsonIndex}.FM,'singlePlaneFit')
-            singlePlaneFits{jsonIndex} = ...
+            singlePlaneFits{i} = ...
                 sectionJsons{jsonIndex}.FM.singlePlaneFit;
         end
         
@@ -212,6 +212,10 @@ rot = NaN*zeros(size(singlePlaneFits));
 rot(~noFit) = cellfun(@(x)(x.rotation_deg),singlePlaneFits(~noFit));
 rot_realigned = NaN*zeros(size(singlePlaneFits));
 rot_realigned(~badFit) = cellfun(@(x)(x.rotation_deg),singlePlaneFits_Realigned(~badFit));
+tilt = NaN*zeros(size(singlePlaneFits));
+tilt(~noFit) = cellfun(@(x)(x.tilt_deg),singlePlaneFits(~noFit));
+tilt_realigned = NaN*zeros(size(singlePlaneFits));
+tilt_realigned(~badFit) = cellfun(@(x)(x.tilt_deg),singlePlaneFits_Realigned(~badFit));
 sc = NaN*zeros(size(singlePlaneFits));
 sc(~noFit) = cellfun(@(x)(norm(x.u)),singlePlaneFits(~noFit))*1e3; %um
 sc = 100*(pixelsSize_um./sc - 1);
@@ -239,7 +243,7 @@ set(fig1,'units','normalized','outerposition',[0 0 1 1]);
 subplot(1,1,1); %Clear previuse figure
 
 %Plot Photobleached lines
-subplot(2,2,1);
+subplot(2,3,1);
 spfPlotTopView( ...
     singlePlaneFits,hLinePositions,vLinePositions, ...
     'lineLength',lineLength,'planeNames',sectionNames, ...
@@ -249,7 +253,7 @@ title(subjectName);
 
 % Plot rotations
 s = sqrt(mean( ( rot(goodFit) - rot_realigned(goodFit) ).^2));
-subplot(2,2,2);
+subplot(2,3,2);
 plotPerIteration(index,rot,sectionIterations,goodFit,'#0072BD');
 hold on;
 plotPerIteration(index,rot,sectionIterations,maybeFit | badFit,'#D95319');
@@ -259,14 +263,29 @@ hold on;
 plot(index, rot_realigned, '--r');
 hold off;
 ylabel('deg');
-xlabel('Slide #');
-title(sprintf('Rotation Angle: %.1f \\pm %.1f[deg]',nanmean(rot_realigned),s));
+setSectionNamesAsXLabels(scJson.sections.names); 
+title(sprintf('Rotation Angle: %.1f \\pm %.1f[deg]\nRotating Along Z Axis',nanmean(rot_realigned),s));
+grid on;
+
+% Plot tilts
+s = sqrt(mean( ( tilt(goodFit) - tilt_realigned(goodFit) ).^2));
+subplot(2,3,3);
+plotPerIteration(index,tilt,sectionIterations,goodFit,'#0072BD');
+hold on;
+plotPerIteration(index,tilt,sectionIterations,maybeFit | badFit,'#D95319');
+hold on;
+plotPerIteration(index,tilt_realigned,sectionIterations, noFit,'k');
+hold on;
+plot(index, tilt_realigned, '--r');
+hold off;
+ylabel('deg');
+setSectionNamesAsXLabels(scJson.sections.names); 
+title(sprintf('Tilt Angle: %.1f \\pm %.1f[deg]\nRotating Along Y Axis',nanmean(tilt_realigned),s));
 grid on;
 
 %Plot size change 
 s = sqrt(mean( ( sc(goodFit) - sc_realigned(goodFit) ).^2));
-subplot(2,2,4);
-plot(NaN, [NaN NaN],'.'); hold on; plot(NaN,NaN,'.k'); plot(NaN,NaN,'o','Color','#0072BD','MarkerSize',4); % For Lengend
+subplot(2,3,5);
 hold on;
 plotPerIteration(index,sc,sectionIterations,goodFit,'#0072BD');
 hold on;
@@ -277,17 +296,15 @@ hold on;
 plot(index, sc_realigned, '--r');
 hold off;
 ylabel('%');
-xlabel('Slide #');
+setSectionNamesAsXLabels(scJson.sections.names); 
 title(sprintf('1D Pixel Size Change: %.1f \\pm %.1f [%%]', ...
     nanmean(sc_realigned),s));
 grid on;
-legend('Good Alignment (1^{st} Iteration)','Bad Alignment','No Alignment, Set to Default','2^{nd} Iteration');
-
 
 %Plot distance to origin
 s = sqrt(nanmean( ( d(goodFit) - d_realigned(goodFit) ).^2));
 isStartCuttingFromDotSide = scJson.histologyInstructions.iterations(1).startCuttingAtDotSide;
-subplot(2,2,3);
+subplot(2,3,4);
 plotPerIteration(index,d,sectionIterations,goodFit,'#0072BD');
 hold on;
 plotPerIteration(index,d,sectionIterations,maybeFit | badFit,'#D95319');
@@ -297,7 +314,7 @@ hold on;
 plot(index, d_realigned, '--r');
 hold off;
 ylabel('Distance [mm]');
-xlabel('Slide #');
+setSectionNamesAsXLabels(scJson.sections.names); 
 title(sprintf('Distance From Origin, SEM %.1f[\\mum], Section Size: %.1f[\\mum]',s*1e3/sqrt(sum(goodFit)),...
     abs(nanmedian(diff(d_realigned*isPlaneNormalSameDirectionAsCuttingDirection))*1e3) ));
 grid on;
@@ -329,6 +346,16 @@ if ~isempty(last1) && ~isempty(first2)
         sprintf('Section Jump: %.0f\\mum',abs(diff(d_realigned(ii)))*1e3) ...
         );
 end
+
+subplot(2,3,6)
+plot(NaN, [NaN NaN],'.'); hold on; plot(NaN,NaN,'.k'); 
+plot(NaN,NaN,'.','Color','#0072BD'); 
+plot(NaN,NaN,'o','Color','#0072BD','MarkerSize',4); 
+plot(NaN,NaN,'d','Color','#0072BD','MarkerSize',4)
+legend('Good Alignment','Bad Alignment','No Alignment, Set to Default', ...
+       '1^{st} Iteration','2^{nd} Iteration','3^{rd} Iteration',...
+       'Location','SouthEast');
+axis off
 
 %% Print a report for user & google doc
 disTextum = arrayfun(@(x)sprintf('%.0f',x),abs(d_realigned*1000),'UniformOutput',false);
@@ -455,4 +482,14 @@ hold on;
 plot(xAxis(isPlotThatPoint & iterations==2),yAxis(isPlotThatPoint & iterations==2),'o','Color',color,'MarkerSize',4);
 plot(xAxis(isPlotThatPoint & iterations==3),yAxis(isPlotThatPoint & iterations==3),'d','Color',color,'MarkerSize',4);
 hold off;
+end
+
+%% Helper function to set section names as x labels
+function setSectionNamesAsXLabels(sectionNames)
+sectionI = 1:3:length(sectionNames);
+
+xticks(sectionI)
+xticklabels(arrayfun(@(x)sprintf('%02d',round(x/3)+1),sectionI,'UniformOutput',false))
+xlim([0,length(sectionNames)+1])
+xlabel('Slide #')
 end

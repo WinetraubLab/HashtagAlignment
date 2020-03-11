@@ -86,7 +86,7 @@ hs = cell2mat(...
 n = median(ns(:,isOk0),2); 
 n = n/norm(n);
 
-% Compute angle between each plane and n
+% Compute angle between each plane norm and stack norm
 angs = acos(dot(repmat(n,[1 size(ns,2)]),ns))*180/pi; %[deg]
 
 % Compute the size change for each u and v
