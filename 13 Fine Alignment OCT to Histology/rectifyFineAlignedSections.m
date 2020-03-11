@@ -70,8 +70,10 @@ for i = 1:max(stackIterations)
         continue;
     end
     
-    cf = fit(sectionNumberI,yFineAligned_umI,...
-        fittype('poly1'),'Weight',wI);
+    isFineAlignedPlanes = ~isnan(yFineAligned_umI);
+    cf = fit(sectionNumberI(isFineAlignedPlanes), ...
+        yFineAligned_umI(isFineAlignedPlanes),...
+        fittype('poly1'),'Weight',wI(isFineAlignedPlanes));
     p = [cf.p1, cf.p2];
     yFineAlignedRectified_umI = polyval(p,sectionNumberI);
     
