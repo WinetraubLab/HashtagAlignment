@@ -261,14 +261,23 @@ try
     
     awsWriteJSON(handles.slideJson,handles.slideJsonFilePath);
     
+    % Set parameters for logging
+    slideFolder = fileparts(handles.slideJsonFilePath);
+    [~,slideName] = fileparts([slideFolder '.a']);
+    subjectFolder = awsModifyPathForCompetability([slideFolder '/../../']);
+    subjectName = s3GetSubjectName(subjectFolder);
+    logFolder = awsModifyPathForCompetability([subjectFolder '/Log/']);
+    
+    % Plot what we did to a figure and upload
+    fig1=figure(100);
+    drawSlideStatus(handles.im,handles.slideJson.FM);
+    title([subjectName ' ' strrep(slideName,'_',' ')]);
+    awsSaveMatlabFigure(fig1, [logFolder '03 Fluorescence Preprocess/' slideName '.png']);
+    
     %Upload the PNG if successful
-    if (handles.isIdentifySuccssful && exist('SlideAlignment.png','file'))
-        slideFolder = fileparts(handles.slideJsonFilePath);
-        [~,slideName] = fileparts([slideFolder '.a']);
-        logFolder = awsModifyPathForCompetability([slideFolder '/../../Log/11 Align OCT to Flourecence Imaging/']);
-        
+    if (handles.isIdentifySuccssful && exist('SlideAlignment.png','file'))       
         %Upload / Copy
-        awsCopyFileFolder('SlideAlignment.png',[logFolder '/' slideName '_SlideAlignment.png']);
+        awsCopyFileFolder('SlideAlignment.png',[logFolder '11 Align OCT to Flourecence Imaging/' slideName '_SlideAlignment.png']);
     end
     hObject.Enable = 'on';
 catch ME
@@ -288,40 +297,7 @@ guidata(hObject, handles);
 function drawStatus(handles)
 
 set(0,'CurrentFigure',handles.figure1); %Set current figure as top active one
-
-L = get(gca,{'xlim','ylim'});  % Get axes limits.
-imagesc(handles.im);
-axis equal;
-axis off;
-colormap gray;
-
-if (sum(L{1} == [0 1]) + sum(L{2} == [0 1]) == 4)
-    %This is the first time the figure appears. No zoom to return to
-else
-    zoom reset
-    set(gca,{'xlim','ylim'},L)
-end
-
-hold on;
-FM = handles.slideJson.FM;
-if isfield(FM,'fiducialLines') 
-    for i=1:length(FM.fiducialLines)
-        ln = FM.fiducialLines(i);
-        switch(ln.group)
-            case {'1','v'}
-                spec = '-ob';
-            case {'2','h'}
-                spec = '-or';
-            case '-'
-                spec = '--oy';
-            case 't'
-                spec = '--ow';
-        end
-        
-        plot(ln.u_pix,ln.v_pix,spec,'LineWidth',2); 
-    end
-end
-hold off;
+drawSlideStatus(handles.im,handles.slideJson.FM)
 
 function json = AddFiducialLineToJson(json,x,y,group)
 f = fdlnCreate(x(:),y(:),group);
@@ -371,10 +347,6 @@ end
 if isempty(json.FM.fiducialLines)
     json.FM = rmfield(json.FM,'fiducialLines');
 end
-
-
-    
-
 
 % --- Executes on button press in pushbuttonIdentifyManually.
 function pushbuttonIdentifyManually_Callback(hObject, eventdata, handles)
