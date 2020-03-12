@@ -84,7 +84,7 @@ for i=1:length(st.subjectNames)
            txt2 = sprintf('%.0f',abs(st.sectionDistanceFromOCTOrigin3StackAlignment_um(i)));
         else
             txt1 = 'No';
-            txt2 = sprintf('%.0f',abs(st.sectionDistanceFromOCTOrigin2StackAlignment_um(i)));
+            txt2 = sprintf('%.0f',abs(st.sectionDistanceFromOCTOrigin2SectionAlignment_um(i)));
         end
         url = awsGenerateTemporarySharableLink(sprintf(...
             '%s/Log/11 Align OCT to Flourecence Imaging/StackAlignmentFigure1.png',...
@@ -186,14 +186,10 @@ for i=1:length(st.subjectNames)
     repStrings(end+1,:) = {'AreaofQualityData_mmsq__auto_','Area of Quality Data [mm sq] [auto]'};
     
     %% Is usable - decide according to quality
-    if st.isQualityControlMaskGenerated(i)
-        if st.isUsableInML(i)
-            item.IsUseable__Auto_ = 'Yes';
-        else
-            item.IsUseable__Auto_ = 'No';
-        end
+    if st.isUsableInML(i)
+        item.IsUseable__Auto_ = 'Yes';
     else
-        item.IsUseable__Auto_ = 'N/A';
+        item.IsUseable__Auto_ = 'No';
     end
         
     repStrings(end+1,:) = {'IsUseable__Auto_','Is Useable? [Auto]'};
