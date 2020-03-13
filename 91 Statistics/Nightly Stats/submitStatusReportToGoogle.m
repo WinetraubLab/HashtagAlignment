@@ -233,7 +233,8 @@ end
 
 url = 'https://script.google.com/macros/s/AKfycbxOeKO4zLt-rlFyLPCbwf9uItBeQeBPQzJtPxctvMe511jOMbU/exec';
 try
-    data = webread(url,'jsonTxt',gsStr);
+    options = weboptions('Timeout', 30);
+    data = webread(url,'jsonTxt',gsStr,options);
 catch ME
     disp(ME)
     ME.stack
