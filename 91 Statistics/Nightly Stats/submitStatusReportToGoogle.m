@@ -6,14 +6,14 @@ sendToHistologyDistance_um = 550;
 
 %% Input checks
 if ~exist('st','var')
-    st = [s3SubjectPath('','LE') '0LibraryStatistics/' '/StatusReportBySection.json'];
+    st = [s3SubjectPath('','LF') '0LibraryStatistics/' '/StatusReportBySection.json'];
 end
 
 if ischar(st)
     st = awsReadJSON(st);
 end
 
-%% Generate google update json path
+%% Generate google update (slides sheet)
 gs = [];
 repStrings = {};
 isRunOnce = true;
@@ -95,8 +95,8 @@ for i=1:length(st.subjectNames)
             subjectPath));
         item.DistanceFromOriginC_um__auto_ = sprintf('=HYPERLINK("%s",%s)',url,txt2); 
     else
-        item.ProperAlignmentWithStack__auto_ = 'Please Run';
-        item.DistanceFromOriginC_um__auto_ = 'Stack Alignment';
+        item.ProperAlignmentWithStack__auto_ = 'Run Stack Alignment';
+        item.DistanceFromOriginC_um__auto_ = 'N/A';
     end
     repStrings(end+1,:) = {'ProperAlignmentWithStack__auto_','Proper Alignment With Stack? [auto]'};
     repStrings(end+1,:) = {'DistanceFromOriginC_um__auto_','Distance From Origin C [um] [auto]'};

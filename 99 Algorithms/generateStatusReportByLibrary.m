@@ -176,8 +176,11 @@ for i=1:length(sectionPathsOut)
     
     % Stack alignment plane position, stack alignment can happen even if
     % nothing is known about this slide except it was requested from histology.
-    if isfield(stackConfigJson,'stackAlignment')
-        
+    if isfield(stackConfigJson,'stackAlignment') &&  ...
+            st.iteration(i) <= length(stackConfigJson.stackAlignment)
+
+        st.isRanStackAlignment(i) = true;   
+
         % planeDistanceFromOCTOrigin_um
         planeDistanceFromOCTOrigin_um = ...
             cellfun(@(x)(x(:)'),{stackConfigJson.stackAlignment.planeDistanceFromOCTOrigin_um},'UniformOutput',false);
@@ -232,14 +235,6 @@ for i=1:length(sectionPathsOut)
             st.sectionTiltAngle_deg(i) = slideConfigJson.FM.singlePlaneFit.tilt_deg;
             st.sectionSizeChange_percent(i) = slideConfigJson.FM.singlePlaneFit.sizeChange_precent;
         end
-    else
-        continue;
-    end
-    
-    % Was stack alignment ran?
-    if (isfield(stackConfigJson,'stackAlignment') && ...
-            st.iteration(i) <= length(stackConfigJson.stackAlignment))
-        st.isRanStackAlignment(i) = true;   
     else
         continue;
     end
