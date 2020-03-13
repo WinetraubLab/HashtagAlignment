@@ -86,6 +86,7 @@ for i=1:length(st.subjectNames)
             txt1 = 'No';
             txt2 = sprintf('%.0f',abs(st.sectionDistanceFromOCTOrigin2SectionAlignment_um(i)));
         end
+        txt2 = strrep(txt2,'NaN','"NaN"'); %If nan add ""
         url = awsGenerateTemporarySharableLink(sprintf(...
             '%s/Log/11 Align OCT to Flourecence Imaging/StackAlignmentFigure1.png',...
             subjectPath));
