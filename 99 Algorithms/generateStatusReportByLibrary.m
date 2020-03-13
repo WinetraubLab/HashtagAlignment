@@ -185,7 +185,7 @@ for i=1:length(sectionPathsOut)
         planeDistanceFromOCTOrigin_um = ...
             cellfun(@(x)(x(:)'),{stackConfigJson.stackAlignment.planeDistanceFromOCTOrigin_um},'UniformOutput',false);
         planeDistanceFromOCTOrigin_um = [planeDistanceFromOCTOrigin_um{:}];
-        if i<length(planeDistanceFromOCTOrigin_um)
+        if i<=length(planeDistanceFromOCTOrigin_um)
             planeDistanceFromOCTOrigin_um = planeDistanceFromOCTOrigin_um(st.sectionNumber(i));
         else
             planeDistanceFromOCTOrigin_um = nan; % No stack alignment data for this section.
