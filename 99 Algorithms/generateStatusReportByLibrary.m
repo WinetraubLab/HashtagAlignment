@@ -155,12 +155,12 @@ for i=1:length(sectionPathsOut)
     end
     slideConfigJson = awsReadJSON(slideConfigFilePath);
     
-    % Read stack config if required
-    if i==1 || strcmp(st.subjectPahts{i-1},st.subjectPahts{i})
+    % Read stack config if required - if it is a new subject.
+    if i==1 || ~strcmp(st.subjectPahts{i-1},st.subjectPahts{i})
         stackConfigJson = awsReadJSON([st.subjectPahts{i} 'Slides/StackConfig.json']);
     end
     
-    % Get stack position according to histology instructions
+    % Get stack position according to histology instructions.
     dist_um = arrayfun(@(hi)((-hi.estimatedDistanceFromFullFaceToOCTOrigin_um+hi.sectionDepthsRequested_um)'),...
         stackConfigJson.histologyInstructions.iterations,'UniformOutput',false);
     dist_um = [dist_um{:}];
