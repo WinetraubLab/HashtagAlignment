@@ -67,7 +67,9 @@ for i=1:length(st.subjectNames)
         url = awsGenerateTemporarySharableLink(sprintf(...
             '%s/Log/11 Align OCT to Flourecence Imaging/%s_SlideAlignment.png',...
             subjectPath,st.sectionNames{i}));
-        item.SizeChange____auto_ = sprintf('=HYPERLINK("%s",%.1f)',url,st.sectionSizeChange_percent(i));
+        txt = sprintf('%.1f',st.sectionSizeChange_percent(i));
+        txt = strrep(txt,'NaN','"NaN"'); %If nan add ""
+        item.SizeChange____auto_ = sprintf('=HYPERLINK("%s",%.1f)',url,txt);
     else
         item.SizeChange____auto_ = 'N/A'; 
     end
