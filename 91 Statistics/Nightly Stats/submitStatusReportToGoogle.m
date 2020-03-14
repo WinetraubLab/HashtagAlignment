@@ -6,7 +6,7 @@ sendToHistologyDistance_um = 550;
 
 %% Input checks
 if ~exist('st','var')
-    st = [s3SubjectPath('','LF') '0LibraryStatistics/' '/StatusReportBySection.json'];
+    st = [s3SubjectPath('','LE') '0LibraryStatistics/' '/StatusReportBySection.json'];
 end
 
 if ischar(st)
@@ -69,7 +69,7 @@ for i=1:length(st.subjectNames)
             subjectPath,st.sectionNames{i}));
         txt = sprintf('%.1f',st.sectionSizeChange_percent(i));
         txt = strrep(txt,'NaN','"NaN"'); %If nan add ""
-        item.SizeChange____auto_ = sprintf('=HYPERLINK("%s",%.1f)',url,txt);
+        item.SizeChange____auto_ = sprintf('=HYPERLINK("%s",%s)',url,txt);
     else
         item.SizeChange____auto_ = 'N/A'; 
     end
