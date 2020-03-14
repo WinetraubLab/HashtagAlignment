@@ -23,6 +23,11 @@ patchOverlap = 32; % Pixels.
 patchDataMinimum = 0.5; % Reject patch if less than x% of its area is usable.
 includeflip = true; % Mirror flip patch as well.
 
+% Jenkins override of inputs
+if exist('patchFolder_','var')
+    outputFolder = patchFolder_;
+end
+
 %% Clear output folder
 outputFolder = awsModifyPathForCompetability([pwd '/' outputFolder '/']);
 if exist(outputFolder,'dir')
@@ -106,31 +111,33 @@ for iSlide=1:length(isUsable)
             roiy = y:y+(patchSize_pix-1);
             roix = x:x+(patchSize_pix-1);
 
-           % Reject image if # of non-zeros pixels greater than threshold
-           goodPixels = sum(sum(img_mask(roiy,roix) < 0.2));
-           totalPixels = patchSize_pix^2;
-           if goodPixels/totalPixels<patchDataMinimum
-               continue;
-           end
+            % Reject image if # of non-zeros pixels greater than threshold
+            goodPixels = sum(sum(img_mask(roiy,roix) < 0.2));
+            totalPixels = patchSize_pix^2;
+            if goodPixels/totalPixels<patchDataMinimum
+                warning('%s-%s have less than %.0f%% of usable pixel, therefore is beeing skipped.', ...
+                subjectName,sectionName,patchDataMinimum*100);
+                continue;
+            end
 
-           % crop images
-           crop_he = img_he(roiy,roix,:);
-           crop_oct =img_oct(roiy,roix,:);
+            % crop images
+            crop_he = img_he(roiy,roix,:);
+            crop_oct =img_oct(roiy,roix,:);
 
-           % combine images
-           outimg = [crop_he, crop_oct];
-           % write image
-           imwritefun(outimg, sprintf(outputFilePathTemplate,0,cropcount));
+            % combine images
+            outimg = [crop_he, crop_oct];
+            % write image
+            imwritefun(outimg, sprintf(outputFilePathTemplate,0,cropcount));
 
-           % write flippled image
-           if includeflip 
+            % write flippled image
+            if includeflip 
                outimg = [fliplr(crop_he), fliplr(crop_oct)];
                imwritefun(outimg, sprintf(outputFilePathTemplate,1,cropcount));
-           end
+            end
 
-           cropcountTotal = cropcountTotal + 1;
-           cropcount = cropcount + 1;
-       end
+            cropcountTotal = cropcountTotal + 1;
+            cropcount = cropcount + 1;
+        end
     end
 end
 fprintf('] Done! Took %.0f minutes.\n',toc()/60);

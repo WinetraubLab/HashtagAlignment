@@ -14,6 +14,7 @@ fileNameToStartTestingSet = 'LE-14';
 % Jenkins override of inputs
 if exist('fileNameToStartTestingSet_','var')
     fileNameToStartTestingSet = fileNameToStartTestingSet_;
+    patchFolder = patchFolder_;
 end
 
 %% Setup Directories
