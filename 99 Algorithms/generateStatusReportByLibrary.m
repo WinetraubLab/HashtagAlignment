@@ -201,7 +201,7 @@ for i=1:length(sectionPathsOut)
         wasSectionUsedInComputingStackAlignment = ...
             cellfun(@(x)(x(:)'),{stackConfigJson.stackAlignment.wasSectionUsedInComputingStackAlignment},'UniformOutput',false);
         wasSectionUsedInComputingStackAlignment = [wasSectionUsedInComputingStackAlignment{:}];
-        if i<length(wasSectionUsedInComputingStackAlignment)
+        if st.sectionNumber(i)<length(wasSectionUsedInComputingStackAlignment)
             wasSectionUsedInComputingStackAlignment = wasSectionUsedInComputingStackAlignment(st.sectionNumber(i));
         else
             wasSectionUsedInComputingStackAlignment = nan; % No stack alignment data for this section.
