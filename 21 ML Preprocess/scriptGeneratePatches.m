@@ -19,8 +19,8 @@ patchPixelSize = 2; % microns.
 outputFolder = 'Patches/';
 
 % How to generate patches.
-patchOverlap = 64; % Pixels.
-patchDataMinimum = 0.4; % Reject patch if less than x% of its area is usable.
+patchOverlap = 32; % Pixels.
+patchDataMinimum = 0.5; % Reject patch if less than x% of its area is usable.
 includeflip = true; % Mirror flip patch as well.
 
 %% Clear output folder
