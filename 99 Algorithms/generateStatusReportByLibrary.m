@@ -218,8 +218,6 @@ for i=1:length(sectionPathsOut)
     % Photobleached lines image uploaded
     if isfield(slideConfigJson,'photobleachedLinesImagePath')
         st.isFluorescenceImageUploaded(i) = true;
-    else
-        continue;
     end
     
     % Fiducial lines marked & how many?
@@ -236,14 +234,12 @@ for i=1:length(sectionPathsOut)
             st.sectionSizeChange_percent(i) = slideConfigJson.FM.singlePlaneFit.sizeChange_precent;
         end
     else
-        continue;
+        % Do nothing because it may be that slide continued despite no fiducial lines
     end
     
     % Do we have histology scanned?
     if isfield(slideConfigJson,'histologyImageFilePath')
         st.isHistologyImageUploaded(i) = true;
-    else
-        continue;
     end
     
     % Is histology aligned with fluorescence image?
@@ -253,8 +249,6 @@ for i=1:length(sectionPathsOut)
         % Did the alignment succeeded?
         st.wasHistologyFluorescenceImageRegistrationSuccessful(i) = ...
             slideConfigJson.FMHistologyAlignment.wasAlignmentSuccessful;
-    else
-        continue;
     end
     
     % Was fine alignment ran?
@@ -265,28 +259,25 @@ for i=1:length(sectionPathsOut)
         st.isCompletedOCTHistologyFineAlignment(i) = true;
         st.sectionDistanceFromOCTOrigin4FineAlignment_um(i) = ...
             slideConfigJson.FM.singlePlaneFit_FineAligned.distanceFromOrigin_mm*1e3;
-    else
-        continue;
     end
     
     % Was mask generated?
     if isfield(slideConfigJson,'alignedImagePath_Mask')
         st.isQualityControlMaskGenerated(i) = true;
-    else
-        continue;
+
+        % Figure out the area of good data
+        [msk, metaData] = yOCTFromTif(...
+            [st.sectionPahts{i} slideConfigJson.alignedImagePath_Mask]);
+        nPixelsWithGoodData = sum(msk(:)==0);
+        pixelArea_um2 = diff(metaData.x.values(1:2))*diff(metaData.z.values(1:2));
+        st.areaOfQualityData_mm2(i) = nPixelsWithGoodData*pixelArea_um2/1e3^2;
+
+        %% Is usable for ML
+
+        %if area is above threshold
+        isAreaThreshold = nPixelsWithGoodData*pixelArea_um2 > 50^2;
+        st.isUsableInML(i) = isAreaThreshold;      
     end
-    
-    % Figure out the area of good data
-    [msk, metaData] = yOCTFromTif(...
-        [st.sectionPahts{i} slideConfigJson.alignedImagePath_Mask]);
-    nPixelsWithGoodData = sum(msk(:)==0);
-    pixelArea_um2 = diff(metaData.x.values(1:2))*diff(metaData.z.values(1:2));
-    st.areaOfQualityData_mm2(i) = nPixelsWithGoodData*pixelArea_um2/1e3^2;
-    
-    %% Is usable for ML
-    
-    %if area is above threshold
-    isAreaThreshold = nPixelsWithGoodData*pixelArea_um2 > 50^2;
-    st.isUsableInML(i) = isAreaThreshold;
+   
 end
 fprintf(']. Done!\n');
