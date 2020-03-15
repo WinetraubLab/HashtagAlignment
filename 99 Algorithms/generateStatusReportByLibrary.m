@@ -251,7 +251,7 @@ for i=1:length(sectionPathsOut)
     end
     
     % Is histology aligned with fluorescence image?
-    if isfield(slideConfigJson,'FMOCTAlignment')
+    if isfield(slideConfigJson,'FMHistologyAlignment')
         st.isCompletedHistologyFluorescenceImageRegistration(i) = true;
         
         % Did the alignment succeeded?
