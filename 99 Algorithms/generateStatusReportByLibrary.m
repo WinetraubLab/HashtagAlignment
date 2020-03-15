@@ -142,6 +142,7 @@ st.notes = sprintf([ ...
 %% Loop over each section, get statistics for each
 fprintf('Processing %d sections, wait for 20 starts [ ',length(sectionPathsOut));
 for i=1:length(sectionPathsOut)
+    try
     if mod(i,round(length(sectionPathsOut)/20)) == 0
         fprintf('* ');
     end
@@ -318,6 +319,8 @@ for i=1:length(sectionPathsOut)
             st.isOCTImageQualityGood(i) & ...
             st.isHistologyImageQualityGood(i);
     end
-   
+    catch
+        warning('error happend i=%d, path %s',i,sectionPathsOut{i});
+    end
 end
 fprintf(']. Done!\n');
