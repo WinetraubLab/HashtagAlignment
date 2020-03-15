@@ -270,7 +270,7 @@ for i=1:length(sectionPathsOut)
     end
     
     % QA Info
-    if isfield(slideConfigJson,'QAInfo')
+    if isfield(slideConfigJson,'QAInfo') && ~isempty(slideConfigJson.QAInfo)
         st.yAxisTolerance_um(i) = ...
             slideConfigJson.QAInfo.AlignmentQuality.YAxisToleranceMicrons;
 
