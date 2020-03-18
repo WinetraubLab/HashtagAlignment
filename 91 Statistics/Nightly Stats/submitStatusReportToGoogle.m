@@ -188,27 +188,35 @@ for i=1:length(st.subjectNames)
     repStrings(end+1,:) = {'IsQualityControlDone__auto_','Is Quality Control Done? [auto]'};
     repStrings(end+1,:) = {'AreaofQualityData_mmsq__auto_','Area of Quality Data [mm sq] [auto]'};
     
-    if isnan(st.isOCTImageQualityGood(i))
+    if fineAlignmentCanComplete
+        % Make a urlt oslide config
+        slideConfigUrl = awsGenerateTemporarySharableLink(sprintf(...
+            '%s/SlideConfig.json', st.sectionPahts{i}));
+    end
+    
+    if isnan(st.isOCTImageQualityGood(i)) || ~fineAlignmentCanComplete
         item.OCTImageQuality_auto_ = 'N/A';
     else
         if (st.isOCTImageQualityGood(i))
-            item.OCTImageQuality_auto_ = 'Good';
+            txt = 'Good';
         else
-            item.OCTImageQuality_auto_ = 'Poor';
+            txt = 'Poor';
         end
+        item.OCTImageQuality_auto_ = sprintf('=HYPERLINK("%s","%s")',slideConfigUrl,txt);
     end
     repStrings(end+1,:) = {'OCTImageQuality_auto_','OCT Image Quality [auto]'};
     
-    if isnan(st.alignmentQuality(i))
+    if isnan(st.alignmentQuality(i)) || ~fineAlignmentCanComplete
         item.AlignmentQuality_auto_ = 'N/A';
     else
-        if st.alignmentQuality(i) > 2.5
-            item.AlignmentQuality_auto_ = 'Good';
-        elseif st.alignmentQuality(i) > 1.5
-            item.AlignmentQuality_auto_ = 'Fair';
+        if st.alignmentQuality(i) >= 2.5
+            txt = 'Good';
+        elseif st.alignmentQuality(i) >= 1.5
+            txt = 'Fair';
         else
-            item.AlignmentQuality_auto_ = 'Poor';
+            txt = 'Poor';
         end
+        item.AlignmentQuality_auto_ = sprintf('=HYPERLINK("%s","%s")',slideConfigUrl,txt);
     end
     repStrings(end+1,:) = {'AlignmentQuality_auto_','Alignment Quality [auto]'};
 
