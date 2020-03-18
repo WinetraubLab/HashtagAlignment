@@ -63,7 +63,7 @@ for i=1:length(st.subjectNames)
     repStrings(end+1,:) = {'NumberofMarkedLines_auto_','Number of Marked Lines [auto]'};
     
     % Size Change
-    if st.areFiducialLinesMarked(i)
+    if st.areFiducialLinesMarked(i) && ~isnan(st.sectionDistanceFromOCTOrigin2SectionAlignment_um(i)) % Lines marked and section alignment ran
         url = awsGenerateTemporarySharableLink(sprintf(...
             '%s/Log/11 Align OCT to Flourecence Imaging/%s_SlideAlignment.png',...
             subjectPath,st.sectionNames{i}));
