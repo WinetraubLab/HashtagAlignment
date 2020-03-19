@@ -211,7 +211,7 @@ for i=1:length(st.subjectNames)
     else
         if st.alignmentQuality(i) >= 2.5
             txt = 'Good';
-        elseif st.alignmentQuality(i) >= 1.5
+        elseif st.alignmentQuality(i) > 1.5 % 1.5 is the threshold for isUsableInML
             txt = 'Fair';
         else
             txt = 'Poor';
