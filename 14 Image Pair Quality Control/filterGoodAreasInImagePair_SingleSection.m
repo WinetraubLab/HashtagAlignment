@@ -32,6 +32,9 @@ imHist = ds.read();
 [imOCT,aux] = yOCTFromTif(alignedOCTPath);
 
 %% Generate masks
+above_interface = 100;
+below_interface = 400;
+
 maskLegend = sprintf('0 - Good Pixel, 1 - Outside or Histology Image, 2 - Far from tissue to interface, 3 - Low Signal');
 mask = zeros(size(imOCT));
 
@@ -41,11 +44,18 @@ mask(sum(imHist,3) == 0) = 1;
 
 % Compute intensity with depth. keep signal around the pick (which is the
 % interface of tissue).
-m = nanmean(imOCT,2);
-interfaceI = find(m==max(m),1,'first');
+m = medfilt2(imOCT,[20,20]); % median filter to get rid of gel interface and smooth horizontally
+
+m_reduced = m(~all(isnan(m),2),:); % remove rows that are all nan
+m(:,any(isnan(m_reduced),1)) = nan; % remove column if any elments are nan
+[~,ind] = max(m,[],'omitnan'); % find max of each column
+ind(ind == 1) = size(m,1);    % if the max was 1 (the column was all nan's) set to image height
+ind = medfilt1(ind,40,'omitnan','truncate'); % median filter again to remove outliers
+interfaceI = min(ind);
+
 zI = 1:size(mask,1);
 outsideArea = zeros(size(mask));
-outsideArea(zI<interfaceI - 100 | zI > interfaceI + 400,:) = 1;
+outsideArea(zI<interfaceI - above_interface | zI > interfaceI + below_interface,:) = 1;
 mask(outsideArea==1 & mask==0) = 2;
 
 % Low signal
