@@ -167,6 +167,17 @@ for i=1:length(st.subjectNames)
     end
     repStrings(end+1,:) = {'DistanceFromOriginF_um__auto_','Distance From Origin F [um] [auto]'};
     
+    % Fine alignment complete & rectified
+    if st.wasRectified(i)
+        url = awsGenerateTemporarySharableLink(sprintf(...
+            '%s/13 Fine Alignment OCT to Histology/RectifyFineAlignedSections_Last.png',...
+            subjectPath));
+        item.WasRectified__auto_ = sprintf('=HYPERLINK("%s",%s)',url,'"Yes"');    
+    else
+        item.WasRectified__auto_ = 'No';
+    end
+    repStrings(end+1,:) = {'WasRectified__auto_','Was Rectified? [auto]'};
+    
     %% Quality Control
     
     % Did Quality Control Done

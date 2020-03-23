@@ -106,11 +106,12 @@ else
 end
 
 if isUpdateCloud
-    saveas(fig1,'tmp.png');
-    awsCopyFileFolder('tmp.png',[subjectPath ...
-        '/Log/13 Fine Alignment OCT to Histology/RectifyFineAlignedSections_' datestr(now,'yyyymmddHHMM') '.png']);
-    delete tmp.png
-    close(fig1);
+    path1 = [subjectPath ...
+        '/Log/13 Fine Alignment OCT to Histology/RectifyFineAlignedSections_Last.png'];
+    path2 = [subjectPath ...
+        '/Log/13 Fine Alignment OCT to Histology/RectifyFineAlignedSections_' datestr(now,'yyyymmddHHMM') '.png'];
+    awsSaveMatlabFigure(fig1,path1);
+    awsCopyFileFolder(path1,path2);
 end
 
 %% Update slide config
@@ -151,7 +152,7 @@ for i=1:length(slideConfigs)
     % Generate a single plane fit (updates)
     slideConfig.FM.singlePlaneFit_FineAligned = spfCreateFromUVH (u,v,h,v_,pixelSize_um);
     slideConfig.FM.singlePlaneFit_FineAligned.wasRectified = true;
-    slideConfig.FM.singlePlaneFit_FineAligned.notes = sprintf('%s\nwasRectified - did ran rectifyFineAlignedSections?.', ...
+    slideConfig.FM.singlePlaneFit_FineAligned.notes = sprintf('%s\nwasRectified - did ran rectifyFineAlignedSections?', ...
         slideConfig.FM.singlePlaneFit_FineAligned.notes);
 
     if isUpdateCloud
