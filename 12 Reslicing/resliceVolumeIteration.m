@@ -9,7 +9,7 @@ appendToDimensions.note = [...
     'Its just prepandicular to u and v which may be anti-parallel to histology cutting direction.\n'];
 
 isReProcessOCT = false;
-whichIterationsToReslice = 2;
+whichIterationsToReslice = 2; % Can be a number or array of numbers if more than one iteration is required.
 runningOnJenkins = false;
 
 subjectFolder = s3SubjectPath('01');
@@ -127,6 +127,17 @@ if isProcessLocallyBeforeUploading
     fprintf('%s Deleting temporary volume from storage...\n',datestr(now));
     rmdir(baseTmpFolder,'s');
 end
+
+%% Remove fine alignment for each slide if required
+slideIterations = [scJson.sections.iterations];
+slideNames = [scJson.sections.names];
+isKeepSlides = zeros(size(slideNames),'logical');
+for sI = 1:length(whichIterationsToReslice)
+    isKeepSlides = isKeepSlides | (slideIterations == whichIterationsToReslice(sI));
+end
+slidePaths = cellfun(@(x)([subjectFolder '/Slides/' x '/']),slideNames(isKeepSlides),'UniformOutput',false);
+
+scrapFineAlignment(slidePaths);
 
 %% Run pre-process of volume in protected memory
 function preprocessVolume(OCTVolumesFolder)
