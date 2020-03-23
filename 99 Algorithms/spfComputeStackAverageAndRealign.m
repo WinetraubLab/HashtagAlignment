@@ -174,6 +174,10 @@ sectionDistanceToOriginOut = sectionDistanceToOriginOut(:);
 clear spfsOut;
 isOutlierOut = zeros(spfsInLength,1);
 project = @(vect)(vect - dot(vect,n)*n);
+averagePixelSize_um = mean([unormRefitted vnormRefitted])*1e3;
+stackSizeChange_p = mean(sizeChangeUs(isOk))*100;
+FMpixelSize_um = averagePixelSize_um*(1+stackSizeChange_p/100); % FM original pixel size. About 0.7 mocrons
+
 j=1;
 for i=1:spfsInLength
     if (emptySPFsIndex(i))
@@ -183,39 +187,28 @@ for i=1:spfsInLength
         
         h = n*sectionDistanceToOriginOut(i);
         isOutlierOut(i) = true; %This is an outlier as is not fit
+        v_ = NaN;
     else
         % Some data is in single plane fit, use it!
         spf = spfs(j);
-
-        % Project u,v to the new plane, correct them to preserve norm
         u = project(spf.u);
         v = project(spf.v);
-        u = u*unormRefitted/norm(u);
-        v = v*vnormRefitted/norm(v);
+        h = project(spf.h);
+        v_ = spf.vTypical;
 
-        % U and V are so off, just use median no point in fixing them
+        % u and v are so off, just use median no point in fixing them
         if (dot(umedian/norm(umedian),u/norm(u)) < cos(45*pi/180))
             u = project(umedian);
         end
         if (dot(vmedian/norm(umedian),v/norm(v)) < cos(45*pi/180))
             v = project(vmedian);
         end
-
-        % For h, replace the component prepandicular to the palne with the
-        % corrected component
-        h = project(spf.h) + n*sectionDistanceToOriginOut(i);
         
         isOutlierOut(i) = isOutlier(j);
         j = j + 1;
     end
     
-    % Generate a new structure
-    s = spfCreateFromUVH(u,v,h);
-
-    % Make sure d is specified, its important
-    if (isnan(s.d))
-        s.d = sectionDistanceToOriginOut(i);
-    end
+    s = spfRealignToStack(u,v,h, n, sectionDistanceToOriginOut(i), stackSizeChange_p, FMpixelSize_um, v_);
     
     % Save to array
     if (i>1)
@@ -228,7 +221,6 @@ end
 %% Generate Output
 [spfsOut,isOutlierOut] = makeOutput(spfsOut,isSPFCell,isOutlierOut,emptySPFsIndex*0);
 nOut = n;
-averagePixelSize_um = mean([unormRefitted vnormRefitted])*1e3;
 function [spfsOut,isOutlierOut] = makeOutput(spfsOut,isSPFCell,isOutlier,emptySPFsIndex)
 %Modify output to be compatible with input
 if (isSPFCell)

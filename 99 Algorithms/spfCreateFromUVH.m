@@ -2,11 +2,11 @@ function singlePlaneFit = spfCreateFromUVH (u,v,h,v_,pixelSize_um)
 %This function creates a single plane fit structure from u,v,h inputs
 %Single plane structure contains some statistics on the plane.
 %INPUTS: 
-%   u,v,h ar 3D vectors defining the plane as u*U+v*V+h. units: mm
+%   u,v,h ar 3D vectors defining the plane as u*U+v*V+h. units: mm.
 %   v_  [optional] - typical value for v (pixels) for the top of the picture, it is used for
-%       estimating a top view for spf. If not defined, will use NaN
+%       estimating a top view for spf. If not defined, will use NaN.
 %   pixelSize_um - pixel size of the imaage used by u,v - if exists will
-%       compute size change
+%       compute size change.
 
 if ~exist('v_','var') || isempty(v_)
     v_ = NaN;
@@ -32,7 +32,7 @@ singlePlaneFit.notes = sprintf([...
     ' * m,n - equation that defines the plane\n' ...
     ' * xFunctionOfU - 2vector (to be used by polyvar) converts u coordinates to x\n'...
     ' * vTypical - tyical value for v (in pixels) to multiply by the vector v\n' ... 
-    'sizeChange_precent - if negative value, isotropic shrinkage of the histology compared to OCT. If positive, expansion [%]\n' ...
+    'sizeChange_precent - if negative value, isotropic shrinkage of the histology compared to OCT. If positive, expansion [%]. sizeChange_precent = 50 means 50% epansion.\n' ...
     ]);
 
 %% Plane parameters
