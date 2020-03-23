@@ -150,6 +150,9 @@ for i=1:length(slideConfigs)
      
     % Generate a single plane fit (updates)
     slideConfig.FM.singlePlaneFit_FineAligned = spfCreateFromUVH (u,v,h,v_,pixelSize_um);
+    slideConfig.FM.singlePlaneFit_FineAligned.wasRectified = true;
+    slideConfig.FM.singlePlaneFit_FineAligned.notes = sprintf('%s\nwasRectified - did ran rectifyFineAlignedSections?.', ...
+        slideConfig.FM.singlePlaneFit_FineAligned.notes);
 
     if isUpdateCloud
         awsWriteJSON(slideConfig,slideConfigsJsonPaths{i});
