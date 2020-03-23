@@ -1,4 +1,4 @@
-function [spfsOut,isOutlierOut,nOut,sectionDistanceToOriginOut,averagePixelSize_um] = spfRealignByStack(spfs, speculatedDistanceToOrigin)
+function [spfsOut,isOutlierOut,nOut,sectionDistanceToOriginOut,averagePixelSize_um] = spfComputeStackAverageAndRealign(spfs, speculatedDistanceToOrigin)
 % This function takes an array of Single Plane Fits (spfs) and rectify them
 % as they should all have the same alignment, as they are from the same
 % stack
