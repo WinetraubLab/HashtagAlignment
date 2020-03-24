@@ -134,16 +134,31 @@ for i=1:length(slideConfigs)
         n = slideConfig.FM.singlePlaneFit_FineAligned.normal;
         v_ = slideConfig.FM.singlePlaneFit_FineAligned.vTypical;
         pixelSize_um = slideConfig.FM.pixelSize_um;
-    else
+    elseif isfield(slideConfig.FM,'singlePlaneFit')
         % This slide wasn't aligned before, so use u,v,h from the stack
         ii = ~isnan(yFineAligned_mm) & stackConfig.sections.iterations == stackConfig.sections.iterations(i);
         ii = find(ii,1,'first');
-        u = slideConfigs{i}.FM.singlePlaneFit_FineAligned.u;
-        v = slideConfigs{i}.FM.singlePlaneFit_FineAligned.v;
-        h = slideConfigs{i}.FM.singlePlaneFit_FineAligned.h;
-        n = slideConfigs{i}.FM.singlePlaneFit_FineAligned.normal;
-        v_ = slideConfig.FM.singlePlaneFit_FineAligned.vTypical; %v_ and pixel size come from this section
+        iteration = stackConfig.sections.iterations(i);
+        n = stackConfig.stackAlignment(iteration).planeNormal;
+        v_ = slideConfig.FM.singlePlaneFit.v; %v_ and pixel size come from this section
         pixelSize_um = slideConfig.FM.pixelSize_um;
+        planeDistance = stackConfig.stackAlignment(iteration).planeDistanceFromOCTOrigin_um(i);
+        spfIn = slideConfig.FM.singlePlaneFit;
+        stackSizeChange_p = 100*(stackConfig.stackAlignment(iteration).scaleFactor-1);
+        spfOut = spfRealignToStack (spfIn,n,planeDistance,stackSizeChange_p,pixelSize_um);
+        u = spfOut.u;
+        v = spfOut.v;
+        h = spfOut.h;
+    else
+         iteration = stackConfig.sections.iterations(i);
+         n = stackConfig.stackAlignment(iteration).planeNormal;
+         planeDistance = stackConfig.stackAlignment(iteration).planeDistanceFromOCTOrigin_um(i);
+         stackSizeChange_p = 100*(stackConfig.stackAlignment(iteration).scaleFactor-1);
+         pixelSize_um = slideConfig.FM.pixelSize_um;
+         spfOut = spfRealignToStack (n, planeDistance, stackSizeChange_p, pixelSize_um);
+         u = spfOut.u;
+         v = spfOut.v;
+         h = spfOut.h;
     end
     
     % Rectify by setting the normal distance to be the same as yFineAlignedRectified_mm

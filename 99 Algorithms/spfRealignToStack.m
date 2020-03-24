@@ -15,7 +15,7 @@ function spfOut = spfRealignToStack(varargin)
 %   - Input plane, pfOut will try to be as close as possible to these.
 %     options:
 %       + spfIn - single plane fit structure.
-%       + u,v,h ar 3D vectors defining the plane as u*U+v*V+h. units: mm
+%       + u,v,h are 3D vectors defining the plane as u*U+v*V+h. units: mm
 %       + v_ [optional] - typical value for v (pixels) for the top of the
 %         picture, it is used for estimating a top view for spf. If not 
 %         defined, will use NaN.
