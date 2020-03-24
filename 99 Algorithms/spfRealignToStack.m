@@ -27,6 +27,7 @@ function spfOut = spfRealignToStack(varargin)
 %       + stackSizeChange_p - stack average size change in %. stackSizeChange_p=-50 means
 %         shrinkage by 50%
 %       + pixelSize_um - fluorescence microscope pixel size.
+%     The following relationship holds: pixelSize_um = |u|*(1+stackSizeChange_p/100);
 % OUTPUTS:
 %   - spfOut - Single Plane Fit data structure.
 
