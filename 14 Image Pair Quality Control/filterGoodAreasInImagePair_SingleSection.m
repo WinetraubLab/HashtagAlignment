@@ -33,14 +33,14 @@ imHist = ds.read();
 
 %% Generate masks
 above_interface = 100;
-below_interface = 400;
+below_interface = 500;
 
 maskLegend = sprintf('0 - Good Pixel, 1 - Outside or Histology Image, 2 - Far from tissue to interface, 3 - Low Signal');
 mask = zeros(size(imOCT));
 
 % No OCT or Histology image data
 mask(isnan(imOCT)) = 1;
-mask(sum(imHist,3) == 0) = 1;
+mask(sum(imHist,3) == 0) = 1; 
 
 % Compute intensity with depth. keep signal around the pick (which is the
 % interface of tissue).
@@ -51,7 +51,7 @@ m(:,any(isnan(m_reduced),1)) = nan; % remove column if any elments are nan
 [~,ind] = max(m,[],'omitnan'); % find max of each column
 ind(ind == 1) = size(m,1);    % if the max was 1 (the column was all nan's) set to image height
 ind = medfilt1(ind,40,'omitnan','truncate'); % median filter again to remove outliers
-interfaceI = min(ind);
+interfaceI = min(ind) + size(imOCT,1) - size(m,1);
 
 zI = 1:size(mask,1);
 outsideArea = zeros(size(mask));
