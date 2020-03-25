@@ -125,47 +125,50 @@ for i=1:length(slideConfigs)
         continue; % This should never happen
     end
     
-    if (~isnan(yFineAligned_mm(i)))
-        % This slide has been updated before, just needs a little
-        % adjustment
+    %% Get information from stack
+    iteration = stackConfig.sections.iterations(i);
+    n = stackConfig.stackAlignment(iteration).planeNormal; % Normal.s
+    pixelSize_um = slideConfig.FM.pixelSize_um; % Bright field pixel size.
+    planeDistance = yFineAlignedRectified_mm(i); % Rectified plane distance.
+    
+    %% Pull the best estimate
+    if isfield(slideConfig.FM,'singlePlaneFit_FineAligned')
+        % This slide has a single plane fit, use u,v,h, and v_ from that.
         u = slideConfig.FM.singlePlaneFit_FineAligned.u;
         v = slideConfig.FM.singlePlaneFit_FineAligned.v;
         h = slideConfig.FM.singlePlaneFit_FineAligned.h;
-        n = slideConfig.FM.singlePlaneFit_FineAligned.normal;
         v_ = slideConfig.FM.singlePlaneFit_FineAligned.vTypical;
-        pixelSize_um = slideConfig.FM.pixelSize_um;
+        
+        % Use the most up-to-date scale factor, the one that was fine
+        % aligned.
+        stackSizeChange_p = slideConfig.FM.singlePlaneFit_FineAligned.sizeChange_precent;
     elseif isfield(slideConfig.FM,'singlePlaneFit')
-        % This slide wasn't aligned before, so use u,v,h from the stack
-        ii = ~isnan(yFineAligned_mm) & stackConfig.sections.iterations == stackConfig.sections.iterations(i);
-        ii = find(ii,1,'first');
-        iteration = stackConfig.sections.iterations(i);
-        n = stackConfig.stackAlignment(iteration).planeNormal;
-        v_ = slideConfig.FM.singlePlaneFit.v; %v_ and pixel size come from this section
-        pixelSize_um = slideConfig.FM.pixelSize_um;
-        planeDistance = stackConfig.stackAlignment(iteration).planeDistanceFromOCTOrigin_um(i);
-        spfIn = slideConfig.FM.singlePlaneFit;
-        stackSizeChange_p = 100*(stackConfig.stackAlignment(iteration).scaleFactor-1);
-        spfOut = spfRealignToStack (spfIn,n,planeDistance,stackSizeChange_p,pixelSize_um);
-        u = spfOut.u;
-        v = spfOut.v;
-        h = spfOut.h;
+        % This slide wasn't aligned before, but has single plane fit,
+        % before the stack, use that as a bases to rectify to.
+        u = slideConfig.FM.singlePlaneFit.u;
+        v = slideConfig.FM.singlePlaneFit.v;
+        h = slideConfig.FM.singlePlaneFit.h;
+        v_ = slideConfig.FM.singlePlaneFit.vTypical;
+        
+        % Use stack scale factor.
+        stackSizeChange_p = 100*(stackConfig.stackAlignment(iteration).scaleFactor-1);    
     else
-         iteration = stackConfig.sections.iterations(i);
-         n = stackConfig.stackAlignment(iteration).planeNormal;
-         planeDistance = stackConfig.stackAlignment(iteration).planeDistanceFromOCTOrigin_um(i);
-         stackSizeChange_p = 100*(stackConfig.stackAlignment(iteration).scaleFactor-1);
-         pixelSize_um = slideConfig.FM.pixelSize_um;
-         spfOut = spfRealignToStack (n, planeDistance, stackSizeChange_p, pixelSize_um);
-         u = spfOut.u;
-         v = spfOut.v;
-         h = spfOut.h;
+        % This slide was never aligned before, doesn't even have single plane fit.
+        % Provide default values
+        
+        u = [1 0 0]';
+        v = [0 0 1]';
+        h = [0 0 0]';
+        v_ = NaN;
+        
+        % Use stack scale factor.
+        stackSizeChange_p = 100*(stackConfig.stackAlignment(iteration).scaleFactor-1);
     end
     
-    % Rectify by setting the normal distance to be the same as yFineAlignedRectified_mm
-    h = h - dot(h,n)*n + yFineAlignedRectified_mm(i)*n;
-     
-    % Generate a single plane fit (updates)
-    slideConfig.FM.singlePlaneFit_FineAligned = spfCreateFromUVH (u,v,h,v_,pixelSize_um);
+    %% Rectify to match with stack, and save
+    slideConfig.FM.singlePlaneFit_FineAligned = ...
+        spfRealignToStack (u,v,h, ...
+        n, planeDistance, stackSizeChange_p, pixelSize_um, v_);
     slideConfig.FM.singlePlaneFit_FineAligned.wasRectified = true;
     slideConfig.FM.singlePlaneFit_FineAligned.notes = sprintf('%s\nwasRectified - did ran rectifyFineAlignedSections?', ...
         slideConfig.FM.singlePlaneFit_FineAligned.notes);
