@@ -51,7 +51,7 @@ m(:,any(isnan(m_reduced),1)) = nan; % remove column if any elments are nan
 [~,ind] = max(m,[],'omitnan'); % find max of each column
 ind(ind == 1) = size(m,1);    % if the max was 1 (the column was all nan's) set to image height
 ind = medfilt1(ind,40,'omitnan','truncate'); % median filter again to remove outliers
-interfaceI = min(ind) + size(imOCT,1) - size(m,1);
+interfaceI = min(ind);
 
 zI = 1:size(mask,1);
 outsideArea = zeros(size(mask));
