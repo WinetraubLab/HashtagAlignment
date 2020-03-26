@@ -12,7 +12,7 @@ function st = generateStatusReportByLibrary(libraryNames)
 %       see sectionStats.notes for explenation about the fields.
 
 if ~exist('libraryNames','var')
-    libraryNames = 'LE';
+    libraryNames = 'LD';
 end
 
 %% Input checks
@@ -162,7 +162,7 @@ for i=1:length(sectionPathsOut)
     
     % Does slide config exist?
     if ~awsExist(slideConfigFilePath,'File')
-        continue;
+        error('Can''t find configuration file');
     end
     slideConfigJson = awsReadJSON(slideConfigFilePath);
     
@@ -325,8 +325,8 @@ for i=1:length(sectionPathsOut)
             st.isOCTImageQualityGood(i) & ...
             st.isHistologyImageQualityGood(i);
     end
-    catch
-        warning('error happend i=%d, path %s',i,sectionPathsOut{i});
+    catch ME
+        warning('error happend i=%d, path %s. Message:',i,sectionPathsOut{i}, ME.message);
     end
 end
 fprintf(']. Done!\n');
