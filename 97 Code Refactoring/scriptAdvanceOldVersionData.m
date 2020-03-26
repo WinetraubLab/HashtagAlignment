@@ -7,16 +7,16 @@
 
 % Which library to run on
 [subjectsPath,subjectsName] = ...
-    s3GetAllSubjectsInLib('LF'); %Set lib (LC, LD etc, or leave empty for latest lib)
+    s3GetAllSubjectsInLib('LC'); %Set lib (LC, LD etc, or leave empty for latest lib)
 
 % Will the script run on subjects or slides?
-runOn = 'slides'; % Can be 'subjects' or 'slides'
+runOn = 'subjects'; % Can be 'subjects' or 'slides'
 
 % Function to run for each subject / slide
 % Function handle interface is func(rootFolder) where root folder will be
 % either the subject folder or the slide folder acording to runOn.
 %funcToRun = @(rootFolder)(rootFolder);
-funcToRun = @uploadMarkLinesImageToLog; %recomputeStackAlignment, recomputeSlideAlignment
+funcToRun = @scanInfoAdvance; %recomputeStackAlignment, recomputeSlideAlignment
 %funcToRun = @changeDispersionParameterA2QuadraticTerm;
 
 %% Loop Over all subjects and make the change (subject related)
