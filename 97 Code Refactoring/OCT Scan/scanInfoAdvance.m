@@ -3,34 +3,47 @@ function scanInfoAdvance(subjectPath)
 % Written at March 25, 2020.
 
 if ~exist('subjectPath','var')
-    subjectPath = s3SubjectPath('01','LD');
+    subjectPath = s3SubjectPath('02','LC');
 end
 
+%% Set paths
+volumeJsonPath_Operational = [subjectPath '/OCTVolumes/Volume/ScanInfo.json'];
+volumeJsonPath_Log = [subjectPath 'Log/00 Depreciated Files Dont Use/Volume_ScanInfo.json'];
+overviewJsonPath_Operational = [subjectPath '/OCTVolumes/Overview/ScanInfo.json'];
+overviewJsonPath_Log = [subjectPath 'Log/00 Depreciated Files Dont Use/Overview_ScanInfo.json'];
+scanConfigPath_Operational = [subjectPath '/OCTVolumes/ScanConfig.json'];
+scanConfigPath_Log = [subjectPath 'Log/00 Depreciated Files Dont Use/ScanConfig.json'];
+
+%% Read template
 % Load Reference scan JSON from most up to date version
 volumeRefJson = awsReadJSON([s3SubjectPath('01') '/OCTVolumes/Volume/ScanInfo.json']);
 
 %% Load and advance volume json & overview
-volumeJsonPath = [subjectPath '/OCTVolumes/Volume/ScanInfo.json'];
-volumeJson = awsReadJSON(volumeJsonPath);
+volumeJson = awsReadJSON(volumeJsonPath_Operational);
+%volumeJson = awsReadJSON(volumeJsonPath_Log);
 if (volumeJson.version ~= 1.0)
     disp('This code updates version 1.0 to 1.1, the version is wrong');
     return;
 end
 volumeJson = cleanupScanInfo(volumeJson, volumeRefJson.octProbe);
 
-overviewJsonPath = [subjectPath '/OCTVolumes/Overview/ScanInfo.json'];
-overviewJson = awsReadJSON(overviewJsonPath);
+overviewJson = awsReadJSON(overviewJsonPath_Operational);
+%overviewJson = awsReadJSON(overviewJsonPath_Log);
 overviewJson = cleanupScanInfo(overviewJson, volumeRefJson.octProbe);
 
 %% Scan Config
-scanConfigPath = [subjectPath '/OCTVolumes/ScanConfig.json'];
-scanConfig = awsReadJSON(scanConfigPath);
+%scanConfigRef = awsReadJSON([s3SubjectPath('01') '/OCTVolumes/ScanConfig.json']);
+
+scanConfig = awsReadJSON(scanConfigPath_Operational);
+%scanConfig = awsReadJSON(scanConfigPath_Log);
 
 % Remove parameters that are in the oct probe
 scanConfig.volume = volumeJson;
 scanConfig.overview = overviewJson;
 scanConfig = rmfield(scanConfig,'octProbeFOV');
-scanConfig = rmfield(scanConfig,'octProbeLensWorkingDistance');
+if isfield(scanConfig,'octProbeLensWorkingDistance')
+    scanConfig = rmfield(scanConfig,'octProbeLensWorkingDistance');
+end
 scanConfig = rmfield(scanConfig,'offsetX');
 scanConfig = rmfield(scanConfig,'offsetY');
 scanConfig = rmfield(scanConfig,'scaleX');
@@ -41,22 +54,32 @@ scanConfig.version = 2.1;
 %% Save 
 
 % Backup copy
-awsCopyFileFolder(volumeJsonPath,[subjectPath 'Log/00 Depreciated Files Dont Use/Volume_ScanInfo.json']);
-awsCopyFileFolder(overviewJsonPath,[subjectPath 'Log/00 Depreciated Files Dont Use/Overview_ScanInfo.json']);
-awsCopyFileFolder(scanConfigPath,[subjectPath 'Log/00 Depreciated Files Dont Use/ScanConfig.json']);
+if true
+awsCopyFileFolder(volumeJsonPath_Operational,volumeJsonPath_Log);
+awsCopyFileFolder(overviewJsonPath_Operational,overviewJsonPath_Log);
+awsCopyFileFolder(scanConfigPath_Operational,scanConfigPath_Log);
+end
 
 % Update
-awsWriteJSON(volumeJson,volumeJsonPath);
-awsWriteJSON(overviewJson,overviewJsonPath);
-awsWriteJSON(scanConfig,scanConfigPath);
+awsWriteJSON(volumeJson,volumeJsonPath_Operational);
+awsWriteJSON(overviewJson,overviewJsonPath_Operational);
+awsWriteJSON(scanConfig,scanConfigPath_Operational);
 
 end
 
 %% Helper function to cleanup ScanInfo
 function scanInfoJson = cleanupScanInfo(scanInfoJson, octProbe)
-scanInfoJson = rmfield(scanInfoJson,'lensWorkingDistance');
-scanInfoJson.xOffset = 0; % xOffset is moved to octProbe
-scanInfoJson.version = 1.1;
+if isfield(scanInfoJson,'lensWorkingDistance')
+    scanInfoJson = rmfield(scanInfoJson,'lensWorkingDistance');
+end
 scanInfoJson.octProbe = octProbe;
+
+% Offset and range should move to probe
+scanInfoJson.octProbe.DynamicFactorX = scanInfoJson.xRange;
+scanInfoJson.octProbe.OffsetX = scanInfoJson.xOffset;
+scanInfoJson.xOffset = 0; % xOffset is moved to octProbe
+scanInfoJson.xRange = 1; % xOffset is moved to octProbe
+
+scanInfoJson.version = 1.1;
 scanInfoJson.note = ['This config file was advanced to latest version on ' datestr(now)];
 end
