@@ -18,6 +18,8 @@ end
 
 if isfield(slideConfigJson.FMHistologyAlignment,'wasAlignmentSuccessful')
     % No need to update
+    disp('wasAlignmentSuccessful already exists');
+    return;
 end
 
 %% Write
