@@ -1,7 +1,7 @@
 %This script runs all preprocessing sequentially
 
 %% Inputs
-SubjectFolderIn = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-01';
+SubjectFolderIn = s3SubjectPath('01');
 SubjectFolderOut = SubjectFolderIn; %Where to save folder to
 
 isRunInAutomatedMode = true; %When set to false, will allow human more control to select info
