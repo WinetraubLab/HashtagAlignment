@@ -42,16 +42,24 @@ mask = zeros(size(imOCT));
 mask(isnan(imOCT)) = 1;
 mask(sum(imHist,3) == 0) = 1; 
 
-% Compute intensity with depth. keep signal around the pick (which is the
+ % Compute intensity with depth. keep signal around the pick (which is the
 % interface of tissue).
-m = medfilt2(imOCT,[20,20]); % median filter to get rid of gel interface and smooth horizontally
+m = medfilt2(imOCT,[50,20]); % median filter to get rid of gel interface and smooth horizontally
 
 m_reduced = m(~all(isnan(m),2),:); % remove rows that are all nan
 m(:,any(isnan(m_reduced),1)) = nan; % remove column if any elments are nan
 [~,ind] = max(m,[],'omitnan'); % find max of each column
-ind(ind == 1) = size(m,1);    % if the max was 1 (the column was all nan's) set to image height
-ind = medfilt1(ind,40,'omitnan','truncate'); % median filter again to remove outliers
-interfaceI = min(ind);
+
+% if reduced image 'm' is less than 100 pixels wide, revert to
+% using axis2 mean of image instead (for example, if image is triangular shape)
+if sum(ind ~= 1)>100
+    ind(ind == 1) = size(m,1);    % if the max was 1 (the column was all nan's) set to image height
+    ind = medfilt1(ind,150,'omitnan','truncate'); % median filter again to remove outliers
+    interfaceI = min(ind);
+else
+    m = nanmean(medfilt2(imOCT,[50,20]),2);
+    interfaceI = find(m>0,1,'first'); %find first index greater than signal = 0
+end
 
 zI = 1:size(mask,1);
 outsideArea = zeros(size(mask));
@@ -63,10 +71,19 @@ m = double(imOCT);
 minSignal = -12;
 m(isnan(m)) = minSignal;
 m = imgaussfilt(m,20);
-mask(m<minSignal ... Under minimal signal
+low_sig_mask = (m<minSignal ... Under minimal signal
     & repmat(zI(:) > interfaceI,1,size(m,2)) ... Below interface
     & mask==0 ... Not flagged already
-    ) = 3;
+    );
+
+%only take largest connected componenet
+CC = bwconncomp(low_sig_mask);
+numOfPixels = cellfun(@numel,CC.PixelIdxList);
+[unused,indexOfMax] = max(numOfPixels);
+low_sig_mask = logical(zeros(size(low_sig_mask)));
+low_sig_mask(CC.PixelIdxList{indexOfMax}) = 1;
+
+mask(low_sig_mask) = 3;
 
 %% Plot Output
 x = (1:size(imOCT,2))*slideConfig.FMOCTAlignment.OCTPixelSize_um/1e3; % mm
