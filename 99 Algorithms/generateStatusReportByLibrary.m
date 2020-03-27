@@ -162,7 +162,8 @@ for i=1:length(sectionPathsOut)
     
     % Does slide config exist?
     if ~awsExist(slideConfigFilePath,'File')
-        error('Can''t find configuration file');
+        % No configuration file, I guess this slides doesn't have anything.
+        continue;
     end
     slideConfigJson = awsReadJSON(slideConfigFilePath);
     
@@ -326,7 +327,7 @@ for i=1:length(sectionPathsOut)
             st.isHistologyImageQualityGood(i);
     end
     catch ME
-        warning('error happend i=%d, path %s. Message:',i,sectionPathsOut{i}, ME.message);
+        warning('error happend i=%d, path %s. Message: %s',i,sectionPathsOut{i}, ME.message);
     end
 end
 fprintf(']. Done!\n');
