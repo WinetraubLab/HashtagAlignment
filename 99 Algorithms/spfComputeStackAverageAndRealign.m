@@ -166,8 +166,7 @@ vmedian = vmedian/norm(vmedian)*vnormRefitted;
 
 %% Calculate distance to origin for all sections, even those without alignment
 sectionI = 1:spfsInLength;
-pp = polyfit(sectionI(~emptySPFsIndex),distanceToOriginRefitted,1);
-sectionDistanceToOriginOut = polyval(pp,sectionI);
+sectionDistanceToOriginOut = interp1(sectionI(~emptySPFsIndex),distanceToOriginRefitted,sectionI,'linear','extrap');
 sectionDistanceToOriginOut = sectionDistanceToOriginOut(:);
 
 %% Update individual planes for all sections, even those without alignment
