@@ -239,7 +239,7 @@ for i=1:length(sectionPathsOut)
         st.fluorescenceImagingDate{i} = slideConfigJson.FM.imagedAt;
         
         % Did single plane fit ran? / succeed
-        if ~isempty(slideConfigJson.FM.singlePlaneFit)
+        if isfield(slideConfigJson.FM,'singlePlaneFit') && ~isempty(slideConfigJson.FM.singlePlaneFit)
             st.sectionDistanceFromOCTOrigin2SectionAlignment_um(i) = slideConfigJson.FM.singlePlaneFit.d*1e3;
             st.sectionRotationAngle_deg(i) = slideConfigJson.FM.singlePlaneFit.rotation_deg;
             st.sectionTiltAngle_deg(i) = slideConfigJson.FM.singlePlaneFit.tilt_deg;
