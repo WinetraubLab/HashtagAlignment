@@ -84,15 +84,23 @@ for sI = 1:length(whichIterationsToReslice)
     n = stackAlignment.planeNormal; % Normal to plane, make sure not to flip it otherwise image will be fliped!
     d_um = stackAlignment.planeDistanceFromOCTOrigin_um;
     
-    % Dimensions of the stack to slice
+    % Dimensions of the original volume (mm)
     xRange = max(dimensions.x.values) - min(dimensions.x.values);
     yRange = max(dimensions.y.values) - min(dimensions.y.values);
-    jumpXYZ = 1e-3; % mm diff(dimensions.x.values(1:2));
     xSpan = sqrt(xRange^2 + yRange^2);
+    
+    % Filter out distances that are too far, no reslicing can be generated
+    % for that
+    good_d = abs(d_um*1e-3) < xSpan/2;
+    min_d_um = min(d_um(good_d));
+    max_d_um = max(d_um(good_d));
+    
+    % Dimensions of the stack to slice
+    jumpXYZ = 1e-3; % mm diff(dimensions.x.values(1:2));  
     x = (-xSpan/2):jumpXYZ:(xSpan/2); %mm
     bufferSize_um = 120; % take some buffer on both ends.
     y = (...
-        (min(d_um)-bufferSize_um):(jumpXYZ*1e3):(max(d_um)+bufferSize_um)...
+        (min_d_um-bufferSize_um):(jumpXYZ*1e3):(max_d_um+bufferSize_um)...
         )/1000; %mm 
     z = (min(dimensions.z.values)):jumpXYZ:(max(dimensions.z.values));
 
