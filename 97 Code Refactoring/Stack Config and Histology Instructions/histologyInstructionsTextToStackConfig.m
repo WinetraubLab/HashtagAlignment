@@ -3,18 +3,23 @@ function histologyInstructionsTextToStackConfig(subjectPath)
 % (used by LC and some LD) Written at Jan 10, 2020.
 %%
 
-if ~exist('subjectPath')
-    subjectPath = s3SubjectPath('08','LF');
+if ~exist('subjectPath','var')
+    subjectPath = s3SubjectPath('02','LC');
 end
 
-deleteOriginalFileWhenDone = true;
+readFileFromOperational = false; % Set to false if reading file from the 'deprecated' folder
 
 %% Figure out if this subject has the older version of histology instructions as we expect.
 logsFloder = awsModifyPathForCompetability([subjectPath '/Log/01 OCT Scan and Pattern/']);
+depricatedFolder = awsModifyPathForCompetability([subjectPath 'Log/00 Depreciated Files Dont Use/']);
 slidesFolder = awsModifyPathForCompetability([subjectPath '/Slides/']);
 
 try
-    ds = fileDatastore([logsFloder 'histoInstructions.txt'],'ReadFcn',@fileread);
+    if readFileFromOperational
+        ds = fileDatastore([logsFloder 'histoInstructions.txt'],'ReadFcn',@fileread);
+    else
+        ds = fileDatastore([depricatedFolder 'histoInstructions.txt'],'ReadFcn',@fileread);
+    end
     hiText = ds.read;
 catch
     disp('Couldn''t load Histology Instructions Text file - does it even exist?, Skipping');
@@ -99,8 +104,8 @@ awsWriteJSON(sc,[slidesFolder '/StackConfig.json']);
 scGenerateHistologyInstructionsFile(sc,[logsFloder 'HistologyInstructions.pdf']);
 
 % Cleanup
-if (deleteOriginalFileWhenDone)
+if (readFileFromOperational)
     awsCopyFileFolder([logsFloder 'histoInstructions.txt'], ...
-        [subjectPath 'Log/00 Depreciated Files Dont Use/histoInstructions.txt']);
+        [depricatedFolder 'histoInstructions.txt']);
     awsRmFile([logsFloder 'histoInstructions.txt']);
 end
