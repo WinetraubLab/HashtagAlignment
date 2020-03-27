@@ -104,6 +104,20 @@ for i=1:length(st.subjectNames)
     repStrings(end+1,:) = {'ProperAlignmentWithStack__auto_','Proper Alignment With Stack? [auto]'};
     repStrings(end+1,:) = {'DistanceFromOriginC_um__auto_','Distance From Origin C [um] [auto]'};
     
+    % Was resliced?
+    if st.wasResliceOCTVolumeRun(i)
+        stackVolumePath = sprintf('%s/OCTVolumes/StackVolume_Iteration%d/',...
+            subjectPath, st.iteration(i));
+        n = awsls(stackVolumePath);
+        
+        url = awsGenerateTemporarySharableLink(sprintf('%s/y%04d.tif',...
+            stackVolumePath, round(n/2)));
+        item.OCTResliced__auto_ = sprintf('=HYPERLINK("%s","Yes")',url);
+    else
+        item.OCTResliced__auto_ = 'No';
+    end
+    repStrings(end+1,:) = {'OCTResliced__auto_','OCT Resliced? [auto]'};
+    
     %% Make a recomendation, should we send slide to histology?
     if st.isRanStackAlignment(i)
         fineAlignmentCanComplete = true;
