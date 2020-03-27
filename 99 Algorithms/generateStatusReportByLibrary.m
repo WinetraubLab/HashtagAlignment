@@ -240,7 +240,11 @@ for i=1:length(sectionPathsOut)
         
         % Did single plane fit ran? / succeed
         if isfield(slideConfigJson.FM,'singlePlaneFit') && ~isempty(slideConfigJson.FM.singlePlaneFit)
-            st.sectionDistanceFromOCTOrigin2SectionAlignment_um(i) = slideConfigJson.FM.singlePlaneFit.d*1e3;
+            d = slideConfigJson.FM.singlePlaneFit.d;
+            if isempty(d)
+                d = NaN;
+            end
+            st.sectionDistanceFromOCTOrigin2SectionAlignment_um(i) = d;
             st.sectionRotationAngle_deg(i) = slideConfigJson.FM.singlePlaneFit.rotation_deg;
             st.sectionTiltAngle_deg(i) = slideConfigJson.FM.singlePlaneFit.tilt_deg;
             st.sectionSizeChange_percent(i) = slideConfigJson.FM.singlePlaneFit.sizeChange_precent;
