@@ -35,6 +35,9 @@ subjectFolder = awsModifyPathForCompetability(subjectFolder);
 scJsonFilePath = awsModifyPathForCompetability([subjectFolder '/Slides/StackConfig.json']);
 scJson = awsReadJSON(scJsonFilePath);
 
+istr = sprintf('%d,',whichIterationsToReslice);
+fprintf('%s Re-slicing %s, iteration(s): %s.\n',datestr(now),subjectName,istr(1:(end-1)));
+
 %% Pre-process volume (if needed)
 if isReProcessOCT
     fprintf('%s Re-pre-processing first.\n',datestr(now));
