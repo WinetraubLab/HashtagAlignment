@@ -108,7 +108,8 @@ for i=1:length(st.subjectNames)
     if st.wasResliceOCTVolumeRun(i)
         stackVolumePath = sprintf('%s/OCTVolumes/StackVolume_Iteration%d/',...
             subjectPath, st.iteration(i));
-        n = awsls(stackVolumePath);
+        %n = length(awsls(stackVolumePath));
+        n = 400; % Conservative number, to avoid awsls every time.
         
         url = awsGenerateTemporarySharableLink(sprintf('%s/y%04d.tif',...
             stackVolumePath, round(n/2)));
