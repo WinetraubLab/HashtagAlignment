@@ -169,6 +169,12 @@ sectionI = 1:spfsInLength;
 sectionDistanceToOriginOut = interp1(sectionI(~emptySPFsIndex),distanceToOriginRefitted,sectionI,'linear','extrap');
 sectionDistanceToOriginOut = sectionDistanceToOriginOut(:);
 
+if (sectionDistanceToOriginOut(~emptySPFsIndex) ~= distanceToOriginRefitted(:))
+    % This should never happen, interpolated values should be indentical to
+    % the original values for the sections that were computed.
+    error('Interpolation failure, please advice');
+end
+
 %% Update individual planes for all sections, even those without alignment
 clear spfsOut;
 isOutlierOut = zeros(spfsInLength,1);
