@@ -1,6 +1,6 @@
 % This script computs stats for the following libraries
 
-libraryNames = {'LF','LE'};
+libraryNames = {'LF','LE','LD'};
 isSubmitStast = false;
 
 %% Compute section status report

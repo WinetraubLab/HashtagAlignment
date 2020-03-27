@@ -150,7 +150,29 @@ for i=1:length(st.subjectNames)
     end
     repStrings(end+1,:) = {'H_ERegisteredtoBrightfield__auto_','H&E Registered to Brightfield? [auto]'};
     
-    % Fine alignment complete
+    % Is fine alignment done?
+    if st.isCompletedOCTHistologyFineAlignment(i)
+        url = awsGenerateTemporarySharableLink(sprintf(...
+            '%s/Log/13 Fine Alignment OCT to Histology/%s.png',...
+            subjectPath,st.sectionNames{i}));
+        item.WasFineAlignmentRan__auto_ = sprintf('=HYPERLINK("%s","Yes")',url);
+    else
+        item.WasFineAlignmentRan__auto_ = "No";
+    end
+    repStrings(end+1,:) = {'WasFineAlignmentRan__auto_','Was Fine Alignment Ran? [auto]'};
+    
+    % Fine alignment complete & rectified
+    if st.wasRectified(i)
+        url = awsGenerateTemporarySharableLink(sprintf(...
+            '%s/Log/13 Fine Alignment OCT to Histology/RectifyFineAlignedSections_Last.png',...
+            subjectPath));
+        item.WasRectified__auto_ = sprintf('=HYPERLINK("%s","Yes")',url);    
+    else
+        item.WasRectified__auto_ = 'No';
+    end
+    repStrings(end+1,:) = {'WasRectified__auto_','Was Rectified? [auto]'};
+    
+    % Distance from origin after fine aligned
     if st.isCompletedOCTHistologyFineAlignment(i)
         txt = sprintf('%.0f',abs(st.sectionDistanceFromOCTOrigin4FineAlignment_um(i)));
         url = awsGenerateTemporarySharableLink(sprintf(...
@@ -166,17 +188,6 @@ for i=1:length(st.subjectNames)
         end
     end
     repStrings(end+1,:) = {'DistanceFromOriginF_um__auto_','Distance From Origin F [um] [auto]'};
-    
-    % Fine alignment complete & rectified
-    if st.wasRectified(i)
-        url = awsGenerateTemporarySharableLink(sprintf(...
-            '%s/13 Fine Alignment OCT to Histology/RectifyFineAlignedSections_Last.png',...
-            subjectPath));
-        item.WasRectified__auto_ = sprintf('=HYPERLINK("%s",%s)',url,'"Yes"');    
-    else
-        item.WasRectified__auto_ = 'No';
-    end
-    repStrings(end+1,:) = {'WasRectified__auto_','Was Rectified? [auto]'};
     
     %% Quality Control
     
