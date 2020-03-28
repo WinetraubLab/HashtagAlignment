@@ -289,7 +289,7 @@ for i=1:length(sectionPathsOut)
             )
         st.isCompletedOCTHistologyFineAlignment(i) = true;
         st.sectionDistanceFromOCTOrigin4FineAlignment_um(i) = ...
-            slideConfigJson.FM.singlePlaneFit_FineAligned.distanceFromOrigin_mm*1e3;
+            slideConfigJson.FM.singlePlaneFit_FineAligned.d*1e3; % Use d and not distanceFromOrigin_mm because we want negative and positive values.
         
         if isfield(slideConfigJson.FM.singlePlaneFit_FineAligned,'wasRectified')
             st.wasRectified(i) = slideConfigJson.FM.singlePlaneFit_FineAligned.wasRectified;
