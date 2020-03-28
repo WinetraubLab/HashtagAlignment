@@ -10,7 +10,6 @@ for i=1:length(libraryNames)
     
     % Generate status
     fprintf('%s Building Stats Report\n',datestr(datetime));
-    disp('Building Stats Report');
     st = generateStatusReportByLibrary(ln);
     
     % Write it to AWS
