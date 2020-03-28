@@ -16,7 +16,7 @@ for i=1:length(libraryNames)
     awsWriteJSON(st,[statsPath '/StatusReportBySection.json']);
     
     % Upload to cloud
-    fprintf('%s Submitting to Cloud\n',datestr(datetime));
+    fprintf('%s Submitting to Google Sheets\n',datestr(datetime));
     submitStatusReportToGoogle(st);
 end
 fprintf('%s Done!\n',datestr(datetime));
