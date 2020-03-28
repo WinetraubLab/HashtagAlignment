@@ -5,10 +5,11 @@ libraryNames = {'LF','LE','LD','LC'};
 %% Compute section status report
 for i=1:length(libraryNames)
     ln = libraryNames{i};
-    disp(ln);
+    fprintf('%s Processing %s\n',datestr(datetime),ln);
     statsPath = [s3SubjectPath('',ln) '0LibraryStatistics/'];
     
     % Generate status
+    fprintf('%s Building Stats Report\n',datestr(datetime));
     disp('Building Stats Report');
     st = generateStatusReportByLibrary(ln);
     
@@ -16,10 +17,10 @@ for i=1:length(libraryNames)
     awsWriteJSON(st,[statsPath '/StatusReportBySection.json']);
     
     % Upload to cloud
-    disp('Submitting to Cloud');
+    fprintf('%s Submitting to Cloud\n',datestr(datetime));
     submitStatusReportToGoogle(st);
 end
-
+fprintf('%s Done!\n',datestr(datetime));
 
 
 
