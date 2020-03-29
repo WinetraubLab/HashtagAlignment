@@ -259,7 +259,7 @@ for i=1:length(sectionPathsOut)
             if isempty(d)
                 d = NaN;
             end
-            st.sectionDistanceFromOCTOrigin2SectionAlignment_um(i) = d;
+            st.sectionDistanceFromOCTOrigin2SectionAlignment_um(i) = d*1e3;
             st.sectionRotationAngle_deg(i) = slideConfigJson.FM.singlePlaneFit.rotation_deg;
             st.sectionTiltAngle_deg(i) = slideConfigJson.FM.singlePlaneFit.tilt_deg;
             st.sectionSizeChange_percent(i) = slideConfigJson.FM.singlePlaneFit.sizeChange_precent;
