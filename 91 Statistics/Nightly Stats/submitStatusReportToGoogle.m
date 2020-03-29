@@ -83,12 +83,12 @@ for i=1:length(st.subjectNames)
     % Proper Alignment With Stack
     if st.isRanStackAlignment(i)
         if st.isSectionPartOfAlingedStack(i)
-           if  st.wasSectionUsedInComputingStackAlignment(i)
-               txt1 = 'Yes';
-           else
-               txt1 = 'Maybe';
-           end
-           txt2 = sprintf('%.0f',abs(st.sectionDistanceFromOCTOrigin3StackAlignment_um(i)));
+            if  st.wasSectionUsedInComputingStackAlignment(i)
+                txt1 = 'Yes';
+            else
+                txt1 = 'Maybe';
+            end
+            txt2 = sprintf('%.0f',abs(st.sectionDistanceFromOCTOrigin3StackAlignment_um(i)));
         else
             txt1 = 'No';
             txt2 = sprintf('%.0f',abs(st.sectionDistanceFromOCTOrigin2SectionAlignment_um(i)));
