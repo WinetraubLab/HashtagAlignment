@@ -64,9 +64,14 @@ for i=1:length(st.subjectNames)
     
     % Size Change
     if st.areFiducialLinesMarked(i) && ~isnan(st.sectionDistanceFromOCTOrigin2SectionAlignment_um(i)) % Lines marked and section alignment ran
-        url = awsGenerateTemporarySharableLink(sprintf(...
-            '%s/Log/11 Align OCT to Flourecence Imaging/%s_SlideAlignment.png',...
-            subjectPath,st.sectionNames{i}));
+        url = '';
+        try
+            url = awsGenerateTemporarySharableLink(sprintf(...
+                '%s/Log/11 Align OCT to Flourecence Imaging/%s_SlideAlignment.png',...
+                subjectPath,st.sectionNames{i}));
+        catch
+            % Do nothing, sometimes this url doesnt exist
+        end
         txt = sprintf('%.1f',st.sectionSizeChange_percent(i));
         txt = strrep(txt,'NaN','"NaN"'); %If nan add ""
         item.SizeChange____auto_ = sprintf('=HYPERLINK("%s",%s)',url,txt);
