@@ -6,7 +6,7 @@ sendToHistologyDistance_um = 550;
 
 %% Input checks
 if ~exist('st','var')
-    st = [s3SubjectPath('','LE') '0LibraryStatistics/' '/StatusReportBySection.json'];
+    st = [s3SubjectPath('','LC') '0LibraryStatistics/' '/StatusReportBySection.json'];
 end
 
 if ischar(st)

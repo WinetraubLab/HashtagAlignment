@@ -12,7 +12,7 @@ function st = generateStatusReportByLibrary(libraryNames)
 %       see sectionStats.notes for explenation about the fields.
 
 if ~exist('libraryNames','var')
-    libraryNames = 'LD';
+    libraryNames = 'LC';
 end
 
 %% Input checks
@@ -161,15 +161,7 @@ for i=1:length(sectionPathsOut)
         st.isOCTVolumeProcessed(i) = st.isOCTVolumeProcessed(i-1);
     end
     
-    slideConfigFilePath = awsModifyPathForCompetability(...
-        [sectionPathsOut{i} '/SlideConfig.json']);
-    
-    % Does slide config exist?
-    if ~awsExist(slideConfigFilePath,'File')
-        % No configuration file, I guess this slides doesn't have anything.
-        continue;
-    end
-    slideConfigJson = awsReadJSON(slideConfigFilePath);
+    %% Stack related parameters
     
     % Read stack config if required - if it is a new subject.
     if i==1 || ~strcmp(st.subjectPahts{i-1},st.subjectPahts{i})
@@ -241,6 +233,17 @@ for i=1:length(sectionPathsOut)
     else
         st.wasResliceOCTVolumeRun(i) = st.wasResliceOCTVolumeRun(i-1);
     end
+    
+    %% Slide Config Parameters
+    
+    slideConfigFilePath = awsModifyPathForCompetability(...
+        [sectionPathsOut{i} '/SlideConfig.json']);
+    % Does slide config exist?
+    if ~awsExist(slideConfigFilePath,'File')
+        % No configuration file, I guess this slides doesn't have anything.
+        continue;
+    end
+    slideConfigJson = awsReadJSON(slideConfigFilePath);
    
     % Photobleached lines image uploaded
     if isfield(slideConfigJson,'photobleachedLinesImagePath')
