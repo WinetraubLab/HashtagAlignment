@@ -80,8 +80,10 @@ low_sig_mask = (m<minSignal ... Under minimal signal
 CC = bwconncomp(low_sig_mask);
 numOfPixels = cellfun(@numel,CC.PixelIdxList);
 [unused,indexOfMax] = max(numOfPixels);
-low_sig_mask = logical(zeros(size(low_sig_mask)));
-low_sig_mask(CC.PixelIdxList{indexOfMax}) = 1;
+if ~isempty(indexOfMax)
+    low_sig_mask = logical(zeros(size(low_sig_mask)));
+    low_sig_mask(CC.PixelIdxList{indexOfMax}) = 1;
+end
 
 mask(low_sig_mask) = 3;
 
