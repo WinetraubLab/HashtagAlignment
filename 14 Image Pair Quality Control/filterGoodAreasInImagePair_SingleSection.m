@@ -33,7 +33,7 @@ imHist = ds.read();
 
 %% Generate masks
 above_interface = 100;
-below_interface = 600; % 600 to be safe, sometimes surface is highly curved
+below_interface = 500; 
 
 maskLegend = sprintf('0 - Good Pixel, 1 - Outside or Histology Image, 2 - Far from tissue to interface, 3 - Low Signal');
 mask = zeros(size(imOCT));
@@ -64,9 +64,11 @@ Y_=interp1(X,Y,X_);
 % cut out markedline over nan regions of OCT image
 X = []; Y = [];
 for k=1:length(X_)
-   if ~isnan(imOCT(round(Y_(k)),round(X_(k))))
-       X = [X X_(k)];
-       Y = [Y Y_(k)];
+   try
+       if ~isnan(imOCT(round(Y_(k)),round(X_(k))))
+           X = [X X_(k)];
+           Y = [Y Y_(k)];
+       end
    end
 end
 
