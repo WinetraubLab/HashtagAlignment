@@ -33,7 +33,7 @@ imHist = ds.read();
 
 %% Generate masks
 above_interface = 100;
-below_interface = 500;
+below_interface = 600; % 600 to be safe, sometimes surface is highly curved
 
 maskLegend = sprintf('0 - Good Pixel, 1 - Outside or Histology Image, 2 - Far from tissue to interface, 3 - Low Signal');
 mask = zeros(size(imOCT));
@@ -42,25 +42,39 @@ mask = zeros(size(imOCT));
 mask(isnan(imOCT)) = 1;
 mask(sum(imHist,3) == 0) = 1; 
 
- % Compute intensity with depth. keep signal around the pick (which is the
-% interface of tissue).
-m = medfilt2(imOCT,[50,20]); % median filter to get rid of gel interface and smooth horizontally
+% Begin code to find interface
+% extract markedline from json
+x = slideConfig.FM.fiducialLines(1).u_pix;
+y = slideConfig.FM.fiducialLines(1).v_pix;
+Transform = slideConfig.FMOCTAlignment.FMToOCTTransform;
+ref = imref2d([size(imHist,1), size(imHist,2),1]);
 
-m_reduced = m(~all(isnan(m),2),:); % remove rows that are all nan
-m(:,any(isnan(m_reduced),1)) = nan; % remove column if any elments are nan
-[~,ind] = max(m,[],'omitnan'); % find max of each column
-
-% if reduced image 'm' is less than 100 pixels wide, revert to
-% using axis2 mean of image instead (for example, if image is triangular shape)
-if sum(ind ~= 1)>100
-    ind(ind == 1) = size(m,1);    % if the max was 1 (the column was all nan's) set to image height
-    ind = medfilt1(ind,150,'omitnan','truncate'); % median filter again to remove outliers
-    interfaceI = min(ind);
-else
-    m = nanmean(medfilt2(imOCT,[50,20]),2);
-    interfaceI = find(m>0,1,'first'); %find first index greater than signal = 0
+% apply transform of markedline from brightfield to OCT frame 
+clearvars X Y
+for k=1:length(x)
+   temp = ([x(k)  y(k)  1])*Transform;
+   X(k) = temp(1);
+   Y(k) = temp(2);
 end
 
+% interpolate markedline over entire OCT image
+X_ = [1:size(imOCT,2)];
+Y_=interp1(X,Y,X_);
+
+% cut out markedline over nan regions of OCT image
+X = []; Y = [];
+for k=1:length(X_)
+   if ~isnan(imOCT(round(Y_(k)),round(X_(k))))
+       X = [X X_(k)];
+       Y = [Y Y_(k)];
+   end
+end
+
+% interface is min value of markedline
+interfaceI = min(Y);
+% End code to find interface
+
+% crop out area above interface
 zI = 1:size(mask,1);
 outsideArea = zeros(size(mask));
 outsideArea(zI<interfaceI - above_interface | zI > interfaceI + below_interface,:) = 1;
