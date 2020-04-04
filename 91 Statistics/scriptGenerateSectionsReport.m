@@ -1,9 +1,10 @@
 % This script generates a status report of all the finish sections
 
-libraryNames = {'LE','LF'};
+libraryNames = {'LF','LE','LD','LC'};
 
 % What to lookfor when applying statistics
-mode = 'isHistologyImageUploaded'; % Will only consider slides with histology uploaded for plot
+%mode = 'isHistologyImageUploaded'; % Will only consider slides with histology uploaded for plot
+mode = 'isUsableInML'; % Most strict consideration
 
 %% Which are the finished sections
 if false % Generate report
@@ -64,15 +65,20 @@ for i=1:length(uniqueSubjectNames)
         % Find which subject
         ii = find(cellfun( @(x)(strcmpi(x,json.samePatientAsSampleWithId)), ...
             uniqueSubjectNames));
-        if length(ii) ~= 1
-            error('Couldnt figure out what patient to associate it');
+        if isempty(ii)
+            warning('Patient %s seems to be the same as sample %s, but couldn''t find the latter, does it have no good samples? Anyways appling this sample as %s', json.sampleId, json.samePatientAsSampleWithId, json.samePatientAsSampleWithId);
+            dataPerSubject{i} = dt;
+            uniqueSubjectNames{i} = json.samePatientAsSampleWithId;
+        elseif length(ii) > 1
+            error('This shouldn''t happen');
+        else
+            dataPerSubject{ii}.numberOfSamples  = ...
+                dataPerSubject{ii}.numberOfSamples + ...
+                dt.numberOfSamples;
+
+            % Remove this subject
+            isToDeleteUniqueSubject(i) = true; continue;
         end
-        dataPerSubject{ii}.numberOfSamples  = ...
-            dataPerSubject{ii}.numberOfSamples + ...
-            dt.numberOfSamples;
-        
-        % Remove this subject
-        isToDeleteUniqueSubject(i) = true; continue;
     end
 end
 
@@ -107,6 +113,7 @@ fitzpatrickSkinType =  cellfun(@(x)(x.fitzpatrickSkinType.*ones(1,x.numberOfSamp
 fitzpatrickSkinType = [fitzpatrickSkinType{:}];
 library = cellfun(@(x)((x.sampleId(2)-'A').*ones(1,x.numberOfSamples)),dataPerSubject,'UniformOutput',false);
 library = [library{:}];
+areaOfQualityData_mm2 = cellfun(@(x)(x.areaOfQualityData_mm2),dataPerSubject);
 
 if strcmpi(prefix,'sections')
     titlePrefix = 'Sections by Patient''s';
@@ -117,8 +124,8 @@ end
 subplot(2,3,[1 4]);
 [regionNames, regionNumberOfDataPoints] = ...
     drawStatisticsOnBody(sampleLocations,numberOfSections);
-title(sprintf('Total %s: %d\nDot location doesn''t reflect laterality',prefix, sum(numberOfSections)));
-
+title(sprintf('Total %s: %d\n Average Area: %.2f mm^2',...
+    prefix, sum(numberOfSections), sum(areaOfQualityData_mm2)/sum(numberOfSections)));
 subplot(2,3,2);
 bar([ ...
     sum((gender==1).*numberOfSections) ...

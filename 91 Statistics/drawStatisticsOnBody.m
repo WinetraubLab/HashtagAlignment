@@ -22,6 +22,7 @@ positions = {...
     'Chest' ''       -0.048 1.533 ; ...
     'Ear'   ''       -0.360 0.567 ; ...
     'Unknown' ''     -0.280 6.150 ; ...
+    'Clavicle' ''    -0.253 1.117 ; ...
     };
 
 %% Input checks
@@ -86,7 +87,7 @@ axis equal
 axis ij
 axis off
 ylim(bodyY([1 end]))
-
+text(0,bodyY(end),'Dot location doesn''t reflect laterality','FontSize',8,'HorizontalAlignment','Center')
 hold on;
 
 %Size scale
