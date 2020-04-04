@@ -30,13 +30,13 @@ for i=1:length(libraryNames)
     else
         fn = fieldnames(st);
         for j=1:length(fn)            
-            val = st.(fn{i});
+            val = st.(fn{j});
             val = val(:);
             
-            val1 = st1.(fn{i});
+            val1 = st1.(fn{j});
             val1 = val1(:);
             
-            st.(fn{i}) = [val; val1];
+            st.(fn{j}) = [val; val1];
         end
     end
 end
