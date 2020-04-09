@@ -59,7 +59,8 @@ end
 
 % interpolate markedline over entire OCT image
 X_ = [1:size(imOCT,2)];
-Y_=interp1(X,Y,X_);
+[X, index] = unique(X); 
+Y_=interp1(X,Y(index),X_);
 
 % cut out markedline over nan regions of OCT image
 X = []; Y = [];
