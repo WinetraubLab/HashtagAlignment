@@ -22,9 +22,9 @@ pipeline {
 			description:"Subject Id.\nExample: LF-01",
 			trim: true)
 		string(
-			name: "Z_TO_PHTOBLEACH",
+			name: "Z_POSITION_TOP_OF_GEL_UM",
 			defaultValue:"-300",
-			description:"We assume top of the sample is in focus right now.\nSet this value to the position of the top of the gel as photobleaching will occur at this specified z.\nUnits are um | +z is deeper",
+			description:"We assume top of the sample is in focus right now.\nSet this value to the position of the top of the gel (code will photobleach just under top of gel) z.\nUnits are um | +z is deeper",
 			trim: true)
 		string(
 			name: "WHO_TO_EMAIL_WHEN_DONE",
@@ -184,7 +184,7 @@ pipeline {
 		stage("Build Files")
 		{steps{script{
 			bat("@echo isDebugFastMode_ = %IS_DEBUG_MODE%; >> runme.m")
-			bat("@echo zToPhtobleach_=%Z_TO_PHTOBLEACH%/1000; >> runme.m") //Matlab works in mm, Z_TO_PHTOBLEACH is in um here
+			bat("@echo zGelTop_mm_=%Z_POSITION_TOP_OF_GEL_UM%/1000; >> runme.m") //Matlab works in mm, Z_POSITION_TOP_OF_GEL_UM is in um here
 			bat("@echo outputFolder_='" + VOLUME_OUTPUT_FOLDER() + "'; >> runme.m")
 			bat("@echo isDrawTickmarks_=%IS_PHOTOBLEACH_TICKMARKS%; >> runme.m")
 			bat("@echo run ScanAndPattern_Thorlabs.m  >> runme.m")

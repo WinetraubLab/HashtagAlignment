@@ -28,6 +28,7 @@ config.zToScan = ((-190:15:500)-5)*1e-3; %[mm]
 
 %Tissue Defenitions
 config.tissueRefractiveIndex = 1.4;
+config.gelIterfacePosionWithRespectToTissueTop_mm = -300e-3; % Z position of the gel-air interface compared to gel-tissue interface. Negative Z means above.
 
 %Overview of the entire area
 config.overview.isScanEnabled = false; %Do you want to scan overview volume? When running on Jenkins, will allways run overview 
@@ -55,8 +56,7 @@ config.photobleach.lineLength = 2; %[mm]
 config.photobleach.isPhotobleachEnabled = true; %Would you like to photobleach? this flag disables all photobleaching
 config.photobleach.isPhotobleachOverview = true; %Would you like to photobleach overview areas as well (extended photobleach)
 config.photobleach.photobleachOverviewBufferZone = 0.170; %See extended lines design of #, this is to prevent multiple lines appearing in the same slice 
-config.photobleach.z = -300*1e-3; %[mm] this parameter is ignored if running from jenkins - will assume provided by jenkins
-    
+   
 %Probe defenitions
 config.octProbePath = getProbeIniPath();
 
@@ -74,7 +74,7 @@ config.theDotY = +config.photobleach.lineLength/2*0.8;
 isExecutingOnJenkins = isRunningOnJenkins();
 if (isRunningOnJenkins())
     outputFolder = outputFolder_; %Set by Jenkins
-    config.photobleach.z = zToPhtobleach_; %Set by Jenkins
+    config.gelIterfacePosionWithRespectToTissueTop_mm = zGelTop_mm_; %Set by Jenkins
     config.photobleach.isDrawTickmarks = isDrawTickmarks_; %Set by Jenkins
     config.photobleach.isDrawTheDot = isDrawTickmarks_;
 	config.overview.isScanEnabled = true;	
@@ -97,6 +97,9 @@ if exist('gitBranch_','var')
 else
     config.gitBranchUsedToScan = 'unknown';
 end
+
+% Photobleach x microns under gel top
+config.photobleach.z = config.gelIterfacePosionWithRespectToTissueTop_mm+50e-3; %[mm] this parameter is ignored if running from jenkins - will assume provided by jenkins
 
 %% Add preprogramed config parameter
 
