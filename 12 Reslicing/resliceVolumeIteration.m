@@ -98,7 +98,7 @@ for sI = 1:length(whichIterationsToReslice)
     % Dimensions of the stack to slice
     jumpXYZ = 1e-3; % mm diff(dimensions.x.values(1:2));  
     x = (-xSpan/2):jumpXYZ:(xSpan/2); %mm
-    bufferSize_um = 120; % take some buffer on both ends.
+    bufferSize_um = 150; % take some buffer on both ends.
     y = (...
         (min_d_um-bufferSize_um):(jumpXYZ*1e3):(max_d_um+bufferSize_um)...
         )/1000; %mm 
