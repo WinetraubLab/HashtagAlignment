@@ -186,7 +186,11 @@ for i=1:length(st.subjectNames)
         url = awsGenerateTemporarySharableLink(sprintf(...
             '%s/Log/13 Fine Alignment OCT to Histology/RectifyFineAlignedSections_Last.png',...
             subjectPath));
-        item.WasRectified__auto_ = sprintf('=HYPERLINK("%s","Yes")',url);    
+        if st.didUserFineTuneAlignmentAfterRectified(i)
+            item.WasRectified__auto_ = sprintf('=HYPERLINK("%s","Yes")',url);    
+        else
+            item.WasRectified__auto_ = sprintf('=HYPERLINK("%s","Yes, but fine tune is required. Please run fine alignment. Check X-Z position, rotation and save again")',url);    
+        end
     else
         item.WasRectified__auto_ = 'No';
     end

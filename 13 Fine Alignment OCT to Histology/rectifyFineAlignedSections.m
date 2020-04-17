@@ -172,6 +172,12 @@ for i=1:length(slideConfigs)
     slideConfig.FM.singlePlaneFit_FineAligned.wasRectified = true;
     slideConfig.FM.singlePlaneFit_FineAligned.notes = sprintf('%s\nwasRectified - did ran rectifyFineAlignedSections?', ...
         slideConfig.FM.singlePlaneFit_FineAligned.notes);
+		
+	% After rectify, FMOCTAlignment.planeDistanceFromOrigin_mm should be updated as well
+	% However, we don't want to do it here since updating planeDistanceFromOrigin_mm may
+	% require update of x-y alignment, so just leave it as is. Next time user runs 
+	% alignHistology2OCT it will be updated
+	% slideConfig.FMOCTAlignment.planeDistanceFromOrigin_mm = slideConfig.FM.singlePlaneFit_FineAligned.d;
 
     if isUpdateCloud
         awsWriteJSON(slideConfig,slideConfigsJsonPaths{i});

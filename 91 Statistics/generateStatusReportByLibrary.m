@@ -92,6 +92,7 @@ st.isCompletedHistologyFluorescenceImageRegistration = zeros(size(st.sectionName
 st.wasHistologyFluorescenceImageRegistrationSuccessful = zeros(size(st.sectionNames),'logical');
 st.isCompletedOCTHistologyFineAlignment = zeros(size(st.sectionNames),'logical');
 st.wasRectified = zeros(size(st.sectionNames),'logical');
+st.didUserFineTuneAlignmentAfterRectified = zeros(size(st.sectionNames),'logical');
 st.sectionDistanceFromOCTOrigin4FineAlignment_um = zeros(size(st.sectionNames))*NaN;
 st.isOCTImageQualityGood = zeros(size(st.sectionNames),'logical')*NaN;
 st.isHistologyImageQualityGood = zeros(size(st.sectionNames),'logical')*NaN;
@@ -133,6 +134,7 @@ st.notes = sprintf([ ...
     'wasHistologyFluorescenceImageRegistrationSuccessful - was H&E image aligned with fluorescence image succesfully or the alignment failed?\n' ...
     'isCompletedOCTHistologyFineAlignment - was fine alignment completed between OCT and histology? At least before rectified.\n' ...
     'wasRectified - after computing fine alignment, did run rectify? (at least once). Notice that user can change fine alignment after rectification. We just want to make sure rectify was run at least once, fine tuning can be done after rectifying.\n' ... 
+    'didUserFineTuneAlignmentAfterRectified - after running rectify, user should go on each slide, make sure x-z and rotation matches between OCT and histology, and save again. If they haddent done so, this varible will be false.\n' ...
     'sectionDistanceFromOCTOrigin4FineAlignment_um - distance between section to OCT origin in microns according to fine alignment. Nan if doesn''t exist.\n' ...
     ' -- Quality Control --\n' ...
     'isOCTImageQualityGood - is epithelium visible, image not shadowed, overall image good?\n' ...
@@ -297,6 +299,17 @@ for i=1:length(sectionPathsOut)
         if isfield(slideConfigJson.FM.singlePlaneFit_FineAligned,'wasRectified')
             st.wasRectified(i) = slideConfigJson.FM.singlePlaneFit_FineAligned.wasRectified;
         end
+        
+        if st.wasRectified(i)
+            % Rectified ran, did user fine tune alignment to make sure its
+            % saved now?
+            if isfield(slideConfigJson,'FMOCTAlignment')
+                %The following line below is indicative if the user saved
+                %the fine alignment after running
+                tmp = slideConfig.FMOCTAlignment.planeDistanceFromOrigin_mm - slideConfig.FM.singlePlaneFit_FineAligned.d;
+                st.didUserFineTuneAlignmentAfterRectified(i) = abs(tmp) < 1e-3;
+            end
+        end
     end
     
     % QA Info
@@ -329,10 +342,14 @@ for i=1:length(sectionPathsOut)
         st.wereFeaturesInsideTissueUsedInAlignment(i) = slideConfigJson.QAInfo.AlignmentQuality.WereFeaturesInsideTissueUsedInAlignment;
     end
     
-    % Was mask generated?
-    if isfield(slideConfigJson,'alignedImagePath_Mask')
+    % Was mask generated? and is most upto date
+    % (st.didUserFineTuneAlignmentAfterRectified)
+    if isfield(slideConfigJson,'alignedImagePath_Mask') && st.didUserFineTuneAlignmentAfterRectified(i)
         st.isQualityControlMaskGenerated(i) = true;
+    end
 
+    %% Finally,
+    if st.isQualityControlMaskGenerated(i)
         % Figure out the area of good data
         [msk, metaData] = yOCTFromTif(...
             [st.sectionPahts{i} slideConfigJson.alignedImagePath_Mask]);
