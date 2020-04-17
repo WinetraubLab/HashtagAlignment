@@ -28,11 +28,17 @@ for i=1:length(slidePaths)
     slideConfig = awsReadJSON(slideConfigPath);
     
     if isfield(slideConfig.FM,'singlePlaneFit_FineAligned')
-        slideConfig.FM = rmfield(slideConfig.FM,'singlePlaneFit_FineAligned');
-        slideConfig = rmfield(slideConfig,'QAInfo');
-        slideConfig = rmfield(slideConfig,'alignedImagePath_OCT');
-        slideConfig = rmfield(slideConfig,'alignedImagePath_Histology');
-        slideConfig = rmfield(slideConfig,'FMOCTAlignment');
+        slideConfig.FM = rmfield_ifexist(slideConfig.FM,'singlePlaneFit_FineAligned');
+        slideConfig = rmfield_ifexist(slideConfig,'QAInfo');
+        slideConfig = rmfield_ifexist(slideConfig,'alignedImagePath_OCT');
+        slideConfig = rmfield_ifexist(slideConfig,'alignedImagePath_Histology');
+        slideConfig = rmfield_ifexist(slideConfig,'FMOCTAlignment');
         awsWriteJSON(slideConfig,slideConfigPath);
     end
+end
+
+function s = rmfield_ifexist(s,fieldName)
+
+if isfield(s,fieldName)
+    s = rmfield(s,fieldName);
 end
