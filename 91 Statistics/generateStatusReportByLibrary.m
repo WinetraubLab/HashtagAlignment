@@ -12,7 +12,7 @@ function st = generateStatusReportByLibrary(libraryNames)
 %       see sectionStats.notes for explenation about the fields.
 
 if ~exist('libraryNames','var')
-    libraryNames = 'LC';
+    libraryNames = 'LD';
 end
 
 %% Input checks
@@ -288,10 +288,7 @@ for i=1:length(sectionPathsOut)
     end
     
     % Was fine alignment ran?
-    if (    isfield(slideConfigJson.FM,'singlePlaneFit_FineAligned') && ...
-            isfield(slideConfigJson,'alignedImagePath_Histology') && ...
-            isfield(slideConfigJson,'alignedImagePath_OCT') ...
-            )
+    if (isfield(slideConfigJson.FM,'singlePlaneFit_FineAligned'))
         st.isCompletedOCTHistologyFineAlignment(i) = true;
         st.sectionDistanceFromOCTOrigin4FineAlignment_um(i) = ...
             slideConfigJson.FM.singlePlaneFit_FineAligned.d*1e3; % Use d and not distanceFromOrigin_mm because we want negative and positive values.

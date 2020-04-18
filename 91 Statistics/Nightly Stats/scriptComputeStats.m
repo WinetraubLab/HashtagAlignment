@@ -15,6 +15,9 @@ for i=1:length(libraryNames)
     % Write it to AWS
     awsWriteJSON(st,[statsPath '/StatusReportBySection.json']);
     
+    % Read from AWS
+    % st = awsReadJSON([statsPath '/StatusReportBySection.json'])
+    
     % Upload to cloud
     fprintf('%s Submitting to Google Sheets\n',datestr(datetime));
     submitStatusReportToGoogle(st);

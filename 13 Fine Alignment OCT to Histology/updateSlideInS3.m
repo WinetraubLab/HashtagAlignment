@@ -8,13 +8,13 @@ yI = find (abs(d_um) == min(abs(d_um)),1,'first');
 octMetadata.y.values = octMetadata.y.values(yI);
 octMetadata.y.index = octMetadata.y.index(yI);
 
-% Write OCT
-yOCT2Tif(octIm, octOutputPath, 'metadata', octMetadata);
+% Write OCT - cancel this part, its done in the post processing
+%yOCT2Tif(octIm, octOutputPath, 'metadata', octMetadata);
 
-% Write Histology
-imwrite(histologyIm,'tmp.tif');
-awsCopyFileFolder('tmp.tif',histologyOutputPath);
-delete tmp.tif;
+% Write Histology - cancel this part, its done in the post processing
+%imwrite(histologyIm,'tmp.tif');
+%awsCopyFileFolder('tmp.tif',histologyOutputPath);
+%delete tmp.tif;
 
 %% Make Log Image
 x = octMetadata.x.values/1e3; % mm
