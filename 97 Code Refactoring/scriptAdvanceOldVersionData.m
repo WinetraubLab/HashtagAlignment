@@ -16,7 +16,7 @@ runOn = 'subjects'; % Can be 'subjects' or 'slides'
 % Function handle interface is func(rootFolder) where root folder will be
 % either the subject folder or the slide folder acording to runOn.
 %funcToRun = @(rootFolder)(rootFolder);
-funcToRun = @recomputeStackAlignment; %recomputeStackAlignment, recomputeSlideAlignment
+funcToRun = @changeFolderName; %recomputeStackAlignment, recomputeSlideAlignment, changeFolderName
 %funcToRun = @changeDispersionParameterA2QuadraticTerm;
 
 %% Loop Over all subjects and make the change (subject related)
