@@ -1,9 +1,17 @@
 function img = imReColor(img, oldColor, newColor)
 % Change one color in image to a new one. works on RGB colors
 
-r = img(:,:,1);
-g = img(:,:,2);
-b = img(:,:,3);
+if (size(img,3) == 3)
+    r = img(:,:,1);
+    g = img(:,:,2); 
+    b = img(:,:,3);
+elseif (size(img,3) == 1) %Gray scale
+    r = img(:,:,1);
+    g = r;
+    b = r;
+else
+    error('Don''t know what to do here');
+end
 
 mask = r == oldColor(1) & g == oldColor(2) & b == oldColor(3);
 

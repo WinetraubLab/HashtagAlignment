@@ -3,7 +3,7 @@
 %% Inputs
 
 % Which libraries to take images from
-libraryNames = {'LE','LF'};
+libraryNames = {'LC','LD','LE','LF'};
 
 % Output patches defenitions.
 patchSizeX_pix = 256; % Patch size (pixels)
@@ -11,8 +11,8 @@ patchSizeY_pix = 256;
 
 % Magnification - Approximate Pixel Size
 %           20x - 0.7 micron
-%           10x - 1.1 micron
-%            4x - 2.7 micron
+%           10x - 1.0 micron
+%            4x - 2.5 micron
 % Source: https://www.amscope.com/camera-resolution
 patchPixelSize = 2; % microns, original image size: 1um.
 
@@ -20,9 +20,16 @@ patchPixelSize = 2; % microns, original image size: 1um.
 outputFolder = 'Patches/';
 
 % How to generate patches.
-patchOverlap = 32; % Pixels.
+patchOverlapX = 64; % Pixels.
+patchOverlapY = 64; % Pixels.
 patchDataMinimum = 0.5; % Reject patch if less than x% of its area is usable.
 includeflip = true; % Mirror flip patch as well.
+
+%How many OCT slides to use, set to 0 if only to use the main one -1:1 to
+%use 1 micron ahead and 1 micron after
+octBScansToUse = -2:2; % Can be 0, -2:2
+octOutputType = 2; %- 1 means all B scans will be placed in the image side by side.
+                   %- 2 means B scans will be averaged to generate one image.
 
 %% Jenkins override of inputs
 if exist('patchFolder_','var')
@@ -50,6 +57,7 @@ st = loadStatusReportByLibrary(libraryNames);
 
 %% Do the work
 isUsable = find(st.isUsableInML);
+%isUsable = 1:length(st.isUsableInML); % For debugging purposes get all slides
 fprintf('Generating patches from %d valid sections. Wait for 10 stars ... [ ',length(isUsable)); tic;
 imwritefun = @(im,path)(imwrite(im,path,'Quality',100));
 cropcountTotal = 1;
@@ -64,10 +72,33 @@ for iSlide=1:length(isUsable)
         outputFolder,subjectName, sectionName);
     outputFilePathTemplate = strrep(outputFilePathTemplate,'\','\\');
     
-    % Load data  
-    img_he = awsimread([sectionPath '/HistologyAligned.tif']);
-    [img_oct, metadata] = yOCTFromTif([sectionPath '/OCTAligned.tif']);
-    img_mask = yOCTFromTif([sectionPath '/MaskAligned.tif']);
+    % Load slide config
+    slideConfig = awsReadJSON([sectionPath 'SlideConfig.json']);
+    
+    % Load data - H&E  
+    img_he = awsimread([sectionPath slideConfig.alignedImagePath_Histology]);
+    
+    % Load data - OCT (and average if needed)
+    if length(octBScansToUse) == 1 && octBScansToUse(1) == 0 %Load just the central slide
+        [img_oct, metadata] = yOCTFromTif([sectionPath slideConfig.alignedImagePath_OCT]);
+    else
+        % We need the stack
+        [img_oct, metadata] = yOCTFromTif([sectionPath slideConfig.alignedImagePath_OCTStack]);
+        
+        % Remove not used parts of the oct image
+        img_oct = img_oct(:,:,(size(img_oct,3)+1)/2 + octBScansToUse);
+        
+        % Average if needed 
+        if(octOutputType==2)
+            %img_oct = squeeze(log(mean(exp(img_oct),3))); % Linear scale averaging. 
+            img_oct = squeeze(mean(img_oct,3)); % Log scale averaging.
+        end
+    end
+    
+    % Load data - mask
+    img_mask = yOCTFromTif([sectionPath slideConfig.alignedImagePath_Mask]);
+    
+    % Rescale image - compute scale factor
     img_pixelSize_um = diff(metadata.x.values(1:2));
     scaleFactor = patchPixelSize/img_pixelSize_um;
     if round(scaleFactor) ~= scaleFactor
@@ -81,20 +112,21 @@ for iSlide=1:length(isUsable)
     
     % Apply mask
     img_he(repmat(img_mask >= 0.2,[1,1,3])) = NaN;
-    img_oct(img_mask >= 0.2) = NaN;
+    img_oct(repmat(img_mask >= 0.2,[1,1,size(img_oct,3)])) = NaN;
+    img_mask(img_mask >= 0.2) = NaN;
     
     % Crop everything outside of mask
-    rowToCrop = find(~any(~isnan(img_oct),2));
+    rowToCrop = find(~any(~isnan(img_mask),2));
     img_he(rowToCrop,:,:) = [];
-    img_oct(rowToCrop,:) = [];
+    img_oct(rowToCrop,:,:) = [];
     img_mask(rowToCrop,:) = [];
-    colToCrop = find(~any(~isnan(img_oct),1));
+    colToCrop = find(~any(~isnan(img_mask),1));
     img_he(:,colToCrop,:) = [];
-    img_oct(:,colToCrop) = [];
+    img_oct(:,colToCrop,:) = [];
     img_mask(:,colToCrop) = [];
 
     % Convert OCT to grayscale (reserve black color to NaN)
-    img_oct = repmat(scale0To255(img_oct),[1 1 3]);
+    img_oct = scale0To255(img_oct);
      
     % Pad with 0s if we cropped too much
     img_he = imPadToMeetPatchSize(img_he, patchSizeX_pix, patchSizeY_pix, 0);
@@ -104,12 +136,6 @@ for iSlide=1:length(isUsable)
     % define h -height and w-width of images after downsize
     h=size(img_he,1); w=size(img_he,2);
     
-    % Recolor to identify empty regions. (no value backgroud)
-    noValueBackground = [0,0,0]; % Black background.
-    %noValueBackground = [0,255,0]; % Green background.
-    img_he = imReColor(img_he,[0 0 0],noValueBackground); %RGB
-    img_oct = imReColor(img_oct,[0 0 0],noValueBackground); %RGB
-    
     %% Generate patches 
     if h<patchSizeY_pix || w<patchSizeX_pix
         error('Should never happen');
@@ -118,8 +144,8 @@ for iSlide=1:length(isUsable)
 
     % loop through patches
     cropcount = 1;
-    for y=1:patchOverlap:(h-patchSizeY_pix)
-        for x =1:patchOverlap:(w-patchSizeX_pix)
+    for y=1:patchOverlapY:(h-patchSizeY_pix)
+        for x=1:patchOverlapX:(w-patchSizeX_pix)
             roiy = y:y+(patchSizeY_pix-1);
             roix = x:x+(patchSizeX_pix-1);
 
@@ -135,15 +161,19 @@ for iSlide=1:length(isUsable)
             % crop images
             crop_he = img_he(roiy,roix,:);
             crop_oct =img_oct(roiy,roix,:);
+            
+            % reshape crop of oct to include all images side by side
+            crop_oct = reshape(...
+                crop_oct,[patchSizeY_pix patchSizeX_pix*size(crop_oct,3)]);
+            crop_oct = repmat(crop_oct,[1 1 3]); % Convert to rgb
 
-            % combine images
-            outimg = [crop_he, crop_oct];
-            % write image
+            % combine images & write
+            outimg = [crop_oct, crop_he];
             imwritefun(outimg, sprintf(outputFilePathTemplate,0,cropcount));
 
             % write flippled image
             if includeflip 
-               outimg = [fliplr(crop_he), fliplr(crop_oct)];
+               outimg = [fliplr(crop_oct), fliplr(crop_he)];
                imwritefun(outimg, sprintf(outputFilePathTemplate,1,cropcount));
             end
 
