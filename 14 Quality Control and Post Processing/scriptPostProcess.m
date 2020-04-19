@@ -8,7 +8,7 @@ for i=1:length(sectionNames)
     sectionName_ = sectionNames{i};
     
     disp(sectionName_);
-    filterGoodAreasInImagePair_SingleSection; 
+    scriptPostProcess_SingleSection; 
 end
 disp('Done');
 close all;
