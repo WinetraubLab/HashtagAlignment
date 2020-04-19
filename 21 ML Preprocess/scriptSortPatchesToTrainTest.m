@@ -7,13 +7,14 @@
 % Where to write patches to:
 patchFolder = 'Patches/';
 
-% Patches up to this subject will be used for training, after for testing
+% All patches are used for training, except patches with these in their
+% filenames, these ones are used for testing
 % (ignores the 0/1 number at the begining for flipped images
-fileNameToStartTestingSet = 'LE-14';
+filesInTestingSet = {'LE-14','LE-15'};
 
 % Jenkins override of inputs
-if exist('fileNameToStartTestingSet_','var')
-    fileNameToStartTestingSet = fileNameToStartTestingSet_;
+if exist('filesInTestingSet_','var')
+    filesInTestingSet = filesInTestingSet_;
     patchFolder = patchFolder_;
 end
 
@@ -41,18 +42,15 @@ fileNames = {d.name};
 fileNames(isdir) = [];
 filePaths = cellfun(@(x)([patchFolder x]),fileNames(:),'UniformOutput',false);
 
-%Compare short names to the first subject
-fileNames2 = cellfun(@(x)(x(3:end)),fileNames(:),'UniformOutput',false);
-isTraining = string(fileNames2) < fileNameToStartTestingSet;
+isTraining = zeros(size(fileNames),'logical');
+for i=1:length(isTraining)
+    isInTesting = cellfun(@(x)(contains(fileNames{i},x)),filesInTestingSet);
+    if ~any(isInTesting)
+        isTraining(i) = true;
+    end
+end
 
 %% Move files around
-fprintf('Training: %s to %s. Numbrt of patches: %d (%.1f%%).\n', ...
-    fileNames2{find(isTraining==1,1,'first')},fileNames2{find(isTraining==1,1,'last')},...
-    sum(isTraining==1),sum(isTraining==1)/length(isTraining)*100)
-fprintf('Testing:  %s to %s. Number of patches: %d (%.1f%%).\n', ...
-    fileNames2{find(isTraining==0,1,'first')},fileNames2{find(isTraining==0,1,'last')},...
-    sum(isTraining==0),sum(isTraining==0)/length(isTraining)*100)
-
 for i=1:length(filePaths)
     if (isTraining(i))
         movefile(filePaths{i},outputFolderTrain)
@@ -61,4 +59,3 @@ for i=1:length(filePaths)
         movefile(filePaths{i},outputFolderValidate)
     end
 end
-
