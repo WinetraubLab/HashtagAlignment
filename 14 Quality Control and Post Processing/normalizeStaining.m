@@ -43,13 +43,13 @@ if ~exist('Io', 'var') || isempty(Io)
 end
 
 % OD threshold for transparent pixels
-if ~exist('beta', 'var') || isempty(beta)
-    beta = 0.1;
+if ~exist('beta1', 'var') || isempty(beta1)
+    beta1 = 0.1;
 end
 
 % tolerance for the pseudo-min and pseudo-max
-if ~exist('alpha', 'var') || isempty(alpha)
-    alpha = 1;
+if ~exist('alpha1', 'var') || isempty(alpha1)
+    alpha1 = 1;
 end
 
 % reference H&E OD matrix
@@ -80,8 +80,8 @@ OD = -log((I+1)/Io);
 
 % remove transparent pixels
 % remove all dark pixels in original image
-ODhat = OD(~(all(OD < beta, 2) | all(OD > 1.2, 2)), :);
-OD((all(OD < beta, 2) | all(OD > 1.2, 2)), :) = 0;
+ODhat = OD(~(all(OD < beta1, 2) | all(OD > 1.2, 2)), :);
+OD((all(OD < beta1, 2) | all(OD > 1.2, 2)), :) = 0;
    
 % calculate eigenvectors
 [V, ~] = eig(cov(ODhat));
@@ -93,8 +93,8 @@ That = ODhat*V(:,2:3);
 % find the min and max vectors and project back to OD space
 phi = atan2(That(:,2), That(:,1));
 
-minPhi = prctile(phi, alpha);
-maxPhi = prctile(phi, 100-alpha);
+minPhi = prctile(phi, alpha1);
+maxPhi = prctile(phi, 100-alpha1);
 
 vMin = V(:,2:3)*[cos(minPhi); sin(minPhi)];
 vMax = V(:,2:3)*[cos(maxPhi); sin(maxPhi)];
