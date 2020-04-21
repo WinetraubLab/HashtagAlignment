@@ -6,23 +6,25 @@
 libraryNames = {'LC','LD','LE','LF'};
 
 % Output patches defenitions.
-patchSizeX_pix = 256; % Patch size (pixels)
-patchSizeY_pix = 256;
+patchSizeX_pix = 1024; % Patch size (pixels)
+patchSizeY_pix = 512;
 
 % Magnification - Approximate Pixel Size
 %           20x - 0.7 micron
 %           10x - 1.0 micron
 %            4x - 2.5 micron
 % Source: https://www.amscope.com/camera-resolution
-patchPixelSize = 2; % microns, original image size: 1um.
+patchPixelSize = 1; % microns, original image size: 1um.
 
 % Where to write patches to:
 outputFolder = 'Patches/';
 
 % How to generate patches.
-patchOverlapX = 64; % Pixels.
-patchOverlapY = 64; % Pixels.
-patchDataMinimum = 0.5; % Reject patch if less than x% of its area is usable.
+patchOverlapX_pix = patchSizeX_pix/2; % Pixels.
+patchOverlapY_pix = patchSizeY_pix/2; % Pixels.
+% Reject if not patchDataMinimumAbs is ment and not patchDataMinimumRelative
+patchDataMinimumAbs = 0.3; % Reject patch if less than x% of its area is usable. Set to 1 to disable.
+patchDataMinimumRelative = 0.5; %Reject patch if it is less than x% of the area of the first patch. Set to 1 to disable.
 includeflip = true; % Mirror flip patch as well.
 
 %How many OCT slides to use, set to 0 if only to use the main one -1:1 to
@@ -44,6 +46,16 @@ end
 if exist('patchSizeY_pix_','var')
     patchSizeY_pix = patchSizeY_pix_;
 end
+
+%% Write configuration to log
+varNames=who;
+json =[];
+for i=1:length(varNames)
+    json.(varNames{i}) = eval(varNames{i});
+end
+
+disp('Configuration used for running this script:');
+json
 
 %% Clear output folder
 outputFolder = awsModifyPathForCompetability([pwd '/' outputFolder '/']);
@@ -144,17 +156,22 @@ for iSlide=1:length(isUsable)
 
     % loop through patches
     cropcount = 1;
-    for y=1:patchOverlapY:(h-patchSizeY_pix)
-        for x=1:patchOverlapX:(w-patchSizeX_pix)
+    for y=1:patchOverlapY_pix:(h-patchSizeY_pix)
+        for x=1:patchOverlapX_pix:(w-patchSizeX_pix)
             roiy = y:y+(patchSizeY_pix-1);
             roix = x:x+(patchSizeX_pix-1);
 
             % Reject image if # of non-zeros pixels greater than threshold
             goodPixels = sum(sum(img_mask(roiy,roix) < 0.2));
             totalPixels = patchSizeX_pix*patchSizeY_pix;
-            if goodPixels/totalPixels<patchDataMinimum
-                warning('%s-%s have less than %.0f%% of usable pixel, therefore is beeing skipped.', ...
-                subjectName,sectionName,patchDataMinimum*100);
+            if x==1 && y==1
+                goodPixelsInFirstPatch = goodPixels;
+            end
+            if (...
+                ~(goodPixels/totalPixels<patchDataMinimumAbs) && ...
+                ~(goodPixels/goodPixelsInFirstPatch<patchDataMinimumRelative))
+                warning('%s-%s have less than %.0f%% of usable pixels, or less than minimul relative good pixels, therefore is beeing skipped.', ...
+                subjectName,sectionName,patchDataMinimumAbs*100);
                 continue;
             end
 
