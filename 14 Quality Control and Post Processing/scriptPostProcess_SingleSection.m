@@ -82,8 +82,13 @@ imHist = normalizeStaining(imHist);
 
 % Orient Histology image to OCT reference frame
 ref = imref2d([size(imOCT,1), size(imOCT,2), 3]);
-imHistRot = imwarp(imHist,...
+imHist = imwarp(imHist,...
     affine2d(jsons.slideConfig.data.FMOCTAlignment.FMToOCTTransform),'OutputView',ref);
+
+% Save histology
+imwrite(imHist,'tmp.tif');
+awsCopyFileFolder('tmp.tif',[slideFolder jsons.slideConfig.data.alignedImagePath_Histology]);
+delete tmp.tif;
 
 %% Generate masks
 above_interface = 100;
@@ -199,7 +204,7 @@ title('Histology');
 hold on;
 image('XData',x,'YData',z,...
       'CData',m,...
-      'AlphaData',0.1);
+      'AlphaData',0.2);
 hold off;
 
 %% Upload drawing and JSON.
