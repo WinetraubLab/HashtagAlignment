@@ -10,7 +10,7 @@ patchFolder = 'Patches/';
 % All patches are used for training, except patches with these in their
 % filenames, these ones are used for testing
 % (ignores the 0/1 number at the begining for flipped images
-filesInTestingSet = {'LE-14','LE-15'};
+filesInTestingSet = {'LE-01','LE-03','LF'};
 
 % Jenkins override of inputs
 if exist('filesInTestingSet_','var')
