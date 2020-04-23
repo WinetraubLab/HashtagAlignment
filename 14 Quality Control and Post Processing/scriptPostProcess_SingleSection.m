@@ -144,7 +144,15 @@ mask(outsideArea==1 & mask==0) = 2;
 
 % Low signal
 m = double(imOCT);
-minSignal = -12;
+
+% Adaptive threshold for minSignal
+m_mean = nanmean(m,2);
+m_mean(isnan(m_mean)) = [];
+m_mean_max = prctile(m_mean,99);
+m_mean_min = mean(m_mean(end-50:end));
+minSignal = 0.2 * (m_mean_max - m_mean_min) + m_mean_min;
+
+% Compute log signal mask
 m(isnan(m)) = minSignal;
 m = imgaussfilt(m,20);
 low_sig_mask = (m<minSignal ... Under minimal signal
