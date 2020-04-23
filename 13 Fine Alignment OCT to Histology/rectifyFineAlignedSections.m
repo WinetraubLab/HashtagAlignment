@@ -1,8 +1,14 @@
 function rectifyFineAlignedSections(subjectPath)
 %This function takes the fine alinged data tries to correct it to a linear
 %function - to reduce noise
+% This function will ask user if they would like to update fine tuning
+% before doing so.
 
-%subjectPath = s3SubjectPath('01','LE');
+%subjectPath = s3SubjectPath('12','LD');
+
+% When set to false, will not try to rectify sections that don't have h&e,
+% that makes sense since slides with no h&e cannot be fine aligned.
+shouldRectifySectionsWithNoHE = false; 
 
 %% Read stack config
 stackConfig = awsReadJSON([subjectPath '/Slides/StackConfig.json']);
@@ -43,6 +49,9 @@ for i=1:length(slideConfigs)
         alignmentQA = slideConfig.QAInfo.AlignmentQuality;
         overallAlignmentQuality(i) = alignmentQA.OverallAlignmentQuality;
         yAxisTolerance_um(i) = alignmentQA.YAxisToleranceMicrons;
+    end
+    if ~isfield(slideConfig,'histologyImageFilePath')
+        yAxisTolerance_um(i) = NaN; %No histology, means no way fine alignment has a reasonable tolerance.
     end
 end
 
@@ -94,6 +103,7 @@ for i = 1:max(stackIterations)
             mean(yFineAlignedRectified_umI) - mean(yStackAligned_umI),p(1)), ...
         'location','south');
     title(sprintf('%s, Iteration: %d',stackConfig.sampleID,i));
+    xlim(sectionNumberI([1 end])' + [-1 1]);
     
     yFineAlignedRectified_mm(isInThisIeration) = yFineAlignedRectified_umI*1e-3;
 end
@@ -124,6 +134,11 @@ for i=1:length(slideConfigs)
     if isempty(slideConfig)
         continue; % This should never happen
     end
+    if ~isfield(slideConfig,'histologyImageFilePath') && ~shouldRectifySectionsWithNoHE
+        %No histology, means no fine alignment, and user asked not to
+        %update fine alignment on those.
+        continue;
+    end 
     
     %% Get information from stack
     iteration = stackConfig.sections.iterations(i);
