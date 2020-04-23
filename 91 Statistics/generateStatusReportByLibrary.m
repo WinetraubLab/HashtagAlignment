@@ -15,6 +15,8 @@ if ~exist('libraryNames','var')
     libraryNames = 'LD';
 end
 
+minimalAreaForSectionToBeQualified_mm2 = 0.23; %mm^2
+
 %% Input checks
 if ischar(libraryNames)
     libraryNames = {libraryNames};
@@ -357,7 +359,7 @@ for i=1:length(sectionPathsOut)
         %% Is usable for ML
 
         %if area is above threshold
-        isAreaThreshold = st.areaOfQualityData_mm2(i) > 50e-3^2;
+        isAreaThreshold = st.areaOfQualityData_mm2(i) > minimalAreaForSectionToBeQualified_mm2;
         st.isUsableInML(i) = ...
             isAreaThreshold & ...
             (st.alignmentQuality(i) > 1.5) & ...
