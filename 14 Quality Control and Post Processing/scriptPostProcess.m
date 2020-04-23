@@ -8,7 +8,11 @@ for i=1:length(sectionNames)
     sectionName_ = sectionNames{i};
     
     disp(sectionName_);
-    scriptPostProcess_SingleSection; 
+    try
+        scriptPostProcess_SingleSection; 
+    catch ME
+       warning('Error happend: %s. Continuing...',ME.message) 
+    end 
 end
 disp('Done');
 close all;
