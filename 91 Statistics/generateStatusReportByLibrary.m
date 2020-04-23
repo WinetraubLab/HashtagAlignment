@@ -303,7 +303,7 @@ for i=1:length(sectionPathsOut)
             if isfield(slideConfigJson,'FMOCTAlignment')
                 %The following line below is indicative if the user saved
                 %the fine alignment after running
-                tmp = slideConfig.FMOCTAlignment.planeDistanceFromOrigin_mm - slideConfig.FM.singlePlaneFit_FineAligned.d;
+                tmp = slideConfigJson.FMOCTAlignment.planeDistanceFromOrigin_mm - slideConfigJson.FM.singlePlaneFit_FineAligned.d;
                 st.didUserFineTuneAlignmentAfterRectified(i) = abs(tmp) < 1e-3;
             end
         end
