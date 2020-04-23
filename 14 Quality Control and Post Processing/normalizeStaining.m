@@ -55,9 +55,9 @@ end
 % reference H&E OD matrix
 if ~exist('HERef', 'var') || isempty(HERef)
 	% Use calculateHERef function to compute this reference re-coloring vector
-    HERef =  [0.582425513326483,  -0.125818663831307;
-              0.717184627954488, 0.914964900660510;
-              0.378211305806164, 0.375634613849307];
+    HERef =  [0.759569358860349,-0.322561704422584307;
+         0.942831210850856,0.739522098490852;
+         0.267537650874669,0.137850718311857];
 end
 
 % reference maximum stain concentrations for H&E
