@@ -15,7 +15,16 @@ if ~exist('libraryNames','var')
     libraryNames = 'LD';
 end
 
-minimalAreaForSectionToBeQualified_mm2 = 0.23; %mm^2
+%%  What is the minimal usable area, let us folow calculation:
+octVolumeSideLength = 1; %mm
+maxDistanceFromOrigin = 0.550; %mm
+% Using trigonomaty, what is the length of a histology section, cut at 45
+% degrees, maxDistanceFromOrigin away from the origin
+l = sqrt(2)*octVolumeSideLength-2*maxDistanceFromOrigin;
+h = 0.3 + 0.1; % minimal acceptable depth of OCT section + gel
+
+%minimalAreaForSectionToBeQualified_mm2 = l*h %mm^2
+minimalAreaForSectionToBeQualified_mm2 = 0.12; %mm^2
 
 %% Input checks
 if ischar(libraryNames)
