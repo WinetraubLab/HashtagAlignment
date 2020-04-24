@@ -92,8 +92,20 @@ for iSlide=1:length(isUsable)
     
     % Load data - OCT (and average if needed)
     if length(octBScansToUse) == 1 && octBScansToUse(1) == 0 %Load just the central slide
+        
+        if ~isfield(slideConfig,'alignedImagePath_OCT')
+            warning('%s %s doesn''t have alignedImagePath_OCT, skipping',...
+                subjectName,sectionName)
+            continue;
+        end
+        
         [img_oct, metadata] = yOCTFromTif([sectionPath slideConfig.alignedImagePath_OCT]);
     else
+        if ~isfield(slideConfig,'alignedImagePath_OCTStack')
+            warning('%s %s doesn''t have alignedImagePath_OCTStack, skipping',...
+                subjectName,sectionName)
+            continue;
+        end
         % We need the stack
         [img_oct, metadata] = yOCTFromTif([sectionPath slideConfig.alignedImagePath_OCTStack]);
         
@@ -139,8 +151,11 @@ for iSlide=1:length(isUsable)
 
     % Convert OCT to grayscale (reserve black color to NaN)
     img_oct = scale0To255(img_oct);
+    
+    % Convert mask to numbers
+    img_mask(isnan(img_mask)) = 10;
      
-    % Pad with 0s if we cropped too much
+    % Pad with 0s if we cropped too much, mask pads with 10
     img_he = imPadToMeetPatchSize(img_he, patchSizeX_pix, patchSizeY_pix, 0);
     img_oct = imPadToMeetPatchSize(img_oct, patchSizeX_pix, patchSizeY_pix, 0);
     img_mask = imPadToMeetPatchSize(img_mask, patchSizeX_pix, patchSizeY_pix, 10); 
@@ -168,8 +183,8 @@ for iSlide=1:length(isUsable)
                 goodPixelsInFirstPatch = goodPixels;
             end
             if (...
-                ~(goodPixels/totalPixels<patchDataMinimumAbs) && ...
-                ~(goodPixels/goodPixelsInFirstPatch<patchDataMinimumRelative))
+                (goodPixels/totalPixels<patchDataMinimumAbs) && ...
+                (goodPixels/goodPixelsInFirstPatch<patchDataMinimumRelative))
                 warning('%s-%s have less than %.0f%% of usable pixels, or less than minimul relative good pixels, therefore is beeing skipped.', ...
                 subjectName,sectionName,patchDataMinimumAbs*100);
                 continue;
