@@ -4,6 +4,7 @@
 
 % Which libraries to take images from
 libraryNames = {'LC','LD','LE','LF'};
+libraryNames = {'LD'}; %Temp for testing (TBD TODO: Yonatan to delete)
 
 % Output patches defenitions.
 patchSizeX_pix = 1024; % Patch size (pixels)
@@ -49,16 +50,21 @@ end
 
 %% Write configuration to log
 varNames=who;
-json =[];
+json_allVaribels =[];
 for i=1:length(varNames)
-    json.(varNames{i}) = eval(varNames{i});
+    json_allVaribels.(varNames{i}) = eval(varNames{i});
 end
 
 disp('Configuration used for running this script:');
-json
+json_allVaribels
 
 %% Clear output folder
-outputFolder = awsModifyPathForCompetability([pwd '/' outputFolder '/']);
+if (~strncmp(outputFolder,'//',2) && ~outputFolder(2) == ':')
+    % Path is relative, make it absolute
+    outputFolder = awsModifyPathForCompetability([pwd '/' outputFolder '/']);
+else
+    outputFolder = awsModifyPathForCompetability([outputFolder '/']);
+end
 if exist(outputFolder,'dir')
     rmdir(outputFolder,'s');
 end
