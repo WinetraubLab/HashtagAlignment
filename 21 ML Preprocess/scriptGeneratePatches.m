@@ -4,7 +4,6 @@
 
 % Which libraries to take images from
 libraryNames = {'LC','LD','LE','LF'};
-libraryNames = {'LD'}; %Temp for testing (TBD TODO: Yonatan to delete)
 
 % Output patches defenitions.
 patchSizeX_pix = 1024; % Patch size (pixels)

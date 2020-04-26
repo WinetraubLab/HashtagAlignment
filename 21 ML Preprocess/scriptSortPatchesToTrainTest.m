@@ -11,7 +11,7 @@ patchFolder = 'Patches/';
 % filenames, these ones are used for testing
 % (ignores the 0/1 number at the begining for flipped images
 filesInTestingSet = {'LE-01','LE-03','LF'};
-filesInTestingSet(end+1) = {'LD-03'}; %Temp for testing (TBD TODO: Yonatan to delete)
+
 % Jenkins override of inputs
 if exist('filesInTestingSet_','var')
     filesInTestingSet = filesInTestingSet_;
