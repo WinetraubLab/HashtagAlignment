@@ -15,11 +15,18 @@ filesInTestingSet(end+1) = {'LD-03'}; %Temp for testing (TBD TODO: Yonatan to de
 % Jenkins override of inputs
 if exist('filesInTestingSet_','var')
     filesInTestingSet = filesInTestingSet_;
+end
+if exist('patchFolder_','var')
     patchFolder = patchFolder_;
 end
 
 %% Setup Directories
-patchFolder = awsModifyPathForCompetability([pwd '/' patchFolder '/']);
+if (~strncmp(patchFolder,'//',2) && ~patchFolder(2) == ':')
+    % Path is relative, make it absolute
+    patchFolder = awsModifyPathForCompetability([pwd '/' patchFolder '/']);
+else
+    patchFolder = awsModifyPathForCompetability([patchFolder '/']);
+end
 
 outputFolderTrain = [patchFolder 'train/'];
 outputFolderTest = [patchFolder 'test/'];
@@ -31,7 +38,7 @@ for i=1:length(combo)
     if exist(combo{i},'dir')
         rmdir(combo{i},'s');
     end
-    mkdir(combo{i});
+    awsMkDir(combo{i});
 end
 
 %% Set Which files go to which set
