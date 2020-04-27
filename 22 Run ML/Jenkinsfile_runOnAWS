@@ -102,7 +102,10 @@ pipeline {
 			bat("@echo scriptSetupML; >> runme.m")
 			
 			// Before starting matlab, make sure instructions.txt exists and contain some information
-			bat("@echo No Instructions > instructions.txt")
+			bat("@echo No Instructions > Testers/instructions.txt")
+			nextCommands = readFile('Testers/instructions.txt').trim()
+			echo(nextCommands)
+			echo("here")
 			
 			try
 			{
@@ -112,8 +115,6 @@ pipeline {
 			catch(Exception e)
 			{
 				currentBuild.result = 'FAILURE'
-				
-				instructions.txt
 				throw("Matlab Failed")
 			}
 			finally
