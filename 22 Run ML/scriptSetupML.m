@@ -1,4 +1,4 @@
-% This script will set up ML by opening an instance, copying etc.
+% This script will set up ML by opening an instance, copying etc. on aws
 % To launch ml instance in aws, we will be following instructions by:
 % https://aws.amazon.com/blogs/machine-learning/get-started-with-deep-learning-using-the-aws-deep-learning-ami/
 
@@ -25,7 +25,7 @@ end
 awsMkDir(folderToUpload);
 
 %% Build a dataset 
-patchFolder_ = [folderToUpload 'dataset\'];
+patchFolder_ = [folderToUpload 'dataset_oct_histology\'];
 fprintf('%s Build images dataset...\n',datestr(datetime));
 scriptGeneratePatches;
 scriptSortPatchesToTrainTest;
