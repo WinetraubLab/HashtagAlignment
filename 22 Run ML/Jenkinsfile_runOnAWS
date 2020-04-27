@@ -92,7 +92,7 @@ pipeline {
 			bat("@echo HashtagAlignmentGitHash = '" + hashtagAlignmentVer + "';  >> runme.m")
 			bat("@echo myOCTGitHash = '" + myOCTVer + "';  >> runme.m")
 			
-			echo("Checking out %ML_GIT_PATH%")
+			echo("Checking out $ML_GIT_PATH")
 			bat('"' + gitFolder + 'git.exe" clone --single-branch "%ML_GIT_PATH%" ./Testers/sc/') //Checkout myOCT
 			bat("@echo folderToUpload_AdditionalCodeAndData_ = 'sc\';  >> runme.m")
 			
@@ -118,17 +118,21 @@ pipeline {
 			}
 			finally
 			{
+				echo("Check point #1")
 				//EMAIL
 				//Get the email of the user who started the build
 				def userId = currentBuild.getRawBuild().getCauses()[0].getUserId()
 				hudson.model.User user = hudson.model.User.get(userId)
 				email = user.getProperty(hudson.tasks.Mailer.UserProperty).getAddress()
-				
+				echo("Check point #2")
 				// Get the result from matlab if exists
-				nextCommands = readFile('Testers\\instructions.txt').trim()
-				
+				nextCommands = readFile('Testers/instructions.txt').trim()
+				echo("Check point #3")
+				echo("Check point #3" + nextCommands)
 				try
 				{
+				echo("Check point #4")
+				echo("Check point #4" + nextCommands)
 				emailext ( //Using ext-email plugin
 					subject: "[OCTHist] ML Started ${currentBuild.result} #$BUILD_NUMBER",
 					from : "Yonatan",
