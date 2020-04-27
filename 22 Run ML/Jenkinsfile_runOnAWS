@@ -107,7 +107,7 @@ pipeline {
 			
 			try
 			{
-				RunMatlabRunme(params.AWS_PARALLEL_COMPUTING)
+				RunMatlabRunme
 				currentBuild.result = 'SUCCESS'
 			}
 			catch(Exception e)
