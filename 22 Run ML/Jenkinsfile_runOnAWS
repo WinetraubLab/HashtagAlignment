@@ -11,7 +11,7 @@ pipeline {
 	{
 		string(
 			name: "ML_GIT_PATH",
-			defaultValue:"https://github.com/phillipi/pix2pix.git",
+			defaultValue:"https://github.com/NVIDIA/pix2pixHD",
 			description:"Git path to the machine learning model to use",
 			trim: true)
 		string(
