@@ -107,7 +107,7 @@ pipeline {
 			
 			try
 			{
-				RunMatlabRunme()
+				RunMatlabRunme(false)
 				currentBuild.result = 'SUCCESS'
 			}
 			catch(Exception e)
