@@ -103,9 +103,10 @@ pipeline {
 			
 			// Before starting matlab, make sure instructions.txt exists and contain some information
 			bat("@echo No Instructions > Testers/instructions.txt")
-			nextCommands = readFile('Testers/instructions.txt').trim()
-			echo(nextCommands)
-			echo("here")
+			nextCommands = readFile('Testers/instructions.txt').trim() //DELETE HERE
+			echo(nextCommands) //DELETE HERE
+			echo("here") //DELETE HERE
+			echo(pwd())
 			
 			try
 			{
@@ -119,17 +120,18 @@ pipeline {
 			}
 			finally
 			{
-				echo("Check point #1")
+				echo("Check point #1") //DELETE HERE
+				echo(pwd())
 				//EMAIL
 				//Get the email of the user who started the build
 				def userId = currentBuild.getRawBuild().getCauses()[0].getUserId()
 				hudson.model.User user = hudson.model.User.get(userId)
 				email = user.getProperty(hudson.tasks.Mailer.UserProperty).getAddress()
-				echo("Check point #2")
+				echo("Check point #2") //DELETE HERE
 				// Get the result from matlab if exists
 				nextCommands = readFile('Testers/instructions.txt').trim()
-				echo("Check point #3")
-				echo("Check point #3" + nextCommands)
+				echo("Check point #3") //DELETE HERE
+				echo("Check point #3" + nextCommands) //DELETE HERE
 				try
 				{
 				echo("Check point #4")
