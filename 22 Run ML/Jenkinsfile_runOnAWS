@@ -93,8 +93,7 @@ pipeline {
 			bat("@echo myOCTGitHash = '" + myOCTVer + "');  >> runme.m")
 			
 			echo("Checking out %ML_GIT_PATH%")
-			bat('"' + gitFolder + 'git.exe" clone --single-branch "%ML_GIT_PATH%" ./scTmp/') //Checkout myOCT
-			bat('@xcopy /E scTmp sc /Y /Q')
+			bat('"' + gitFolder + 'git.exe" clone --single-branch "%ML_GIT_PATH%" ./sc/') //Checkout myOCT
 			String currentDir = new File(".").getAbsolutePath()
 			bat("@echo folderToUpload_AdditionalCodeAndData_ = '" + currentDir + "/sc/');  >> runme.m")
 			
