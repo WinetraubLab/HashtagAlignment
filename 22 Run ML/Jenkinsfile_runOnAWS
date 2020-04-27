@@ -89,13 +89,13 @@ pipeline {
 			bat("@echo disp('To see repository go to');  >> runme.m")
 			bat("@echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
 			bat("@echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
-			bat("@echo HashtagAlignmentGitHash = '" + hashtagAlignmentVer + "');  >> runme.m")
-			bat("@echo myOCTGitHash = '" + myOCTVer + "');  >> runme.m")
+			bat("@echo HashtagAlignmentGitHash = '" + hashtagAlignmentVer + "';  >> runme.m")
+			bat("@echo myOCTGitHash = '" + myOCTVer + "';  >> runme.m")
 			
 			echo("Checking out %ML_GIT_PATH%")
 			bat('"' + gitFolder + 'git.exe" clone --single-branch "%ML_GIT_PATH%" ./sc/') //Checkout myOCT
 			String currentDir = new File(".").getAbsolutePath()
-			bat("@echo folderToUpload_AdditionalCodeAndData_ = '" + currentDir + "/sc/');  >> runme.m")
+			bat("@echo folderToUpload_AdditionalCodeAndData_ = '" + currentDir + "/sc/';  >> runme.m")
 			
 		}}}
 		stage("Build Runme File and Run Matlab")
