@@ -54,6 +54,10 @@ if exist('isConcatinateOCTHistologyImages_','var')
     isConcatinateOCTHistologyImages = isConcatinateOCTHistologyImages_;
 end
 
+if exist('octOutputType_','var')
+	octOutputType = octOutputType_;
+end
+
 %% Clear output folder
 if (~strncmp(outputFolder,'//',2) && ~outputFolder(2) == ':')
     % Path is relative, make it absolute
