@@ -32,6 +32,10 @@ includeflip = true; % Mirror flip patch as well.
 octBScansToUse = -2:2; % Can be 0, -2:2
 octOutputType = 2; %- 1 means all B scans will be placed in the image side by side.
                    %- 2 means B scans will be averaged to generate one image.
+                   
+% Should OCT & Histology be concatinated together in the same image?
+% If not, will be generated as seperate images _A and _B
+isConcatinateOCTHistologyImages = false;
 
 %% Jenkins override of inputs
 if exist('patchFolder_','var')
@@ -46,14 +50,20 @@ end
 if exist('patchSizeY_pix_','var')
     patchSizeY_pix = patchSizeY_pix_;
 end
+if exist('isConcatinateOCTHistologyImages_','var')
+    isConcatinateOCTHistologyImages = isConcatinateOCTHistologyImages_;
+end
 
 %% Write configuration to log
 varNames=who;
 json_allVaribels =[];
+subjectNamesUsed = st.subjectNames{isUsable};
+sectionNames = st.subjectNames{isUsable};
 for i=1:length(varNames)
-    json_allVaribels.(varNames{i}) = eval(varNames{i});
+    if ~strcmp(varNames{i}),'st')
+        json_allVaribels.(varNames{i}) = eval(varNames{i});
+    end
 end
-
 disp('Configuration used for running this script:');
 json_allVaribels
 
@@ -68,6 +78,8 @@ if exist(outputFolder,'dir')
     rmdir(outputFolder,'s');
 end
 mkdir(outputFolder);
+
+awsWriteJSON(json_allVaribels,[outputFolder 'ImageSetDefenition.json']);
 
 %% Load slides information
 st = loadStatusReportByLibrary(libraryNames);
@@ -85,7 +97,7 @@ for iSlide=1:length(isUsable)
     subjectName = st.subjectNames{isUsable(iSlide)};
     sectionName = st.sectionNames{isUsable(iSlide)};
     sectionPath = st.sectionPahts{isUsable(iSlide)};
-    outputFilePathTemplate = sprintf('%s%%d_%s-%s_Patch%%02d.jpg' ,...
+    outputFilePathTemplate = sprintf('%s%%d_%s-%s_Patch%%02d%%s.jpg' ,...
         outputFolder,subjectName, sectionName);
     outputFilePathTemplate = strrep(outputFilePathTemplate,'\','\\');
     
@@ -205,13 +217,23 @@ for iSlide=1:length(isUsable)
             crop_oct = repmat(crop_oct,[1 1 3]); % Convert to rgb
 
             % combine images & write
-            outimg = [crop_oct, crop_he];
-            imwritefun(outimg, sprintf(outputFilePathTemplate,0,cropcount));
+            if isConcatinateOCTHistologyImages
+                outimg = [crop_oct, crop_he];
+                imwritefun(outimg, sprintf(outputFilePathTemplate,0,cropcount,''));
+            else
+                imwritefun(crop_oct, sprintf(outputFilePathTemplate,0,cropcount,'_A'));
+                imwritefun(crop_he, sprintf(outputFilePathTemplate,0,cropcount,'_B'));
+            end
 
             % write flippled image
-            if includeflip 
-               outimg = [fliplr(crop_oct), fliplr(crop_he)];
-               imwritefun(outimg, sprintf(outputFilePathTemplate,1,cropcount));
+            if includeflip  
+               if isConcatinateOCTHistologyImages
+                    outimg = [fliplr(crop_oct), fliplr(crop_he)];
+                    imwritefun(outimg, sprintf(outputFilePathTemplate,1,cropcount,''));
+                else
+                    imwritefun(fliplr(crop_oct), sprintf(outputFilePathTemplate,1,cropcount,'_A'));
+                    imwritefun(fliplr(crop_he), sprintf(outputFilePathTemplate,1,cropcount,'_B'));
+                end
             end
 
             cropcountTotal = cropcountTotal + 1;

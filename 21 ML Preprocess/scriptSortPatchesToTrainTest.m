@@ -20,27 +20,6 @@ if exist('patchFolder_','var')
     patchFolder = patchFolder_;
 end
 
-%% Setup Directories
-if (~strncmp(patchFolder,'//',2) && ~patchFolder(2) == ':')
-    % Path is relative, make it absolute
-    patchFolder = awsModifyPathForCompetability([pwd '/' patchFolder '/']);
-else
-    patchFolder = awsModifyPathForCompetability([patchFolder '/']);
-end
-
-outputFolderTrain = [patchFolder 'train/'];
-outputFolderTest = [patchFolder 'test/'];
-outputFolderValidate = [patchFolder 'val/'];
-
-% Clear output folders
-combo = {outputFolderTrain,outputFolderTest,outputFolderValidate};
-for i=1:length(combo)
-    if exist(combo{i},'dir')
-        rmdir(combo{i},'s');
-    end
-    awsMkDir(combo{i});
-end
-
 %% Set Which files go to which set
 % Get file names, remove directories
 d = dir(patchFolder);
@@ -48,6 +27,8 @@ isdir = [d.isdir];
 fileNames = {d.name};
 fileNames(isdir) = [];
 filePaths = cellfun(@(x)([patchFolder x]),fileNames(:),'UniformOutput',false);
+fileNames(~cellfun(@(x)(contains(x,'.jpg')),fileNames)) = []; % Remove non images
+fileNames = fileNames(:);
 
 isTraining = zeros(size(fileNames),'logical');
 for i=1:length(isTraining)
@@ -57,12 +38,73 @@ for i=1:length(isTraining)
     end
 end
 
-%% Move files around
-for i=1:length(filePaths)
-    if (isTraining(i))
-        movefile(filePaths{i},outputFolderTrain)
+% Figure out if both images are concatinated in the same file?
+isAType = cellfun(@(x)(contains(x,'_A.')),fileNames);
+isBType = cellfun(@(x)(contains(x,'_B.')),fileNames);
+if sum(isAType) == sum(isBType)
+    if (sum(isAType) > 0)
+        isConcatinateOCTHistologyImages = false;
     else
-        copyfile(filePaths{i},outputFolderTest)
-        movefile(filePaths{i},outputFolderValidate)
+        isConcatinateOCTHistologyImages = true;
+    end
+else
+    error('This should never happen');
+end
+
+%% Setup Directories
+if (~strncmp(patchFolder,'//',2) && ~patchFolder(2) == ':')
+    % Path is relative, make it absolute
+    patchFolder = awsModifyPathForCompetability([pwd '/' patchFolder '/']);
+else
+    patchFolder = awsModifyPathForCompetability([patchFolder '/']);
+end
+
+if isConcatinateOCTHistologyImages
+    outputFolderTrain = [patchFolder 'train/'];
+    outputFolderTest = [patchFolder 'test/'];
+    combo = {outputFolderTrain,outputFolderTest,[patchFolder 'val/']};
+else
+    outputFolderTrain = [patchFolder 'train'];
+    outputFolderTest = [patchFolder 'test'];
+    combo = {[outputFolderTrain '_A'],[outputFolderTrain '_B'],...
+        [outputFolderTest '_A'],[outputFolderTest '_B']};
+end
+
+% Clear output folders
+for i=1:length(combo)
+    if exist(combo{i},'dir')
+        rmdir(combo{i},'s');
+    end
+    awsMkDir(combo{i});
+end
+
+%% Move files around - concatinated mode
+if isConcatinateOCTHistologyImages
+    for i=1:length(filePaths)
+        if (isTraining(i))
+            movefile(filePaths{i},outputFolderTrain)
+        else
+            %copyfile(filePaths{i},outputFolderValidate)
+            movefile(filePaths{i},outputFolderTest)
+        end
+    end
+else
+    for i=1:length(filePaths)
+        if (isAType(i))
+            pref = '_A';
+        else
+            pref = '_B';
+        end
+        
+        [~,fileName,fileType] = fileparts(filePaths{i});
+        if (isTraining(i))
+            toFilePath = awsModifyPathForCompetability(...
+                [outputFolderTrain pref '/' strrep(fileName,pref,'') fileType]);
+            movefile(filePaths{i},toFilePath);
+        else
+            toFilePath = awsModifyPathForCompetability(...
+                [outputFolderTest pref '/' strrep(fileName,pref,'') fileType]);
+            movefile(filePaths{i},toFilePath);
+        end
     end
 end
