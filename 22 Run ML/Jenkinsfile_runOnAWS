@@ -135,7 +135,7 @@ pipeline {
 					"Hi,<br>" +
 					"Your AWS has started, ML model is active.<br> Instructions, Run matlab commands:<br><br>"+
 					nextCommands +
-					"Data may be viewed at: \\171.65.17.174\\MATLAB_Share\\Jenkins\\Start ML on AWS OCTHist\\workspace\\Testers\\ml\\dataset_oct_histology\\"
+					"<br><br>Data may be viewed at:<br>\\171.65.17.174\\MATLAB_Share\\Jenkins\\Start ML on AWS OCTHist\\workspace\\Testers\\ml\\dataset_oct_histology\\"
 					,
 					attachLog: true,
 					to: "$WHO_TO_EMAIL_WHEN_DONE," + email )
