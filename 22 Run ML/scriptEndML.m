@@ -39,17 +39,16 @@ waitfor(msgbox({...
 ssh([sshCmd '"jupyter notebook"'],true);
 
 %% Once done, exit
-answer = inputdlg({'Path to folder to save:', 'Experiment Name:'},'Click Ok to Terminate AWS Instance',[1 100],{'~/ml/',''});
+
+answer = inputdlg({'Path to folder to save:', 'Experiment Name:'},'Click Ok to Save, Cancel to Skip Save',[1 100],{'~/ml/',''});
 
 if ~isempty(answer)
-    
     % Generate a directory for output.
     modelDirectory = awsModifyPathForCompetability(sprintf('%s/%s %s/', ...
         s3SubjectPath('','_MLModels'), ...
         datestr(now,'yyyy-mm-dd'),answer{2}),true);
     awsMkDir(modelDirectory);
     modelDirectoryLinux = strrep(modelDirectory,' ','\ ');
-    
     % Copy what the user wanted
     userFolder = awsModifyPathForCompetability([answer{1} '/']);
     userFolder = strrep(userFolder,'\','/');
@@ -59,14 +58,18 @@ if ~isempty(answer)
     dest = awsModifyPathForCompetability(modelDirectory,true);
     awsEC2RunCommandOnInstance(ec2Instance,...
         ['aws s3 sync ' userFolder ' ' modelDirectoryLinux folderName '/']);
-    
+
     % Copy configuration
     awsEC2RunCommandOnInstance(ec2Instance,...
         {...
-		['aws s3 cp ~/ml/RunConfig.json ' modelDirectoryLinux], ...
-		['aws s3 cp ~/ml/runme.ipynb ' modelDirectoryLinux], ...
-		});
-    
+        ['aws s3 cp ~/ml/RunConfig.json ' modelDirectoryLinux], ...
+        ['aws s3 cp ~/ml/runme.ipynb ' modelDirectoryLinux], ...
+        });
+end
+
+% Should we terminate instance
+answer = questdlg('Should I Terminate EC2 Machine?','?','Yes','No','No');
+if strcmp(answer,'Yes')
     % Terminate instance
     awsEC2TerminateInstance(ec2Instance);
 end
