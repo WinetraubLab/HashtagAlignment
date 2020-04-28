@@ -129,7 +129,9 @@ pipeline {
 				email = user.getProperty(hudson.tasks.Mailer.UserProperty).getAddress()
 				echo("Check point #2") //DELETE HERE
 				// Get the result from matlab if exists
-				nextCommands = readFile('Testers/instructions.txt').trim()
+				bat("copy Testers\\instructions.txt instructions.txt")
+				bat("type instructions.txt")
+				nextCommands = readFile('instructions.txt').trim()
 				echo("Check point #3") //DELETE HERE
 				echo("Check point #3" + nextCommands) //DELETE HERE
 				try
