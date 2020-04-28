@@ -54,19 +54,6 @@ if exist('isConcatinateOCTHistologyImages_','var')
     isConcatinateOCTHistologyImages = isConcatinateOCTHistologyImages_;
 end
 
-%% Write configuration to log
-varNames=who;
-json_allVaribels =[];
-subjectNamesUsed = st.subjectNames{isUsable};
-sectionNames = st.subjectNames{isUsable};
-for i=1:length(varNames)
-    if ~strcmp(varNames{i}),'st')
-        json_allVaribels.(varNames{i}) = eval(varNames{i});
-    end
-end
-disp('Configuration used for running this script:');
-json_allVaribels
-
 %% Clear output folder
 if (~strncmp(outputFolder,'//',2) && ~outputFolder(2) == ':')
     % Path is relative, make it absolute
@@ -79,14 +66,28 @@ if exist(outputFolder,'dir')
 end
 mkdir(outputFolder);
 
-awsWriteJSON(json_allVaribels,[outputFolder 'ImageSetDefenition.json']);
-
 %% Load slides information
 st = loadStatusReportByLibrary(libraryNames);
-
-%% Do the work
 isUsable = find(st.isUsableInML);
 %isUsable = 1:length(st.isUsableInML); % For debugging purposes get all slides
+
+%% Write configuration to log
+subjectNamesUsed = st.subjectNames{isUsable};
+sectionNames = st.subjectNames{isUsable};
+varNames=who;
+json_allVaribels =[];
+for i=1:length(varNames)
+    json_allVaribels.(varNames{i}) = eval(varNames{i});
+end
+disp('Configuration used for running this script:');
+json_allVaribels = rmfield(json_allVaribels,'st');
+json_allVaribels = rmfield(json_allVaribels,'isUsable');
+%json_allVaribels = rmfield(json_allVaribels,'varNames');
+json_allVaribels
+
+awsWriteJSON(json_allVaribels,[outputFolder 'ImageSetDefenition.json']);
+
+%% Do the work
 fprintf('Generating patches from %d valid sections. Wait for 10 stars ... [ ',length(isUsable)); tic;
 imwritefun = @(im,path)(imwrite(im,path,'Quality',100));
 cropcountTotal = 1;
