@@ -103,10 +103,6 @@ pipeline {
 			
 			// Before starting matlab, make sure instructions.txt exists and contain some information
 			bat("@echo No Instructions > Testers/instructions.txt")
-			nextCommands = readFile('Testers/instructions.txt').trim() //DELETE HERE
-			echo(nextCommands) //DELETE HERE
-			echo("here") //DELETE HERE
-			echo(pwd())
 			
 			try
 			{
@@ -120,14 +116,8 @@ pipeline {
 			}
 			finally
 			{
-				echo("Check point #1") //DELETE HERE
-				bat("dir")
-				bat("dir Testers");
-				bat("copy Testers\\instructions.txt instructions.txt")
-				bat("type instructions.txt")
-				nextCommands = readFile('instructions.txt').trim()
-				echo("Check point #3") //DELETE HERE
-				echo("Check point #3" + nextCommands) //DELETE HERE
+				// Read instructuins
+				nextCommands = readFile('Testers/instructions.txt').trim() //DELETE HERE
 				
 				//EMAIL
 				//Get the email of the user who started the build
@@ -143,8 +133,9 @@ pipeline {
 					from : "Yonatan",
 					body: 
 					"Hi,<br>" +
-					"Your AWS has started, ML model is active.<br> Instructions: Run matlab commands:<br><br>"+
-					nextCommands 
+					"Your AWS has started, ML model is active.<br> Instructions, Run matlab commands:<br><br>"+
+					nextCommands +
+					"Data may be viewed at: \\171.65.17.174\\MATLAB_Share\\Jenkins\\Start ML on AWS OCTHist\\workspace\\Testers\\ml\\dataset_oct_histology\\"
 					,
 					attachLog: true,
 					to: "$WHO_TO_EMAIL_WHEN_DONE," + email )
