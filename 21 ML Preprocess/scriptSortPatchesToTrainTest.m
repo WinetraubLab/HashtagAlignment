@@ -26,9 +26,9 @@ d = dir(patchFolder);
 isdir = [d.isdir];
 fileNames = {d.name};
 fileNames(isdir) = [];
-filePaths = cellfun(@(x)([patchFolder x]),fileNames(:),'UniformOutput',false);
 fileNames(~cellfun(@(x)(contains(x,'.jpg')),fileNames)) = []; % Remove non images
 fileNames = fileNames(:);
+filePaths = cellfun(@(x)([patchFolder x]),fileNames(:),'UniformOutput',false);
 
 isTraining = zeros(size(fileNames),'logical');
 for i=1:length(isTraining)

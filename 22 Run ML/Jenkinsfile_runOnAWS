@@ -121,24 +121,23 @@ pipeline {
 			finally
 			{
 				echo("Check point #1") //DELETE HERE
-				echo(pwd())
-				//EMAIL
-				//Get the email of the user who started the build
-				def userId = currentBuild.getRawBuild().getCauses()[0].getUserId()
-				hudson.model.User user = hudson.model.User.get(userId)
-				email = user.getProperty(hudson.tasks.Mailer.UserProperty).getAddress()
-				echo("Check point #2a") //DELETE HERE
-				// Get the result from matlab if exists
+				bat("dir")
 				bat("dir Testers");
 				bat("copy Testers\\instructions.txt instructions.txt")
 				bat("type instructions.txt")
 				nextCommands = readFile('instructions.txt').trim()
 				echo("Check point #3") //DELETE HERE
 				echo("Check point #3" + nextCommands) //DELETE HERE
+				
+				//EMAIL
+				//Get the email of the user who started the build
+				def userId = currentBuild.getRawBuild().getCauses()[0].getUserId()
+				hudson.model.User user = hudson.model.User.get(userId)
+				email = user.getProperty(hudson.tasks.Mailer.UserProperty).getAddress()
+				
+				// Get the result from matlab if exists
 				try
 				{
-				echo("Check point #4")
-				echo("Check point #4" + nextCommands)
 				emailext ( //Using ext-email plugin
 					subject: "[OCTHist] ML Started ${currentBuild.result} #$BUILD_NUMBER",
 					from : "Yonatan",
