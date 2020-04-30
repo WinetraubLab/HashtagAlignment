@@ -141,7 +141,7 @@ subplot(2,3,3);
 histogram(age,10,'FaceAlpha',0.6);
 title([titlePrefix ' Age']);
 ylabel(['# of ' prefix]);
-xlabel('years');
+xlabel('Years');
 grid on;
 
 subplot(2,3,5);
