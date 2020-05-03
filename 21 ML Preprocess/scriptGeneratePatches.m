@@ -37,26 +37,11 @@ octOutputType = 2; %- 1 means all B scans will be placed in the image side by si
 % If not, will be generated as seperate images _A and _B
 isConcatinateOCTHistologyImages = false;
 
-%% Jenkins override of inputs
-if exist('patchFolder_','var')
-    outputFolder = patchFolder_;
-end
-if exist('patchPixelSize_','var')
-    patchPixelSize = patchPixelSize_;
-end
-if exist('patchSizeX_pix_','var')
-    patchSizeX_pix = patchSizeX_pix_;
-end
-if exist('patchSizeY_pix_','var')
-    patchSizeY_pix = patchSizeY_pix_;
-end
-if exist('isConcatinateOCTHistologyImages_','var')
-    isConcatinateOCTHistologyImages = isConcatinateOCTHistologyImages_;
-end
-
-if exist('octOutputType_','var')
-	octOutputType = octOutputType_;
-end
+%% Jenkins 
+%This function updates all input varible names that have name_ like this:
+%name = name_ 
+%(jenkins override of input)
+setVariblesFromJenkins(); 
 
 %% Clear output folder
 if (~strncmp(outputFolder,'//',2) && ~outputFolder(2) == ':')

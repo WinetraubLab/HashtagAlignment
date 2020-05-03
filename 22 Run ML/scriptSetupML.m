@@ -12,9 +12,10 @@ folderToUpload_AdditionalCodeAndData = ''; % When set, will copy data and code f
 currentFileFolder = fileparts(mfilename('fullpath'));
 
 %% Get data from Jenkins
-if exist('folderToUpload_AdditionalCodeAndData_','var')
-    folderToUpload_AdditionalCodeAndData = folderToUpload_AdditionalCodeAndData_;
-end
+
+%This function updates all input varible names that have name_ like this:
+%name = name_
+setVariblesFromJenkins(); 
 
 folderToUpload = awsModifyPathForCompetability([folderToUpload '\']);
 

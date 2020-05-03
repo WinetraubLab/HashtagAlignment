@@ -12,13 +12,10 @@ patchFolder = 'Patches/';
 % (ignores the 0/1 number at the begining for flipped images
 filesInTestingSet = {'LE-01','LE-03','LF'};
 
-% Jenkins override of inputs
-if exist('filesInTestingSet_','var')
-    filesInTestingSet = filesInTestingSet_;
-end
-if exist('patchFolder_','var')
-    patchFolder = patchFolder_;
-end
+%% Jenkins 
+%This function updates all input varible names that have name_ like this:
+%name = name_ (jenkins override of input)
+setVariblesFromJenkins(); 
 
 %% Set Which files go to which set
 % Get file names, remove directories
