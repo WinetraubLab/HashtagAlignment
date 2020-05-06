@@ -88,6 +88,13 @@ pipeline {
 			name: 'IS_DEBUG_MODE',
 			defaultValue:false,
 			description:"Set to true if you would like to do a fast debug scan")
+		string(
+			name: "CODE_TO_RUN_BEFORE_RUNNING_MAIN_SCRIPT",
+			defaultValue:"",
+			description:"Will run the code above before running the main matlab script. Use this string to set parameters.\n" + 
+				"For example, to run just a few z stacs, use this code:\n" + 
+				"zToScan_ = (([-190,0,500])-5)*1e-3;",
+			trim: true)
     }
 	stages{
 		stage("Checkout")
@@ -187,6 +194,7 @@ pipeline {
 			bat("@echo zGelTop_mm_=%Z_POSITION_TOP_OF_GEL_UM%/1000; >> runme.m") //Matlab works in mm, Z_POSITION_TOP_OF_GEL_UM is in um here
 			bat("@echo outputFolder_='" + VOLUME_OUTPUT_FOLDER() + "'; >> runme.m")
 			bat("@echo isDrawTickmarks_=%IS_PHOTOBLEACH_TICKMARKS%; >> runme.m")
+			bat("@echo %CODE_TO_RUN_BEFORE_RUNNING_MAIN_SCRIPT% >> runme.m")
 			bat("@echo run ScanAndPattern_Thorlabs.m  >> runme.m")
 				
 			//Make a folder for the log

@@ -44,7 +44,7 @@ base = 100/1000; %base seperation [mm]
 %LA,LB
 %config.photobleach.vLinePositions = base*[-1 0 3]; %[mm] 
 %config.photobleach.hLinePositions = base*[-1 0 2]; %[mm] 
-%LC, LE, LF
+%LC, LE, LF, LG
 config.photobleach.vLinePositions = base*[-4  0 1 3]; %[mm] 
 config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm]
 %LD
@@ -90,6 +90,13 @@ if (isRunningOnJenkins())
 		config.photobleach.exposure = 5; %sec per mm
 		config.zToScan = [config.zToScan(1:3) 0 config.zToScan(end)]; %Reduce number of Z scans
 	end
+	
+	if exist('zToScan_','var')
+		% User defined zToScan.
+		% If you would like fast zTOScan_ but one that coveres all the essentials use:
+		% zToScan_ = (([-190,0,500])-5)*1e-3;
+		config.zToScan = zToScan_;
+	end	
 end
 
 if exist('gitBranch_','var')
