@@ -93,7 +93,7 @@ pipeline {
 			defaultValue:"",
 			description:"Will run the code above before running the main matlab script. Use this string to set parameters. Keep empty if no additional parameters are set.\n" + 
 				"For example, to run just a few z stacs, use this code:\n" + 
-				"zToScan_ = (([-190,5,500])-5)*1e-3;",
+				"zToScan_ = (([-190,5,500])-5)*1e-3; overview_rangeAllX_=5; overview_rangeAllY_=4;",
 			trim: true)
     }
 	stages{
