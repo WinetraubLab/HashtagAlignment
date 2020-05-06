@@ -94,7 +94,7 @@ if (isRunningOnJenkins())
 	if exist('zToScan_','var')
 		% User defined zToScan.
 		% If you would like fast zTOScan_ but one that coveres all the essentials use:
-		% zToScan_ = (([-190,0,500])-5)*1e-3;
+		% zToScan_ = (([-190,5,500])-5)*1e-3;
 		config.zToScan = zToScan_;
 	end	
 end
