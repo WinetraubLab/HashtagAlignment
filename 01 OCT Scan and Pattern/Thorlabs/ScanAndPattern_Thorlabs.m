@@ -91,20 +91,24 @@ if (isRunningOnJenkins())
 		config.zToScan = [config.zToScan(1:3) 0 config.zToScan(end)]; %Reduce number of Z scans
 	end
 	
+	% Setup for faster execution
 	if exist('zToScan_','var')
 		% User defined zToScan.
 		% If you would like fast zTOScan_ but one that coveres all the essentials use:
 		% zToScan_ = (([-190,5,500])-5)*1e-3;
 		config.zToScan = zToScan_;
 	end	
-	
 	if exist('overview_rangeAllX_','var')
 		% For faster execution: overview_rangeAllX_ = 5
 		config.overview.rangeAllX = overview_rangeAllX_;
 	end
 	if exist('overview_rangeAllY_','var')
-	% For faster execution: overview_rangeAllY_ = 4
-		config.overview.rangeAllX = overview_rangeAllY_;
+		% For faster execution: overview_rangeAllY_ = 4
+		config.overview.rangeAllY = overview_rangeAllY_;
+	end
+	if exist('overview_nZToScan_','var')
+		% For faster execution: overview_nZToScan_ = 2
+		config.overview.nZToScan = overview_nZToScan_;
 	end
 end
 
