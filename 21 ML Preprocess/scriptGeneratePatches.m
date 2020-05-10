@@ -14,7 +14,7 @@ patchSizeY_pix = 512;
 %           10x - 1.0 micron
 %            4x - 2.5 micron
 % Source: https://www.amscope.com/camera-resolution
-patchPixelSize = 1; % microns, original image size: 1um.
+patchImagePixelSize_um = 1; % microns, original image size: 1um.
 
 % Where to write patches to:
 outputFolder = 'Patches/';
@@ -131,7 +131,7 @@ for iSlide=1:length(isUsable)
     
     % Rescale image - compute scale factor
     img_pixelSize_um = diff(metadata.x.values(1:2));
-    scaleFactor = patchPixelSize/img_pixelSize_um;
+    scaleFactor = patchImagePixelSize_um/img_pixelSize_um;
     if round(scaleFactor) ~= scaleFactor
         error('Scaling factor should be an integer, adjust patchPixelSize');
     end
@@ -175,11 +175,20 @@ for iSlide=1:length(isUsable)
         error('Should never happen');
         %this image is too small to generate patches.
     end 
+    
+    % In cases that image is only slightly bigger than the size that fits
+    % in a patch, try to set the start point such that the least amount of
+    % data is wasted, i.e. start in the middle
+    r = (w-patchSizeX_pix)/patchOverlapX_pix;
+    r = r-floor(r);
+    wastedPixels = r*patchOverlapX_pix;
+    x_Start = round(wastedPixels/2);
+    
 
     % loop through patches
     cropcount = 1;
     for y=1:patchOverlapY_pix:(h-patchSizeY_pix)
-        for x=1:patchOverlapX_pix:(w-patchSizeX_pix)
+        for x=x_Start:patchOverlapX_pix:(w-patchSizeX_pix)
             roiy = y:y+(patchSizeY_pix-1);
             roix = x:x+(patchSizeX_pix-1);
 

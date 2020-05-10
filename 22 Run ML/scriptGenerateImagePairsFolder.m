@@ -12,7 +12,7 @@ outputFolder = 'Output\';
 mainFolder = awsModifyPathForCompetability([mainFolder '/']);
 runConfigJson = awsReadJSON([mainFolder 'RunConfig.json']);
 
-imagesPixelSize_um = runConfigJson.patchPixelSize;
+imagesPixelSize_um = runConfigJson.patchPixelSize; %replace with:patchImagePixelSize_um
 
 if (runConfigJson.isConcatinateOCTHistologyImages)
     error('Doesn''t know how to work with concatinated images, just images that are split apart');
