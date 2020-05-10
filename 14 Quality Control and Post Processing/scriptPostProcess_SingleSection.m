@@ -37,6 +37,11 @@ d_um = abs(ys_um - ...
 [~,yI] = min(d_um);
 
 yIs = yI + (-yPlanesAroundCenter:yPlanesAroundCenter);
+if (min(yIs) < 1)
+    error('Section requires a slice that is before the beginning of reslice');
+elseif (max(yIs) > length(length(jsons.sectionIterationConfig.data_um.y.values)))
+    error('Section requires a slice that is after the last slide of reslice');
+end
 
 % Load OCT
 octCenterSection = octFromTifCash(jsons.sectionIterationConfig.path,mean(yIs));
