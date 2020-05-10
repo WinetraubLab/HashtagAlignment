@@ -184,7 +184,6 @@ for iSlide=1:length(isUsable)
     wastedPixels = r*patchOverlapX_pix;
     x_Start = round(wastedPixels/2);
     
-
     % loop through patches
     cropcount = 1;
     for y=1:patchOverlapY_pix:(h-patchSizeY_pix)
