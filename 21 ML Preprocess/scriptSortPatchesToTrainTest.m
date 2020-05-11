@@ -5,7 +5,7 @@
 %% Inputs
 
 % Where to write patches to:
-patchFolder = 'Patches/';
+outputFolder_ = 'Patches/';
 
 % All patches are used for training, except patches with these in their
 % filenames, these ones are used for testing
@@ -19,13 +19,13 @@ setVariblesFromJenkins();
 
 %% Set Which files go to which set
 % Get file names, remove directories
-d = dir(patchFolder);
+d = dir(outputFolder_);
 isdir = [d.isdir];
 fileNames = {d.name};
 fileNames(isdir) = [];
 fileNames(~cellfun(@(x)(contains(x,'.jpg')),fileNames)) = []; % Remove non images
 fileNames = fileNames(:);
-filePaths = cellfun(@(x)([patchFolder x]),fileNames(:),'UniformOutput',false);
+filePaths = cellfun(@(x)([outputFolder_ x]),fileNames(:),'UniformOutput',false);
 
 isTraining = zeros(size(fileNames),'logical');
 for i=1:length(isTraining)
@@ -49,20 +49,20 @@ else
 end
 
 %% Setup Directories
-if (~strncmp(patchFolder,'//',2) && ~patchFolder(2) == ':')
+if (~strncmp(outputFolder_,'//',2) && ~outputFolder_(2) == ':')
     % Path is relative, make it absolute
-    patchFolder = awsModifyPathForCompetability([pwd '/' patchFolder '/']);
+    outputFolder_ = awsModifyPathForCompetability([pwd '/' outputFolder_ '/']);
 else
-    patchFolder = awsModifyPathForCompetability([patchFolder '/']);
+    outputFolder_ = awsModifyPathForCompetability([outputFolder_ '/']);
 end
 
 if isConcatinateOCTHistologyImages
-    outputFolderTrain = [patchFolder 'train/'];
-    outputFolderTest = [patchFolder 'test/'];
-    combo = {outputFolderTrain,outputFolderTest,[patchFolder 'val/']};
+    outputFolderTrain = [outputFolder_ 'train/'];
+    outputFolderTest = [outputFolder_ 'test/'];
+    combo = {outputFolderTrain,outputFolderTest,[outputFolder_ 'val/']};
 else
-    outputFolderTrain = [patchFolder 'train'];
-    outputFolderTest = [patchFolder 'test'];
+    outputFolderTrain = [outputFolder_ 'train'];
+    outputFolderTest = [outputFolder_ 'test'];
     combo = {[outputFolderTrain '_A'],[outputFolderTrain '_B'],...
         [outputFolderTest '_A'],[outputFolderTest '_B']};
 end

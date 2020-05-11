@@ -20,13 +20,10 @@ setVariblesFromJenkins();
 folderToUpload = awsModifyPathForCompetability([folderToUpload '\']);
 
 %% Build folder structure 
-if exist(folderToUpload,'dir')
-    awsRmDir(folderToUpload);
-end
-awsMkDir(folderToUpload);
+awsMkDir(folderToUpload,true); %Make dir and clear
 
 %% Build a dataset 
-patchFolder_ = [folderToUpload 'dataset_oct_histology\'];
+outputFolder_ = [folderToUpload 'dataset_oct_histology\'];
 fprintf('%s Build images dataset...\n',datestr(datetime));
 scriptGeneratePatches;
 scriptSortPatchesToTrainTest;
