@@ -5,7 +5,7 @@
 %% Inputs
 
 % Where to write patches to:
-outputFolder_ = 'Patches/';
+outputFolder = 'Patches/';
 
 % All patches are used for training, except patches with these in their
 % filenames, these ones are used for testing
@@ -19,13 +19,13 @@ setVariblesFromJenkins();
 
 %% Set Which files go to which set
 % Get file names, remove directories
-d = dir(outputFolder_);
+d = dir(outputFolder);
 isdir = [d.isdir];
 fileNames = {d.name};
 fileNames(isdir) = [];
 fileNames(~cellfun(@(x)(contains(x,'.jpg')),fileNames)) = []; % Remove non images
 fileNames = fileNames(:);
-filePaths = cellfun(@(x)([outputFolder_ x]),fileNames(:),'UniformOutput',false);
+filePaths = cellfun(@(x)([outputFolder x]),fileNames(:),'UniformOutput',false);
 
 isTraining = zeros(size(fileNames),'logical');
 for i=1:length(isTraining)
@@ -49,20 +49,20 @@ else
 end
 
 %% Setup Directories
-if (~strncmp(outputFolder_,'//',2) && ~outputFolder_(2) == ':')
+if (~strncmp(outputFolder,'//',2) && ~outputFolder(2) == ':')
     % Path is relative, make it absolute
-    outputFolder_ = awsModifyPathForCompetability([pwd '/' outputFolder_ '/']);
+    outputFolder = awsModifyPathForCompetability([pwd '/' outputFolder '/']);
 else
-    outputFolder_ = awsModifyPathForCompetability([outputFolder_ '/']);
+    outputFolder = awsModifyPathForCompetability([outputFolder '/']);
 end
 
 if isConcatinateOCTHistologyImages
-    outputFolderTrain = [outputFolder_ 'train/'];
-    outputFolderTest = [outputFolder_ 'test/'];
-    combo = {outputFolderTrain,outputFolderTest,[outputFolder_ 'val/']};
+    outputFolderTrain = [outputFolder 'train/'];
+    outputFolderTest = [outputFolder 'test/'];
+    combo = {outputFolderTrain,outputFolderTest,[outputFolder 'val/']};
 else
-    outputFolderTrain = [outputFolder_ 'train'];
-    outputFolderTest = [outputFolder_ 'test'];
+    outputFolderTrain = [outputFolder 'train'];
+    outputFolderTest = [outputFolder 'test'];
     combo = {[outputFolderTrain '_A'],[outputFolderTrain '_B'],...
         [outputFolderTest '_A'],[outputFolderTest '_B']};
 end
