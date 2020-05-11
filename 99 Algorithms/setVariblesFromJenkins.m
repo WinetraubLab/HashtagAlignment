@@ -6,7 +6,7 @@ function wasSet = setVariblesFromJenkins()
 % This is a non trivial implementation, but its easier
 
 % Get names of all varibles in parent worksapce
-nms = evalin('base','who');
+nms = evalin('caller','who');
 
 % Get jenkins varibles
 isJenkinsInput = cellfun(@(x)(x(end)=='_'),nms);
@@ -14,7 +14,7 @@ isJenkinsInput = cellfun(@(x)(x(end)=='_'),nms);
 % Set
 nms = nms(isJenkinsInput);
 for i=1:length(nms)
-    evalin('base',[nms{i}(1:(end-1)) '=' nms{i} ';']);
+    evalin('caller',[nms{i}(1:(end-1)) '=' nms{i} ';']);
 end
 
 wasSet = length(nms)>0;
