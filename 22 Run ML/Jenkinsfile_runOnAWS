@@ -138,7 +138,8 @@ pipeline {
 					"<br><br>Data may be viewed at:<br>\\171.65.17.174\\MATLAB_Share\\Jenkins\\Start ML on AWS OCTHist\\workspace\\Testers\\ml\\dataset_oct_histology\\"
 					,
 					attachLog: true,
-					to: "$WHO_TO_EMAIL_WHEN_DONE," + email )
+					to: "$WHO_TO_EMAIL_WHEN_DONE," + email,
+					mimeType: "text/html")
 				}
 				catch(Exception e)
 				{

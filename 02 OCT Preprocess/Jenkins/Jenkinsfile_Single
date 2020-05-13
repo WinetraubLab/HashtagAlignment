@@ -143,7 +143,8 @@ pipeline {
 					,
 					attachLog: true,
 					attachmentsPattern: "Testers\\*.png",
-					to: "$WHO_TO_EMAIL_WHEN_DONE," + email )
+					to: "$WHO_TO_EMAIL_WHEN_DONE," + email,
+					mimeType: "text/html")
 				}
 				catch(Exception e)
 				{

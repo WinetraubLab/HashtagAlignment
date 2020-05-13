@@ -135,7 +135,8 @@ pipeline {
 					,
 				attachLog: true,
 				//attachmentsPattern: "Testers/*.png",
-				to: "$WHO_TO_EMAIL_WHEN_DONE" )	
+				to: "$WHO_TO_EMAIL_WHEN_DONE", 
+				mimeType: "text/html")	
 				
 			}
 			if (IS_MAKE_INSTRUCTIONS == "true")
@@ -165,7 +166,8 @@ pipeline {
 						,
 					attachLog: true,
 					//attachmentsPattern: "Testers/*.png",
-					to: "$WHO_TO_EMAIL_WHEN_DONE" )
+					to: "$WHO_TO_EMAIL_WHEN_DONE",
+					mimeType: "text/html")
 				}
 				catch(Exception e)
 				{
@@ -228,7 +230,8 @@ pipeline {
 							,
 						attachLog: true,
 						attachmentsPattern: "Testers/HistologyInstructions.pdf",
-						to: "$WHO_TO_EMAIL_WHEN_DONE" )
+						to: "$WHO_TO_EMAIL_WHEN_DONE",
+						mimeType: "text/html")
 					}
 					catch(Exception e)
 					{
