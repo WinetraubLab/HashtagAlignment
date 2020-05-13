@@ -24,7 +24,7 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 	// Type matlab file to output log
 	bat("""
 		@echo off
-		echo """ + scriptPath + """
+		echo """ + scriptPath + """ / Testers\\hiddenRunme.m 
 		echo ---------------
 		type Testers\\hiddenRunme.m """) 
 		
