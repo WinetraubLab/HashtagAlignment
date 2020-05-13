@@ -3,7 +3,7 @@
 
 %% Inputs
 subjectPath = s3SubjectPath('01');
-sectionName = 'Slide01_Section01';
+sectionName = 'Slide03_Section01';
 
 % How many y planes to take around the center OCT plane +-yPlanesAroundCenter
 yPlanesAroundCenter = 10; % Each plane is 1um
@@ -38,9 +38,9 @@ d_um = abs(ys_um - ...
 
 yIs = yI + (-yPlanesAroundCenter:yPlanesAroundCenter);
 if (min(yIs) < 1)
-    error('Section requires a slice that is before the beginning of reslice');
-elseif (max(yIs) > length(length(jsons.sectionIterationConfig.data_um.y.values)))
-    error('Section requires a slice that is after the last slide of reslice');
+    error('Section requires a slice that is before the beginning of reslice (min)');
+elseif (max(yIs) > length(jsons.sectionIterationConfig.data_um.y.values))
+    error('Section requires a slice that is after the last slide of reslice (max)');
 end
 
 % Load OCT
