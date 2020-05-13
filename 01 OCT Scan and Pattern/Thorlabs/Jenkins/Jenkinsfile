@@ -395,7 +395,7 @@ pipeline {
 					,
 				attachLog: true,
 				attachmentsPattern: "Testers/HistologyInstructions.pdf",
-				to: "$WHO_TO_EMAIL_WHEN_DONE"
+				to: "$WHO_TO_EMAIL_WHEN_DONE",
 				mimeType: "text/html")
 		} 
 		failure {
@@ -405,7 +405,7 @@ pipeline {
 				body: "See log <br>Yonatan",
 				attachLog: true,
 				//attachmentsPattern: "Testers/*.png",
-				to: "$WHO_TO_EMAIL_WHEN_DONE"
+				to: "$WHO_TO_EMAIL_WHEN_DONE",
 				mimeType: "text/html")
 		aborted {
 			emailext (
@@ -414,7 +414,7 @@ pipeline {
 				body: "See log<br>Be sure to kill Matlab (run by System) if its still running<br>Yonatan",
 				attachLog: true,
 				//attachmentsPattern: "Testers/*.png",
-				to: "$WHO_TO_EMAIL_WHEN_DONE"
+				to: "$WHO_TO_EMAIL_WHEN_DONE",
 				mimeType: "text/html")
 			}
 		}
