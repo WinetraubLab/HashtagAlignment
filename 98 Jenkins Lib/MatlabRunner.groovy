@@ -4,7 +4,16 @@
 //Usually, write a script called runme.m and execute RunMatlabScript("runme.m")
 def RunMatlabScript (scriptPath, isConnectToCluster=false) 
 {
-	def MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"'
+	def matlab_2019a = new File('C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe')
+	def MATLAB_PATH = "Unknown"
+	if (matlab_2019a.exists())
+	{
+		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"'
+	}
+	else
+	{
+		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe"'
+	}
 	
 	//Build M File
 	//////////////
