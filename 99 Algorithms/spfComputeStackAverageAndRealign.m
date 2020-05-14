@@ -18,42 +18,48 @@ function [spfsOut,isOutlierOut,nOut,sectionDistanceToOriginOut,averagePixelSize_
 %       (positive numbers are further along nOut)
 %    averagePixelSize_um - medain pixel size (average of |u| and |v|)
 
-%% Input checks
-spfsInLength = length(spfs);
+%% Input check
 if iscell(spfs)
-    %Some of spfs are not identical / empty find them
-    emptySPFsIndex = cellfun(@isempty,spfs);
-    spfs = [spfs{~emptySPFsIndex}];
+    % spfs is a cell array, so it may contain empty plane fits, meaning
+    % plane did not exist. Find those instances and replace them with a
+    % null numbers
+    isSPFEmpty = cellfun(@isempty,spfs);
+    nanVec = [NaN; NaN; NaN]; 
+    spfs(isSPFEmpty) = {spfCreateFromUVH(nanVec,nanVec,nanVec)};
     
-    speculatedDistanceToOrigin = speculatedDistanceToOrigin(~emptySPFsIndex);
+    % Convert to array for easy use
+    spfs = [spfs{:}];
+    
     isSPFCell = true;
 else
-    emptySPFsIndex = boolean(zeros(size(spfs)));
+    % No empty spfs on vector array, just mark that this is a cell
     isSPFCell = false;
 end
 
-emptySPFsIndex = emptySPFsIndex(:);
-spfs = spfs(:);
-speculatedDistanceToOrigin = speculatedDistanceToOrigin(:)';
+% Measure input length
+spfsInLength = length(spfs);
 
-%% Refresh spfs if version is wrong
+% Refresh spfs if version is wrong
 if ~isfield(spfs,'version') || spfs(1).version < 1.1
     spfs_ = arrayfun(@(x)(spfCreateFromUVH(x.u,x.v,x.h)),spfs);
 else
     spfs_ = spfs;
 end
 
-%Check that we have data to work with
-if (isempty(spfs_))
+%Check that we have some spfs that have data in them
+if (all(isnan([spfs_.d])))
     %Nothing to do
-    warning('No samples, nothing to do');
-    isOutlier = boolean(ones(size(emptySPFsIndex)));
-    [spfsOut,isOutlierOut] = makeOutput(spfs,isSPFCell,isOutlier,emptySPFsIndex);
+    warning('No non empty single plane fits, nothing to do');
+    isOutlierOut = ones(size(spfs_),'logical');
+    spfsOut = makeOutput(spfs_,isSPFCell);
     nOut=NaN;
     sectionDistanceToOriginOut = NaN;
     averagePixelSize_um = NaN;
     return;
 end
+
+% Make sure speculatedDistanceToOrigin is a raw
+speculatedDistanceToOrigin = speculatedDistanceToOrigin(:)';
 
 %% 0th pass, weed out obvious outliers
 isOk0 = ...
@@ -126,7 +132,7 @@ isOk = ~isOutlier;
 if (sum(isOk) < length(isOk)/3 || sum(isOk)<2)
     warning('Not enugh good samples, everything seems to be an outlier');
     isOutlier = boolean(ones(size(isOutlier)));
-    [spfsOut,isOutlierOut] = makeOutput(spfs,isSPFCell,isOutlier,emptySPFsIndex);
+    [spfsOut,isOutlierOut] = makeOutput(spfs_,isSPFCell);
     nOut=NaN;
     sectionDistanceToOriginOut = NaN;
     averagePixelSize_um = NaN;
@@ -156,6 +162,9 @@ if (abs(scale) > 1.4 || abs(scale) < 1-0.5)
 end
 distanceToOriginRefitted = polyval(p,speculatedDistanceToOrigin); %Fit corrected values
 
+% Output section distances
+sectionDistanceToOriginOut = distanceToOriginRefitted;
+
 % Compute size
 unormRefitted = mean(unorms(isOk));
 vnormRefitted = mean(vnorms(isOk));
@@ -163,17 +172,6 @@ vnormRefitted = mean(vnorms(isOk));
 % Update median size to fit the mean
 umedian = umedian/norm(umedian)*unormRefitted;
 vmedian = vmedian/norm(vmedian)*vnormRefitted;
-
-%% Calculate distance to origin for all sections, even those without alignment
-sectionI = 1:spfsInLength;
-sectionDistanceToOriginOut = interp1(sectionI(~emptySPFsIndex),distanceToOriginRefitted,sectionI,'linear','extrap');
-sectionDistanceToOriginOut = sectionDistanceToOriginOut(:);
-
-if (sectionDistanceToOriginOut(~emptySPFsIndex) ~= distanceToOriginRefitted(:))
-    % This should never happen, interpolated values should be indentical to
-    % the original values for the sections that were computed.
-    error('Interpolation failure, please advice');
-end
 
 %% Update individual planes for all sections, even those without alignment
 clear spfsOut;
@@ -183,9 +181,8 @@ averagePixelSize_um = mean([unormRefitted vnormRefitted])*1e3;
 stackSizeChange_p = mean(sizeChangeUs(isOk))*100;
 FMpixelSize_um = averagePixelSize_um*(1+stackSizeChange_p/100); % FM original pixel size. About 0.7 mocrons
 
-j=1;
 for i=1:spfsInLength
-    if (emptySPFsIndex(i))
+    if (isnan(spfs_(i).u(1)))
         % Empty spf, start from scratch
         u = project(umedian);
         v = project(vmedian);
@@ -195,7 +192,7 @@ for i=1:spfsInLength
         v_ = NaN;
     else
         % Some data is in single plane fit, use it!
-        spf = spfs(j);
+        spf = spfs_(i);
         u = project(spf.u);
         v = project(spf.v);
         h = project(spf.h);
@@ -209,8 +206,7 @@ for i=1:spfsInLength
             v = project(vmedian);
         end
         
-        isOutlierOut(i) = isOutlier(j);
-        j = j + 1;
+        isOutlierOut(i) = isOutlier(i);
     end
     
     s = spfRealignToStack(u,v,h, n, sectionDistanceToOriginOut(i), stackSizeChange_p, FMpixelSize_um, v_);
@@ -224,21 +220,14 @@ for i=1:spfsInLength
 end
 
 %% Generate Output
-[spfsOut,isOutlierOut] = makeOutput(spfsOut,isSPFCell,isOutlierOut,emptySPFsIndex*0);
+spfsOut = makeOutput(spfsOut,isSPFCell);
 nOut = n;
-function [spfsOut,isOutlierOut] = makeOutput(spfsOut,isSPFCell,isOutlier,emptySPFsIndex)
+function [spfsOut] = makeOutput(spfsOut,isSPFCell)
 %Modify output to be compatible with input
 if (isSPFCell)
-    spfsOutCell = cell(size(emptySPFsIndex));
-    isOutlierOut = boolean(ones(size(emptySPFsIndex)));
-    
-    j=1;
+    spfsOutCell = cell(size(spfsOut));
     for i=1:length(spfsOutCell)
-        if(~emptySPFsIndex(i))
-            spfsOutCell(i) = {spfsOut(j)};
-            isOutlierOut(i) = isOutlier(j);
-            j = j+1;
-        end
+        spfsOutCell(i) = {spfsOut(i)};
     end
     
     spfsOut = spfsOutCell;

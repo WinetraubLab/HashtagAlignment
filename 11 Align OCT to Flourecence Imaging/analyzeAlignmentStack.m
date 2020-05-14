@@ -6,7 +6,7 @@
 %false if saved locally only
 isUpdateCloud = false; 
 
-subjectFolder = s3SubjectPath('01');
+subjectFolder = s3SubjectPath('09','LC');
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %Jenkins
     isUpdateCloud = true;
@@ -222,15 +222,15 @@ sc = 100*(pixelsSize_um./sc - 1);
 sc_realigned = NaN*zeros(size(singlePlaneFits));
 sc_realigned(~badFit) = cellfun(@(x)(norm(x.u)),singlePlaneFits_Realigned(~badFit))*1e3; %um
 sc_realigned = 100*(pixelsSize_um./sc_realigned - 1);
-d = NaN*zeros(size(singlePlaneFits));
+d_singlePlaneFit = NaN*zeros(size(singlePlaneFits));
 for i=1:length(noFit)
     if ~noFit(i)
-        d(i) = dot(singlePlaneFits_Realigned{i}.normal,singlePlaneFits{i}.h);
-        %d(i) = dot(singlePlaneFits{i}.normal,singlePlaneFits{i}.h);
+        d_singlePlaneFit(i) = dot(singlePlaneFits_Realigned{i}.normal,singlePlaneFits{i}.h);
+        %d_singlePlaneFit(i) = dot(singlePlaneFits{i}.normal,singlePlaneFits{i}.h);
     end
 end
-d_realigned = NaN*zeros(size(singlePlaneFits));
-d_realigned(~badFit)  = cellfun(@(x)(x.d),singlePlaneFits_Realigned(~badFit)); %mm
+d_stackPlaneFit = NaN*zeros(size(singlePlaneFits));
+d_stackPlaneFit(~badFit)  = cellfun(@(x)(x.d),singlePlaneFits_Realigned(~badFit)); %mm
 % Notice, some nan values exist for 
 %   - slides with no data but only before the fit
 %   - in case fit failed for some slides
@@ -302,21 +302,21 @@ title(sprintf('1D Pixel Size Change: %.1f \\pm %.1f [%%]', ...
 grid on;
 
 %Plot distance to origin
-s = sqrt(nanmean( ( d(goodFit) - d_realigned(goodFit) ).^2));
+s = sqrt(nanmean( ( d_singlePlaneFit(goodFit) - d_stackPlaneFit(goodFit) ).^2));
 isStartCuttingFromDotSide = scJson.histologyInstructions.iterations(1).startCuttingAtDotSide;
 subplot(2,3,4);
-plotPerIteration(index,d,sectionIterations,goodFit,'#0072BD');
+plotPerIteration(index,d_singlePlaneFit,sectionIterations,goodFit,'#0072BD');
 hold on;
-plotPerIteration(index,d,sectionIterations,maybeFit | badFit,'#D95319');
+plotPerIteration(index,d_singlePlaneFit,sectionIterations,maybeFit | badFit,'#D95319');
 hold on;
-plotPerIteration(index,d_realigned,sectionIterations, noFit,'k');
+plotPerIteration(index,d_stackPlaneFit,sectionIterations, noFit,'k');
 hold on;
-plot(index, d_realigned, '--r');
+plot(index, d_stackPlaneFit, '--r');
 hold off;
 ylabel('Distance [mm]');
 setSectionNamesAsXLabels(scJson.sections.names); 
 title(sprintf('Distance From Origin, SEM %.1f[\\mum], Section Size: %.1f[\\mum]',s*1e3/sqrt(sum(goodFit)),...
-    abs(nanmedian(diff(d_realigned*isPlaneNormalSameDirectionAsCuttingDirection))*1e3) ));
+    abs(nanmedian(diff(d_stackPlaneFit*isPlaneNormalSameDirectionAsCuttingDirection))*1e3) ));
 grid on;
 if isPlaneNormalSameDirectionAsCuttingDirection == 1
     set(gca, 'YDir','reverse');
@@ -342,8 +342,8 @@ if ~isempty(last1) && ~isempty(first2)
     ii = [last1 first2];
     text(...
         mean(ii), ...
-        mean(d_realigned(ii))+0.2, ...
-        sprintf('Section Jump: %.0f\\mum',abs(diff(d_realigned(ii)))*1e3) ...
+        mean(d_stackPlaneFit(ii))+0.2, ...
+        sprintf('Section Jump: %.0f\\mum',abs(diff(d_stackPlaneFit(ii)))*1e3) ...
         );
 end
 
@@ -358,8 +358,8 @@ legend('Good Alignment','Bad Alignment','No Alignment, Set to Default', ...
 axis off
 
 %% Print a report for user & google doc
-disTextum = arrayfun(@(x)sprintf('%.0f',x),abs(d_realigned*1000),'UniformOutput',false);
-disTextum(isnan(d_realigned)) = {'""'};
+disTextum = arrayfun(@(x)sprintf('%.0f',x),abs(d_stackPlaneFit*1000),'UniformOutput',false);
+disTextum(isnan(d_stackPlaneFit)) = {'""'};
 isProperStackAlignmentSuccess = sum(~badFit) > 1; %Alignment succeeded if at least one slide is aligned
 if (isProperStackAlignmentSuccess)
     %% Print a report for user & google doc - alignment success case
@@ -372,7 +372,7 @@ if (isProperStackAlignmentSuccess)
         '"Slide Seperation um":%.2f,' ...
         '"XY Angle deg":%.1f,"Size Change Percent":%.1f}'],...
         subjectName, ...
-        abs(nanmedian(diff(d_realigned)))*1e3, ...
+        abs(nanmedian(diff(d_stackPlaneFit)))*1e3, ...
         ang,nanmean(sc_realigned) ...
         );
     
@@ -432,7 +432,7 @@ fprintf('\n\nSubmit Changes Online:\n %s\n',lk);
 % anti-parallel direction to the cuting direction.
 % Comparing the anti-parallel to cutting with the normal to plane to the
 % histology cuts is: (-isPlaneNormalSameDirectionAsCuttingDirection)
-d_lastSlide = (-isPlaneNormalSameDirectionAsCuttingDirection) * d_realigned(end);
+d_lastSlide = (-isPlaneNormalSameDirectionAsCuttingDirection) * d_stackPlaneFit(end);
 fprintf('Distance from current face to origin (negative number means we surpassed origin):\n\t%.0f [um]\n',...
     d_lastSlide*1e3);
 
