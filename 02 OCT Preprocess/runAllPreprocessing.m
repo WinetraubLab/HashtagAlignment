@@ -63,13 +63,13 @@ end
 %% Start by uploading to the cloud
 if(isUploadToCloud && ...
 	isRunInAutomatedMode) %In manual mode run code first than upload to the cloud
-    disp('Uploading files to AWS');
+	fprintf('%s Uploading files to AWS ...\n',datestr(datetime));
     
     %Copy to the cloud
     awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
     
-    disp('Uploading Completed');
-    disp('Preprocessing Using local copy...');
+	fprintf('%s Uploading Completed.\n',datestr(datetime));
+	fprintf('%s Preprocessing Using local copy...\n',datestr(datetime));
 end
 
 %% Running
@@ -119,8 +119,9 @@ try
 				end
 			end
 		else %ran manually need to upload everything
-			disp('Uploading files to AWS');
+			fprintf('%s Uploading files to AWS...\n',datestr(datetime));
 			awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
+			fprintf('%s Uploading complete.\n',datestr(datetime));
 		end
 		
 		if deleteFolderAfterUpload
@@ -132,8 +133,7 @@ try
     fprintf('%s Done Running.\n',datestr(datetime));
 catch ME 
     %% Error Hendle. If error happend during processing we still want to upload the data
-	disp(' '); 
-	disp('Error Happened'); 
+	fprintf('\n%s Error Happened.\n',datestr(datetime));
 	for i=1:length(ME.stack) 
 		ME.stack(i) 
 	end 
