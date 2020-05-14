@@ -66,7 +66,7 @@ if(isUploadToCloud && ...
 	fprintf('%s Uploading files to AWS ...\n',datestr(datetime));
     
     %Copy to the cloud
-    awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
+    awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut,true);
     
 	fprintf('%s Uploading Completed.\n',datestr(datetime));
 	fprintf('%s Preprocessing Using local copy...\n',datestr(datetime));
@@ -120,7 +120,7 @@ try
 			end
 		else %ran manually need to upload everything
 			fprintf('%s Uploading files to AWS...\n',datestr(datetime));
-			awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut);
+			awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut,true);
 			fprintf('%s Uploading complete.\n',datestr(datetime));
 		end
 		
