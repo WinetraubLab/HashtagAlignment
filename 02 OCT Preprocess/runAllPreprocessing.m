@@ -12,7 +12,7 @@ deleteFolderAfterUpload = true; %Would you like to delete data after uploading t
 
 %% Setup environment
 if (exist('SubjectFolderIn_','var'))
-	disp(['Processing input: ' SubjectFolderIn_ ]);
+	fprintf('%s Processing input: "%s"\n',datestr(datetime),SubjectFolderIn_);
     SubjectFolderIn = SubjectFolderIn_;
     SubjectFolderOut = SubjectFolderOut_;
 end
