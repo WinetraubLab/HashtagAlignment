@@ -108,8 +108,9 @@ mask(sum(imHist,3) == 0) = 1;
 
 % Begin code to find interface
 % extract markedline from json
-x = jsons.slideConfig.data.FM.fiducialLines(1).u_pix;
-y = jsons.slideConfig.data.FM.fiducialLines(1).v_pix;
+tissueInterfaceI = [jsons.slideConfig.data.FM.fiducialLines.group] == 't';
+x = jsons.slideConfig.data.FM.fiducialLines(tissueInterfaceI).u_pix;
+y = jsons.slideConfig.data.FM.fiducialLines(tissueInterfaceI).v_pix;
 Transform = jsons.slideConfig.data.FMOCTAlignment.FMToOCTTransform;
 ref = imref2d([size(imHist,1), size(imHist,2),1]);
 
