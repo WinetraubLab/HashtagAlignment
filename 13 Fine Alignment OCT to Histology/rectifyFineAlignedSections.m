@@ -4,7 +4,9 @@ function rectifyFineAlignedSections(subjectPath)
 % This function will ask user if they would like to update fine tuning
 % before doing so.
 
-%subjectPath = s3SubjectPath('12','LD');
+if ~exist('subjectPath','var')
+    subjectPath = s3SubjectPath('09','LC');
+end
 
 % When set to false, will not try to rectify sections that don't have h&e,
 % that makes sense since slides with no h&e cannot be fine aligned.
@@ -45,7 +47,7 @@ for i=1:length(slideConfigs)
     if isfield(slideConfig,'FM') && isfield(slideConfig.FM,'singlePlaneFit_FineAligned')
         yFineAligned_mm(i) = slideConfig.FM.singlePlaneFit_FineAligned.d;
     end
-    if isfield(slideConfig,'QAInfo')
+    if isfield(slideConfig,'QAInfo') && ~isempty(slideConfig.QAInfo)
         alignmentQA = slideConfig.QAInfo.AlignmentQuality;
         overallAlignmentQuality(i) = alignmentQA.OverallAlignmentQuality;
         yAxisTolerance_um(i) = alignmentQA.YAxisToleranceMicrons;
