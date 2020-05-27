@@ -7,7 +7,7 @@ pipeline {
     	CREDENTIALS_PATH = "F:\\Jenkins\\"
 	}
 	options {
-		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
+		buildDiscarder(logRotator(numToKeepStr: '100', artifactNumToKeepStr: '100')) //Discard old builds
   	}
 	parameters 
 	{
