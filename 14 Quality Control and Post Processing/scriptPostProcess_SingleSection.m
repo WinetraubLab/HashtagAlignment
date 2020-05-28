@@ -150,13 +150,14 @@ mask(outsideArea==1 & mask==0) = 2;
 
 % Low signal
 m = double(imOCT);
+%m(1026:end,623:740) = min(min(m));, used for manually cropping areas out if necessary
 
 % Adaptive threshold for minSignal
 m_mean = nanmean(m,2);
 m_mean(isnan(m_mean)) = [];
 m_mean_max = prctile(m_mean,99);
 m_mean_min = mean(m_mean(end-50:end));
-minSignal = 0.2 * (m_mean_max - m_mean_min) + m_mean_min;
+minSignal = 0.28 * (m_mean_max - m_mean_min) + m_mean_min;
 
 % Compute log signal mask
 m(isnan(m)) = minSignal;
