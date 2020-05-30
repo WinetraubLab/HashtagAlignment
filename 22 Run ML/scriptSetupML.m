@@ -9,11 +9,11 @@
 % datasets are saved in _Datasets, Snapshots are saved in _MLModels
 loadFrom = 'dataset'; % Set to 'dataset' or 'snapshot'
 
-% 'dataset', will get the latest dataset which follows these conditions:
+% When loadFrom = 'dataset', will get the latest dataset which follows these conditions:
 imageResolution = '10x'; % Can be 2x,4x,10x
 datasetTag = ''; % Additional string to search for 
 
-% 'snapshot', will get the snapshot with this name (or part of the name)
+% When loadFrom = 'snapshot', will get the snapshot with this name (or part of the name)
 snapshotName = '2020-05-10 Pix2PixHD';
 
 %% Get data from Jenkins
@@ -42,6 +42,7 @@ if strcmpi(loadFrom,'dataset')
     datasetPath = strrep(datasetPath,' ','\ ');
     
     disp(datasetPath);
+    origPath = datasetPath;
 
     [status,txt] = awsEC2RunCommandOnInstance (ec2Instance,{...
         'mkdir -p ~/ml' ... Make a home directory
@@ -67,6 +68,7 @@ else
     pathToSnapshot = strrep(pathToSnapshot,' ','\ ');
     
     disp(pathToSnapshot);
+    origPath = pathToSnapshot;
     
     [status,txt] = awsEC2RunCommandOnInstance (ec2Instance,{...
         'mkdir -p ~/ml' ... Make a home directory
@@ -77,6 +79,7 @@ else
         error('Failed to sync dataset: %s',txt);
     end
 end
+origPath = strrep(origPath,'\ ',' ');
 
 %% Upload Jupyter notebooks 
 fprintf('%s Copy notebooks to instance...\n',datestr(datetime));
@@ -90,6 +93,7 @@ for i=1:length(notbookPaths)
 end
 
 fprintf('%s Done...\n',datestr(datetime));
+
 %% Capture information user will need & disconnect from instance
 
 % Capture information to keep for reconnect
@@ -100,9 +104,6 @@ id = ec2Instance.id;
 awsEC2TemporarilyDisconnectFromInstance(ec2Instance);
 
 % Print information
-instructions = sprintf('id_=''%s''; dns_=''%s''; scriptEndML;',id,dns);
+instructions = sprintf('id_=''%s''; dns_=''%s''; origPath_ =''%s''; scriptEndML;',id,dns,origPath);
 disp('Next steps: ');
 disp(instructions);
-fid = fopen('instructions.txt','w');
-fprintf(fid,'%s',instructions);
-fclose(fid);

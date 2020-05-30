@@ -4,6 +4,7 @@
 %% Inputs
 id = '';
 dns = '';
+origPath = ''; % Where this instance data started from
 
 %% Jenkins
 
@@ -12,6 +13,9 @@ if exist('id_','var')
 end
 if exist('dns_','var')
     dns = dns_;
+end
+if exist('origPath_','var')
+    origPath = origPath_;
 end
 
 if isempty(id) || isempty(dns)
@@ -34,37 +38,32 @@ sshCmd = sprintf('-L localhost:8888:localhost:8888 -i "%s" ubuntu@%s ',...
 waitfor(msgbox({...
     'Copy URL from the terminal that will appear after closing this dialog box.',...
     'Paste to browser, this will be your access to jupyter',...
-    'Once online, navigate to ml/runme.ipynb - continue from there'}));
+    'Once online, navigate to ml/runme_x.ipynb - continue from there'}));
 
 ssh([sshCmd '"jupyter notebook"'],true);
 
 %% Once done, exit
 
-answer = inputdlg({'Path to folder to save:', 'Experiment Name:'},'Click Ok to Save, Cancel to Skip Save',[1 100],{'~/ml/',''});
+answer = inputdlg({'Your Name:', 'Experiment Name: (leave blank if unknown)'},'Click Ok to Save, Cancel to Skip Save',[1 100],{'Yonatan',''});
 
 if ~isempty(answer)
+    
+    % Figure out dataset name
+    [~, origDatasetName] = analyze_origPath (origPath);
+    
     % Generate a directory for output.
-    modelDirectory = awsModifyPathForCompetability(sprintf('%s/%s %s/', ...
-        s3SubjectPath('','_MLModels'), ...
-        datestr(now,'yyyy-mm-dd'),answer{2}),true);
-    awsMkDir(modelDirectory);
+    modelDirectory = awsModifyPathForCompetability([strtrim(sprintf('%s/%s %s %s', ...
+        s3SubjectPath('','_MLModels'), origDatasetName, ...
+        strtrim(answer{1}),strtrim(answer{2}))) '/'],true);
+    awsMkDir(modelDirectory,true);
     modelDirectoryLinux = strrep(modelDirectory,' ','\ ');
-    % Copy what the user wanted
-    userFolder = awsModifyPathForCompetability([answer{1} '/']);
-    userFolder = strrep(userFolder,'\','/');
-    [~,folderName] = fileparts(userFolder(1:(end-1))); % Get folder's name
-    userFolder = strrep(userFolder,'\ ',' ');
-    userFolder = strrep(userFolder,' ','\ ');
-    dest = awsModifyPathForCompetability(modelDirectory,true);
-    awsEC2RunCommandOnInstance(ec2Instance,...
-        ['aws s3 sync ' userFolder ' ' modelDirectoryLinux folderName '/']);
-
-    % Copy configuration
-    awsEC2RunCommandOnInstance(ec2Instance,...
-        {...
-        ['aws s3 cp ~/ml/RunConfig.json ' modelDirectoryLinux], ...
-        ['aws s3 cp ~/ml/runme.ipynb ' modelDirectoryLinux], ...
-        });
+    
+    % Take a snapshot
+    [status, txt] = awsEC2RunCommandOnInstance(ec2Instance,...
+        ['aws s3 sync ~/ml/ ' modelDirectoryLinux]);
+    if (Status ~= 0)
+        error('Couldn''t save a snapshot: %s',txt);
+    end
 end
 
 % Should we terminate instance
