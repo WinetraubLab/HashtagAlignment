@@ -34,13 +34,13 @@ ec2Instance = awsEC2RunstructureToInstance(ec2RunStructure, id, dns);
 sshCmd = sprintf('-L localhost:8888:localhost:8888 -i "%s" ubuntu@%s ',...
     ec2Instance.pemFilePath, ec2Instance.dns);
 
+ssh([sshCmd '"jupyter notebook"'],true);
+
 % Present user what to do
 waitfor(msgbox({...
     'Copy URL from the terminal that will appear after closing this dialog box.',...
     'Paste to browser, this will be your access to jupyter',...
     'Once online, navigate to ml/runme_x.ipynb - continue from there'}));
-
-ssh([sshCmd '"jupyter notebook"'],true);
 
 %% Once done, exit
 
