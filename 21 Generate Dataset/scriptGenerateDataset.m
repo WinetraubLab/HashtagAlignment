@@ -35,6 +35,9 @@ mainUploadDirectory = awsModifyPathForCompetability(sprintf('%s/%s/', ...
         s3SubjectPath('','_Datasets'), ...
         dataSetName),true);
     
+% Clear local directory
+awsMkDir(localDirectory);
+    
 %% Generate images & patches - main dataset
 
 % Get images
