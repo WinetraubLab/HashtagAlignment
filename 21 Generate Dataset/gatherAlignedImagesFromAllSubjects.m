@@ -31,12 +31,12 @@ if ~exist('outputImagePixelSize_um','var') || isempty(outputImagePixelSize_um)
     outputImagePixelSize_um = 1;
 end
 
-if ~exist('minPatchSizeX_pix','var') || isempty(minPatchSizeX_pix)
-    minPatchSizeX_pix = round(256*0.7);
-end
-if ~exist('minPatchSizeY_pix','var') || isempty(minPatchSizeY_pix)
-    minPatchSizeY_pix = round(256*0.7);
-end
+%if ~exist('minPatchSizeX_pix','var') || isempty(minPatchSizeX_pix)
+%    minPatchSizeX_pix = round(256*0.7);
+%end
+%if ~exist('minPatchSizeY_pix','var') || isempty(minPatchSizeY_pix)
+%    minPatchSizeY_pix = round(256*0.7);
+%end
 
 %% Set inputs we would like to keep in to JSON
 clear json

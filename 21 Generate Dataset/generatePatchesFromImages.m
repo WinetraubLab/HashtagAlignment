@@ -36,6 +36,18 @@ ds_B = fileDatastore(...
 
 awsMkDir(outputFolder,true);
 
+%% Add an empty image to the dataset (empty OCT and empty histology)
+% These empty images allow the ML training to learn that empty slides are
+% translated to empty slides.
+
+imwrite( ...
+    imPadToMeetPatchSize(0, patchSize_pix(2), patchSize_pix(1), 0), ...
+    GetCropFilePath('black_A.jpg', 0, outputFolder));
+imwrite( ...
+    imPadToMeetPatchSize(0, patchSize_pix(2), patchSize_pix(1), 0), ...
+    GetCropFilePath('black_B.jpg', 0, outputFolder));
+
+
 %% Loop over all images to generate patches
 for imageI=1:length(ds_A.Files)
     im_A = ds_A.read;
