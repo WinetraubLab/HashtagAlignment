@@ -133,10 +133,10 @@ for iSlide=1:length(isUsable)
     img_mask(:,colToCrop) = [];
     
     % Size check
-    if size(img_mask,1) < minPatchSizeY_pix || size(img_mask,2) < minPatchSizeX_pix
-        % Too small, skip
-        continue;
-    end
+    %if size(img_mask,1) < minPatchSizeY_pix || size(img_mask,2) < minPatchSizeX_pix
+    %    % Too small, skip
+    %    continue;
+    %end
 
     % Convert OCT to grayscale (reserve black color to NaN)
     img_oct = scale0To255(img_oct);
