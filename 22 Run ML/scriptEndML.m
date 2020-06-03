@@ -61,7 +61,7 @@ if ~isempty(answer)
     % Take a snapshot
     [status, txt] = awsEC2RunCommandOnInstance(ec2Instance,...
         ['aws s3 sync ~/ml/ ' modelDirectoryLinux]);
-    if (Status ~= 0)
+    if (status ~= 0)
         error('Couldn''t save a snapshot: %s',txt);
     end
 end
