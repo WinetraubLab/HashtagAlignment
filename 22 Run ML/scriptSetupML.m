@@ -85,7 +85,8 @@ origPath = strrep(origPath,'\ ',' ');
 fprintf('%s Copy notebooks to instance...\n',datestr(datetime));
 filesOnThisFolder = awsls(currentFileFolder);
 isNotebook = cellfun(@(x)(contains(x,'.ipynb')),filesOnThisFolder);
-notbookPaths = filesOnThisFolder(isNotebook);
+isPyCode = cellfun(@(x)(contains(x,'.py')),filesOnThisFolder);
+notbookPaths = filesOnThisFolder(isNotebook | isPyCode);
 
 for i=1:length(notbookPaths)
     awsEC2UploadDataToInstance(ec2Instance,[currentFileFolder '/' notbookPaths{i}]...
