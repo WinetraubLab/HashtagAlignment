@@ -1,6 +1,6 @@
 % This script computs stats for the following libraries
 
-libraryNames = {'LF','LE','LD','LC'};
+libraryNames = {'LG','LF','LE','LD','LC'};
 
 %% Compute section status report
 for i=1:length(libraryNames)
