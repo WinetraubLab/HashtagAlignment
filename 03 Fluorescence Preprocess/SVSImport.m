@@ -10,7 +10,7 @@ slideNumber = 1;
 
 folderPath = '\\171.65.17.174\e\Caroline\OCT-Histology\';
 flourescenceImagePath = [folderPath 'FM.svs'];
-brightfieldImagePAth = [folderPath 'BF.svs'];
+brightfieldImagePath = [folderPath 'BF.svs'];
 
 % How deep below gel-tissue interface to aquire data
 howDeepIsTissue_mm = 1.5;
