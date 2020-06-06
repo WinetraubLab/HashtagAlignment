@@ -1,4 +1,5 @@
-%This script imports SP5 Fluorescence images 
+% This script imports SP5 Fluorescence images 
+% This is similar to SVS5Import but for SP5
 
 %% Inputs
 
@@ -205,8 +206,8 @@ ds = fileDatastore(folder,'ReadFcn',@(x)(x),'IncludeSubfolders',true);
 files = ds.Files;
 toSend = cellfun(@(x)(contains(x,fileName)),files);
 files = files(toSend);
-for i=1:length(files)
-    awsCopyFileFolder(files{i},[outputFolder '/FM_Raw/']);
+for ii=1:length(files)
+    awsCopyFileFolder(files{ii},[outputFolder '/FM_Raw/']);
 end
 
 fprintf('%s Uploading complete.\n',datetime)
