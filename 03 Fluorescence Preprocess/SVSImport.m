@@ -212,3 +212,5 @@ for si=1:length(sectionNames)
     awsCopyFileFolder(json.photobleachedLinesImagePath,outputFolder);
     awsCopyFileFolder(json.brightFieldImagePath,outputFolder);
 end
+
+close;
