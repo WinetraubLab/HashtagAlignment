@@ -83,7 +83,7 @@ ds = fileDatastore(histFilePath,'ReadFcn',@imread);
 imHist = ds.read();
 
 % Recolor histology to the standard coloring scheme
-imHist = normalizeStaining(imHist);
+imHist = normalizeStaining(imHist,HE0);
 
 % Orient Histology image to OCT reference frame
 ref = imref2d([size(imOCT,1), size(imOCT,2), 3]);

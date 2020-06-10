@@ -1,4 +1,4 @@
-function [Inorm, H, E] = normalizeStaining(I)
+function [Inorm, H, E] = normalizeStaining(I, HE0)
 % Normalize the staining appearance of images originating from H&E stained
 % sections.
 %
@@ -101,10 +101,14 @@ vMax = V(:,2:3)*[cos(maxPhi); sin(maxPhi)];
 
 % a heuristic to make the vector corresponding to hematoxylin first and the
 % one corresponding to eosin second
-if vMin(1) > vMax(1)
-    HE = [vMin vMax];
+if ~exist('HE0', 'var') || isempty(HE0)
+    if vMin(1) > vMax(1)
+        HE = [vMin vMax];
+    else
+        HE = [vMax vMin];
+    end
 else
-    HE = [vMax vMin];
+    HE = HE0;
 end
 
 % rows correspond to channels (RGB), columns to OD values
