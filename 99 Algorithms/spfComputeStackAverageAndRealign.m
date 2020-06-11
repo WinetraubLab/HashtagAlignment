@@ -131,8 +131,8 @@ isOk = ~isOutlier;
 % are present, fit is failed.
 if (sum(isOk) < length(isOk)/3 || sum(isOk)<2)
     warning('Not enugh good samples, everything seems to be an outlier');
-    isOutlier = boolean(ones(size(isOutlier)));
-    [spfsOut,isOutlierOut] = makeOutput(spfs_,isSPFCell);
+    isOutlierOut = boolean(ones(size(isOutlier)));
+    spfsOut = makeOutput(spfs_,isSPFCell);
     nOut=NaN;
     sectionDistanceToOriginOut = NaN;
     averagePixelSize_um = NaN;
