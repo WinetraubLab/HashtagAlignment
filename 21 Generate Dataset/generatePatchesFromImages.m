@@ -1,4 +1,4 @@
-function outputFolder=generatePatchesFromImages(alignedImagesFolder,outputFolder, patchSize_pix)
+function outputFolder=generatePatchesFromImages(alignedImagesFolder,outputFolder, patchSize_pix, aspectRatio)
 % This function takes image pairs and generates patches
 %% Inputs
 
@@ -12,10 +12,27 @@ if ~exist('patchSize_pix','var') || isempty(patchSize_pix)
     patchSize_pix = [512, 1024]; % Y,X
 end
 
+% Aspect ratio
+% When aspectRatio = [1 1] pixel size in both axis is equal. (default)
+% When aspectRatio = [1 0.5] pixel size in x direction is double than y
+% direction. Meaning size of image along x will be 0.5 of original size.
+% This allows to fill up a rectangular image to a square
+if ~exist('aspectRatio','var') || isempty(aspectRatio)
+    aspectRatio = [1 1]; %[Y,X]
+end
+
 % Folder to write patches to (output folder)
 if ~exist('outputFolder','var') || isempty(outputFolder)
+    aspectRatioText = '';
+    if any(aspectRatio~=1)
+        aspectRatioText = sprintf('_aspect_ratio_%.0f_%.0f',...
+            1/aspectRatio(2),1/aspectRatio(1));
+    end
+    
     outputFolder = awsModifyPathForCompetability(...
-        [alignedImagesFolder '..\patches_' sprintf('%dpx_%dpx',patchSize_pix(2),patchSize_pix(1)) '\']);
+        [alignedImagesFolder '..\patches_' ...
+        sprintf('%dpx_%dpx%s',patchSize_pix(2),patchSize_pix(1),aspectRatioText) ...
+        '\']);
 end
 
 % Patch overlap
@@ -67,6 +84,13 @@ for imageI=1:length(ds_A.Files)
     end
     if any(size(im_A,[1 2]) ~= size(im_B,[1 2]))
         error('size of im_A is different from im_B for %s',ds_A.Files{imageI});
+    end
+    
+    % Apply aspect ratio
+    if any(aspectRatio ~= 1)
+        % Compress image
+        im_A = imresize(im_A, round(size(im_A,[1 2]).*aspectRatio), 'Antialiasing', true, 'method', 'cubic');
+        im_B = imresize(im_B, round(size(im_B,[1 2]).*aspectRatio), 'Antialiasing', true, 'method', 'cubic');
     end
     
     h = size(im_A,1);
