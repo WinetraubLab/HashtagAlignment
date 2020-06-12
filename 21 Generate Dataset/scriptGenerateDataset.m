@@ -63,6 +63,11 @@ outputFolder = generatePatchesFromImages(alignedImagesFolder,[], [256, 256], [1,
 fprintf('%s Devide to train test dataset ...\n',datestr(datetime));
 sortImagesTrainTest(outputFolder,filesInTestingSet);
 
+fprintf('%s Generate 512X256 Patches Dataset ...\n',datestr(datetime));
+outputFolder = generatePatchesFromImages(alignedImagesFolder,[], [256, 512]);
+fprintf('%s Devide to train test dataset ...\n',datestr(datetime));
+sortImagesTrainTest(outputFolder,filesInTestingSet);
+
 fprintf('%s Generate 1024X512 Patches Dataset ...\n',datestr(datetime));
 outputFolder = generatePatchesFromImages(alignedImagesFolder,[], [512, 1024]);
 fprintf('%s Devide to train test dataset ...\n',datestr(datetime));
