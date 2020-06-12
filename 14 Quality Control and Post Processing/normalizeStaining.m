@@ -4,6 +4,10 @@ function [Inorm, H, E] = normalizeStaining(I, HE0)
 %
 % Input:
 % I         - RGB input image, to be normalized;
+% HE0       - HE  vector used to calculate concentrations of each dye;
+%             If HE0 not defined, HE vectors will be calculated by the SVD method
+%             Note  this is different from HERef, to HE vectors the image is 
+%             normalized to.
 % 
 % Function variables:
 % Io        - (optional) transmitted light intensity (default: 240);
@@ -101,6 +105,8 @@ vMax = V(:,2:3)*[cos(maxPhi); sin(maxPhi)];
 
 % a heuristic to make the vector corresponding to hematoxylin first and the
 % one corresponding to eosin second
+%
+% uses HE0 if provided
 if ~exist('HE0', 'var') || isempty(HE0)
     if vMin(1) > vMax(1)
         HE = [vMin vMax];

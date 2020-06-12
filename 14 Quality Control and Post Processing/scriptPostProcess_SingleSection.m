@@ -82,6 +82,11 @@ histFilePath = awsModifyPathForCompetability(...
 ds = fileDatastore(histFilePath,'ReadFcn',@imread);
 imHist = ds.read();
 
+% Explicity set HE0 to be empty if non-existent for whatever reason
+if ~exist('HE0','var')
+    HE0 = []; % No average HE vector, compute from this slide.
+end
+
 % Recolor histology to the standard coloring scheme
 imHist = normalizeStaining(imHist,HE0);
 
