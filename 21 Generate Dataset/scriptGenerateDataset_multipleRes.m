@@ -1,19 +1,12 @@
 % This script generate datasets in multiple resolutions and scales
 
-clear;
-magnificationName_ = '4x';
-fprintf('%s --- Generate %s ---\n',datestr(datetime),magnificationName_);
-scriptGenerateDataset;
-
-clear;
-magnificationName_ = '2x';
-fprintf('%s --- Generate %s ---\n',datestr(datetime),magnificationName_);
-scriptGenerateDataset;
-
-clear;
-magnificationName_ = '10x';
-fprintf('%s --- Generate %s ---\n',datestr(datetime),magnificationName_);
-scriptGenerateDataset;
-
+call_scriptGenerateDataset('4x');
+call_scriptGenerateDataset('2x');
+call_scriptGenerateDataset('10x');
 
 fprintf('%s Done Done!\n',datestr(datetime));
+
+function call_scriptGenerateDataset(magnificationName_)
+fprintf('%s --- Generate %s ---\n',datestr(datetime),magnificationName_);
+scriptGenerateDataset;
+end
