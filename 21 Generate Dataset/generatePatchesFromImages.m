@@ -91,8 +91,8 @@ for imageI=1:length(ds_A.Files)
     % Apply aspect ratio
     if any(aspectRatio ~= 1)
         % Compress image
-        im_A = imresize(im_A, round(size(im_A,[1 2]).*aspectRatio), 'Antialiasing', true, 'method', 'cubic');
-        im_B = imresize(im_B, round(size(im_B,[1 2]).*aspectRatio), 'Antialiasing', true, 'method', 'cubic');
+        im_A = imresize(im_A, round(sz_A.*aspectRatio), 'Antialiasing', true, 'method', 'cubic');
+        im_B = imresize(im_B, round(sz_B.*aspectRatio), 'Antialiasing', true, 'method', 'cubic');
     end
     
     h = size(im_A,1);
