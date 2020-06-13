@@ -36,7 +36,9 @@ for imageI=1:length(ds_A.Files)
     if ~strcmp(strrep(ds_A.Files{imageI},'_A.jpg',''), strrep(ds_B.Files{imageI},'_B.jpg',''))
         error('file names don''t match "%s" vs "%s"',ds_A.Files{imageI},ds_B.Files{imageI});
     end
-    if any(size(im_A,[1 2]) ~= size(im_B,[1 2]))
+    sz_A = [size(im_A,1) size(im_A,2)];
+    sz_B = [size(im_B,1) size(im_B,2)];
+    if any(sz_A ~= sz_B)
         error('size of im_A is different from im_B for %s',ds_A.Files{imageI});
     end
     
