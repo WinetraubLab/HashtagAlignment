@@ -18,6 +18,11 @@ datasetNames = awsls(datasetBaseDirectory);
 
 isContainImageResolution = cellfun(@(x)(contains(x,imageResolution)),datasetNames);
 isContainTag = cellfun(@(x)(contains(x,datasetTag)),datasetNames);
+
+if ~any(isContainImageResolution & isContainTag)
+    error('Colud not find any data set with resulution "%s" and tag "%s"',imageResolution,datasetTag);
+end
+
 datasetNames = datasetNames(isContainImageResolution & isContainTag);
 
 datasetPath = awsModifyPathForCompetability([datasetBaseDirectory '/' datasetNames{end} '/'],true); 
