@@ -207,7 +207,7 @@ for si=1:length(sectionNames)
     json.brightFieldImagePath = brightFieldImagePath;
     
     % Upload
-    outputFolder = [s3Dir '/Slides/' sectionNames '/'];
+    outputFolder = [s3Dir '/Slides/' sectionNames{si} '/'];
     awsWriteJSON(json,[outputFolder '/SlideConfig.json']);
     awsCopyFileFolder(json.photobleachedLinesImagePath,outputFolder);
     awsCopyFileFolder(json.brightFieldImagePath,outputFolder);
