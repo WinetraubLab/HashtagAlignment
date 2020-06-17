@@ -25,7 +25,7 @@ mkdir(tmpFolderSubjectFilePath);
 
 %Prompt user to select a file
 %[tmp1,tmp2] = uigetfile('.svs','Select File');
-[tmp1,tmp2] = uigetfile('\\171.65.17.174\e\Caroline\LE-Histology Scans\*.svs','Select File');
+[tmp1,tmp2] = uigetfile('\\171.65.17.174\e\Caroline\Histology Scans\*.svs','Select File');
 histologyFP = [tmp2 tmp1];
 %histologyFP = 'E:\myslides\1000418.svs'; %File path to .svs file
 
