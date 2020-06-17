@@ -75,3 +75,4 @@ end
 saveas(fig1,'tmp.png');
 awsCopyFileFolder('tmp.png',logImageOut);
 delete tmp.png
+close(fig1);
