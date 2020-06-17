@@ -5,7 +5,7 @@ x = app.jsons.sectionIterationConfig.data_um.x.values;
 z = app.jsons.sectionIterationConfig.data_um.z.values;
 dx = diff(x(1:2));
 dz = diff(z(1:2));
-if std(diff(x))>1e-3 || std(diff(z))>1e-3 || dx ~= dz
+if std(diff(x))>1e-3 || std(diff(z))>1e-3 || abs(dx-dz)>1e-3
     error('Unimplemented here');
 end
 
