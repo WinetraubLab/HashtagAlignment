@@ -113,7 +113,18 @@ mask(sum(imHist,3) == 0) = 1;
 
 % Begin code to find interface
 % extract markedline from json
-tissueInterfaceI = [jsons.slideConfig.data.FM.fiducialLines.group] == 't';
+e = false;
+if isfield(jsons.slideConfig.data.FM,'fiducialLines')
+    tissueInterfaceI = [jsons.slideConfig.data.FM.fiducialLines.group] == 't';
+    if ~any(tissueInterfaceI)
+        e = true;
+    end
+else
+    e = true;
+end
+if e
+    error('No tissue marked lines. Please mark tissue interface by running MarkLines.m');
+end
 x = jsons.slideConfig.data.FM.fiducialLines(tissueInterfaceI).u_pix;
 y = jsons.slideConfig.data.FM.fiducialLines(tissueInterfaceI).v_pix;
 Transform = jsons.slideConfig.data.FMOCTAlignment.FMToOCTTransform;
