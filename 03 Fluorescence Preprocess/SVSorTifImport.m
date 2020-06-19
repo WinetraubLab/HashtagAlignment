@@ -1,5 +1,8 @@
-% This script imports Fluorescence images in SVS format.
-% This is similar to SP5Import but for SVS
+% This script imports Fluorescence images in SVS or TIF format.
+% This is similar to SP5Import but for SVS or TIF
+% Notice, this function can import SVS or TIF files that where generated
+% as 'bigTIFF' by ZEN-Blue (ZEISS microscopes). To export use the "Pyramid"
+% and "TiffTiles", "Merge All Scences" enabled options
 
 %% Inputs
 
@@ -9,6 +12,8 @@ s3Dir = s3SubjectPath('01');
 slideNumber = 1;
 
 folderPath = '\\171.65.17.174\e\Caroline\OCT-Histology\';
+% Can be SVS or TIFF, but flourescence image and brightfield should be the
+% same format.
 flourescenceImagePath = [folderPath 'FM.svs'];
 brightfieldImagePath = [folderPath 'BF.svs'];
 
@@ -32,22 +37,54 @@ sectionNames = stackConfig.sections.names;
 % Sort out section names by slide
 sectionNames = sectionNames(cellfun(@(x)contains(x,sprintf('Slide%02d',slideNumber)),sectionNames));
 
-%% Get general information from SVS file
+%% Get general information from SVS or TIFF file
 
-infoFM =imfinfo(flourescenceImagePath);
-infoBF =imfinfo(brightfieldImagePath);
+% Get info
+infoFM = imfinfo(flourescenceImagePath);
+infoBF = imfinfo(brightfieldImagePath);
 
-% Load low resolution FM, slide info etc
-lowResSlideLevel = 4;
-lowResSlideIm=rgb2gray(imread(flourescenceImagePath,'Index',lowResSlideLevel));
-if length(infoFM) == 7
-    slideInfoIm  =imread(flourescenceImagePath,'Index',6);
-    wholeSlideLevel = 7; 
-else
-    slideInfoIm  =imread(flourescenceImagePath,'Index',5);
-    wholeSlideLevel = 6; 
+% Compute pixel size, see: 
+% http://www.fileformat.info/format/tiff/corion.htm
+xResolution_umperpix = zeros(size(infoFM))*NaN;
+yResolution_umperpix = zeros(size(infoFM))*NaN;
+for i=1:length(xResolution_umperpix)
+    switch(lower(infoFM(i).ResolutionUnit))
+        case 'centimeter'
+            xResolution_umperpix(i) = 10000/infoBF(i).XResolution;
+            yResolution_umperpix(i) = 10000/infoBF(i).YResolution;
+        otherwise
+            % Fill in resolution according to ratio with other slides
+            wR = [infoFM.Width]; wR = wR / wR(i);
+            hR = [infoFM.Height]; hR = hR / hR(i);       
+            xResolution_umperpix(i) = nanmean(xResolution_umperpix(:).*wR(:));
+            yResolution_umperpix(i) = nanmean(yResolution_umperpix(:).*hR(:));
+    end
 end
-wholeSlideIm =imread(flourescenceImagePath,'Index',wholeSlideLevel);
+resolution_umperpix = xResolution_umperpix;
+
+% Which tiff stack level resulution to upload
+[~,toUploadLevel] = min(abs(resolution_umperpix-resToUpload));
+
+%% Load Images
+
+% Figure out which parts of the pyramid we need
+[~,~,ext] = fileparts(flourescenceImagePath);
+switch(lower(ext))
+    case '.svs'
+        lowResSlideLevel = 4;
+        wholeSlideLevel = length(infoFM);
+        slideInfoLevel = wholeSlideLevel - 1;
+        
+    case '.tif'
+        lowResSlideLevel = length(infoFM)-1;
+        wholeSlideLevel = length(infoFM);
+        slideInfoLevel = length(infoFM);
+end
+
+% Actual load
+slideInfoIm   = imread(flourescenceImagePath,'Index',slideInfoLevel);
+wholeSlideIm  = imread(flourescenceImagePath,'Index',wholeSlideLevel);
+lowResSlideIm = imread(flourescenceImagePath,'Index',lowResSlideLevel);
 wholeSlideIm = rgb2gray(wholeSlideIm);
 
 if size(lowResSlideIm,1) > size(lowResSlideIm,2)
@@ -60,22 +97,6 @@ if isTranspose
     lowResSlideIm = transpose(lowResSlideIm);
     wholeSlideIm = transpose(wholeSlideIm);
 end
-
-% Compute pixel size, see: 
-% http://www.fileformat.info/format/tiff/corion.htm
-xResolution_umperpix = zeros(size(infoFM))*NaN;
-yResolution_umperpix = zeros(size(infoFM))*NaN;
-for i=1:length(xResolution_umperpix)
-    switch(lower(infoFM(i).ResolutionUnit))
-        case 'centimeter'
-            xResolution_umperpix(i) = 10000/infoBF(i).XResolution;
-            yResolution_umperpix(i) = 10000/infoBF(i).YResolution;
-    end
-end
-resolution_umperpix = xResolution_umperpix;
-
-% Which tiff stack level resulution to upload
-[~,toUploadLevel] = min(abs(resolution_umperpix-resToUpload));
 
 %% Make the main figure
 %Make the main figure
