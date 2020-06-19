@@ -7,7 +7,7 @@
 %% Inputs
 
 %Where to upload data
-s3Dir = s3SubjectPath('01');
+s3Dir = s3SubjectPath('00','LF');
 
 slideNumber = 1;
 
