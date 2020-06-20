@@ -11,7 +11,7 @@ if ~exist('outputFolder','var') || isempty(outputFolder)
 end
 
 % Which libraries to take images from
-libraryNames = {'LC','LD','LE','LF'};
+libraryNames = {'LC','LD','LE','LF','LG'};
 
 if ~exist('octBScanToUseAroundCenter','var') || isempty(octBScanToUseAroundCenter)
     %How many OCT slides to use, set to 0 if only to use the main one -1:1 to
@@ -22,11 +22,7 @@ if ~exist('isAverageOCTBScans','var') || isempty(isAverageOCTBScans)
     isAverageOCTBScans = true; % true means B scans to be averaged, false to generate individual images
 end
 
-% Magnification - Approximate Pixel Size
-%           20x - 0.7 micron
-%           10x - 1.0 micron
-%            4x - 2.5 micron
-% Source: https://www.amscope.com/camera-resolution
+% For magnification as function of pixel size, see: magnificationToPixelSizeMicrons
 if ~exist('outputImagePixelSize_um','var') || isempty(outputImagePixelSize_um)
     outputImagePixelSize_um = 1;
 end
