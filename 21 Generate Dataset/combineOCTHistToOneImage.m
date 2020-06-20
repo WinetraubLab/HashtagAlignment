@@ -51,7 +51,7 @@ for imageI=1:length(ds_A.Files)
     imAll(end-(20:30),20+(1:scalebarLength),:) = 256;
 
     imshow(imAll);
-    title(nname);
+     title(sprintf('%s (%s)',nname,pixelSizeToMagnification(imagesPixelSize_um)));
 
     %text(20+scalebarLength+10,size(imAll,1)-25,'100\mum','Color',[1 1 1],'FontWeight','bold');
     text(20,size(imAll,1)-25,'100\mum','FontSize',8);
