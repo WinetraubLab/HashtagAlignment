@@ -19,16 +19,7 @@ setVariblesFromJenkins();
 dataSetName = sprintf('%s %s %s', datestr(now,'yyyy-mm-dd'), magnificationName,tagName);
 dataSetName = strtrim(dataSetName);
 
-switch (magnificationName)
-    case '10x'
-        pixSize_um = 1;
-    case '4x'
-        pixSize_um = 2;
-    case '2x'
-        pixSize_um = 4;
-    otherwise
-        error('magnificationName: %s unknown',magnificationName);
-end
+pixSize_um = magnificationToPixelSizeMicrons (magnificationName);
 
 localDirectory = [pwd '\dataset_oct_histology\'];
 mainUploadDirectory = awsModifyPathForCompetability(sprintf('%s/%s/', ...
