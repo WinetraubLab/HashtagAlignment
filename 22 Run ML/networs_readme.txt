@@ -1,0 +1,2 @@
+We modified networks.py and pix2pix_model.py such that we can print the latent space during the testing phase. These files are to be replaced with the originan pix2pix algorithm from github:
+https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
