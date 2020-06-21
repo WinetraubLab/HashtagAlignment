@@ -14,7 +14,8 @@ imageResolution = '4x'; % Can be 2x,4x,10x
 datasetTag = ''; % Additional string to search for 
 
 % When loadFrom = 'snapshot', will get the snapshot with this name (or part of the name)
-snapshotName = '2020-05-10 Pix2PixHD';
+% Loads from _MLModels
+snapshotName = '2020-06-13 4x';
 
 %% Get data from Jenkins
 
