@@ -482,8 +482,8 @@ class UnetGenerator(nn.Module):
         #'/home/delazerdagpu/Desktop/DL Models/pytorch-CycleGAN-and-pix2pix-master/results/patches_256px_256px/feats'
            
          
-        # center layer
-        layer = self.model.model[1].model[3].model[3].model[3].model[3].model[3].model[3].model[2]
+        # center layer, after batch norm
+        layer = self.model.model[1].model[3].model[3].model[3].model[3].model[3].model[3].model[4]
         # print(layer)
         layer.register_forward_hook(self.get_activation('center'))
 
