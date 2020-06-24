@@ -15,7 +15,7 @@ if ~exist('isCalibrationFolder','var')
     isCalibrationFolder = false;
 end
 
-p = ['s3://delazerdamatlab/Users/OCTHistologyLibrary/' lib '/'];
+p = ['s3://delazerdamatlab/Users/OCTHistologyLibrary/' lib(1:2) '/'];
 
 if (isCalibrationFolder)
     p = [p '0Calibratoins/' subject '/'];
