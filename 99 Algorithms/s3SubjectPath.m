@@ -15,12 +15,20 @@ if ~exist('isCalibrationFolder','var')
     isCalibrationFolder = false;
 end
 
-p = ['s3://delazerdamatlab/Users/OCTHistologyLibrary/' lib(1:2) '/'];
+% Figure out prefix
+if strcmp(lib,'LFM') || strcmp(lib,'LGC')
+    prefx = lib(3);
+    lib = lib(1:2);
+else
+    prefx = '';
+end
+
+p = ['s3://delazerdamatlab/Users/OCTHistologyLibrary/' lib '/'];
 
 if (isCalibrationFolder)
     p = [p '0Calibratoins/' subject '/'];
 elseif ~isempty(subject)
-    p = [p lib '-' subject '/'];
+    p = [p lib prefx '-' subject '/'];
 end
 
 p = awsModifyPathForCompetability(p);
