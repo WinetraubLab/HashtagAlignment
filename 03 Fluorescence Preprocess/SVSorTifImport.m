@@ -7,15 +7,15 @@
 %% Inputs
 
 %Where to upload data
-s3Dir = s3SubjectPath('00','LF');
+s3Dir = s3SubjectPath('21','LFM');
 
 slideNumber = 1;
 
-folderPath = '\\171.65.17.174\e\Caroline\OCT-Histology\';
+folderPath = 'E:\Edwin\Pathxdx\Demo Slides\LFM-21\Calibration\';
 % Can be SVS or TIFF, but flourescence image and brightfield should be the
 % same format.
-flourescenceImagePath = [folderPath 'FM.svs'];
-brightfieldImagePath = [folderPath 'BF.svs'];
+flourescenceImagePath = ['E:\Edwin\Pathxdx\Demo Slides\LFM-21\iteration 1\Slide 1\EC21_Slide 01_Florescent.tif'];
+brightfieldImagePath = ['E:\Edwin\Pathxdx\Demo Slides\LFM-21\iteration 1\Slide 1\EC21_Slide 01_Florescent.tif'];
 
 % How deep below gel-tissue interface to aquire data
 howDeepIsTissue_mm = 1.5;
@@ -148,45 +148,55 @@ for si=1:length(sectionNames)
         delete(h);
         
         % Compute vector from a line to a point, using these equations:
-        % https://math.stackexchange.com/questions/1398634/finding-a-perpendicular-vector-from-a-line-to-a-point
+        % https://math.stackexchange.com/questions/1398634/finding-a-perpendicular-vector-from-a-line-to-a- point
         u1 = (roi(2,:)-roi(1,:))';
         u0 = roi(1,:)';
         P = up';
         Pprime = dot(P-u0,u1)/norm(u1)^2*u1+u0;
+
+        up_direction(:,si) = P-Pprime;
         
-        up_direction = P-Pprime;
-        if (isTranspose)
-            up_direction = flipud(up_direction);
-        end
+    else
+        % find perpendicular to tissue-gel interface
+        u1 = (roi(2,:)-roi(1,:))';
+        u1_perpendicular = [-u1(2) u1(1)] / norm([-u1(2) u1(1)]);
         
-        if true
-            hold on;
-            plot(Pprime(1),Pprime(2),'o')
-            plot(P(1),P(2),'o')
-            plot(u0(1)+[0 u1(1)],u0(2)+[0 u1(2)]); 
-            hold off;
-        end
+        up_direction(:,si) = u1_perpendicular * norm(up_direction(:,1));
+    end
+
+   
+        
+    if (si==1)
+        hold on;
+        plot(Pprime(1),Pprime(2),'o')
+        plot(P(1),P(2),'o')
+        plot(u0(1)+[0 u1(1)],u0(2)+[0 u1(2)]); 
+        hold off;
     end
 end
 
+% flip if necesssary
+if (isTranspose)
+    up_direction = flipud(up_direction);
+end
 %% Loop over sections, capture & Save
 howDeepIsTissue_px = howDeepIsTissue_mm*1000 / resolution_umperpix(lowResSlideLevel); % How deep is the tissue in pixels?
-down_direction = -up_direction/norm(up_direction)*howDeepIsTissue_px;
 for si=1:length(sectionNames)
-    
+    down_direction = -up_direction(:,si)/norm(up_direction(:,si))*howDeepIsTissue_px;
+
     % Figure out section dimensions to save. Start by computing a rectangle
     % that captures the section
     x = [ ...
             roixs(1,si)+down_direction(1), ...
             roixs(2,si)+down_direction(1), ...
-            roixs(2,si)+up_direction(1), ...
-            roixs(1,si)+up_direction(1) ...
+            roixs(2,si)+up_direction(1,si), ...
+            roixs(1,si)+up_direction(1,si) ...
         ];
     y = [ ...
             roiys(1,si)+down_direction(2), ...
             roiys(2,si)+down_direction(2), ...
-            roiys(2,si)+up_direction(2), ...
-            roiys(1,si)+up_direction(2) ...
+            roiys(2,si)+up_direction(2,si), ...
+            roiys(1,si)+up_direction(2,si) ...
         ];
     if true
         hold on;
@@ -203,8 +213,8 @@ for si=1:length(sectionNames)
     c = [min(x) max(x)];
     Rows=round(r*infoBF(toUploadLevel).Height/infoBF(lowResSlideLevel).Height);
     Cols=round(c*infoBF(toUploadLevel).Width /infoBF(lowResSlideLevel).Width);
-    
-    rot_deg = asin(up_direction(2)/norm(up_direction))*180/pi + 90; % Rotation angle
+ 
+    rot_deg = asin(up_direction(1,si)/norm(up_direction(:,si)))*180/pi; % Rotation angle
     
     % Get FM image
     im = rgb2gray(imread(flourescenceImagePath,'Index',toUploadLevel,'PixelRegion',{Rows,Cols}));
