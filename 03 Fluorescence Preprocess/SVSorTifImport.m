@@ -5,17 +5,17 @@
 % and "TiffTiles", "Merge All Scences" enabled options
 
 %% Inputs
-
+clear all; clc;
 %Where to upload data
 s3Dir = s3SubjectPath('21','LFM');
 
-slideNumber = 1;
+slideNumber = 3;
 
 folderPath = 'E:\Edwin\Pathxdx\Demo Slides\LFM-21\Calibration\';
 % Can be SVS or TIFF, but flourescence image and brightfield should be the
 % same format.
 flourescenceImagePath = ['E:\Edwin\Pathxdx\Demo Slides\LFM-21\iteration 1\Slide 1\EC21_Slide 01_Florescent.tif'];
-brightfieldImagePath = ['E:\Edwin\Pathxdx\Demo Slides\LFM-21\iteration 1\Slide 1\EC21_Slide 01_Florescent.tif'];
+brightfieldImagePath = ['E:\Edwin\Pathxdx\Demo Slides\LFM-21\iteration 1\Slide 1\EC21_Slide 01_Florescent.tif']; 
 
 % How deep below gel-tissue interface to aquire data
 howDeepIsTissue_mm = 1.5;
@@ -218,13 +218,14 @@ for si=1:length(sectionNames)
     
     % Get FM image
     im = rgb2gray(imread(flourescenceImagePath,'Index',toUploadLevel,'PixelRegion',{Rows,Cols}));
-    im = imrotate(im,rot_deg,'bilinear','crop');
+    im = imrotate(im,rot_deg,'bilinear');
+    im = imadjust(im, [0, 0.2]);
     photobleachedLinesImagePath = 'FM_PhotobleachedLinesImage.tif';
     imwrite(im,photobleachedLinesImagePath);
     
     % Get bright field image
     im = rgb2gray(imread(brightfieldImagePath,'Index',toUploadLevel,'PixelRegion',{Rows,Cols}));
-    im = imrotate(im,rot_deg,'bilinear','crop');
+    im = imrotate(im,rot_deg,'bilinear');
     brightFieldImagePath = 'FM_BrightfieldImage.tif';
     imwrite(im,brightFieldImagePath);
     
