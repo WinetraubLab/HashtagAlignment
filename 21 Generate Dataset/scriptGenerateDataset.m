@@ -7,6 +7,10 @@ tagName = '';
 octBScanToUseAroundCenter = [];
 isAverageOCTBScans = [];
 
+% Which libraries to take images from
+libraryNames = {'LC','LD','LE','LF','LG'};
+
+% Which of the dataset is in training
 filesInTestingSet = {'LE-03','LF-01','LG'};
 
 %% Jenkins 
@@ -34,7 +38,7 @@ awsMkDir(localDirectory);
 % Get images
 fprintf('%s Gather image pairs OCT Histology\n',datestr(datetime));
 alignedImagesFolder = [localDirectory 'original_image_pairs\'];
-gatherAlignedImagesFromAllSubjects(...
+gatherAlignedImagesFromAllSubjects(libraryNames,...
     alignedImagesFolder,octBScanToUseAroundCenter,...
     isAverageOCTBScans, pixSize_um);
 

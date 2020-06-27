@@ -1,4 +1,4 @@
-function gatherAlignedImagesFromAllSubjects(outputFolder,...
+function gatherAlignedImagesFromAllSubjects(libraryNames,outputFolder,...
     octBScanToUseAroundCenter,isAverageOCTBScans, outputImagePixelSize_um, ...
     minPatchSizeX_pix, minPatchSizeY_pix)
 % This script gathers OCT & Histology images from all subjects in library
@@ -9,9 +9,6 @@ function gatherAlignedImagesFromAllSubjects(outputFolder,...
 if ~exist('outputFolder','var') || isempty(outputFolder)
     outputFolder = [pwd '\dataset_oct_histology\original_image_pairs\'];
 end
-
-% Which libraries to take images from
-libraryNames = {'LC','LD','LE','LF','LG'};
 
 if ~exist('octBScanToUseAroundCenter','var') || isempty(octBScanToUseAroundCenter)
     %How many OCT slides to use, set to 0 if only to use the main one -1:1 to
