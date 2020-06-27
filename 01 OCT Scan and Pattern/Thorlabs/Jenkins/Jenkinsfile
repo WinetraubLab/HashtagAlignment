@@ -353,6 +353,10 @@ pipeline {
 						name: 'WhichSideToStartSections', 
 						choices: ['same side as black dot','side opposite to the black dot'], 
 						description: 'On which side should histologyist cut sections: black dot side or opposite to black dot?')
+                    choice(
+						name: 'ProcessingVendorName', 
+						choices: ['StanfordPC','PathXdx'], 
+						description: 'Who is the vendor these instructions are for (so we can use the right knife calibration)')
                     ]) 
 					
 			//Get person who scanned name
@@ -362,7 +366,8 @@ pipeline {
 			//Generate runme with data
 			bat("@echo subjectFolder_ = '" + SUBJECT_OUTPUT_FOLDER() + "'; > runme.m"); 
 			bat("@echo yourName_ = '" + whoRanExperiment + "'; >> runme.m")
-			bat("@echo distanceToOCTOrigin_um_ = " + userInput. HowDeepUM + "; >> runme.m") 
+            bat("@echo processingVendorName_ = '" + userInput.ProcessingVendorName + "'; >> runme.m")
+			bat("@echo distanceToOCTOrigin_um_ = " + userInput.HowDeepUM + "; >> runme.m") 
             bat("@echo isOverrideExistingInstructions_ = false; >> runme.m") 
 			
 			bat("@echo iteration_ = 1; >> runme.m") //First iteration

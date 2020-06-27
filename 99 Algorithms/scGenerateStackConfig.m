@@ -22,6 +22,12 @@ function stackConfig = scGenerateStackConfig(varargin)
 %   'histoKnife_sectionThickness_um'
 %   'histoKnife_thicknessOf5umSlice_um'
 %   'histoKnife_thicknessOf25umSlice_um'
+%   'histoKnife_processingVendorName' - can be any of the values below
+%       If set to 'StanfordPC' will override histoKnife_ values to fit
+%           StanfordPC calibration.
+%       If set to 'PathXdx' will override histoKnife_ values to fit
+%           PathXdx calibration.
+%       If set to '' will not override histoKnife_ values.
 
 %% Input Processing
 p = inputParser;
@@ -43,6 +49,7 @@ addParameter(p,'histoKnife_sectionsPerSlide',3);
 addParameter(p,'histoKnife_sectionThickness_um',5);
 addParameter(p,'histoKnife_thicknessOf5umSlice_um',5*2);
 addParameter(p,'histoKnife_thicknessOf25umSlice_um',25*1.7);
+addParameter(p,'histoKnife_processingVendorName','');
 
 if (length(varargin) == 1)
     %Try parsing the first one as a cell
@@ -60,7 +67,7 @@ if ~isempty(in.appendToSC)
 end
 
 % Version
-stackConfig.version = 1.2;
+stackConfig.version = 1.3;
 
 % Sample ID (if doesn't already exist)
 if ~isfield(stackConfig,'sampleID') || isempty(stackConfig.sampleID)
@@ -68,12 +75,26 @@ if ~isfield(stackConfig,'sampleID') || isempty(stackConfig.sampleID)
 end
 
 %% Histology knife (if doesn't already exist)
+if ~isempty(in.histoKnife_processingVendorName)
+    switch(lower(in.histoKnife_processingVendorName))
+        case 'stanfordpc'
+            in.histoKnife_thicknessOf5umSlice_um = 10;
+            in.histoKnife_thicknessOf25umSlice_um = 42.5;
+        case 'pathxdx'
+            in.histoKnife_thicknessOf5umSlice_um = 5.1;
+            in.histoKnife_thicknessOf25umSlice_um = 48.5;
+    end
+else
+    in.histoKnife_processingVendorName = 'unknown';
+end
+
 if  ~isfield(stackConfig,'histologyInstructions') || ...
     ~isfield(stackConfig.histologyInstructions,'histoKnife')
     stackConfig.histologyInstructions.histoKnife.sectionsPerSlide = in.histoKnife_sectionsPerSlide;
     stackConfig.histologyInstructions.histoKnife.sectionThickness_um = in.histoKnife_sectionThickness_um;
     stackConfig.histologyInstructions.histoKnife.thicknessOf5umSlice_um = in.histoKnife_thicknessOf5umSlice_um;
     stackConfig.histologyInstructions.histoKnife.thicknessOf25umSlice_um = in.histoKnife_thicknessOf25umSlice_um;
+    stackConfig.histologyInstructions.histoKnife.processingVendorName = in.histoKnife_processingVendorName;
 end
 
 %% Iteration

@@ -6,7 +6,7 @@
 %false if saved locally only
 isUpdateCloud = false; 
 
-subjectFolder = s3SubjectPath('09','LC');
+subjectFolder = s3SubjectPath('21','LFM');
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %Jenkins
     isUpdateCloud = true;
@@ -316,7 +316,7 @@ hold off;
 ylabel('Distance [mm]');
 setSectionNamesAsXLabels(scJson.sections.names); 
 title(sprintf('Distance From Origin, SEM %.1f[\\mum], Section Size: %.1f[\\mum]',s*1e3/sqrt(sum(goodFit)),...
-    abs(nanmedian(diff(d_stackPlaneFit*isPlaneNormalSameDirectionAsCuttingDirection))*1e3) ));
+    nanmedian(abs(diff(d_stackPlaneFit*isPlaneNormalSameDirectionAsCuttingDirection))*1e3) ));
 grid on;
 if isPlaneNormalSameDirectionAsCuttingDirection == 1
     set(gca, 'YDir','reverse');

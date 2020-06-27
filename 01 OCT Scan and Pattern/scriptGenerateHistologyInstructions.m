@@ -50,6 +50,13 @@ else
     end
 end
 
+% Select histology processing vendor, or set to '' if unknown
+if exist('processingVendorName_','var')
+    processingVendorName = processingVendorName_;
+else
+    processingVendorName = '';
+end
+
 %% Decide where to cut
 whereToCut_um = (0:(numberOfSlidesToCut*3-1))*30;
 whereToCut_um = whereToCut_um - mean(whereToCut_um);
@@ -109,6 +116,7 @@ inputs = [inputs {...
     'estimatedDistanceFromFullFaceToOCTOrigin_um', distanceToOCTOrigin_um,...
     'operator', yourName, ...
     'date', now, ...
+    'histoKnife_processingVendorName', processingVendorName, ...
     }];
 
 stackConfig = scGenerateStackConfig(inputs);
