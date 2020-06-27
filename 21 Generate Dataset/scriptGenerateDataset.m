@@ -7,7 +7,7 @@ tagName = '';
 octBScanToUseAroundCenter = [];
 isAverageOCTBScans = [];
 
-filesInTestingSet = {'LF-01','LG'};
+filesInTestingSet = {'LE-03','LF-01','LG'};
 
 %% Jenkins 
 %This function updates all input varible names that have name_ like this:

@@ -7,7 +7,7 @@ function sortImagesTrainTest(baseFolder,filesInTestingSet)
 
 %% Inputs
 if ~exist('filesInTestingSet','var') || isempty(filesInTestingSet)
-    filesInTestingSet = {'LE-01','LE-03','LF'};
+    %filesInTestingSet = {'LE-01','LE-03','LF'};
 end
 
 if ~exist('baseFolder','var') || isempty(baseFolder)
