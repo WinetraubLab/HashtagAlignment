@@ -72,16 +72,12 @@ imwrite( ...
 
 %% Loop over all images to generate patches
 for imageI=1:length(ds_A.Files)
+    
+    % Load Images
     im_A = ds_A.read;
     im_B = ds_B.read;
     
-    % Pad to match the minimal size of patch
-    im_A = imPadToMeetPatchSize(im_A, patchSize_pix(2), patchSize_pix(1), 0);
-    im_B = imPadToMeetPatchSize(im_B, patchSize_pix(2), patchSize_pix(1), 0);
-    
-    if ~strcmp(strrep(ds_A.Files{imageI},'_A.jpg',''), strrep(ds_B.Files{imageI},'_B.jpg',''))
-        error('file names don''t match "%s" vs "%s"',ds_A.Files{imageI},ds_B.Files{imageI});
-    end
+    % Check size
     sz_A = [size(im_A,1) size(im_A,2)];
     sz_B = [size(im_B,1) size(im_B,2)];
     if any(sz_A ~= sz_B)
@@ -94,22 +90,41 @@ for imageI=1:length(ds_A.Files)
         im_A = imresize(im_A, round(sz_A.*aspectRatio), 'Antialiasing', true, 'method', 'cubic');
         im_B = imresize(im_B, round(sz_B.*aspectRatio), 'Antialiasing', true, 'method', 'cubic');
     end
+    clear('sz_A','sz_B');
     
+    % Pad to match the minimal size of patch
+    im_A = imPadToMeetPatchSize(im_A, patchSize_pix(2), patchSize_pix(1), 0);
+    im_B = imPadToMeetPatchSize(im_B, patchSize_pix(2), patchSize_pix(1), 0);
+    
+    if ~strcmp(strrep(ds_A.Files{imageI},'_A.jpg',''), strrep(ds_B.Files{imageI},'_B.jpg',''))
+        error('file names don''t match "%s" vs "%s"',ds_A.Files{imageI},ds_B.Files{imageI});
+    end
+
     h = size(im_A,1);
     w = size(im_A,2);
     
     % In cases that image is only slightly bigger than the size that fits
     % in a patch, try to set the start point such that the least amount of
     % data is wasted, i.e. start in the middle
-    r = (w-patchSize_pix(2))/patchOverlap_pix(2);
-    r = r-floor(r);
-    wastedPixels = r*patchOverlap_pix(2);
-    x_Start = round((wastedPixels+1)/2);
+    
+    % Number of patches that this image will be devided by (x direction)
+    nXPatches = 1 + ...
+        (w-patchSize_pix(2))/patchOverlap_pix(2); 
+    nXPatches = floor(nXPatches);
+    if nXPatches < 1
+        nXPatches = 1;
+    end
+    
+    % Residual pixels
+    rx = w - ( patchSize_pix(2) + patchOverlap_pix(2)*(nXPatches - 1) );
+    
+    % Set start position to be the center of the residual
+    x_Start = max([round(rx/2),1]);
     
     % loop through patches
     cropcount = 1;
     for y=1:patchOverlap_pix(1):(h-patchSize_pix(1))
-        for x=x_Start:patchOverlap_pix(2):(w-patchSize_pix(2))
+        for x=x_Start:patchOverlap_pix(2):max([w-patchSize_pix(2),1])
             roiy = y:y+(patchSize_pix(1)-1);
             roix = x:x+(patchSize_pix(2)-1);
 
@@ -124,7 +139,9 @@ for imageI=1:length(ds_A.Files)
                 (goodPixels/goodPixelsInFirstPatch<patchDataMinimumRelative))
                 warning('%s have less than %.0f%% of usable pixels, or less than minimul relative good pixels, therefore is beeing skipped.', ...
                 ds_A.Files{imageI},patchDataMinimumAbs*100);
-                continue;
+            
+                % Don't throw anything!
+                % continue;
             end
 
             % crop images
