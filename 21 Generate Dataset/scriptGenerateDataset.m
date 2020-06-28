@@ -1,7 +1,7 @@
 % This script generates dataset for ML models
 
 %% Inputs - set defaults
-magnificationName = '10x';
+magnificationName = '4x';
 tagName = '';
 
 octBScanToUseAroundCenter = [];

@@ -70,7 +70,7 @@ for iSlide=1:length(isUsable)
     % Load data - OCT (and average if needed)
     if length(octBScanToUseAroundCenter) == 1 && octBScanToUseAroundCenter(1) == 0 %Load just the central slide
         if ~isfield(slideConfig,'alignedImagePath_OCT')
-            warning('%s %s doesn''t have alignedImagePath_OCT, skipping',...
+            error('%s %s doesn''t have alignedImagePath_OCT, skipping',...
                 subjectName,sectionName)
             continue;
         end
@@ -78,7 +78,7 @@ for iSlide=1:length(isUsable)
         [img_oct, metadata] = yOCTFromTif([sectionPath slideConfig.alignedImagePath_OCT]);
     else
         if ~isfield(slideConfig,'alignedImagePath_OCTStack')
-            warning('%s %s doesn''t have alignedImagePath_OCTStack, skipping',...
+            error('%s %s doesn''t have alignedImagePath_OCTStack, skipping',...
                 subjectName,sectionName)
             continue;
         end

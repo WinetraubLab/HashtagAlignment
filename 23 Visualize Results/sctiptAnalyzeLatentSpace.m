@@ -2,7 +2,7 @@
 
 %% Inputs
 datasetBaseDirectory = s3SubjectPath('','_MLModels');
-baseMLFolder = [datasetBaseDirectory '2020-06-13 4x Yonatan Pix2PixLatentTest3'];
+baseMLFolder = [datasetBaseDirectory '2020-06-27 4x Yonatan Pix2Pix'];
 
 % Path to the specific model results
 modelName = 'pix2pix_2to1ratio'; % 'pix2pix_2to1_ratio','pix2pix_256px256px'
