@@ -23,6 +23,7 @@ positions = {...
     'Ear'   ''       -0.360 0.567 ; ...
     'Unknown' ''     -0.280 6.150 ; ...
     'Clavicle' ''    -0.253 1.117 ; ...
+    'forearm' ''      0.778 2.499 ; ...
     };
 
 %% Input checks
@@ -63,7 +64,7 @@ for i=1:length(bodyPartsNames)
     positionsMask = positionsMask | cellfun(@isempty,positions(:,2)); % Add parts that dont have sides
     
     % Filter by body part
-    positionsMask = positionsMask.*cellfun(@(x)(contains(bp,x,'IgnoreCase',true)),positions(:,1));
+    positionsMask = positionsMask.*cellfun(@(x)(contains([' ' bp],[' ' x],'IgnoreCase',true)),positions(:,1));
     
     % Unknown position mask
     if ~any(positionsMask)
