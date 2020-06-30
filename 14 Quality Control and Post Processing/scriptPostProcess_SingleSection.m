@@ -178,8 +178,16 @@ minSignal = 0.28 * (m_mean_max - m_mean_min) + m_mean_min;
 % Compute log signal mask
 m(isnan(m)) = minSignal;
 m = imgaussfilt(m,20);
+% Below interface
+below_interface = zeros(size(m));
+for xi = 1:length(X_)
+    try
+        below_interface(round(Y_(xi)):end,xi) = 1; 
+    end
+end
+
 low_sig_mask = (m<minSignal ... Under minimal signal
-    & repmat(zI(:) > interfaceI,1,size(m,2)) ... Below interface
+    & below_interface ... Below interface
     & mask==0 ... Not flagged already
     );
 
