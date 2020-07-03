@@ -91,7 +91,7 @@ yToLoad = dim.y.index(...
 %Load a few y slices
 [int1,dim1] = ...
     yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'YFramesToProcess',yToLoad}]);
-[scan1,dim1] = yOCTInterfToScanCpx ({int1 dim1 ,'n',n});
+[scan1,dim1] = yOCTInterfToScanCpx ({int1, dim1, 'n', n, reconstructConfig});
 scan1 = abs(scan1);
 for i=length(size(scan1)):-1:4 %Average BScan, AScan avg but no z,x,y
     scan1 = squeeze(mean(scan1,i));
@@ -137,7 +137,7 @@ frameI = 2; %frame = 1 is at the top of the gel, number 2 should be better
 
 [int1,dim1] = ...
     yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'YFramesToProcess',yToLoad}]);
-[scan1,dim1] = yOCTInterfToScanCpx ({int1 dim1 ,'n',n});
+[scan1,dim1] = yOCTInterfToScanCpx ({int1, dim1, 'n', n, reconstructConfig});
 scan1 = abs(scan1);
 for i=length(size(scan1)):-1:4 %Average BScan, AScan avg but no z,x,y
     scan1 = squeeze(mean(scan1,i));
