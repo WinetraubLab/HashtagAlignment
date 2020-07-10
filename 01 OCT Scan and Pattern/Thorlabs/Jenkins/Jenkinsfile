@@ -278,7 +278,7 @@ pipeline {
 				"isRunInAutomatedMode_ = false; cd('" + currentDir + """\\02 OCT Preprocess\\'); runAllPreprocessing; disp('MAKE SURE YOU QUIT MATLAB BEFORE RUNNING JENKINS!');" > "%TEMP_STORAGE%\\%SAMPLE_ID%_runAllPreprocessing_Manualy.bat" """)
 
 			//Automated
-			bat("@echo " + foldersDef + """runAllPreprocessing; >> "%TEMP_STORAGE%\\runme_preprocess.m" """)
+			bat("@echo " + foldersDef + """isPreprocess_=false; runAllPreprocessing; >> "%TEMP_STORAGE%\\runme_preprocess.m" """)
 			
 			//println gitFolder
 		}}}
