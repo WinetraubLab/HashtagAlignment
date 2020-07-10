@@ -352,7 +352,7 @@ pipeline {
                     choice(
 						name: 'WhichSideToStartSections', 
 						choices: ['same side as black dot','side opposite to the black dot'], 
-						description: 'On which side should histologyist cut sections: black dot side or opposite to black dot?')
+						description: 'On which side should histologyist cut sections: black dot side or opposite to black dot?'),
                     choice(
 						name: 'ProcessingVendorName', 
 						choices: ['StanfordPC','PathXdx'], 
