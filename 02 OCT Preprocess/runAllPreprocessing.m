@@ -6,9 +6,10 @@ SubjectFolderOut = SubjectFolderIn; %Where to save folder to
 
 isRunInAutomatedMode = true; %When set to false, will allow human more control to select info
 
-%For debug purpose, skip the uploading part
-isProcessOnly = false; %No uploading to the cloud
+% Specify what kind of processing is needed
+isUploadToCloud = true; % Should data be uploaded to S3?
 deleteFolderAfterUpload = true; %Would you like to delete data after uploading to the cloud or ask for manual delete?
+isPreprocess = true; % When set to false, will not preprocess, just upload
 
 %% Setup environment
 if (exist('SubjectFolderIn_','var'))
@@ -17,13 +18,17 @@ if (exist('SubjectFolderIn_','var'))
     SubjectFolderOut = SubjectFolderOut_;
 end
 
-%Processing
-if exist('isProcessOnly_','var') 
-	disp('Processing only mode, will not upload to cloud');
-	isProcessOnly = isProcessOnly_;
+% Set up processing and uploading switches
+if exist('isUploadToCloud','var') 
+	isUploadToCloud = isUploadToCloud_;
 end
-if (isProcessOnly)
+if exist('isPreprocess_','var') 
+	isPreprocess = isPreprocess_;
+end
+
+if (~isUploadToCloud)
     %If only processing, no need to upload to the cloud
+	disp('Will not upload to cloud');
     SubjectFolderOut = SubjectFolderIn;
 end
 
@@ -43,7 +48,7 @@ end
 
 OCTVolumesFolder_ = [SubjectFolderIn '\OCTVolumes\'];
 
-%% Do we need to upload to the cloud?
+%% Check uploading 
 if (awsIsAWSPath(SubjectFolderIn))
     inputFolderAWS = true;
 else
@@ -55,14 +60,17 @@ if (awsIsAWSPath(SubjectFolderOut))
 else
     outputFolderAWS = false;
 end
-isUploadToCloud = ~inputFolderAWS && outputFolderAWS;
-if (isProcessOnly)
-    isUploadToCloud = false;
+
+if isUploadToCloud 
+	if ~inputFolderAWS && outputFolderAWS)
+		isUploadToCloud = false;
+		warning('Upload data to the cloud mode, but either input folder is not local or output folder is not in S3 - can''t upload!');
+	end
 end
 
 %% Start by uploading to the cloud
 if(isUploadToCloud && ...
-	isRunInAutomatedMode) %In manual mode run code first than upload to the cloud
+	isRunInAutomatedMode) %In manual mode run code first than upload to the cloud, but in auto mode upload first.
 	fprintf('%s Uploading files to AWS ...\n',datestr(datetime));
     
     %Copy to the cloud
@@ -74,20 +82,23 @@ end
 
 %% Running
 try
-	%Create one parallel pull for all
-	setupParpolOCTPreprocess();
+	if isPreprocess
+		%Create one parallel pull for all
+		setupParpolOCTPreprocess();
+		
+		fprintf('%s Running findFocusInBScan.\n',datestr(datetime));
+		findFocusInBScan;
+		close all;
+		
+		fprintf('%s Running stitchOverview.\n',datestr(datetime));
+		stitchOverview;
+		close all;
+		
+		fprintf('%s Running stitchVolume.\n',datestr(datetime));
+		stitchVolume
+		close all;
 	
-    fprintf('%s Running findFocusInBScan.\n',datestr(datetime));
-    findFocusInBScan;
-    close all;
-    
-    fprintf('%s Running stitchOverview.\n',datestr(datetime));
-    stitchOverview;
-    close all;
-    
-    fprintf('%s Running stitchVolume.\n',datestr(datetime));
-    stitchVolume
-    close all;
+	end
 	
 	%Upload new files to the cloud, but only if processing was finished correctly
 	if(isUploadToCloud)
@@ -118,7 +129,7 @@ try
 							[SubjectFolderOut '/' d(i).name],false); %Verboose mode off
 				end
 			end
-		else %ran manually need to upload everything
+		else %ran manually. Need to upload everything
 			fprintf('%s Uploading files to AWS...\n',datestr(datetime));
 			awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut,true);
 			fprintf('%s Uploading complete.\n',datestr(datetime));
