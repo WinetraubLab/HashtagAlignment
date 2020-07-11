@@ -62,7 +62,7 @@ else
 end
 
 if isUploadToCloud 
-	if ~inputFolderAWS && outputFolderAWS)
+	if ~inputFolderAWS && outputFolderAWS
 		isUploadToCloud = false;
 		warning('Upload data to the cloud mode, but either input folder is not local or output folder is not in S3 - can''t upload!');
 	end
@@ -97,7 +97,8 @@ try
 		fprintf('%s Running stitchVolume.\n',datestr(datetime));
 		stitchVolume
 		close all;
-	
+    else
+        fprintf('%s skipping preprocess.\n',datestr(datetime));
 	end
 	
 	%Upload new files to the cloud, but only if processing was finished correctly
