@@ -19,7 +19,7 @@ if (exist('SubjectFolderIn_','var'))
 end
 
 % Set up processing and uploading switches
-if exist('isUploadToCloud','var') 
+if exist('isUploadToCloud_','var') 
 	isUploadToCloud = isUploadToCloud_;
 end
 if exist('isPreprocess_','var') 
