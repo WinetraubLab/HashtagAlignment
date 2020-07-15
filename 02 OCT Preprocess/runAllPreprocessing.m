@@ -26,12 +26,6 @@ if exist('isPreprocess_','var')
 	isPreprocess = isPreprocess_;
 end
 
-if (~isUploadToCloud)
-    %If only processing, no need to upload to the cloud
-	disp('Will not upload to cloud');
-    SubjectFolderOut = SubjectFolderIn;
-end
-
 %Automated only
 if exist('isRunInAutomatedMode_','var')
 	isRunInAutomatedMode = isRunInAutomatedMode_;
@@ -40,15 +34,13 @@ if ~isRunInAutomatedMode
 	input('Once we click on enter script will run, would you like to edit files? Click enter when ready');
 end
 
-if ~awsIsAWSPath(SubjectFolderIn_ ) && ~exist(SubjectFolderIn_,'dir')
-	disp(['Input folder non existing: ' SubjectFolderIn_ '. Probably already upload to the cloud']);
-	disp('Skipping that one');
-	return;
+%% Check Folders
+
+if ~awsExist(SubjectFolderIn)
+     disp(['Input folder "' SubjectFolderIn '" does not exist. Skipping']);
+     return;
 end
 
-OCTVolumesFolder_ = [SubjectFolderIn '\OCTVolumes\'];
-
-%% Check uploading 
 if (awsIsAWSPath(SubjectFolderIn))
     inputFolderAWS = true;
 else
@@ -61,12 +53,26 @@ else
     outputFolderAWS = false;
 end
 
-if isUploadToCloud 
-	if ~inputFolderAWS && outputFolderAWS
-		isUploadToCloud = false;
-		warning('Upload data to the cloud mode, but either input folder is not local or output folder is not in S3 - can''t upload!');
-	end
+% if requesting to upload to the cloud, make sure folder is not already in s3 :)
+if (isUploadToCloud && inputFolderAWS)
+     disp(['Input folder "' SubjectFolderIn '" is already in the cloud, will not override. Skipping']);
+     return;
 end
+
+if (isUploadToCloud && ~outputFolderAWS)
+     disp(['Output folder "' outputFolderAWS '" is not in the cloud, cannot upload. Skipping']);
+     return;
+end
+
+if (~isUploadToCloud)
+    % If only processing, no need to upload to the cloud
+	disp('Will not upload to cloud');
+    SubjectFolderOut = SubjectFolderIn;
+end
+
+OCTVolumesFolder_ = [SubjectFolderIn '\OCTVolumes\'];
+
+fprintf('%s Input checks completed.\n',datestr(datetime));
 
 %% Start by uploading to the cloud
 if(isUploadToCloud && ...
