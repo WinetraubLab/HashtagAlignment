@@ -13,7 +13,7 @@ isPreprocess = true; % When set to false, will not preprocess, just upload
 
 %% Setup environment
 if (exist('SubjectFolderIn_','var'))
-	fprintf('%s Processing input: "%s"\n',datestr(datetime),SubjectFolderIn_);
+	fprintf('%s Input: "%s"\n',datestr(datetime),SubjectFolderIn_);
     SubjectFolderIn = SubjectFolderIn_;
     SubjectFolderOut = SubjectFolderOut_;
 end
