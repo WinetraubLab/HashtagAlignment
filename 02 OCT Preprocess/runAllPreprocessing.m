@@ -83,12 +83,13 @@ if(isUploadToCloud && ...
     awsCopyFileFolder(SubjectFolderIn,SubjectFolderOut,true);
     
 	fprintf('%s Uploading Completed.\n',datestr(datetime));
-	fprintf('%s Preprocessing Using local copy...\n',datestr(datetime));
 end
 
 %% Running
 try
 	if isPreprocess
+        fprintf('%s Preprocessing Using local copy...\n',datestr(datetime));
+        
 		%Create one parallel pull for all
 		setupParpolOCTPreprocess();
 		
@@ -104,7 +105,7 @@ try
 		stitchVolume
 		close all;
     else
-        fprintf('%s skipping preprocess.\n',datestr(datetime));
+        fprintf('%s Skipping preprocess.\n',datestr(datetime));
 	end
 	
 	%Upload new files to the cloud, but only if processing was finished correctly
