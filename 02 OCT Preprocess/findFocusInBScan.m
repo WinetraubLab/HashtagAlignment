@@ -134,6 +134,7 @@ focusDepth1 = mean(dim.z.values(tissueZi)); %[um] - first guess
 %% Refine initial guess by going to the point where focus is highest
 disp('Refining Focus Position...');
 frameI = 2; %frame = 1 is at the top of the gel, number 2 should be better
+fp = sprintf('%sData%02d/',OCTVolumesFolderVolume,frameI);
 
 [int1,dim1] = ...
     yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'YFramesToProcess',yToLoad}]);
