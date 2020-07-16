@@ -5,8 +5,8 @@ disp('Looking For Focus Position...');
 %% Inputs
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-02D/OCTVolumes/';
-reconstructConfig = {'dispersionQuadraticTerm',6.539e07}; %Configuration for processing OCT Volume
+OCTVolumesFolder = 's3://delazerdamatlab/Users/BrainProject/1-12-2020Ganymede/';
+reconstructConfig = {'dispersionQuadraticTerm',8e07}; %Configuration for processing OCT Volume
 
 %Probe Data
 focusSigma = 20; %Sigma size of focus [pixel]
@@ -17,7 +17,7 @@ isRunInAutomatedMode =  false;
 if (exist('OCTVolumesFolder_','var'))
     OCTVolumesFolder = OCTVolumesFolder_;
 end
-LogFolder = [OCTVolumesFolder '..\Log\02 OCT Preprocess\'];
+LogFolder = [OCTVolumesFolder '\Log\Stats\'];
 
 if (exist('isRunInAutomatedMode_','var'))
     isRunInAutomatedMode = isRunInAutomatedMode_;
