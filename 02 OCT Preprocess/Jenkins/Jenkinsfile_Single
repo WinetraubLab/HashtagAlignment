@@ -97,6 +97,7 @@ pipeline {
 		stage("Build Runme File and Run Matlab")
 		{steps{script{
 			bat("@echo isRunInAutomatedMode_ = true; >> runme.m")
+            bat("@echo isUploadToCloud_ = false; >> runme.m") // Already uploaded
 			bat("@echo SubjectFolderIn_ = '%SUBJECT_FOLDER_PATH%'; >> runme.m")
 			bat("@echo SubjectFolderOut_ = '%SUBJECT_FOLDER_PATH%'; >> runme.m")
 			bat("@echo isRunInDebugMode_ =%IS_RUN_IN_DEBUG_MODE%; >> runme.m")
