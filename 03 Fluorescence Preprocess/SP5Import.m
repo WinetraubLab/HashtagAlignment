@@ -105,12 +105,17 @@ else
     brightfieldImagePath = brightfieldImagePath{:};
 end
 
-beadsImagePath = files(cellfun(@(x)(contains(x,sprintf('ch%02d',beadsChanel))),files));
-if length(beadsImagePath) ~= 1
-    warning('Could not find one file with _ch%02d (beads channel)',beadsChanel);
-    beadsImagePath = '';
+if ~isempty(beadsChanel)
+    beadsImagePath = files(cellfun(@(x)(contains(x,sprintf('ch%02d',beadsChanel))),files));
+    if length(beadsImagePath) ~= 1
+        warning('Could not find one file with _ch%02d (beads channel)',beadsChanel);
+        beadsImagePath = '';
+    else
+        beadsImagePath = beadsImagePath{:};
+    end
 else
-    beadsImagePath = beadsImagePath{:};
+    % No beads chanel
+    beadsImagePath = '';
 end
 
 %% Read pixel size from meta data
