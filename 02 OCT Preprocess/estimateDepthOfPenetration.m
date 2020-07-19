@@ -115,8 +115,8 @@ for BScanI=1:length(bScanIndexs)
     %% Plot output
     figure(12);
     imagesc(meta.x.values*1e3,meta.z.values*1e3,imOCT); colormap gray
-    title(sprintf('#%d OCT B-Scan, y=%.0f[\\mum]\nDepth of Penetration: %.0f[\\mum]',...
-        BScanI, 1e3*meta.y.values(bScanIndexs(BScanI)),nanmedian(depthOfPenetration)));
+    title(sprintf('#%d OCT B-Scan, yI=%d\nDepth of Penetration: %.0f[\\mum]',...
+        BScanI, bScanIndexs(BScanI), nanmedian(depthOfPenetration)));
     hold on;
     plot(meta.x.values*1e3,surfaceZPosition_um);
     plot(meta.x.values*1e3,maxDepthPosition_um);
@@ -152,8 +152,8 @@ awsSaveMatlabFigure(gcf,[logPath 'TissueInterfacePositions.png']);
 
 %% Save Statistics
 scanConfigJson.volumeStatistics.depthOfPenetration_um = median(depthOfPenetrations);
-scanConfigJson.volumeStatistics.minTissueInterfaceZ_um = prctile(tissueTopPositions,5);
-scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um = prctile(tissueTopPositions,95);
+scanConfigJson.volumeStatistics.minTissueInterfaceZ_um = prctile(tissueTopPositions,10);
+scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um = prctile(tissueTopPositions,90);
 scanConfigJson.volumeStatistics.surfaceIntensity_db = median(surfaceIntensitys);
 scanConfigJson.volumeStatistics.noiseFloor_db = median(noiseIntensitys);
 

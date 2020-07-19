@@ -7,7 +7,7 @@
 
 % Which library to run on
 [subjectsPath,subjectsName] = ...
-    s3GetAllSubjectsInLib('LC'); %Set lib (LC, LD etc, or leave empty for latest lib)
+    s3GetAllSubjectsInLib({'LC','LD','LE','LF','LG'}); %Set lib (LC, LD etc, or leave empty for latest lib)
 
 % Will the script run on subjects or slides?
 runOn = 'subjects'; % Can be 'subjects' or 'slides'
