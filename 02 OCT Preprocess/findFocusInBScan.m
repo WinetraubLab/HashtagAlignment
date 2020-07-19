@@ -5,7 +5,8 @@ disp('Looking For Focus Position...');
 %% Inputs
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/BrainProject/1-12-2020Ganymede/';
+OCTVolumesFolder = 's3://delazerdamatlab/Users/BrainProject/6-26-Ganymede20x/';
+FolderScanName=regexp(OCTVolumesFolder,filesep,'split');
 reconstructConfig = {'dispersionQuadraticTerm',8e07}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -187,6 +188,7 @@ hold off;
 
 %% Plot and let the user decide
 %Find focal point as the brightest (its also the top of the tissue..)
+close all;
 ax = figure(4);
 imagesc(dim.x.values,dim.z.values,squeeze(log(mean(scan1,3))))
 colormap gray
@@ -228,13 +230,13 @@ json.VolumeOCTDimensions = dim;
 awsWriteJSON(json,[OCTVolumesFolder 'ScanConfig.json']); %Can save locally or to AWS
 
 %Output Tiff 
-saveas(ax,'FindFocusInBScan.png');
+saveas(ax,[FolderScanName{6} 'BScanFocus.png']);
 if (awsIsAWSPath(OCTVolumesFolder))
     %Upload to AWS
-    awsCopyFileFolder('FindFocusInBScan.png',[LogFolder '/FindFocusInBScan.png']);
+    awsCopyFileFolder([FolderScanName{6} 'BScanFocus.png'],[LogFolder '/FindFocusInBScan.png']);
 else
     if ~exist(LogFolder,'dir')
         mkdir(LogFolder)
     end
-    copyfile('FindFocusInBScan.png',[LogFolder '\FindFocusInBScan.png']);
+    copyfile([FolderScanName{6} 'BScanFocus.png'],[LogFolder '\FindFocusInBScan.png']);
 end   
