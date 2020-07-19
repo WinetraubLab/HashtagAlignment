@@ -34,7 +34,7 @@ if strcmpi(runOn,'slides')
     disp('Running on Slides')
     for si = 1:length(subjectsPath)
         subjectPath = subjectsPath{si};
-        disp(['Processing ' subjectsName{si}]);
+        fprintf('%s Processing %s\n', datestr(datetime), subjectsName{si});
         tic;
         try
             [slidesPath,sectionNames] = s3GetAllSlidesOfSubject(subjectPath);
@@ -45,7 +45,7 @@ if strcmpi(runOn,'slides')
 
         for sli = 1:length(slidesPath)
             slidePath = slidesPath{sli};
-            disp(['  Processing ' sectionNames{sli}]);
+            fprintf('%s    Processing %s\n', datestr(datetime), sectionNames{si});
 
             funcToRun(slidePath);
         end
