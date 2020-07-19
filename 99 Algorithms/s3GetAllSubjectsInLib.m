@@ -13,8 +13,8 @@ if iscell(lib)
     
     for i=1:length(lib)
         [p,n] = s3GetAllSubjectsInLib(lib{i});
-        subjectPaths = [subjectPaths p];
-        subjectNames = [subjectNames n];
+        subjectPaths = [subjectPaths; p];
+        subjectNames = [subjectNames; n];
     end
     return;
 end
