@@ -93,17 +93,8 @@ try
 		%Create one parallel pull for all
 		setupParpolOCTPreprocess();
 		
-		fprintf('%s Running findFocusInBScan.\n',datestr(datetime));
-		findFocusInBScan;
-		close all;
-		
-		fprintf('%s Running stitchOverview.\n',datestr(datetime));
-		stitchOverview;
-		close all;
-		
-		fprintf('%s Running stitchVolume.\n',datestr(datetime));
-		stitchVolume
-		close all;
+        % Run
+        RunProcessingSterileEnvironment(OCTVolumesFolder_);
     else
         fprintf('%s Skipping preprocess.\n',datestr(datetime));
 	end
@@ -168,3 +159,26 @@ catch ME
 end 
 
 fprintf('%s Finish.\n',datestr(datetime));
+
+function RunProcessingSterileEnvironment(OCTVolumesFolder_)
+% Run the script in a way that will not harm outside 
+
+fprintf('%s Running findFocusInBScan.\n',datestr(datetime));
+findFocusInBScan;
+close all;
+
+fprintf('%s Running stitchOverview.\n',datestr(datetime));
+stitchOverview;
+close all;
+
+fprintf('%s Running stitchVolume.\n',datestr(datetime));
+stitchVolume
+close all;
+
+fprintf('%s Estimate Depth Of Penetration.\n',datestr(datetime));
+estimateDepthOfPenetration
+close all;
+
+end
+
+
