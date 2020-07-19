@@ -26,7 +26,7 @@ zPixelSize_um = diff(meta.z.values(1:2))*1e3; % um/pix
 
 % Select bScans to load, around the center of the scan as this is the
 % relevant area.
-bScanIndexs = meta.y.index(round(linspace(1,length(meta.y.index),21)));
+bScanIndexs = meta.y.index(round(linspace(0,length(meta.y.index)-1,21)+0.5));
 bScanIndexs([1 end]) = [];
 
 % Change z coordinate system (if required) such that z=0 is the focus positoin of OCT image when zDepths=0 scan was taken.
