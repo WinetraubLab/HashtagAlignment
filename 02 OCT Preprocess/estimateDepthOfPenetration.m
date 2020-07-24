@@ -6,8 +6,12 @@
 %% Inputs
 
 %OCT Data
-%OCTVolumesFolder = [s3SubjectPath('06','LC') 'OCTVolumes/'];
-OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
+OCTVolumesFolder = [s3SubjectPath('10','LC') 'OCTVolumes/'];
+%OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
+
+% Problematic datasets
+% OCTVolumesFolder = [s3SubjectPath('10','LC') 'OCTVolumes/'];
+% OCTVolumesFolder = [s3SubjectPath('06','LC') 'OCTVolumes/'];
 
 isUploadToAWS = false; % Set to true if you would like to upload to aws
 
