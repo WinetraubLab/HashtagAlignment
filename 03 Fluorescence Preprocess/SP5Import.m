@@ -12,7 +12,7 @@ s3Dir = s3SubjectPath('01');
 
 %Pointer to the folder structure, expecting [folderStructurePath '\slideX\section Y']
 %In each section we will need to have the tif, and MetaData xml
-folderStructurePath = '\\171.65.17.174\e\Caroline\OCT-Histology\LE\LE-01\slide 1\sec 1\';
+folderStructurePath = '\\171.65.17.174\e\Caroline\OCT-Histology\LG\LG-37\slide 1\sec 1\';
 
 %Fluorescence Image Path of one og
 %fp = '\\171.65.17.174\MATLAB_Share\Yonatan\Edwin SP5\LB\S1\slide 1\sec 1\Experiment_TileScan_005_Merging001_z0_ch01.tif';
@@ -135,8 +135,9 @@ x = xml2struct(xmlFilePath);
 xAttributes = x.Data.Image.ImageDescription.Dimensions.DimensionDescription{1}.Attributes;
 yAttributes = x.Data.Image.ImageDescription.Dimensions.DimensionDescription{2}.Attributes;
 
-xRes = str2double(xAttributes.Length)/str2double(xAttributes.NumberOfElements)*1000;
-yRes = str2double(yAttributes.Length)/str2double(yAttributes.NumberOfElements)*1000;
+% Capture resolution from xml
+xRes = str2double(xAttributes.Length)/str2double(xAttributes.NumberOfElements)*toMicronFactor(xAttributes.Unit);
+yRes = str2double(yAttributes.Length)/str2double(yAttributes.NumberOfElements)*toMicronFactor(yAttributes.Unit);
 
 json.FM.pixelSize_um = mean([xRes,yRes]);
 fprintf('xRes/yRes-1 = %.5f\n',xRes/yRes-1);
@@ -216,4 +217,15 @@ for ii=1:length(files)
 end
 
 fprintf('%s Uploading complete.\n',datetime)
+end
+
+function f = toMicronFactor(unitText)
+switch(strtrim(lower(unitText)))
+    case 'mm'
+        f = 1e3;
+    case 'um'
+        f = 1;
+    case 'µm'
+        f = 1;
+end
 end
