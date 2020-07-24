@@ -180,7 +180,7 @@ try
     imagesc(meta.x.values*1e3, meta.y.values*1e3, tissueGelInterfaceZInterp_um);
     xlabel('x[\mum]');
     ylabel('y[\mum]');
-    title(['Tissue Surface Z[\mum] ' newline '(compared to user selection of average surface at z=0)']);
+    title(['Tissue Surface Z[\mum] ' newline '(compared to user selection of average surface at z=0, z+ is deeper)']);
     colorbar;
 catch e
     warning(e.identifier,'Interpolation failed %s',e.message);
