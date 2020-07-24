@@ -6,8 +6,8 @@
 %% Inputs
 
 %OCT Data
-OCTVolumesFolder = [s3SubjectPath('06','LC') 'OCTVolumes/'];
-%OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
+%OCTVolumesFolder = [s3SubjectPath('06','LC') 'OCTVolumes/'];
+OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
 
 isUploadToAWS = false; % Set to true if you would like to upload to aws
 
@@ -36,7 +36,7 @@ xPixelSize_um = diff(meta.x.values(1:2))*1e3; % um/pix
 % relevant area.
 bScanIndexs = meta.y.index(round(linspace(0,length(meta.y.index)-1,41)+0.5));
 bScanIndexs([1 end]) = [];
-bScanIndexs = [1;bScanIndexs;length(meta.y.index)-1];
+bScanIndexs = [1; bScanIndexs; length(meta.y.index)-1; length(meta.y.index)];
 
 % Change z coordinate system (if required) such that z=0 is the focus positoin of OCT image when zDepths=0 scan was taken.
 if ~isfield(meta.z,'origin') || contains(meta.z.origin,'top of OCT image')
@@ -50,16 +50,19 @@ zGelSurface = round(zTopOfTissue_pix + min((scanConfigJson.volume.zDepths*1000)/
 aboveFocusMask = min([100 (zTopOfTissue_pix-zGelSurface)-30]);
 
 %% Load Volumes and Compute depth of penetration
-depthOfPenetrations = [];
-tissueTopPositions = [];
-surfaceIntensitys = [];
 noiseIntensitys = [];
+surfaceIntensitys = [];
 tissueGelInterfaceZ_um = NaN*zeros(length(meta.y.values),length(meta.x.values));
 maxLightPenetrationZ_um = tissueGelInterfaceZ_um;
 for BScanI=1:length(bScanIndexs)
     
     % Load a single B-Scan, saves time
-    imOCT = yOCTFromTif([OCTVolumesFolder '/VolumeScanAbs/'],'yI',bScanIndexs(BScanI));
+    try
+        imOCT = yOCTFromTif([OCTVolumesFolder '/VolumeScanAbs/'],'yI',bScanIndexs(BScanI));
+    catch e
+        warning(e.identifier,'Missing Slide %d, %s',bScanIndexs(BScanI),e.message);
+        continue;
+    end   
     
     %% Step #1 - find tissue surface
     
@@ -132,7 +135,12 @@ for BScanI=1:length(bScanIndexs)
     
     %% Depth of penetration
     depthOfPenetration = maxDepthPosition_um(:)' - surfaceZPosition_um(:)';
-    depthOfPenetration = depthOfPenetration(:)';
+    tmp1 = depthOfPenetration(~isnan(depthOfPenetration));
+    if (sum(isnan(depthOfPenetration))/length(depthOfPenetration) > 0.2 || ... Too many nans, this slide might have a problem
+        prctile(tmp1,25) < 50 ... Depth of penetration is highly unlikely, this slide might have a problem
+        )
+        continue;
+    end      
     
     %% Plot output
     if mod(bScanIndexs(BScanI),100)==0
@@ -155,8 +163,6 @@ for BScanI=1:length(bScanIndexs)
     end
     
     %% Capture data
-    depthOfPenetrations = [depthOfPenetrations depthOfPenetration(~isnan(depthOfPenetration))];
-    tissueTopPositions = [tissueTopPositions surfaceZPosition_um(~isnan(surfaceZPosition_um))];
     surfaceIntensitys = [surfaceIntensitys surfaceIntensity];
     noiseIntensitys = [noiseIntensitys minIntensity];
     
@@ -166,10 +172,34 @@ end
 
 %% Interpolate tissue interface positions
 [yyi,xxi] = meshgrid(1:size(tissueGelInterfaceZ_um,1),1:size(tissueGelInterfaceZ_um,2));
-tissueGelInterfaceZ_um = interp2(...
-    yyi(bScanIndexs,:),xxi(bScanIndexs,:),tissueGelInterfaceZ_um(bScanIndexs,:),yyi,xxi,'spline');
-maxLightPenetrationZ_um = interp2(...
-    yyi(bScanIndexs,:),xxi(bScanIndexs,:),maxLightPenetrationZ_um(bScanIndexs,:),yyi,xxi,'spline');
+try
+    tissueGelInterfaceZInterp_um = interp2(...
+        yyi(bScanIndexs,:),xxi(bScanIndexs,:),tissueGelInterfaceZ_um(bScanIndexs,:),yyi,xxi);
+    
+    figure(10);
+    imagesc(meta.x.values*1e3, meta.y.values*1e3, tissueGelInterfaceZInterp_um);
+    xlabel('x[\mum]');
+    ylabel('y[\mum]');
+    title(['Tissue Surface Z[\mum] ' newline '(compared to user selection of average surface at z=0)']);
+    colorbar;
+catch e
+    warning(e.identifier,'Interpolation failed %s',e.message);
+    tissueGelInterfaceZInterp_um = tissueGelInterfaceZ_um;
+end
+try
+    maxLightPenetrationZInterp_um = interp2(...
+        yyi(bScanIndexs,:),xxi(bScanIndexs,:),maxLightPenetrationZ_um(bScanIndexs,:),yyi,xxi);
+    
+    figure(9);
+    imagesc(meta.x.values*1e3, meta.y.values*1e3, maxLightPenetrationZInterp_um-tissueGelInterfaceZInterp_um);
+    xlabel('x[\mum]');
+    ylabel('y[\mum]');
+    title('Depth of Penetration [\mum]');
+    colorbar;
+catch e
+    warning(e.identifier,'Interpolation failed %s',e.message);
+    maxLightPenetrationZInterp_um = maxLightPenetrationZ_um;
+end
 
 % Save
 if isUploadToAWS
@@ -178,14 +208,15 @@ if isUploadToAWS
     metaData.z.units = 'um';
     metaData.z.meaning = 'for each pixel value is depth in microns. z=0 is where the focal position was at user selected scan start depth';
     scanConfigJson.volumeStatistics.tissueGelInterfaceImagePath = 'tissueGelInterfaceZ_um.tif';
-    yOCT2Tif(tissueGelInterfaceZ_um,[OCTVolumesFolder '/TissueGelInterfaceZ_um.tif'],'metadata',metaData);
+    yOCT2Tif(tissueGelInterfaceZInterp_um,[OCTVolumesFolder '/TissueGelInterfaceZ_um.tif'],'metadata',metaData);
     scanConfigJson.volumeStatistics.depthOfPenetrationImagePath = 'maxLightPenetrationZ_um.tif';
-    yOCT2Tif(maxLightPenetrationZ_um,[OCTVolumesFolder '/MaxLightPenetrationZ_um.tif'],'metadata',metaData);
+    yOCT2Tif(maxLightPenetrationZInterp_um,[OCTVolumesFolder '/MaxLightPenetrationZ_um.tif'],'metadata',metaData);
 end
-
 
 %% Plot overall statistics
 figure(12);
+depthOfPenetrations = tissueGelInterfaceZ_um(:) - maxLightPenetrationZ_um(:);
+depthOfPenetrations(isnan(depthOfPenetrations)) = [];
 histogram(depthOfPenetrations,20);
 grid on;
 title (sprintf('Depth of Penetration at Different X-Y Positions\n Median: %.0f[\\mum]',...
@@ -195,7 +226,9 @@ if isUploadToAWS
     awsSaveMatlabFigure(gcf,[logPath 'DepthOfPenetrations.png']);
 end
 
-figure(12);
+figure(13);
+tissueTopPositions = tissueGelInterfaceZ_um(:);
+tissueTopPositions(isnan(tissueTopPositions)) = [];
 histogram(tissueTopPositions,20);
 grid on;
 title ('Tissue-Gel Interface Z at Different X-Y Positions');
