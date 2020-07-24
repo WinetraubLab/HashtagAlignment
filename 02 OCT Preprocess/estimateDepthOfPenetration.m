@@ -36,7 +36,7 @@ xPixelSize_um = diff(meta.x.values(1:2))*1e3; % um/pix
 % relevant area.
 bScanIndexs = meta.y.index(round(linspace(0,length(meta.y.index)-1,41)+0.5));
 bScanIndexs([1 end]) = [];
-bScanIndexs = [1;bScanIndexs;length(meta.y.index)];
+bScanIndexs = [1;bScanIndexs;length(meta.y.index)-1];
 
 % Change z coordinate system (if required) such that z=0 is the focus positoin of OCT image when zDepths=0 scan was taken.
 if ~isfield(meta.z,'origin') || contains(meta.z.origin,'top of OCT image')
