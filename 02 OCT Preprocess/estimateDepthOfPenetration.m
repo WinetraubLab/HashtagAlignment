@@ -37,6 +37,8 @@ end
 
 % Top of tissue in pixels
 [~,zTopOfTissue_pix] = min(abs(meta.z.values-0));
+zGelSurface = round(zTopOfTissue_pix + min((scanConfigJson.volume.zDepths*1000)/zPixelSize_um));
+aboveFocusMask = min([100 (zTopOfTissue_pix-zGelSurface)-30]);
 
 %% Load Volumes and Compute depth of penetration
 depthOfPenetrations = [];
@@ -52,23 +54,26 @@ for BScanI=1:length(bScanIndexs)
     
     % Keep data only around surface to prevent confusion
     imOCTTemp = imOCT;
-    imOCTTemp(1:(zTopOfTissue_pix-200),:) = 0;
+    imOCTTemp(1:(zTopOfTissue_pix-aboveFocusMask),:) = 0;
     imOCTTemp((zTopOfTissue_pix+350):end,:) = 0; 
     
     % Find bright spot and cluster
     BW = imbinarize(imOCTTemp,'adaptive','ForegroundPolarity','dark','Sensitivity',1);
-    SE = strel('disk',2,8);
-    BW = imdilate(imdilate(imdilate(imdilate(BW,SE),SE),SE),SE);
     CC = bwconncomp(BW);
     featuresSize = cellfun(@(x)(length(x)),CC.PixelIdxList);
+    featuresSize = sort(featuresSize,'descend');
     
     % Remove small clusters
     maxVal = max(featuresSize);
+    %Val = featuresSize(ceil(length(featuresSize)*0.05));
     for k=1:CC.NumObjects
-        if length(CC.PixelIdxList{k})< maxVal/4
+        if length(CC.PixelIdxList{k})<= maxVal/100
             BW(CC.PixelIdxList{k}) = 0;
         end
     end
+    SE = strel('disk',2,8);
+    BW = imdilate(imdilate(imdilate(imdilate(imdilate(BW,SE),SE),SE),SE),SE);
+    
     
     % For each x position, find surface z position
     [val, surfaceZPosition_px] = max(BW);
