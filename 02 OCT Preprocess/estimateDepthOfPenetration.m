@@ -47,7 +47,7 @@ end
 % Top of tissue in pixels
 [~,zTopOfTissue_pix] = min(abs(meta.z.values-0));
 zGelSurface = round(zTopOfTissue_pix + min((scanConfigJson.volume.zDepths*1000)/zPixelSize_um));
-aboveFocusMask = min([100 (zTopOfTissue_pix-zGelSurface)-30]);
+aboveFocusMask = min([160 (zTopOfTissue_pix-zGelSurface)-30]);
 
 %% Load Volumes and Compute depth of penetration
 noiseIntensitys = [];
