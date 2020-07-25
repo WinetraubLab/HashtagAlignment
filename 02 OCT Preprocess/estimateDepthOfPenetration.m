@@ -31,10 +31,14 @@ end
 scanConfigPath = [OCTVolumesFolder '/ScanConfig.json'];
 scanConfigJson = awsReadJSON(scanConfigPath);
 
+% Clear config volume, we will write it right now
+scanConfigJson.volumeStatistics = [];
+
 %% Load Volume information
 [~,meta] = yOCTFromTif([OCTVolumesFolder '/VolumeScanAbs/'],'isLoadMetadataOnly',true);  
 zPixelSize_um = diff(meta.z.values(1:2))*1e3; % um/pix
 xPixelSize_um = diff(meta.x.values(1:2))*1e3; % um/pix
+yPixelSize_um = diff(meta.y.values(1:2))*1e3; % um/pix
 
 % Select bScans to load, around the center of the scan as this is the
 % relevant area.
@@ -51,7 +55,7 @@ end
 % Top of tissue in pixels
 [~,zTopOfTissue_pix] = min(abs(meta.z.values-0));
 zGelSurface = round(zTopOfTissue_pix + min((scanConfigJson.volume.zDepths*1000)/zPixelSize_um));
-aboveFocusMask = min([160 (zTopOfTissue_pix-zGelSurface)-30]);
+aboveFocusMask = min([160 (zTopOfTissue_pix-90)]); % Above tissue go the minimum of x pixels and gel interface. (Gel iterface is at the very top of the image)
 
 %% Load Volumes and Compute depth of penetration
 noiseIntensitys = [];
@@ -175,10 +179,12 @@ for BScanI=1:length(bScanIndexs)
 end
 
 %% Interpolate tissue interface positions
-[yyi,xxi] = meshgrid(1:size(tissueGelInterfaceZ_um,1),1:size(tissueGelInterfaceZ_um,2));
+[yy,xx] = meshgrid(1:size(tissueGelInterfaceZ_um,1),1:size(tissueGelInterfaceZ_um,2));
+yy = (yy-mean(yy(:)))*yPixelSize_um;
+xx = (xx-mean(xx(:)))*xPixelSize_um;
 try
     tissueGelInterfaceZInterp_um = interp2(...
-        yyi(bScanIndexs,:),xxi(bScanIndexs,:),tissueGelInterfaceZ_um(bScanIndexs,:),yyi,xxi);
+        yy(bScanIndexs,:),xx(bScanIndexs,:),tissueGelInterfaceZ_um(bScanIndexs,:),yy,xx);
     
     figure(10);
     imagesc(meta.x.values*1e3, meta.y.values*1e3, tissueGelInterfaceZInterp_um);
@@ -192,7 +198,7 @@ catch e
 end
 try
     maxLightPenetrationZInterp_um = interp2(...
-        yyi(bScanIndexs,:),xxi(bScanIndexs,:),maxLightPenetrationZ_um(bScanIndexs,:),yyi,xxi);
+        yy(bScanIndexs,:),xx(bScanIndexs,:),maxLightPenetrationZ_um(bScanIndexs,:),yy,xx);
     
     figure(9);
     imagesc(meta.x.values*1e3, meta.y.values*1e3, maxLightPenetrationZInterp_um-tissueGelInterfaceZInterp_um);
@@ -217,6 +223,31 @@ if isUploadToAWS
     yOCT2Tif(maxLightPenetrationZInterp_um,[OCTVolumesFolder '/MaxLightPenetrationZ_um.tif'],'metadata',metaData);
 end
 
+%% Fit a plane 
+
+f = @(a)(a(1) + a(2)*xx + a(3)*yy);
+a = fminsearch(@(a)(nanmean(nanmean(( f(a)-tissueGelInterfaceZInterp_um ).^2))),[1 1 1]);
+tissueGelInterfaceZInterpAdj_um = tissueGelInterfaceZInterp_um-f(a);
+
+figure(10);
+subplot(1,2,1);
+imagesc(meta.x.values*1e3, meta.y.values*1e3, tissueGelInterfaceZInterp_um);
+xlabel('x[\mum]');
+ylabel('y[\mum]');
+title(['Tissue Surface Z[\mum] ' newline '(compared to user selection of average surface at z=0, z+ is deeper)']);
+caxis([min(tissueGelInterfaceZInterpAdj_um(:)) max(tissueGelInterfaceZInterpAdj_um(:))])
+axis equal
+colorbar;
+subplot(1,2,2);
+imagesc(meta.x.values*1e3, meta.y.values*1e3, tissueGelInterfaceZInterpAdj_um);
+xlabel('x[\mum]');
+ylabel('y[\mum]');
+title(['Tissue Surface Z[\mum] after removing plan fit']);
+caxis([min(tissueGelInterfaceZInterpAdj_um(:)) max(tissueGelInterfaceZInterpAdj_um(:))])
+axis equal
+colorbar;
+
+
 %% Plot overall statistics
 figure(12);
 depthOfPenetrations = tissueGelInterfaceZ_um(:) - maxLightPenetrationZ_um(:);
@@ -231,11 +262,12 @@ if isUploadToAWS
 end
 
 figure(13);
-tissueTopPositions = tissueGelInterfaceZ_um(:);
-tissueTopPositions(isnan(tissueTopPositions)) = [];
-histogram(tissueTopPositions,20);
+tissueTopPositionsRemovingTilt = tissueGelInterfaceZ_um-f(a);
+tissueTopPositionsRemovingTilt = tissueTopPositionsRemovingTilt(:);
+tissueTopPositionsRemovingTilt(isnan(tissueTopPositionsRemovingTilt)) = [];
+histogram(tissueTopPositionsRemovingTilt,20);
 grid on;
-title ('Tissue-Gel Interface Z at Different X-Y Positions');
+title ('Tissue-Gel Interface Z at Different X-Y Positions (Removing Tilt)');
 xlabel(sprintf('Top of Tissue Z[\\mum]\nZ=0 is user selected focus position. Z>0 means deeper.'));
 if isUploadToAWS
     awsSaveMatlabFigure(gcf,[logPath 'TissueInterfacePositions.png']);
@@ -243,14 +275,19 @@ end
 
 %% Save Statistics
 scanConfigJson.volumeStatistics.depthOfPenetration_um = median(depthOfPenetrations);
-scanConfigJson.volumeStatistics.minTissueInterfaceZ_um = prctile(tissueTopPositions,10);
-scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um = prctile(tissueTopPositions,90);
+scanConfigJson.volumeStatistics.minTissueInterfaceZ_um = prctile(tissueTopPositionsRemovingTilt,10);
+scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um = prctile(tissueTopPositionsRemovingTilt,90);
+scanConfigJson.volumeStatistics.userSelectedTissueZ_um = a(1);
+scanConfigJson.volumeStatistics.tissueInterfaceTiltX = a(2);
+scanConfigJson.volumeStatistics.tissueInterfaceTiltY = a(3);
 scanConfigJson.volumeStatistics.surfaceIntensity_db = median(surfaceIntensitys);
 scanConfigJson.volumeStatistics.noiseFloor_db = median(noiseIntensitys);
 
 scanConfigJson.volumeStatistics.notes = [ ...
     'depthOfPenetration_um - Median depth of penetration from tissue until loss of OCT signal.' newline ...
-    'minTissueInterfaceZ_um and maxTissueInterfaceZ_um - Min/Max z position of gel-tissue interface. Z=0 is user selected focus position when scan started. Z>0 means deeper.' newline ...
+    'minTissueInterfaceZ_um and maxTissueInterfaceZ_um - Min/Max z position of gel-tissue interface after correcting for tilt. Z=0 is user selected focus position when scan started. Z>0 means deeper.' newline ...
+    'userSelectedTissueZ_um - distance between plane fit tissue center and user selected tissue center in microns.' newline ...
+    'tissueInterfaceTiltX, tissueInterfaceTiltY - tilt along x axis and y axis, fraction of 1.' newline ...
     'surfaceIntensity_db - intensity at the surface of the tissue. Units: db.' newline ...
     'noiseFloor_db - intensity of the signal we consider to be the bare minimum to have detection. Units: dn.' newline ...
     ];
