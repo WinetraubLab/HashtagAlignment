@@ -12,6 +12,7 @@ OCTVolumesFolder = [s3SubjectPath('10','LC') 'OCTVolumes/'];
 % Problematic datasets
 % OCTVolumesFolder = [s3SubjectPath('10','LC') 'OCTVolumes/'];
 % OCTVolumesFolder = [s3SubjectPath('06','LC') 'OCTVolumes/'];
+% OCTVolumesFolder = [s3SubjectPath('18','LG') 'OCTVolumes/'];
 
 isUploadToAWS = false; % Set to true if you would like to upload to aws
 
@@ -226,7 +227,13 @@ end
 %% Fit a plane 
 
 f = @(a)(a(1) + a(2)*xx + a(3)*yy);
-a = fminsearch(@(a)(nanmean(nanmean(( f(a)-tissueGelInterfaceZInterp_um ).^2))),[1 1 1]);
+if sum(isnan(tissueGelInterfaceZInterp_um(:)))/length(tissueGelInterfaceZInterp_um(:)) > 0.25
+   % Too many nans, don't estimate a
+   a = [NaN NaN NaN];
+   f = @(a)(0);
+else
+    a = fminsearch(@(a)(nanmean(nanmean(( f(a)-tissueGelInterfaceZInterp_um ).^2))),[1 1 1]);
+end
 tissueGelInterfaceZInterpAdj_um = tissueGelInterfaceZInterp_um-f(a);
 
 figure(10);
@@ -239,13 +246,18 @@ caxis([min(tissueGelInterfaceZInterpAdj_um(:)) max(tissueGelInterfaceZInterpAdj_
 axis equal
 colorbar;
 subplot(1,2,2);
-imagesc(meta.x.values*1e3, meta.y.values*1e3, tissueGelInterfaceZInterpAdj_um);
-xlabel('x[\mum]');
-ylabel('y[\mum]');
-title(['Tissue Surface Z[\mum] after removing plan fit']);
-caxis([min(tissueGelInterfaceZInterpAdj_um(:)) max(tissueGelInterfaceZInterpAdj_um(:))])
-axis equal
-colorbar;
+if ~isnan(a(1)) %if fit was not made, don't present an image
+    imagesc(meta.x.values*1e3, meta.y.values*1e3, tissueGelInterfaceZInterpAdj_um);
+    xlabel('x[\mum]');
+    ylabel('y[\mum]');
+    title(['Tissue Surface Z[\mum] after removing plan fit']);
+    caxis([min(tissueGelInterfaceZInterpAdj_um(:)) max(tissueGelInterfaceZInterpAdj_um(:))])
+    axis equal
+    colorbar;
+else
+    plot(0,0);
+    text(0,0,'No Reliable Estimation');
+end
 
 
 %% Plot overall statistics
@@ -275,8 +287,14 @@ end
 
 %% Save Statistics
 scanConfigJson.volumeStatistics.depthOfPenetration_um = median(depthOfPenetrations);
-scanConfigJson.volumeStatistics.minTissueInterfaceZ_um = prctile(tissueTopPositionsRemovingTilt,10);
-scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um = prctile(tissueTopPositionsRemovingTilt,90);
+if ~isnan(a(1))
+    scanConfigJson.volumeStatistics.minTissueInterfaceZ_um = prctile(tissueTopPositionsRemovingTilt,10);
+    scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um = prctile(tissueTopPositionsRemovingTilt,90);
+else
+    % No good estimation
+    scanConfigJson.volumeStatistics.minTissueInterfaceZ_um = NaN;
+    scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um = NaN;
+end
 scanConfigJson.volumeStatistics.userSelectedTissueZ_um = a(1);
 scanConfigJson.volumeStatistics.tissueInterfaceTiltX = a(2);
 scanConfigJson.volumeStatistics.tissueInterfaceTiltY = a(3);
