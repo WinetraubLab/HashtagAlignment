@@ -12,7 +12,7 @@ function st = generateStatusReportByLibrary(libraryNames)
 %       see sectionStats.notes for explenation about the fields.
 
 if ~exist('libraryNames','var')
-    libraryNames = 'LD';
+    libraryNames = 'LG';
 end
 
 %%  What is the minimal usable area, let us folow calculation:
@@ -83,6 +83,12 @@ st.sectionPahts = sectionPathsOut;
 st.iteration = sectionIterationOut;
 st.sectionNumber = sectionNumberOut;
 st.isOCTVolumeProcessed = zeros(size(st.sectionNames),'logical');
+st.octdDepthOfPenetration_um = zeros(size(st.sectionNames))*NaN;
+st.octTissueInterfaceVariation_um = zeros(size(st.sectionNames))*NaN;
+st.octUserSelectedTissueZ_um = zeros(size(st.sectionNames))*NaN;
+st.octTissueInterfaceTilt = zeros(size(st.sectionNames))*NaN;
+st.octSurfaceIntensity_db = zeros(size(st.sectionNames))*NaN;
+st.octNoiseFloor_db = zeros(size(st.sectionNames))*NaN;
 st.isHistologyInstructionsPrepared = ones(size(st.sectionNames),'logical'); %If its on this list, it has histology instructions
 st.fluorescenceImagingDate = cell(size(st.sectionNames));
 st.sectionDistanceFromOCTOrigin1HistologyInstructions_um = zeros(size(st.sectionNames))*NaN;
@@ -123,7 +129,14 @@ st.notes = sprintf([ ...
     'fluorescenceImagingDate - section scan date - time string.\n' ...
     'isHistologyInstructionsPrepared - was histology instructions exist for this section.\n' ... 
     'isOCTVolumeProcessed - was OCT volume processed to generate a tif file.\n' ...
-    ' -- Histology Instructions --\n' ....
+    ' -- OCT Volume Statistics --\n' ...
+    'octdDepthOfPenetration_um - depth of penetration of OCT light into the sample.\n' ...
+    'octTissueInterfaceVariation_um - what is the difference between the highest point in the tissue and the lowest, given tissue tilt is corrected.\n' ...
+    'octUserSelectedTissueZ_um - difference between user selected average tissue interface depth and the computed average.\n' ...
+    'octTissueInterfaceTilt - overall tilt of the sample (% grade) abesolute magnitude.\n' ...
+    'octSurfaceIntensity_db - surface signal magnitude.\n' ...
+    'octNoiseFloor_db - noise flour magnitude.\n' ...
+    ' -- Histology Instructions --\n' ...
     'sectionDistanceFromOCTOrigin1HistologyInstructions_um - distance between section to OCT origin in microns, best guess according to the time histology instructions were made.' ...
     ' -- Alignment Using a Single Slide --\n' ....
     'isFluorescenceImageUploaded - was fluorescence image scanned and uploaded for this section.\n' ...
@@ -166,12 +179,27 @@ for i=1:length(sectionPathsOut)
         fprintf('* ');
     end
     
+    %% OCT parameters
+    
     % Was OCT Volume Tif generated
     if i==1 || ~strcmp(st.subjectPahts{i},st.subjectPahts{i-1})
         st.isOCTVolumeProcessed(i) = awsExist([st.subjectPahts{i} '/OCTVolumes/VolumeScanAbs/TifMetadata.json'],'file');
+        scanConfigJson = awsReadJSON([st.subjectPahts{i} '/OCTVolumes/ScanConfig.json']);
     else
         %Its the same subject, so use the same value.
         st.isOCTVolumeProcessed(i) = st.isOCTVolumeProcessed(i-1);
+    end
+    
+    if (st.isOCTVolumeProcessed(i))
+        st.octdDepthOfPenetration_um(i) = scanConfigJson.volumeStatistics.depthOfPenetration_um;
+        st.octTissueInterfaceVariation_um(i) = ...
+            scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um - scanConfigJson.volumeStatistics.minTissueInterfaceZ_um;
+        st.octUserSelectedTissueZ_um(i) = scanConfigJson.volumeStatistics.userSelectedTissueZ_um;
+        st.octTissueInterfaceTilt(i) = sqrt( ...
+            scanConfigJson.volumeStatistics.tissueInterfaceTiltX.^2 + ...
+            scanConfigJson.volumeStatistics.tissueInterfaceTiltY.^2 );
+        st.octSurfaceIntensity_db(i) = scanConfigJson.volumeStatistics.surfaceIntensity_db;
+        st.octNoiseFloor_db(i) = scanConfigJson.volumeStatistics.noiseFloor_db;
     end
     
     %% Stack related parameters
