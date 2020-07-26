@@ -262,7 +262,7 @@ end
 
 %% Plot overall statistics
 figure(12);
-depthOfPenetrations = tissueGelInterfaceZ_um(:) - maxLightPenetrationZ_um(:);
+depthOfPenetrations = maxLightPenetrationZ_um(:)-tissueGelInterfaceZ_um(:);
 depthOfPenetrations(isnan(depthOfPenetrations)) = [];
 histogram(depthOfPenetrations,20);
 grid on;
