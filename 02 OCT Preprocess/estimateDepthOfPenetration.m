@@ -6,8 +6,7 @@
 %% Inputs
 
 %OCT Data
-OCTVolumesFolder = [s3SubjectPath('10','LC') 'OCTVolumes/'];
-%OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
+OCTVolumesFolder = [s3SubjectPath('42','LG') 'OCTVolumes/'];
 
 % Problematic datasets
 % OCTVolumesFolder = [s3SubjectPath('10','LC') 'OCTVolumes/'];
@@ -55,7 +54,6 @@ end
 
 % Top of tissue in pixels
 [~,zTopOfTissue_pix] = min(abs(meta.z.values-0));
-zGelSurface = round(zTopOfTissue_pix + min((scanConfigJson.volume.zDepths*1000)/zPixelSize_um));
 aboveFocusMask = min([160 (zTopOfTissue_pix-90)]); % Above tissue go the minimum of x pixels and gel interface. (Gel iterface is at the very top of the image)
 
 %% Load Volumes and Compute depth of penetration
@@ -242,7 +240,10 @@ imagesc(meta.x.values*1e3, meta.y.values*1e3, tissueGelInterfaceZInterp_um);
 xlabel('x[\mum]');
 ylabel('y[\mum]');
 title(['Tissue Surface Z[\mum] ' newline '(compared to user selection of average surface at z=0, z+ is deeper)']);
-caxis([min(tissueGelInterfaceZInterpAdj_um(:)) max(tissueGelInterfaceZInterpAdj_um(:))])
+c = [min(tissueGelInterfaceZInterpAdj_um(:)) max(tissueGelInterfaceZInterpAdj_um(:))];
+if ~any(isnan(c))
+    caxis([min(tissueGelInterfaceZInterpAdj_um(:)) max(tissueGelInterfaceZInterpAdj_um(:))])
+end
 axis equal
 colorbar;
 subplot(1,2,2);
