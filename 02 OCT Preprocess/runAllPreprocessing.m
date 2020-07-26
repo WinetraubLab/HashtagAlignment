@@ -88,13 +88,13 @@ end
 %% Running
 try
 	if isPreprocess
-        fprintf('%s Preprocessing Using local copy...\n',datestr(datetime));
+        fprintf('%s Preprocessing ...\n',datestr(datetime));
         
 		%Create one parallel pull for all
 		setupParpolOCTPreprocess();
 		
         % Run
-        RunProcessingSterileEnvironment(OCTVolumesFolder_);
+        RunProcessingSterileEnvironment(OCTVolumesFolder_, isRunInAutomatedMode);
     else
         fprintf('%s Skipping preprocess.\n',datestr(datetime));
 	end
@@ -160,8 +160,9 @@ end
 
 fprintf('%s Finish.\n',datestr(datetime));
 
-function RunProcessingSterileEnvironment(OCTVolumesFolder_)
+function RunProcessingSterileEnvironment(OCTVolumesFolder_, isRunInAutomatedMode)
 % Run the script in a way that will not harm outside 
+isRunInAutomatedMode_ = isRunInAutomatedMode;
 
 fprintf('%s Running findFocusInBScan.\n',datestr(datetime));
 findFocusInBScan;
