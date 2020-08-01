@@ -4,7 +4,7 @@ libraryNames = {'LG','LF','LE','LD','LC'};
 
 %% Time dependence
 
-if mod(round(now),7) == 1 % On the run between Thursday and Friday
+if mod(round(now),7) == 0 % On the run between Thursday and Friday
     % Run over all liberies
 else
     % Run on the latest libery only to save time.
