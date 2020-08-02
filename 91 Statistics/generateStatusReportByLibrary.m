@@ -191,7 +191,7 @@ for i=1:length(sectionPathsOut)
     end
     
     if (st.isOCTVolumeProcessed(i))
-        st.octdDepthOfPenetration_um(i) = scanConfigJson.volumeStatistics.depthOfPenetration_um;
+        st.octdDepthOfPenetration_um(i) = nanmax([scanConfigJson.volumeStatistics.depthOfPenetration_um NaN]);
         st.octTissueInterfaceVariation_um(i) = ...
             nanmax([scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um - scanConfigJson.volumeStatistics.minTissueInterfaceZ_um NaN]);
         st.octUserSelectedTissueZ_um(i) = nanmax([scanConfigJson.volumeStatistics.userSelectedTissueZ_um NaN]);
