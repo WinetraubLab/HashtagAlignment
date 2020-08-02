@@ -190,7 +190,7 @@ for i=1:length(sectionPathsOut)
         st.isOCTVolumeProcessed(i) = st.isOCTVolumeProcessed(i-1);
     end
     
-    if (st.isOCTVolumeProcessed(i))
+    if (st.isOCTVolumeProcessed(i) && isfield(scanConfigJson,'volumeStatistics'))
         st.octdDepthOfPenetration_um(i) = nanmax([scanConfigJson.volumeStatistics.depthOfPenetration_um NaN]);
         st.octTissueInterfaceVariation_um(i) = ...
             nanmax([scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um - scanConfigJson.volumeStatistics.minTissueInterfaceZ_um NaN]);
