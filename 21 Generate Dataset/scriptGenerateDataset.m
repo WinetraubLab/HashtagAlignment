@@ -11,7 +11,7 @@ isAverageOCTBScans = [];
 libraryNames = {'LC','LD','LE','LF','LG'};
 
 % Which of the dataset is in training
-filesInTestingSet = {'LE-03','LF-01','LG'};
+filesInTestingSet = {}; %Keep empty such that we use isFilesInTrainingSet default
 
 %% Jenkins 
 %This function updates all input varible names that have name_ like this:

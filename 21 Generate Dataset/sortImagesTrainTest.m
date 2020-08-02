@@ -7,7 +7,7 @@ function sortImagesTrainTest(baseFolder,filesInTestingSet)
 
 %% Inputs
 if ~exist('filesInTestingSet','var') || isempty(filesInTestingSet)
-    %filesInTestingSet = {'LE-01','LE-03','LF'};
+    filesInTestingSet = {}; %Use default
 end
 
 if ~exist('baseFolder','var') || isempty(baseFolder)
@@ -26,13 +26,7 @@ fileNames(~cellfun(@(x)(contains(x,'.jpg')),fileNames)) = []; % Remove non image
 fileNames = fileNames(:);
 filePaths = cellfun(@(x)([baseFolder x]),fileNames(:),'UniformOutput',false);
 
-isTraining = zeros(size(fileNames),'logical');
-for i=1:length(isTraining)
-    isInTesting = cellfun(@(x)(contains(fileNames{i},x)),filesInTestingSet);
-    if ~any(isInTesting)
-        isTraining(i) = true;
-    end
-end
+isTraining = isFilesInTrainingSet(fileNames, filesInTestingSet);
 
 % Figure out if both images are concatinated in the same file?
 isAType = cellfun(@(x)(contains(x,'_A.')),fileNames);
