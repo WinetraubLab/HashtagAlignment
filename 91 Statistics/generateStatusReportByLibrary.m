@@ -193,11 +193,11 @@ for i=1:length(sectionPathsOut)
     if (st.isOCTVolumeProcessed(i))
         st.octdDepthOfPenetration_um(i) = scanConfigJson.volumeStatistics.depthOfPenetration_um;
         st.octTissueInterfaceVariation_um(i) = ...
-            scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um - scanConfigJson.volumeStatistics.minTissueInterfaceZ_um;
-        st.octUserSelectedTissueZ_um(i) = scanConfigJson.volumeStatistics.userSelectedTissueZ_um;
-        st.octTissueInterfaceTilt(i) = sqrt( ...
+            nanmax([scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um - scanConfigJson.volumeStatistics.minTissueInterfaceZ_um NaN]);
+        st.octUserSelectedTissueZ_um(i) = nanmax([scanConfigJson.volumeStatistics.userSelectedTissueZ_um NaN]);
+        st.octTissueInterfaceTilt(i) = nanmax([sqrt( ...
             scanConfigJson.volumeStatistics.tissueInterfaceTiltX.^2 + ...
-            scanConfigJson.volumeStatistics.tissueInterfaceTiltY.^2 );
+            scanConfigJson.volumeStatistics.tissueInterfaceTiltY.^2 ), NaN]);
         st.octSurfaceIntensity_db(i) = scanConfigJson.volumeStatistics.surfaceIntensity_db;
         st.octNoiseFloor_db(i) = scanConfigJson.volumeStatistics.noiseFloor_db;
     end
