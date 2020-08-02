@@ -198,8 +198,8 @@ for i=1:length(sectionPathsOut)
         st.octTissueInterfaceTilt(i) = nanmax([sqrt( ...
             scanConfigJson.volumeStatistics.tissueInterfaceTiltX.^2 + ...
             scanConfigJson.volumeStatistics.tissueInterfaceTiltY.^2 ), NaN]);
-        st.octSurfaceIntensity_db(i) = scanConfigJson.volumeStatistics.surfaceIntensity_db;
-        st.octNoiseFloor_db(i) = scanConfigJson.volumeStatistics.noiseFloor_db;
+        st.octSurfaceIntensity_db(i) = nanmax([scanConfigJson.volumeStatistics.surfaceIntensity_db NaN]);
+        st.octNoiseFloor_db(i) = nanmax([scanConfigJson.volumeStatistics.noiseFloor_db NaN]);
     end
     
     %% Stack related parameters
