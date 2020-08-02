@@ -404,7 +404,8 @@ for i=1:length(sectionPathsOut)
             st.isHistologyImageQualityGood(i);
     end
     catch ME
-        warning('error happend i=%d, path %s. Message: %s',i,sectionPathsOut{i}, ME.message);
+        warning('error happend i=%d (line %d), path %s. Message: %s',...
+            i,ME.stack(1).line,sectionPathsOut{i}, ME.message);
     end
 end
 fprintf(']. Done!\n');
