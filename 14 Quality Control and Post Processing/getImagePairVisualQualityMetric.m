@@ -74,7 +74,7 @@ in4 = {... Question, default answer
     'Hair Follicles? (Yes/No, can be seen in both OCT and histology)' 'No'; ...
     'Clusters Of Cells Inside Dermis? (Yes/No, can be seen in both OCT and histology)' 'No'; ...
     'Clumps In Gel? (Yes/No, can be seen in both OCT and histology)' 'No'; ...
-    'Other Objects Or Comments?' ''; ...
+    'Any Notes?' ''; ...
     };
 answer4 = askQuestions(in4,dlgTitle4,answer4);
 if isempty(answer4)
@@ -148,7 +148,7 @@ elseif isempty(a)
 elseif ~isempty(str2double(a(1:(end-1)))) && a(end) == '%'
     a  = str2double(a(1:(end-1)))/100;
     answerType = 'percent';
-elseif ~isempty(str2double(a))
+elseif ~isempty(str2double(a)) && ~isnan(str2double(a))
     a = str2double(a);
     answerType = 'double';
 elseif contains(lower(q),'notes')
