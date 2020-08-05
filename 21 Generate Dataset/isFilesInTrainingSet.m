@@ -11,8 +11,11 @@ function [isTraining, subjectNamesInTraining] = ...
 if ~exist('filesInTestingSet','var') || isempty(filesInTestingSet)
 	filesInTestingSet = { ...
         'LE-03','LF-01', ... Good samples for figures
-        'LD-11','LG-07', ... Samples from unknown area, or not good alignment but still useable as test
-        'LG-2','LG-3','LG-4','LG-5','LG-6','LGC' ... New Samples Coming in
+        ... Samples from unknown area, or not good
+        ... alignment or histology image quality but still useable as test:
+        'LD-11','LG-07', 'LG-02', ...
+        ... New Samples Coming in:
+        'LG-2','LG-3','LG-4','LG-5','LG-6','LG-7','LGC' ...
         }; 
 end
 
