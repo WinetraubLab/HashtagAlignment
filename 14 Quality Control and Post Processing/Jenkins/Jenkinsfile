@@ -1,0 +1,160 @@
+//This Jenkinsfile will preform a scan and save the results to a common storage
+//It will also create a .m file explaining how to preprocess this scan
+pipeline {
+	agent any
+	environment {
+    	CREDENTIALS_PATH = "..\\..\\"
+	}
+	options {
+		buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30')) //Discard old builds
+  	}
+	parameters 
+	{
+		string(
+			name: "SUBJECT_FOLDER_PATH",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LG/LG-01/",
+			description:"Subject Directory\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LG/LG-01/",
+			trim: true)
+		string(
+			name: "WHO_TO_EMAIL_WHEN_DONE",
+			defaultValue:"",
+			description:"Who should get an email with the results?  (Apart from you! - you will get an email anyways)\n\nUse comma to specify multiple emails\nExample: me@stanford.edu, you@stanford.edu",
+			trim: true)
+    }
+	stages{
+		stage("Checkout")
+		{steps{script{
+			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
+			def gitTxt
+			try
+			{
+				bat "git describe --tags --exact-match > commandResult.txt" 
+				gitTxt = readFile('commandResult.txt').trim()
+				echo gitTxt
+				if (gitTxt.contains("fatal: No tags can describe"))
+				{
+					gitTxt = "master"
+				}
+			}
+			catch(Exception e)
+			{ 
+				// Couldn't find exact match, its actually we look at the master
+				gitTxt = "master"
+			}
+			
+			branch = gitTxt
+			echo("Jenkins Build #: " + env.BUILD_NUMBER)
+			echo("Fetching: " + branch)
+			
+			//Identify where github is installed
+			def gitFolderOption1 = new File("C:\\Program Files (x86)\\Git\\cmd\\")
+			def gitFolderOption2 = new File("C:\\Program Files\\Git\\cmd\\")
+			def gitFolder = ""
+			if (gitFolderOption1.exists()) {
+				gitFolder = gitFolderOption1.absolutePath
+			} else if (gitFolderOption2.exists()) {
+				gitFolder = gitFolderOption2.absolutePath
+			} else {
+				error "Clould not find git in the known possible possitions"
+			}
+			gitFolder = gitFolder + "\\"
+			
+			//Checkout a fresh copy 
+			cleanWs()
+			bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/HashtagAlignment.git"') //Checkout HashtagAlignment
+			bat('"' + gitFolder + 'git.exe" clone --branch "' + branch + '" --single-branch "https://github.com/MyYo/myOCT.git"') //Checkout myOCT
+			
+			//Make note of the repository version
+			bat('@cd HashtagAlignment && @"' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			def hashtagAlignmentVer = readFile('commandResult.txt').trim()
+			bat('@cd myOCT && @"' + gitFolder + 'git.exe" rev-parse HEAD > ..\\commandResult.txt')
+			def myOCTVer = readFile('commandResult.txt').trim()
+			
+			//Move files to main folder
+			bat('@xcopy /E HashtagAlignment . /Y /Q')
+			bat('@xcopy /E myOCT . /Y /Q')
+			bat('@copy "%CREDENTIALS_PATH%\\*.m" .')
+			
+			//Delete folder used for checkout
+			bat('@rmdir HashtagAlignment /S /Q')
+			bat('@rmdir myOCT /S /Q')
+			
+			//Start buidling the runme file
+			bat("@echo disp('HashtagAlignment Git Hash: " + hashtagAlignmentVer + "');  >> runme.m")
+			bat("@echo disp('myOCT Git Hash: " + myOCTVer + "');  >> runme.m")
+			bat("@echo disp('To see repository go to');  >> runme.m")
+			bat("@echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
+			bat("@echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
+		}}}
+		stage("Build Runme File and Run Matlab")
+		{steps{script{
+			bat("@echo subjectPath__ = '%SUBJECT_FOLDER_PATH%'; >> runme.m")
+			bat("@echo scriptPostProcess; >> runme.m")
+			
+			try
+			{
+				RunMatlabRunme()
+				currentBuild.result = 'SUCCESS'
+			}
+			catch(Exception e)
+			{
+				currentBuild.result = 'FAILURE'
+				throw("Matlab Failed")
+			}
+			finally
+			{
+				//EMAIL
+				//Get the email of the user who started the build
+				def userId = currentBuild.getRawBuild().getCauses()[0].getUserId()
+				hudson.model.User user = hudson.model.User.get(userId)
+				email = user.getProperty(hudson.tasks.Mailer.UserProperty).getAddress()
+				
+				try
+				{
+				emailext ( //Using ext-email plugin
+					subject: "[OCTHist] Processing Completed ${currentBuild.result} #$BUILD_NUMBER",
+					from : "Yonatan",
+					body: 
+					"Hi,<br>" +
+					"Your files are processed (Build # ${BUILD_NUMBER}, ${currentBuild.result}).<br>" +
+					"All the files are saved at:<br>" +
+					"$SUBJECT_FOLDER_PATH<br>" +
+					"See attached files for result summary.<br><br>" + 
+					"""To access files on AWS S3, follow <a href="https://s3.console.aws.amazon.com/s3/buckets/delazerdamatlab/Users/?region=us-east-1&tab=overview">Link</a><br>""" +
+					"To log in to AWS use:<br>" + 
+					"Email address of your AWS account // account ID : 313934313216<br>" +
+					"IAM User name: student<br>" +
+					"Password: same as your server's password<br><br><br>" +
+					"<b> Jenkins Parameters: </b><br>" +
+					"SUBJECT_FOLDER_PATH:     $SUBJECT_FOLDER_PATH<br>" +
+					"WHO_TO_EMAIL_WHEN_DONE:  $WHO_TO_EMAIL_WHEN_DONE<br>"
+					,
+					attachLog: true,
+					attachmentsPattern: "Testers\\*.png",
+					to: "$WHO_TO_EMAIL_WHEN_DONE," + email,
+					mimeType: "text/html")
+				}
+				catch(Exception e)
+				{
+					echo "Might had a problem with sending the email out"
+				}
+				
+			}
+		}}}
+	}
+}
+def RunMatlabRunme(isConnectToCluster=false)  //runs runme.m
+{
+	try
+	{
+		def rootDir = pwd()
+		def MatlabRunner = load "${rootDir}/98 Jenkins Lib/MatlabRunner.Groovy"
+		MatlabRunner.RunMatlabScript ("runme.m",isConnectToCluster);
+		bat("@del \f runme.m");
+	}
+	catch(Exception e)
+	{
+		currentBuild.result = 'FAILURE'
+		throw("Matlab Failed")
+	}
+}

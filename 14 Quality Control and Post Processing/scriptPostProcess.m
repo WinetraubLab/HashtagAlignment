@@ -1,8 +1,14 @@
 % Compute quality control on all images of a subject
 
+%% Inputs
 subjectPath_ = s3SubjectPath('02','LE');
-[~,sectionNames] = s3GetAllSlidesOfSubject(subjectPath_);
 
+%% Jenkins & get section path
+if exist('subjectPath__','var')
+    subjectPath_ = subjectPath__;
+end
+
+[~,sectionNames] = s3GetAllSlidesOfSubject(subjectPath_);
 
 %% Run on all subjects in a loop
 HRef = [];
