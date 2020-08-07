@@ -142,6 +142,7 @@ end
 X_ = [1:size(imOCT,2)];
 [X, index] = unique(X); 
 Y_=interp1(X,Y(index),X_);
+Y_ = fillmissing(Y_,'nearest');
 
 % cut out markedline over nan regions of OCT image
 X = []; Y = [];
