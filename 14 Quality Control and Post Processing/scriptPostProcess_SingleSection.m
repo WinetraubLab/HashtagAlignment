@@ -155,7 +155,7 @@ for k=1:length(X_)
 end
 
 % interface is min value of markedline
-interfaceI = min(Y);
+interfaceI = nanmean(Y);
 % End code to find interface
 
 % crop out area above interface
