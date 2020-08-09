@@ -1,7 +1,7 @@
 % This script compares cross plane distance of algorithm vs fine alignment.
 %% Inputs 
 
-libraryNames = {'LG','LF','LE','LD','LC'};
+libraryNames = {'LC','LD','LE','LF','LG'};
 
 %% Load data
 st = loadStatusReportByLibrary(libraryNames);
@@ -72,7 +72,7 @@ diff_distance = d_StackAlignment-d_FineAlignment;
 figure(2);
 s = std(diff_distance); % mum
 m = median(diff_distance); % mum
-out = abs(diff_distance-m) > s*2.5;
+out = abs(diff_distance-m) > s*2.5*100; % Disable outlier filtration
 s = std(diff_distance(~out));
 m = mean(diff_distance(~out));
 n = 1:length(diff_distance);
@@ -94,7 +94,7 @@ axis ij
 
 figure(3);
 a = histogram(diff_distance,30);
-title(sprintf('Std Error: \\pm31\\mum'))
+title(sprintf('Std Error: \\pm%.0f\\mum',s))
 hold on;
 plot(m+s*[1 1],[0 max(a.Values)],'k--');
 plot(m-s*[1 1],[0 max(a.Values)],'k--');
@@ -102,3 +102,11 @@ hold off
 grid on; 
 ylabel('# of Sections');
 xlabel('Distance Between Stack Alignment to Human Fine Tuning [\mum]');
+
+%% Compute aligment accuracy post fine alignment
+h = st.yAxisTolerance_um;
+h(h>s) = s;
+h(isnan(h)) = [];
+plot(h)
+mean(h)
+
