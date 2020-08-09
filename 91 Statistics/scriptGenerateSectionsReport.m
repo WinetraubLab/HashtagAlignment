@@ -117,7 +117,7 @@ for i=1:length(dataPerSubject)
             dataPerSubject{i}.isTraining = isTraining(i);
     end
 end
-dataPerSubject(ii) = [];
+dataPerSubject(iiToDelete) = [];
 
 %% Draw - Sections Statistics
 fig1 = figure(1);

@@ -23,6 +23,10 @@ end
 %% Convert body parts to position on reference image
 [x,y,p,positionNames] = bodyPartsNames2Positions(bodyPartsNames, numberOfDataPoints);
 [x2,y2,p2] = bodyPartsNames2Positions(bodyPartsNames2, numberOfDataPoints2);
+if length(x) ~= length(x2)
+    error('Was expecting same length');
+end
+pTotal = p+p2;
 
 %% Load reference image
 currentFileFolder = fileparts(mfilename('fullpath'));
@@ -88,7 +92,10 @@ ltxt = ['legend(' sprintf('''%.0f'',',sizeScale) '''location'',''south'',''orien
 
 % Text for unknown position
 isUnknown = find(cellfun(@(x)(strcmpi(x,'unknown')),positionNames),1,'first');
-text(x(isUnknown), y(isUnknown),'  Unknown');
+if (pTotal(isUnknown) > 0)
+    % Write unknown text only if we have data with unknown position
+    text(x(isUnknown), y(isUnknown),'  Unknown');
+end
 
 [~,i] = sort(p,'descend');
 regionNames = positionNames(i);
