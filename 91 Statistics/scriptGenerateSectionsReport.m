@@ -6,6 +6,18 @@ libraryNames = {'LG','LF','LE','LD','LC'};
 %mode = 'isHistologyImageUploaded'; % Will only consider slides with histology uploaded for plot
 mode = 'isUsableInML'; % Most strict consideration
 
+% Mode can be 1,2,3
+%   1 - concatinate all train and test sets to one set and plot it on the
+%       body figure
+%   2 - plot only train set
+%   3 - plot train and test but in different colors (blue is train, red is
+%       test)
+plotAreasMode = 2;
+
+% When set, will devide up to training and testing, set to NaN to ignore
+% deviding, set to {} to use default split
+filesInTestingSet = NaN;
+
 %% Which are the finished sections
 if false % Generate report
     st = generateStatusReportByLibrary(libraryNames);
@@ -84,6 +96,29 @@ end
 
 dataPerSubject(isToDeleteUniqueSubject) = [];
 
+%% Split to train & test
+isTraining = isFilesInTrainingSet(...
+    cellfun(@(x)(x.sampleId),dataPerSubject,'UniformOutput',false));
+
+
+% Go over all samples, modify
+iiToDelete = [];
+for i=1:length(dataPerSubject)
+    switch(plotAreasMode)
+        case 1
+            dataPerSubject{i}.isTraining = true;
+        case 2
+            if isTraining(i)
+                dataPerSubject{i}.isTraining = true;
+            else
+                iiToDelete = [iiToDelete i];
+            end
+        case 3
+            dataPerSubject{i}.isTraining = isTraining(i);
+    end
+end
+dataPerSubject(ii) = [];
+
 %% Draw - Sections Statistics
 fig1 = figure(1);
 set(fig1,'units','normalized','outerposition',[0 0 1 1]);
@@ -105,6 +140,9 @@ saveas(fig1,'Stats_NumberOfPatient.png');
 function myDraw(dataPerSubject,prefix)
 
 sampleLocations = cellfun(@(x)(x.sampleLocation),dataPerSubject,'UniformOutput',false);
+isSampleInTrainingSet = logical(cell2mat(cellfun(@(x)(x.isTraining),dataPerSubject,'UniformOutput',false)));
+isSectionInTrainingSet = cellfun(@(x)(x.isTraining*ones(1,x.numberOfSamples)),dataPerSubject,'UniformOutput',false);
+isSectionInTrainingSet = logical([isSectionInTrainingSet{:}]);
 numberOfSections = cellfun(@(x)(x.numberOfSamples),dataPerSubject);
 gender = cellfun(@(x)(x.gender),dataPerSubject);
 age =  cellfun(@(x)(x.age.*ones(1,x.numberOfSamples)),dataPerSubject,'UniformOutput',false);
@@ -123,13 +161,19 @@ end
 
 subplot(2,3,[1 4]);
 [regionNames, regionNumberOfDataPoints] = ...
-    drawStatisticsOnBody(sampleLocations,numberOfSections);
+    drawStatisticsOnBody(...
+        sampleLocations(isSampleInTrainingSet), ...
+        numberOfSections(isSampleInTrainingSet), ...
+        sampleLocations(~isSampleInTrainingSet), ...
+        numberOfSections(~isSampleInTrainingSet) ...
+        );
 title(sprintf('Total %s: %d\n Average Area: %.2f mm^2',...
-    prefix, sum(numberOfSections), sum(areaOfQualityData_mm2)/sum(numberOfSections)));
+    prefix, sum(numberOfSections(isSampleInTrainingSet)), ...
+    sum(areaOfQualityData_mm2(isSampleInTrainingSet))/sum(numberOfSections(isSampleInTrainingSet))));
 subplot(2,3,2);
 bar([ ...
-    sum((gender==1).*numberOfSections) ...
-    sum((gender==-1).*numberOfSections) ...
+    sum((gender==1).*numberOfSections.*isSampleInTrainingSet) ...
+    sum((gender==-1).*numberOfSections.*isSampleInTrainingSet) ...
     ...sum((gender==0).*numberOfSections) ...
     ],'FaceAlpha',0.6);
 title ([titlePrefix ' Gender']);
@@ -138,14 +182,14 @@ grid on;
 xticklabels({'Male' 'Female'});
 
 subplot(2,3,3);
-histogram(age,10,'FaceAlpha',0.6);
+histogram(age(isSectionInTrainingSet),10,'FaceAlpha',0.6);
 title([titlePrefix ' Age']);
 ylabel(['# of ' prefix]);
 xlabel('Years');
 grid on;
 
 subplot(2,3,5);
-histogram(fitzpatrickSkinType,(1:6)-0.5,'FaceAlpha',0.6);
+histogram(fitzpatrickSkinType(isSectionInTrainingSet),(1:6)-0.5,'FaceAlpha',0.6);
 title([titlePrefix ' Fitzpatrick Skin Type']);
 ylabel(['# of ' prefix]);
 xlabel('Skin Type');
