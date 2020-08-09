@@ -12,7 +12,7 @@ mode = 'isUsableInML'; % Most strict consideration
 %   2 - plot only train set
 %   3 - plot train and test but in different colors (blue is train, red is
 %       test)
-plotAreasMode = 2;
+plotAreasMode = 3;
 
 % When set, will devide up to training and testing, set to NaN to ignore
 % deviding, set to {} to use default split
