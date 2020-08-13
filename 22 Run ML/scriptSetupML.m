@@ -10,7 +10,7 @@
 loadFrom = 'dataset'; % Set to 'dataset' or 'snapshot'
 
 % When loadFrom = 'dataset', will get the latest dataset which follows these conditions:
-imageResolution = '4x'; % Can be 2x,4x,10x
+imageResolution = '10x'; % Can be 2x,4x,10x
 datasetTag = ''; % Additional string to search for 
 
 % When loadFrom = 'snapshot', will get the snapshot with this name (or part of the name)
