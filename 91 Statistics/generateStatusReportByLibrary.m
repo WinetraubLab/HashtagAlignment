@@ -266,7 +266,7 @@ for i=1:length(sectionPathsOut)
     
     % Was OCT volume resliced?
     if (i==1 || ~strcmp(st.subjectPahts{i},st.subjectPahts{i-1}) || ...
-        st.iteration(i) ~= st.iteration(i-1))
+            st.iteration(i) ~= st.iteration(i-1))
         reslicedVolumePath = ...
             sprintf('%s/OCTVolumes/StackVolume_Iteration%d',...
                 st.subjectPahts{i},  st.iteration(i));  
@@ -322,8 +322,12 @@ for i=1:length(sectionPathsOut)
         st.isCompletedHistologyFluorescenceImageRegistration(i) = true;
         
         % Did the alignment succeeded?
-        st.wasHistologyFluorescenceImageRegistrationSuccessful(i) = ...
-            slideConfigJson.FMHistologyAlignment.wasAlignmentSuccessful;
+        if isfield('wasAlignmentSuccessful',slideConfigJson.FMHistologyAlignment)
+            st.wasHistologyFluorescenceImageRegistrationSuccessful(i) = ...
+                slideConfigJson.FMHistologyAlignment.wasAlignmentSuccessful;
+        else
+            st.wasHistologyFluorescenceImageRegistrationSuccessful(i) = false;
+        end
     end
     
     % Was fine alignment ran?
