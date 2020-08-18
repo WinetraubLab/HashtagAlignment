@@ -29,6 +29,10 @@ def combine_images (img_fold_A, img_fold_B, img_fold_AB):
         path_A = os.path.join(img_fold_A, name_A)
         name_B = name_A
         path_B = os.path.join(img_fold_B, name_B)
+        
+        # Skip non image files
+        if np.char.lower(name_A) == 'thumbs.db':
+            continue
     
         if os.path.isfile(path_A) and os.path.isfile(path_B):
             name_AB = name_A
