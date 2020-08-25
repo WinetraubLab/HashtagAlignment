@@ -12,6 +12,11 @@ isReProcessOCT = false;
 whichIterationsToReslice = 2; % Can be a number or array of numbers if more than one iteration is required.
 runningOnJenkins = false;
 
+% When reslicing take some buffer (microns) before the first slice and
+% after the last one
+bufferSize_um = 220; % take some buffer on both ends.
+
+
 subjectFolder = s3SubjectPath('01');
 
 if exist('subjectFolder_','var')
@@ -98,7 +103,6 @@ for sI = 1:length(whichIterationsToReslice)
     % Dimensions of the stack to slice
     jumpXYZ = 1e-3; % mm diff(dimensions.x.values(1:2));  
     x = (-xSpan/2):jumpXYZ:(xSpan/2); %mm
-    bufferSize_um = 170; % take some buffer on both ends.
     y = (...
         (min_d_um-bufferSize_um):(jumpXYZ*1e3):(max_d_um+bufferSize_um)...
         )/1000; %mm 
