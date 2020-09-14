@@ -16,7 +16,9 @@ ERef = [];
 for i=1:length(sectionNames)
     sectionName_ = sectionNames{i};
     try
-        collectHERef
+        calculateHERef
+    catch ME
+        warning('calculateHERef failed, message: %s',ME.message)
     end
 end
 
