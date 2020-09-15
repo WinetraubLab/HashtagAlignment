@@ -1,4 +1,4 @@
-function [HERef] = calculateHERef(I)
+function [H,E] = calculateHERef(I)
 % Calculates H&E color vectors (HERef) for the input image I
 %
 % Input:
@@ -11,9 +11,8 @@ function [HERef] = calculateHERef(I)
 % maxCRef   - (optional) reference maximum stain concentrations for H&E (default value is defined);
 %
 % Output:
-% Inorm     - normalized image;
-% H         - (optional) hematoxylin image;
-% E         - (optional)eosin image;
+% H         -  hematoxylin color vector;
+% E         -  eosin color vector;
 %
 % References:
 % A method for normalizing histology slides for quantitative analysis. M.
@@ -95,5 +94,9 @@ if vMin(1) > vMax(1)
 else
     HERef = [vMax vMin];
 end
+
+% assign H and E vectors
+H = HERef(:,1);
+E = HERef(:,2);
 
 end

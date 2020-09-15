@@ -1,7 +1,7 @@
 % Compute quality control on all images of a subject
 
 %% Inputs
-subjectPath_ = s3SubjectPath('02','LE');
+subjectPath_ = s3SubjectPath('43','LG');
 
 %% Jenkins & get section path
 if exist('subjectPath__','var')
@@ -16,9 +16,9 @@ ERef = [];
 for i=1:length(sectionNames)
     sectionName_ = sectionNames{i};
     try
-        calculateHERef
+        collectHERef
     catch ME
-        warning('calculateHERef failed, message: %s',ME.message)
+        warning('collectHERef failed, message: %s',ME.message)
     end
 end
 
