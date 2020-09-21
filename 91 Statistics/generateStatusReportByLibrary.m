@@ -171,6 +171,16 @@ st.notes = sprintf([ ...
     'isUsableInML - true or false, do we have enugh to use it for machine learning.\n'  ...
     ]);
 
+%% For debug purposes, find a specific slide that we would like to focus on
+dSubject = 'LG-22';
+dSlideSection = 'Slide12_Section03';
+dI = cellfun(@(x)(contains(x,dSubject) && contains(x,dSlideSection)),sectionPathsOut); 
+if ~any(dI) 
+    dI = -1;
+else
+    dI = find(dI); % dI will contain the right section we are looking for. Set a breakpoint and i=dI and it should work, including loading the one off files needed.
+end
+
 %% Loop over each section, get statistics for each
 fprintf('Processing %d sections, wait for 20 starts [ ',length(sectionPathsOut));
 for i=1:length(sectionPathsOut)
@@ -182,7 +192,8 @@ for i=1:length(sectionPathsOut)
     %% OCT parameters
     
     % Was OCT Volume Tif generated
-    if i==1 || ~strcmp(st.subjectPahts{i},st.subjectPahts{i-1})
+    if i==1 || ~strcmp(st.subjectPahts{i},st.subjectPahts{i-1}) ...
+            || i==dI %Debug
         st.isOCTVolumeProcessed(i) = awsExist([st.subjectPahts{i} '/OCTVolumes/VolumeScanAbs/TifMetadata.json'],'file');
         scanConfigJson = awsReadJSON([st.subjectPahts{i} '/OCTVolumes/ScanConfig.json']);
     else
@@ -205,7 +216,8 @@ for i=1:length(sectionPathsOut)
     %% Stack related parameters
     
     % Read stack config if required - if it is a new subject.
-    if i==1 || ~strcmp(st.subjectPahts{i-1},st.subjectPahts{i})
+    if i==1 || ~strcmp(st.subjectPahts{i-1},st.subjectPahts{i}) ...
+            || i==dI %Debug
         stackConfigJson = awsReadJSON([st.subjectPahts{i} 'Slides/StackConfig.json']);
     end
     
@@ -265,8 +277,8 @@ for i=1:length(sectionPathsOut)
     end
     
     % Was OCT volume resliced?
-    if (i==1 || ~strcmp(st.subjectPahts{i},st.subjectPahts{i-1}) || ...
-            st.iteration(i) ~= st.iteration(i-1))
+    if i==1 || ~strcmp(st.subjectPahts{i},st.subjectPahts{i-1}) || st.iteration(i) ~= st.iteration(i-1) ...
+        || i==dI %Debug
         reslicedVolumePath = ...
             sprintf('%s/OCTVolumes/StackVolume_Iteration%d',...
                 st.subjectPahts{i},  st.iteration(i));  
