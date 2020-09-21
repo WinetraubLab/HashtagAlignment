@@ -5,12 +5,14 @@ function rectifyFineAlignedSections(subjectPath)
 % before doing so.
 
 if ~exist('subjectPath','var')
-    subjectPath = s3SubjectPath('09','LC');
+    subjectPath = s3SubjectPath('58','LGC');
 end
 
 % When set to false, will not try to rectify sections that don't have h&e,
 % that makes sense since slides with no h&e cannot be fine aligned.
 shouldRectifySectionsWithNoHE = false; 
+
+isWriteToCloud = true; % Set to false if you would like to perform dry run that just computes but doesn't write to the cloud
 
 %% Read stack config
 stackConfig = awsReadJSON([subjectPath '/Slides/StackConfig.json']);
@@ -110,9 +112,13 @@ for i = 1:max(stackIterations)
     yFineAlignedRectified_mm(isInThisIeration) = yFineAlignedRectified_umI*1e-3;
 end
 
-answer = questdlg('Should I upload results to the cloud?','Cloud','Yes','No','No');
-if strcmpi(answer,'yes')
-   isUpdateCloud = true;
+if isWriteToCloud
+    answer = questdlg('Should I upload results to the cloud?','Cloud','Yes','No','No');
+    if strcmpi(answer,'yes')
+       isUpdateCloud = true;
+    else
+        isUpdateCloud = false;
+    end
 else
     isUpdateCloud = false;
 end
@@ -128,12 +134,14 @@ end
 
 %% Update slide config
 % Loop over all configs and update
+iToValidate = [];
 for i=1:length(slideConfigs)
     if isnan(yFineAlignedRectified_mm(i))
         continue; %Nothing to update
     end
     slideConfig = slideConfigs{i};
     if isempty(slideConfig)
+        error('Enpty Slide Config should never happen');
         continue; % This should never happen
     end
     if ~isfield(slideConfig,'histologyImageFilePath') && ~shouldRectifySectionsWithNoHE
@@ -198,5 +206,16 @@ for i=1:length(slideConfigs)
 
     if isUpdateCloud
         awsWriteJSON(slideConfig,slideConfigsJsonPaths{i});
+        iToValidate = [iToValidate i];
+    end
+end
+
+%% Validate proper writing
+for i=1:length(iToValidate)
+    json = awsReadJSON(slideConfigsJsonPaths{iToValidate(i)});
+    if  (~isfield(json.FM,'singlePlaneFit_FineAligned') || ...
+        ~isfield(json.FM,singlePlaneFit_FineAligned,'wasRectified') || ...
+        ~json.FM.singlePlaneFit_FineAligned.wasRectified)
+        error('Slide %s was not updated',slideConfigsJsonPaths{iToValidate(i)});
     end
 end
