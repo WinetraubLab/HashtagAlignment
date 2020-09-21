@@ -3,7 +3,7 @@ function estimateVolumeStatisticsAdvance(subjectPath)
 % Written at July 18, 2020.
 
 if ~exist('subjectPath','var')
-    subjectPath = s3SubjectPath('02','LG');
+    subjectPath = s3SubjectPath('04','LG');
 end
 
 OCTVolumesFolder_ = [subjectPath '\OCTVolumes\'];

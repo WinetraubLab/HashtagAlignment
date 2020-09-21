@@ -7,10 +7,10 @@
 
 % Which library to run on
 [subjectsPath,subjectsName] = ...
-    s3GetAllSubjectsInLib({'LC','LD','LE','LF','LG'}); %Set lib (LC, LD etc, or leave empty for latest lib)
+    s3GetAllSubjectsInLib({'LG'}); %Set lib (LC, LD etc, or leave empty for latest lib)
 
 % Will the script run on subjects or slides?
-runOn = 'subjects'; % Can be 'subjects' or 'slides'
+runOn = 'subjects'; % Can be 'subjects' or '5slides'
 
 % Function to run for each subject / slide
 % Function handle interface is func(rootFolder) where root folder will be
