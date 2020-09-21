@@ -10,9 +10,10 @@ mode = 'isUsableInML'; % Most strict consideration
 %   1 - concatinate all train and test sets to one set and plot it on the
 %       body figure
 %   2 - plot only train set
+%   4 - plot only test set without cancer
 %   3 - plot train and test but in different colors (blue is train, red is
 %       test)
-plotAreasMode = 3;
+plotAreasMode = 4;
 
 % When set, will devide up to training and testing, set to NaN to ignore
 % deviding, set to {} to use default split
@@ -108,6 +109,7 @@ for i=1:length(dataPerSubject)
         case 1
             dataPerSubject{i}.isTraining = true;
         case 2
+            % Plot only train set
             if isTraining(i)
                 dataPerSubject{i}.isTraining = true;
             else
@@ -115,9 +117,21 @@ for i=1:length(dataPerSubject)
             end
         case 3
             dataPerSubject{i}.isTraining = isTraining(i);
+            
+        case 4
+            % Plot only test set
+            if ~isTraining(i) && ...
+                dataPerSubject{i}.sampleId(3) ~= 'C' % Cancer, for example: LGC
+                dataPerSubject{i}.isTraining = true;
+            else
+                iiToDelete = [iiToDelete i];
+            end
     end
 end
 dataPerSubject(iiToDelete) = [];
+
+% Print which subject are included
+%cellfun(@(x)(x.sampleId),dataPerSubject,'UniformOutput',false)
 
 %% Draw - Sections Statistics
 fig1 = figure(1);
