@@ -134,6 +134,7 @@ bodyPartsNames = cellfun(@(x)(strrep(lower(x),'mandible','jaw')),bodyPartsNames,
 bodyPartsNames = cellfun(@(x)(strrep(lower(x),'nasal','nose')),bodyPartsNames,'UniformOutput',false);
 bodyPartsNames = cellfun(@(x)(strrep(lower(x),'mid antihelix','ear')),bodyPartsNames,'UniformOutput',false);
 bodyPartsNames = cellfun(@(x)(strrep(lower(x),'preauricular','ear')),bodyPartsNames,'UniformOutput',false);
+bodyPartsNames = cellfun(@(x)(strrep(lower(x),'helix','ear')),bodyPartsNames,'UniformOutput',false);
 bodyPartsNames = cellfun(@(x)(strrep(lower(x),'lower leg','shin')),bodyPartsNames,'UniformOutput',false);
 bodyPartsNames = cellfun(@(x)(strrep(lower(x),'temple','forehead')),bodyPartsNames,'UniformOutput',false);
 bodyPartsNames = cellfun(@(x)(strrep(lower(x),'arm','forearm')),bodyPartsNames,'UniformOutput',false);
