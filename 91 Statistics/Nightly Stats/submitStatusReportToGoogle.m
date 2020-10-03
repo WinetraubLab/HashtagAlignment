@@ -6,11 +6,21 @@ sendToHistologyDistance_um = 550;
 
 %% Input checks
 if ~exist('st','var')
-    st = [s3SubjectPath('','LC') '0LibraryStatistics/' '/StatusReportBySection.json'];
+    st = [s3SubjectPath('','LG') '0LibraryStatistics/' '/StatusReportBySection.json'];
 end
 
 if ischar(st)
     st = awsReadJSON(st);
+end
+
+%% For debug purposes, find a specific slide that we would like to focus on
+dSubject = 'LG-42';
+dSlideSection = 'Slide05_Section03';
+dI = cellfun(@(x)(contains(x,dSubject) && contains(x,dSlideSection)),st.sectionPahts); 
+if ~any(dI) 
+    dI = -1;
+else
+    dI = find(dI); % dI will contain the right section we are looking for. Set a breakpoint and i=dI and it should work, including loading the one off files needed.
 end
 
 %% Generate google update (slides sheet)
@@ -224,7 +234,7 @@ for i=1:length(st.subjectNames)
         item.AreaofQualityData_mmsq__auto_ = sprintf('%.3f',st.areaOfQualityData_mm2(i));
     else
         if (fineAlignmentCanComplete)
-            item.IsQualityControlDone__auto_ = 'No';
+            item.IsQualityControlDone__auto_ = 'Quality Control Mask Not Generated or No Fine Tune Alignment After Rectified';
             fineAlignmentCanComplete = false;
         else
             item.IsQualityControlDone__auto_ = 'N/A';

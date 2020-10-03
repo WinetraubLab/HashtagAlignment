@@ -2,15 +2,15 @@
 
 %% Inputs
 datasetBaseDirectory = s3SubjectPath('','_MLModels');
-baseMLFolder = [datasetBaseDirectory '2020-06-27 4x Yonatan Pix2Pix'];
+baseMLFolder = [datasetBaseDirectory '2020-08-15 10x Yonatan Pix2Pix'];
 
 % Path to the specific model results
-modelName = 'pix2pix_2to1ratio'; % 'pix2pix_2to1_ratio','pix2pix_256px256px'
+modelName = 'pix2pix'; % 'pix2pix_2to1_ratio','pix2pix_256px256px'
 testImagesPath = [baseMLFolder '/results/' modelName '/test_latest/images/'];
 trainImagesPath = [baseMLFolder '/results/' modelName '/train_latest/images/'];
 latentPath = [baseMLFolder '/results/' modelName '/feats/center/'];
 
-isCorrectAspectRatio2To1 = false; % Set to true if aspect ratio needs correction to 2 to 1
+isCorrectAspectRatio2To1 = true; % Set to true if aspect ratio needs correction to 2 to 1
 
 %% Load all latent features
 ds = fileDatastore([latentPath 'L*.mat'],'ReadFcn',@load);

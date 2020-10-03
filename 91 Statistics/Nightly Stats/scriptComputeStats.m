@@ -2,13 +2,18 @@
 
 libraryNames = {'LG','LF','LE','LD','LC'};
 
-%% Time dependence
+isGoogleSheetUpdate = true; % Set to just update json and skip google sheet updates
 
-if mod(round(now),7) == 0 % On the run between Thursday and Friday
-    % Run over all liberies
-else
-    % Run on the latest libery only to save time.
-    libraryNames = libraryNames(1);
+%% Time dependence
+if isGoogleSheetUpdate
+    % No need to run once every 7 days logic when no google sheet update.
+    % It is faster.
+    if mod(round(now),7) == 0 % On the run between Thursday and Friday
+        % Run over all liberies
+    else
+        % Run on the latest libery only to save time.
+        libraryNames = libraryNames(1);
+    end
 end
 
 %% Compute section status report
@@ -28,8 +33,10 @@ for i=1:length(libraryNames)
     % st = awsReadJSON([statsPath '/StatusReportBySection.json'])
     
     % Upload to cloud
-    fprintf('%s Submitting to Google Sheets\n',datestr(datetime));
-    submitStatusReportToGoogle(st);
+    if isGoogleSheetUpdate
+        fprintf('%s Submitting to Google Sheets\n',datestr(datetime));
+        submitStatusReportToGoogle(st);
+    end
 end
 fprintf('%s Done!\n',datestr(datetime));
 

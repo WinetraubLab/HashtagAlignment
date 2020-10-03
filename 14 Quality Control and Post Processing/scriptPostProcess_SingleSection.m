@@ -2,8 +2,8 @@
 % Histology sections and a mask to highlight good parts from bad ones.
 
 %% Inputs
-subjectPath = s3SubjectPath('01');
-sectionName = 'Slide03_Section01';
+subjectPath = s3SubjectPath('42');
+sectionName = 'Slide05_Section03';
 
 % How many y planes to take around the center OCT plane +-yPlanesAroundCenter
 yPlanesAroundCenter = 10; % Each plane is 1um

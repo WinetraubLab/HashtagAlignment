@@ -119,6 +119,7 @@ st.yAxisTolerance_um = zeros(size(st.sectionNames))*NaN;
 st.isQualityControlMaskGenerated = zeros(size(st.sectionNames),'logical');
 st.areaOfQualityData_mm2 = zeros(size(st.sectionNames))*NaN;
 st.isUsableInML = zeros(size(st.sectionNames),'logical');
+st.mlPhase = zeros(size(st.sectionNames));
 
 st.notes = sprintf([ ...
     ' -- General and Scanning Parameters --\n' ....
@@ -169,11 +170,12 @@ st.notes = sprintf([ ...
     'isQualityControlMaskGenerated - is ran quality control on image.\n' ...
     'areaOfQualityData_mm2 - at the aligned image, how big is the area which has high quality data.\n' ...
     'isUsableInML - true or false, do we have enugh to use it for machine learning.\n'  ...
+    'mlPhase - Which phase is this section participate in: -1 - training set, 1 - testing set, or 0 - not participating in ML.\n'  ...
     ]);
 
 %% For debug purposes, find a specific slide that we would like to focus on
-dSubject = 'LG-22';
-dSlideSection = 'Slide12_Section03';
+dSubject = 'LG-42';
+dSlideSection = 'Slide05_Section03';
 dI = cellfun(@(x)(contains(x,dSubject) && contains(x,dSlideSection)),sectionPathsOut); 
 if ~any(dI) 
     dI = -1;
@@ -226,6 +228,7 @@ for i=1:length(sectionPathsOut)
         stackConfigJson.histologyInstructions.iterations,'UniformOutput',false);
     dist_um = [dist_um{:}];
     if isfield(stackConfigJson,'stackAlignment') && ... Ran stack alignment
+            length(stackConfigJson.stackAlignment) >= st.iteration(i) && ... Ran stack alignment for this iteration
             ~isempty(stackConfigJson.stackAlignment(st.iteration(i)).planeNormal) % and stack alignment succeed for this iteration
         dirFlip = ...
             stackConfigJson.stackAlignment(st.iteration(i)).isPlaneNormalSameDirectionAsCuttingDirection;
@@ -424,4 +427,9 @@ for i=1:length(sectionPathsOut)
             i,ME.stack(1).line,sectionPathsOut{i}, ME.message);
     end
 end
+
+% Update ml phases
+ph = splitDataToPhases(st.subjectNames);
+st.mlPhase = ( (ph==0)*(-1) + (ph==1)*(1) ).*st.isUsableInML;
+
 fprintf(']. Done!\n');
