@@ -47,6 +47,9 @@ st = loadStatusReportByLibrary(libraryNames);
 isUsable = find(st.isUsableInML);
 %isUsable = 1:length(st.isUsableInML); % For debugging purposes get all slides
 
+%% Save slide information to local directory for future use
+awsWriteJSON(st,[outputFolder '\StatusReportBySection.json']);
+
 %% Do the work
 fprintf('Gathering images from %d valid sections. Wait for 10 stars ... [ ',length(isUsable)); tic;
 imwritefun = @(im,path)(imwrite(im,path,'Quality',100));

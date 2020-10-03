@@ -1,4 +1,4 @@
-function sortImagesTrainTest(baseFolder,filesInTestingSet)
+function sortImagesTrainTest(baseFolder,trainSetSubjects)
 % This function sorts images to train & test folders
 % train_A, test_A contains OCT, _B contains histology.
 %   baseFolder - main folder to sort
@@ -6,8 +6,8 @@ function sortImagesTrainTest(baseFolder,filesInTestingSet)
 %   included in test set, all the rest will be train set
 
 %% Inputs
-if ~exist('filesInTestingSet','var') || isempty(filesInTestingSet)
-    filesInTestingSet = {}; %Use default
+if ~exist('trainSetSubjects','var') || isempty(trainSetSubjects)
+    trainSetSubjects = {}; %Use default
 end
 
 if ~exist('baseFolder','var') || isempty(baseFolder)
@@ -26,7 +26,7 @@ fileNames(~cellfun(@(x)(contains(x,'.jpg')),fileNames)) = []; % Remove non image
 fileNames = fileNames(:);
 filePaths = cellfun(@(x)([baseFolder x]),fileNames(:),'UniformOutput',false);
 
-isTraining = isFilesInTrainingSet(fileNames, filesInTestingSet);
+isTraining = isFilesInTrainingSet(fileNames, trainSetSubjects);
 
 % Figure out if both images are concatinated in the same file?
 isAType = cellfun(@(x)(contains(x,'_A.')),fileNames);
@@ -97,4 +97,11 @@ else
             movefile(filePaths{i},toFilePath);
         end
     end
+end
+
+function isTraining = isFilesInTrainingSet(fileNames, trainSetSubjects)
+
+isTraining = zeros(size(fileNames),'logical');
+for i=1:length(isTraining)
+    isTraining(i) = any(cellfun(@(x)(contains(fileNames{i},x)),[trainSetSubjects(:)' {'black'}]));
 end
