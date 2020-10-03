@@ -6,5 +6,5 @@ datasetTag = '';%'2020-08-15'; % What date this data set was created, leave empt
 
 %% Gather dataset
 datasetPath = getPathToLatestDataset(imageResolution,datasetTag);
-awsMkDir('tmp/',true);
+awsMkDir([pwd '/tmp/'],true);
 awsCopyFileFolder(datasetPath,'tmp/');
