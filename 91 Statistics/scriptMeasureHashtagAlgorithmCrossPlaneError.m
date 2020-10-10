@@ -7,7 +7,7 @@ libraryNames = {'LC','LD','LE','LF','LG'};
 st = loadStatusReportByLibrary(libraryNames);
 
 %% Filter
-goodI = getSectionsWithBestAlignment(st);
+goodI = computeOverallSectionQuality(st) == 2;
 
 % Pull data
 goodI = find(goodI);

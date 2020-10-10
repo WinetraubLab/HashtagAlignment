@@ -23,9 +23,6 @@ maxDistanceFromOrigin = 0.550; %mm
 l = sqrt(2)*octVolumeSideLength-2*maxDistanceFromOrigin;
 h = 0.3 + 0.1; % minimal acceptable depth of OCT section + gel
 
-%minimalAreaForSectionToBeQualified_mm2 = l*h %mm^2
-minimalAreaForSectionToBeQualified_mm2 = 0.12; %mm^2
-
 %% Input checks
 if ischar(libraryNames)
     libraryNames = {libraryNames};
@@ -368,33 +365,20 @@ for i=1:length(sectionPathsOut)
     end
     
     % QA Info
+    [qScore, isOCTImageQualityGood, isHistologyImageQualityGood, ...
+        alignmentQuality, areaOfQualityData_mm2] = ...
+        computeOverallSectionQuality (st.sectionPahts{i});
+    
     if isfield(slideConfigJson,'QAInfo') && ~isempty(slideConfigJson.QAInfo)
         st.yAxisTolerance_um(i) = ...
             slideConfigJson.QAInfo.AlignmentQuality.YAxisToleranceMicrons;
 
-        st.isOCTImageQualityGood(i) = ...
-            slideConfigJson.QAInfo.OCTImageQuality.IsOverallImageQualityGood & ...
-            slideConfigJson.QAInfo.OCTImageQuality.IsEpitheliumVisible & ...
-           ~slideConfigJson.QAInfo.OCTImageQuality.IsMostOfImageShadowed;
-        
-        st.isHistologyImageQualityGood(i) = ...
-           slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.IsOverallImageQualityGood & ...
-          ~slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.WasTissueFolded & ...
-           true;%(slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.WasGelDetachedFromTissue < 0.2); % Gel detachment shouldn't effect usablilty
-        
-        ql1 = slideConfigJson.QAInfo.AlignmentQuality.OverallAlignmentQuality;
-        if ~slideConfigJson.QAInfo.AlignmentQuality.WasSurfaceUsedToAlign && ...
-           ~slideConfigJson.QAInfo.AlignmentQuality.WereFeaturesInsideTissueUsedInAlignment
-            ql2 = 1;
-        elseif slideConfigJson.QAInfo.AlignmentQuality.WasSurfaceUsedToAlign && ...
-               slideConfigJson.QAInfo.AlignmentQuality.WereFeaturesInsideTissueUsedInAlignment
-            ql2 = 3;
-        else
-            ql2 = 2;
-        end
-        st.alignmentQuality(i) = mean([ql1,ql2]);
-        
-        st.wereFeaturesInsideTissueUsedInAlignment(i) = slideConfigJson.QAInfo.AlignmentQuality.WereFeaturesInsideTissueUsedInAlignment;
+        st.isOCTImageQualityGood(i) = isOCTImageQualityGood;     
+        st.isHistologyImageQualityGood(i) = isHistologyImageQualityGood;
+        st.alignmentQuality(i) = alignmentQuality;
+    
+        st.wereFeaturesInsideTissueUsedInAlignment(i) = ...
+            slideConfigJson.QAInfo.AlignmentQuality.WereFeaturesInsideTissueUsedInAlignment;
     end
     
     % Was mask generated? and is most upto date
@@ -406,22 +390,10 @@ for i=1:length(sectionPathsOut)
     %% Finally,
     if st.isQualityControlMaskGenerated(i)
         % Figure out the area of good data
-        [msk, metaData] = yOCTFromTif(...
-            [st.sectionPahts{i} slideConfigJson.alignedImagePath_Mask]);
-        nPixelsWithGoodData = sum(msk(:)==0);
-        pixelArea_um2 = diff(metaData.x.values(1:2))*diff(metaData.z.values(1:2));
-        st.areaOfQualityData_mm2(i) = nPixelsWithGoodData*pixelArea_um2/1e3^2;
-
-        %% Is usable for ML
-
-        %if area is above threshold
-        isAreaThreshold = st.areaOfQualityData_mm2(i) > minimalAreaForSectionToBeQualified_mm2;
-        st.isUsableInML(i) = ...
-            isAreaThreshold & ...
-            (st.alignmentQuality(i) > 1.5) & ...
-            st.isOCTImageQualityGood(i) & ...
-            st.isHistologyImageQualityGood(i);
+        st.areaOfQualityData_mm2(i) = areaOfQualityData_mm2;
     end
+    
+    st.isUsableInML(i) = qScore > 0;
     catch ME
         warning('error happend i=%d (line %d), path %s. Message: %s',...
             i,ME.stack(1).line,sectionPathsOut{i}, ME.message);
