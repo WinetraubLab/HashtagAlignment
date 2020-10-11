@@ -27,7 +27,7 @@ minimalAreaForSectionToBeQualified_mm2 = 0.12; %mm^2
 
 %% Input checks
 if ~exist('input1','var')
-    input1 = [s3SubjectPath('07','LG') 'Slides/Slide07_Section01/'];
+    input1 = [s3SubjectPath('07','LG') 'Slides/Slide03_Section03/'];
 end
 
 if ischar(input1)
@@ -49,6 +49,8 @@ if exist('st','var')
     isHistologyImageQualityGood = st.isHistologyImageQualityGood;
     alignmentQuality = st.alignmentQuality;
     areaOfQualityData_mm2 = st.areaOfQualityData_mm2;
+    isDermisVisibleInOCT = st.isDermisVisibleInOCT;
+    pGelDetachedFromTissue = st.pGelDetachedFromTissueHistology;
     
     isAreaThreshold = areaOfQualityData_mm2 > minimalAreaForSectionToBeQualified_mm2;
     didUserFineTuneAlignmentAfterRectified = st.didUserFineTuneAlignmentAfterRectified;
@@ -62,6 +64,8 @@ else
     if ~isfield(slideConfigJson,'QAInfo')
         return; % Unable to determine score as QA info does not exist
     end
+    
+    isDermisVisibleInOCT = slideConfigJson.QAInfo.OCTImageQuality.IsDermisVisible;
 
     isOCTImageQualityGood = ...
         slideConfigJson.QAInfo.OCTImageQuality.IsOverallImageQualityGood & ...
@@ -71,7 +75,8 @@ else
     isHistologyImageQualityGood = ...
        slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.IsOverallImageQualityGood & ...
       ~slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.WasTissueFolded & ...
-       true;%(slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.WasGelDetachedFromTissue < 0.2); % Gel detachment shouldn't effect usablilty
+       (slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.TissueBreakageOrHolesPresent < 0.8) ... No big holes in the tissue
+      ;%(slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.WasGelDetachedFromTissue < 0.2); % Gel detachment shouldn't effect usablilty
 
     ql1 = slideConfigJson.QAInfo.AlignmentQuality.OverallAlignmentQuality;
     if ~slideConfigJson.QAInfo.AlignmentQuality.WasSurfaceUsedToAlign && ...
@@ -118,6 +123,7 @@ else
     end
     
     yAxisTolerance_um = slideConfigJson.QAInfo.AlignmentQuality.YAxisToleranceMicrons;
+    pGelDetachedFromTissue = slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.WasGelDetachedFromTissue;
 end
 
 %% Final basic score
@@ -133,7 +139,9 @@ qScore = isUsableInML;
 %% Update score if quality is particularly good
 qScore(isUsableInML & ...
     (alignmentQuality >= 2.5) & ... High threshold quality
-    (yAxisTolerance_um <=10 )   ... Filter out sections that have high uncertanty about the accuracy of fine
+    (yAxisTolerance_um <=10 ) & ... Filter out sections that have high uncertanty about the accuracy of fine
                                 ... alignment. Our hope is to be left with sections with defining features
                                 ... that will help determine alignment accuracy
+    isDermisVisibleInOCT & ... We would like dermis to be visible for high quality
+    (pGelDetachedFromTissue<0.75) ... Not alot of detachement
     ) = 2;    

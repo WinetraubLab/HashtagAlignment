@@ -166,6 +166,9 @@ for iSlide=1:length(isUsable)
     
     % Save image
     imwritefun(img_he, sprintf(outputFilePathTemplate,'p',0,'B'));
+    
+    % Save JSON for future usage
+    awsWriteJSON(slideConfig,sprintf(strrep(outputFilePathTemplate,'.jpg','.json'),'p',0,''));
 end
 fprintf('] Done! Took %.0f minutes.\n',toc()/60);
 

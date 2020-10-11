@@ -18,6 +18,9 @@ ds_A = fileDatastore(...
 ds_B = fileDatastore(...
     awsModifyPathForCompetability([alignedImagesFolder '/*_B.jpg']),'ReadFcn',@imread);
 
+ds_json = fileDatastore(...
+    awsModifyPathForCompetability([alignedImagesFolder '/*_.json']),'ReadFcn',@awsReadJSON);
+
 awsMkDir(outputFolder,true);
 
 json = awsReadJSON([alignedImagesFolder '/DatasetConfig.json']);
@@ -27,6 +30,7 @@ imagesPixelSize_um = json.imagesPixelSize_um;
 for imageI=1:length(ds_A.Files)
     im_A = ds_A.read;
     im_B = ds_B.read;
+    json = ds_json.read;
     
     [~,fn,tmp] = fileparts(ds_A.Files{imageI});
     fn = [fn tmp];
@@ -50,12 +54,27 @@ for imageI=1:length(ds_A.Files)
     scalebarLength = 100/imagesPixelSize_um;
     imAll(end-(20:30),20+(1:scalebarLength),:) = 256;
 
+    subplot(1,1,1);
+    subplot(1,4,1:3)
     imshow(imAll);
-     title(sprintf('%s (%s)',nname,pixelSizeToMagnification(imagesPixelSize_um)));
+    title(sprintf('%s (%s)',nname,pixelSizeToMagnification(imagesPixelSize_um)));
 
     %text(20+scalebarLength+10,size(imAll,1)-25,'100\mum','Color',[1 1 1],'FontWeight','bold');
     text(20,size(imAll,1)-25,'100\mum','FontSize',8);
     
+    % Write info about this image
+    txt = jsonencode(json.QAInfo);txt([1 end-1 end]) = []; 
+    txt = strrep(txt,'"','');
+    txt = strrep(txt,'{',[newline '--------' newline]);
+    txt = strrep(txt,'}',newline);
+    txt = strrep(txt,',',newline);
+    txt = strrep(txt,'_',' ');
+    txt = strrep(txt,':',': ');
+    subplot(1,4,4)
+    text(0,0.5,txt,'Color','k','HorizontalAlignment','left','VerticalAlignment','middle');
+    title('QA Information');
+    axis off;
+    
     % Save
-    awsSaveMatlabFigure(gcf,[outputFolder '/' fn],false,false);
+    awsSaveMatlabFigure(gcf,[outputFolder '/' fn],true,false);
 end

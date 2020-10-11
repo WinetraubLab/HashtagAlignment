@@ -7,16 +7,16 @@
 
 % Which library to run on
 [subjectsPath,subjectsName] = ...
-    s3GetAllSubjectsInLib({'LG'}); %Set lib (LC, LD etc, or leave empty for latest lib)
+    s3GetAllSubjectsInLib({'LG','LF','LE','LD','LC'}); %Set lib (LC, LD etc, or leave empty for latest lib)
 
 % Will the script run on subjects or slides?
-runOn = 'subjects'; % Can be 'subjects' or '5slides'
+runOn = 'slides'; % Can be 'subjects' or 'slides'
 
 % Function to run for each subject / slide
 % Function handle interface is func(rootFolder) where root folder will be
 % either the subject folder or the slide folder acording to runOn.
 %funcToRun = @(rootFolder)(rootFolder);
-funcToRun = @estimateVolumeStatisticsAdvance; %recomputeStackAlignment, recomputeSlideAlignment, changeFolderName
+funcToRun = @updateQA; %recomputeStackAlignment, recomputeSlideAlignment, changeFolderName
 
 %% Loop Over all subjects and make the change (subject related)
 if strcmpi(runOn,'subjects')
@@ -45,7 +45,7 @@ if strcmpi(runOn,'slides')
 
         for sli = 1:length(slidesPath)
             slidePath = slidesPath{sli};
-            fprintf('%s    Processing %s\n', datestr(datetime), sectionNames{si});
+            fprintf('%s    Processing %s\n', datestr(datetime), sectionNames{sli});
 
             funcToRun(slidePath);
         end
