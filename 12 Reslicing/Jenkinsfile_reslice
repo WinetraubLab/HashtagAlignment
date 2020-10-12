@@ -11,8 +11,8 @@ pipeline {
 	{
 		string(
 			name: "SUBJECT_FOLDER_PATH",
-			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LG/LG-01/",
-			description:"Subject Directory\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LG/LG-01/",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LH/LH-01/",
+			description:"Subject Directory\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LH/LH-01/",
 			trim: true)
 		string(
 			name: "WHICH_ITERATIONS_TO_RESLICE",

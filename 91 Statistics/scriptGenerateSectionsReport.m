@@ -1,6 +1,6 @@
 % This script generates a status report of all the finish sections
 
-libraryNames = {'LG','LF','LE','LD','LC'};
+libraryNames = {'LH','LG','LF','LE','LD','LC'};
 
 % What to lookfor when applying statistics
 %mode = 'isHistologyImageUploaded'; % Will only consider slides with histology uploaded for plot

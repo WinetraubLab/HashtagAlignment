@@ -1,6 +1,6 @@
 % This script computs stats for the following libraries
 
-libraryNames = {'LG','LF','LE','LD','LC'};
+libraryNames = {'LH','LG','LF','LE','LD','LC'};
 
 isGoogleSheetUpdate = true; % Set to just update json and skip google sheet updates
 
@@ -12,7 +12,7 @@ if isGoogleSheetUpdate
         % Run over all liberies
     else
         % Run on the latest libery only to save time.
-        libraryNames = libraryNames(1);
+        libraryNames = libraryNames(1:2);
     end
 end
 
