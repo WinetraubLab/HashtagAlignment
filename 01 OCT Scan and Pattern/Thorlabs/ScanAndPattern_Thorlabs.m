@@ -25,6 +25,7 @@ config.volume.nBScanAvg = 1;
 %z defenitions below are compared to starting position
 %+z is deeper
 config.zToScan = ((-190:15:500)-5)*1e-3; %[mm]
+config.isZScanStartFromTop = false; % Would you like to start scanning from the top of the sample (true) or bottom (false)
 
 %Tissue Defenitions
 config.tissueRefractiveIndex = 1.4;
@@ -123,19 +124,27 @@ config.photobleach.z = config.gelIterfacePosionWithRespectToTissueTop_mm+50e-3; 
 
 %% Add preprogramed config parameter
 
-%Input check
-if (sum(config.zToScan == 0) == 0)
+% Input check
+if ~any(config.zToScan == 0)
 	error('zToScan does not contain focus (z=0) that will cause problems down the road, please adjust');
 end
 
-config.whenWasItScanned = datestr(now());
-config.version = 2.1; %Version of this JSON file
-
-%Scan one silce where we photobleaching
+% Scan one silce where we photobleaching
+config.zToScan_TopOfGelZ = config.photobleach.z;
+config.zToScan_TopTissueZ = config.zToScan(1);
 config.zToScan = unique([config.photobleach.z config.zToScan]);
 
+% Flip zToScan if user selected to start from the bottom
+if (~config.isZScanStartFromTop)
+    config.zToScan = fliplr(config.zToScan);
+end
+
+% Housekeeping parameters
+config.whenWasItScanned = datestr(now());
+config.version = 2.2; %Version of this JSON file
+
 %% Initialize Folders
-%Make dirs for output and log
+% Make dirs for output and log
 if ~exist(outputFolder,'dir')
 	mkdir(outputFolder);
 end
@@ -183,14 +192,14 @@ scanParameters = yOCTScanTile (...
     volumeOutputFolder, ...
     'octProbePath', config.octProbePath, ...
     'tissueRefractiveIndex', config.tissueRefractiveIndex, ...
-    'xOffset', 0, ...
-    'yOffset', 0, ... 
-    'xRange', config.volume.xRange, ...
-    'yRange', config.volume.yRange, ...
-    'nXPixels', config.volume.nXPixels, ...
-    'nYPixels', config.volume.nYPixels, ...
+    'xOffset',   0, ...
+    'yOffset',   0, ... 
+    'xRange',    config.volume.xRange, ...
+    'yRange',    config.volume.yRange, ...
+    'nXPixels',  config.volume.nXPixels, ...
+    'nYPixels',  config.volume.nYPixels, ...
     'nBScanAvg', config.volume.nBScanAvg, ...
-    'zDepths',    config.zToScan, ... [mm]
+    'zDepths',   config.zToScan, ... [mm]
     'v',true  ...
     );
 for fn = fieldnames(scanParameters)'
@@ -206,9 +215,10 @@ if (config.overview.isScanEnabled)
     gridXc = (-config.overview.rangeAllX/2+config.overview.range/2):config.overview.range:(config.overview.rangeAllX/2-config.overview.range/2);
     gridYc = (-config.overview.rangeAllY/2+config.overview.range/2):config.overview.range:(config.overview.rangeAllY/2-config.overview.range/2);
     
+    % What depths to scan overview
     z = linspace( ...
-        config.zToScan(2), ... Just above the tissue (index 1 is the photobleach position)
-        config.zToScan(end)+0.5, ...Deepest depth of tissue scan, and add some after.
+        config.zToScan_TopTissueZ, ... Just above the tissue
+        max(config.zToScan)+0.2, ...Deepest depth of tissue scan, and add some after.
                                  ...This extra is for cases where tissue starts very deep so pathology will think it has a 'full face' when we couldn't see it in overview
         config.overview.nZToScan);
     
