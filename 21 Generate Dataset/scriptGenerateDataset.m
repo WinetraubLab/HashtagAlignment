@@ -17,7 +17,12 @@ libraryNames = {'LC','LD','LE','LF','LG','LH'};
 setVariblesFromJenkins(); 
 
 %% Generate dataset name & general information
-dataSetName = sprintf('%s %s %s', datestr(now,'yyyy-mm-dd'), magnificationName,tagName);
+if exist('dataSetInitDate_','var')
+    dataSetInitDate = dataSetInitDate_;
+else
+    dataSetInitDate = datestr(now,'yyyy-mm-dd');
+end
+dataSetName = sprintf('%s %s %s', dataSetInitDate, magnificationName,tagName);
 dataSetName = strtrim(dataSetName);
 
 pixSize_um = magnificationToPixelSizeMicrons (magnificationName);
