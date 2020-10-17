@@ -11,7 +11,7 @@ scaleBar = 100; % Plot scale bar [um]
 
 % Notice that total number of images to be rated by pathologist is
 % (capSectionsTrain + capSectionsTest) * 2
-capSectionsTrain = 15; % How many sections in train to cap
+capSectionsTrain = 14; % How many sections in train to cap
 capSectionsTest = 35; % How many sections in test to cap
 
 %% Download all images
