@@ -34,7 +34,7 @@ f = fdlnSortLines(f); %Sort lines such that they are organized by position, left
     
 %% Part #1, identify lines (x-y)
 if isfield(octVolumeJson,'version') && ...
-        (octVolumeJson.version == 2 || octVolumeJson.version == 2.1)
+        (octVolumeJson.version == 2 || octVolumeJson.version == 2.1 || octVolumeJson.version == 2.2)
     vLinePositions = octVolumeJson.photobleach.vLinePositions;
     hLinePositions = octVolumeJson.photobleach.hLinePositions;
 else
