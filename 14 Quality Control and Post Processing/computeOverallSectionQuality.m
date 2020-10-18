@@ -128,11 +128,11 @@ end
 
 %% Final basic score
 isUsableInML = ...
-        isAreaThreshold & ... Histology is close enugh to OCT such that many pixels exist in both
-       (alignmentQuality > 1.5) & ... Alignment quality is high
-        isOCTImageQualityGood & ... OCT quality is high
-        isHistologyImageQualityGood & ... Histology quality is high
-        didUserFineTuneAlignmentAfterRectified; % User performed fine tuning
+        (isAreaThreshold==true) & ... Histology is close enugh to OCT such that many pixels exist in both
+        (alignmentQuality > 1.5) & ... Alignment quality is high
+        (isOCTImageQualityGood==true) & ... OCT quality is high
+        (isHistologyImageQualityGood==true) & ... Histology quality is high
+        (didUserFineTuneAlignmentAfterRectified==true); % User performed fine tuning
     
 qScore = isUsableInML;
 
