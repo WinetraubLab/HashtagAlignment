@@ -134,7 +134,7 @@ isUsableInML = ...
         (isHistologyImageQualityGood==true) & ... Histology quality is high
         (didUserFineTuneAlignmentAfterRectified==true); % User performed fine tuning
     
-qScore = isUsableInML;
+qScore = ones(size(isUsableInML)).*(isUsableInML==true);
 
 %% Update score if quality is particularly good
 qScore(isUsableInML & ...
@@ -142,6 +142,6 @@ qScore(isUsableInML & ...
     (yAxisTolerance_um <=10 ) & ... Filter out sections that have high uncertanty about the accuracy of fine
                                 ... alignment. Our hope is to be left with sections with defining features
                                 ... that will help determine alignment accuracy
-    isDermisVisibleInOCT & ... We would like dermis to be visible for high quality
+    (isDermisVisibleInOCT==true) & ... We would like dermis to be visible for high quality
     (pGelDetachedFromTissue<0.75) ... Not alot of detachement
     ) = 2;    
