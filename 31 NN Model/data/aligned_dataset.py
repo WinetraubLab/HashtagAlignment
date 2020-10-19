@@ -51,9 +51,6 @@ class AlignedDataset(BaseDataset):
         A_transform = get_transform(self.opt, transform_params, grayscale=(self.input_nc == 1))
         B_transform = get_transform(self.opt, transform_params, grayscale=(self.output_nc == 1))
 
-        A = A_transform(A)
-        B = B_transform(B)
-
         # OCT2Hist: translate images by a random amount to increase robustness
         if self.opt.isTrain:
             scale = 0.5
@@ -61,6 +58,9 @@ class AlignedDataset(BaseDataset):
             randy = random.uniform(-1,1) * h * scale
             A = TF.affine(A,angle=0,translate=(randx,randy),scale=1,shear=0)
             B = TF.affine(B,angle=0,translate=(randx,randy),scale=1,shear=0)
+
+        A = A_transform(A)
+        B = B_transform(B)
 
         return {'A': A, 'B': B, 'A_paths': AB_path, 'B_paths': AB_path}
 
