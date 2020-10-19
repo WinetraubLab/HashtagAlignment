@@ -96,6 +96,11 @@ end
 
 fprintf('%s Done...\n',datestr(datetime));
 
+%% Upload OCT2Hitology ML model
+
+p = awsModifyPathForCompetability([currentFileFolder '/../31 NN Model']);
+awsEC2UploadDataToInstance(ec2Instance,p,'~/ml/oct2hist_model/'); %Copy
+
 %% Capture information user will need & disconnect from instance
 
 % Capture information to keep for reconnect
