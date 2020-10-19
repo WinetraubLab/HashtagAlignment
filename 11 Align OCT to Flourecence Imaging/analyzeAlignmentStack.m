@@ -100,7 +100,8 @@ end
 
 %Get H&V lines positions
 if isfield(octVolumeJson,'version') && ...
-        (octVolumeJson.version == 2 || octVolumeJson.version == 2.1)
+        (octVolumeJson.version == 2 || octVolumeJson.version == 2.1 || ...
+        octVolumeJson.version == 2.2)
     vLinePositions = octVolumeJson.photobleach.vLinePositions;
     hLinePositions = octVolumeJson.photobleach.hLinePositions;
     lineLength = octVolumeJson.photobleach.lineLength;
