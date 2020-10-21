@@ -14,7 +14,7 @@ runningOnJenkins = false;
 
 % When reslicing take some buffer (microns) before the first slice and
 % after the last one
-bufferSize_um = 220; % take some buffer on both ends.
+bufferSize_um = 300; % take some buffer on both ends.
 
 
 subjectFolder = s3SubjectPath('01');
