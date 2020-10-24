@@ -16,7 +16,7 @@ end
 
 %% Load and concatinate
 st = [];
-for i=1:length(libraryNames)
+for i=1:length(libraryNames) % Loop over all libraries
     ln = libraryNames{i};
     
     statsPath = [s3SubjectPath('',ln) '0LibraryStatistics/StatusReportBySection.json'];
@@ -26,16 +26,25 @@ for i=1:length(libraryNames)
     
     st1 = awsReadJSON(statsPath);
     if isempty(st)
+        % First time get fields
         st = st1;
     else
+        % Concatinate fields onto the first st
         fn = fieldnames(st);
-        for j=1:length(fn)            
+        for j=1:length(fn) % Loop over all fields  
+            if strcmp(fn,'notes')
+                % 'notes' field shouldn't be concatinate we just use the
+                % first one
+                continue;
+            end
+            
             val = st.(fn{j});
             val = val(:);
             
             val1 = st1.(fn{j});
             val1 = val1(:);
             
+            % Concatinate
             st.(fn{j}) = [val; val1];
         end
     end
