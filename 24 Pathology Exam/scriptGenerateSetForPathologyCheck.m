@@ -52,8 +52,8 @@ isVeryBestAlignment = whichFilesContainTheseSections(fpToKeep, st, verBest1);
 ii = cellfun(@(x)(contains(x,'LGC-')),fpToKeep);
 fpToKeepIndex(ii) = false;
 
-% Remove OCT images, we are only interested in real and fake histology
-ii = cellfun(@(x)(contains(x,'real_A.png')),fpToKeep);
+% Remove cancer images
+ii = st.isSampleHealthy == 0;
 fpToKeepIndex(ii) = false;
 
 % Print statistics
