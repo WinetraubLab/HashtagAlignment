@@ -32,7 +32,7 @@ for i=1:length(libraryNames) % Loop over all libraries
         % Concatinate fields onto the first st
         fn = fieldnames(st);
         for j=1:length(fn) % Loop over all fields  
-            if strcmp(fn,'notes')
+            if strcmp(fn{j},'notes')
                 % 'notes' field shouldn't be concatinate we just use the
                 % first one
                 continue;
