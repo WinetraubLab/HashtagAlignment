@@ -31,9 +31,11 @@ libraryNames = sort(libraryNames);
 
 %% Get all subejcts in all libraries
 subjectPaths = {};
+subjectPaths_libraryI = [];
 for i=1:length(libraryNames)
     s = s3GetAllSubjectsInLib(libraryNames{i});
     subjectPaths = [subjectPaths; s(:)]; %#ok<AGROW>
+    subjectPaths_libraryI = [subjectPaths_libraryI; ones(size(s(:)))*i]; %#ok<AGROW>
 end
 subjectPaths = sort(subjectPaths);
 
@@ -43,6 +45,7 @@ sectionPathsOut = {};
 sectionNameOut = {};
 sectionIterationOut = [];
 sectionNumberOut = [];
+libraryNamesOut = {};
 fprintf('Processing %d subjects, wait for 10 starts [ ',length(subjectPaths));
 for i=1:length(subjectPaths)
     if mod(i,round(length(subjectPaths)/10)) == 0
@@ -63,6 +66,7 @@ for i=1:length(subjectPaths)
     sectionPathsOut = [sectionPathsOut; sp(:)]; %#ok<AGROW>
     sectionNameOut = [sectionNameOut; sn(:)]; %#ok<AGROW>
     subjectPathsOut = [subjectPathsOut; repmat(subjectPaths(i),length(sp),1)]; %#ok<AGROW>
+    libraryNamesOut = [libraryNamesOut; repmat({libraryNames{subjectPaths_libraryI(i)}},length(sp),1)]; %#ok<AGROW>
 
     % Get section's iteration
     sectionIterationOut = [sectionIterationOut; stackConfigJson.sections.iterations(:)]; %#ok<AGROW>
@@ -73,14 +77,16 @@ end
 fprintf(']. Done!\n');
 
 %% Define st (status) structure
+st.libraryNames = libraryNamesOut;
 st.subjectNames = cellfun(@s3GetSubjectName,subjectPathsOut,'UniformOutput',false);
 st.subjectPahts = subjectPathsOut;
 st.sectionNames = sectionNameOut;
 st.sectionPahts = sectionPathsOut;
 st.iteration = sectionIterationOut;
 st.sectionNumber = sectionNumberOut;
+st.isSampleHealthy = zeros(size(st.sectionNames),'logical');
 st.isOCTVolumeProcessed = zeros(size(st.sectionNames),'logical');
-st.octdDepthOfPenetration_um = zeros(size(st.sectionNames))*NaN;
+st.octDepthOfPenetration_um = zeros(size(st.sectionNames))*NaN;
 st.octTissueInterfaceVariation_um = zeros(size(st.sectionNames))*NaN;
 st.octUserSelectedTissueZ_um = zeros(size(st.sectionNames))*NaN;
 st.octTissueInterfaceTilt = zeros(size(st.sectionNames))*NaN;
@@ -121,16 +127,18 @@ st.isUsableInML = zeros(size(st.sectionNames),'logical');
 st.mlPhase = zeros(size(st.sectionNames));
 
 st.notes = sprintf([ ...
-    ' -- General and Scanning Parameters --\n' ....
+    ' -- General and Scanning Parameters --\n' ...
+    'libraryNames - e.g. ''LC'', ''LD''.\n' ... 
     'subjectNames, subjectPahts - direct path to the subject corresponding to the section.\n' ...
     'sectionNames, sectionPahts - section name and direct path to the specific section.\n' ...
     'iteration - iteration number that this section was taken as part of.\n' ...
-    'sectionNumber - section''s number in subject\n' ...
+    'sectionNumber - section''s number in subject.\n' ...
+    'isSampleHealthy - is sample cancer (false) or healthy (true) tissue?\n' ...
     'fluorescenceImagingDate - section scan date - time string.\n' ...
     'isHistologyInstructionsPrepared - was histology instructions exist for this section.\n' ... 
     'isOCTVolumeProcessed - was OCT volume processed to generate a tif file.\n' ...
     ' -- OCT Volume Statistics --\n' ...
-    'octdDepthOfPenetration_um - depth of penetration of OCT light into the sample.\n' ...
+    'octDepthOfPenetration_um - depth of penetration of OCT light into the sample.\n' ...
     'octTissueInterfaceVariation_um - what is the difference between the highest point in the tissue and the lowest, given tissue tilt is corrected.\n' ...
     'octUserSelectedTissueZ_um - difference between user selected average tissue interface depth and the computed average.\n' ...
     'octTissueInterfaceTilt - overall tilt of the sample (%% grade) abesolute magnitude.\n' ...
@@ -192,6 +200,13 @@ for i=1:length(sectionPathsOut)
         fprintf('* ');
     end
     
+    %% Sample parameters
+    if i==1 || ~strcmp(st.subjectPahts{i},st.subjectPahts{i-1}) ...
+            || i==dI %Debug
+        subjectJson = awsReadJSON([st.subjectPahts{i} '/Subject.json']);
+    end
+    st.isSampleHealthy(i) = ~strcmp(subjectJson.sampleType,'Healthy');
+    
     %% OCT parameters
     
     % Was OCT Volume Tif generated
@@ -205,7 +220,7 @@ for i=1:length(sectionPathsOut)
     end
     
     if (st.isOCTVolumeProcessed(i) && isfield(scanConfigJson,'volumeStatistics'))
-        st.octdDepthOfPenetration_um(i) = nanmax([scanConfigJson.volumeStatistics.depthOfPenetration_um NaN]);
+        st.octDepthOfPenetration_um(i) = nanmax([scanConfigJson.volumeStatistics.depthOfPenetration_um NaN]);
         st.octTissueInterfaceVariation_um(i) = ...
             nanmax([scanConfigJson.volumeStatistics.maxTissueInterfaceZ_um - scanConfigJson.volumeStatistics.minTissueInterfaceZ_um NaN]);
         st.octUserSelectedTissueZ_um(i) = nanmax([scanConfigJson.volumeStatistics.userSelectedTissueZ_um NaN]);
