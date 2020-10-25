@@ -205,7 +205,7 @@ for i=1:length(sectionPathsOut)
             || i==dI %Debug
         subjectJson = awsReadJSON([st.subjectPahts{i} '/Subject.json']);
     end
-    st.isSampleHealthy(i) = ~strcmp(subjectJson.sampleType,'Healthy');
+    st.isSampleHealthy(i) = strcmp(subjectJson.sampleType,'Healthy');
     
     %% OCT parameters
     

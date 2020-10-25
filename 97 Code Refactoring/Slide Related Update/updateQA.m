@@ -4,7 +4,7 @@ function updateQA(slidePath)
 
 %% Load Data
 if ~exist('slidePath','var')
-    slidePath = [s3SubjectPath('07','LG') 'Slides/Slide03_Section03/'];
+    slidePath = [s3SubjectPath('16','LE') 'Slides/Slide07_Section01/'];
 end
 slideConfigPath = [slidePath 'SlideConfig.json'];
 slideConfigJson = awsReadJSON(slideConfigPath);

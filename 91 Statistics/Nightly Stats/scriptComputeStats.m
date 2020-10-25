@@ -12,7 +12,7 @@ if isGoogleSheetUpdate
         % Run over all liberies
     else
         % Run on the latest libery only to save time.
-        libraryNames = libraryNames(1:2);
+        libraryNames = libraryNames(1);
     end
 end
 
