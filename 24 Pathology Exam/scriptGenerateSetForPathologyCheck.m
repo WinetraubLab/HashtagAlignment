@@ -3,7 +3,7 @@
 
 %% Inputs
 
-modelName = 'Yonatan'; % Part of the model name
+modelName = 'Yonatan OCT2Hist'; % Part of the model name
 isCorrectAspectRatio2To1 = true;
 
 outputFolder = [pwd '\tmp\'];

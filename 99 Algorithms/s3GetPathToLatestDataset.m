@@ -1,4 +1,4 @@
-function datasetPath = getPathToLatestDataset (imageResolution,datasetTag)
+function datasetPath = s3GetPathToLatestDataset (imageResolution,datasetTag)
 % imageResolution can be '2x','4x','10x' etc
 % datasetTag can be additional search phrase, or can be empty (default)
 

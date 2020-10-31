@@ -3,8 +3,9 @@
 %% Inputs
 imageResolution = '10x';
 datasetTag = '';%'2020-08-15'; % What date this data set was created, leave empty for latest
+outputDir = 'tmpDataset';
 
 %% Gather dataset
-datasetPath = getPathToLatestDataset(imageResolution,datasetTag);
-awsMkDir([pwd '/tmp/'],true);
-awsCopyFileFolder(datasetPath,'tmp/');
+datasetPath = s3GetPathToLatestDataset(imageResolution,datasetTag);
+awsMkDir([pwd '/' outputDir '/'],true);
+awsCopyFileFolder(datasetPath,[outputDir '/']);

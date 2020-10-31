@@ -15,7 +15,7 @@ datasetTag = ''; % Additional string to search for
 
 % When loadFrom = 'snapshot', will get the snapshot with this name (or part of the name)
 % Loads from _MLModels
-snapshotName = '2020-06-13 4x';
+snapshotName = '2020-06-13 10x';
 
 %% Get data from Jenkins
 
@@ -39,7 +39,7 @@ ec2Instance = awsEC2StartInstance(ec2RunStructure,'g4dn.4xlarge');
 if strcmpi(loadFrom,'dataset')
     fprintf('%s Copy dataset to instance...\n',datestr(datetime));
 
-    datasetPath = getPathToLatestDataset(imageResolution,datasetTag);
+    datasetPath = s3GetPathToLatestDataset(imageResolution,datasetTag);
     datasetPath = strrep(datasetPath,' ','\ ');
     
     disp(datasetPath);

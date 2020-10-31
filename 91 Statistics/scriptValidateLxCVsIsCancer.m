@@ -2,7 +2,6 @@
 % cancer name
 
 libraryNames = {'LC','LD','LE','LF','LG','LH'};
-
 st = loadStatusReportByLibrary(libraryNames);
 
 LxC = cellfun(@(x)(contains(x,'LGC') | contains(x,'LHC')),st.subjectNames);
