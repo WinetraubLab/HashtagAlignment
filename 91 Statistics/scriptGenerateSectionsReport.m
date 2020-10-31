@@ -31,10 +31,12 @@ subjectPathsOut = st.subjectPahts;
 subjectNamesOut = st.subjectNames;
 isGoodSections = st.(mode);
 areaOfQualityData_mm2 = st.areaOfQualityData_mm2;
+subjetPhase = st.mlPhase;
 
 subjectPathsOut = subjectPathsOut(isGoodSections);
 subjectNamesOut = subjectNamesOut(isGoodSections);
 areaOfQualityData_mm2 = areaOfQualityData_mm2(isGoodSections);
+subjetPhase = subjetPhase(isGoodSections);
 
 uniqueSubjectPaths = unique(subjectPathsOut);
 uniqueSubjectNames = cellfun(@s3GetSubjectName,uniqueSubjectPaths,'UniformOutput',false);
@@ -68,6 +70,7 @@ for i=1:length(uniqueSubjectNames)
                                         subjectNamesOut);
     dt.numberOfSamples = sum(samplesInThisSubject);
     dt.areaOfQualityData_mm2 = nansum(areaOfQualityData_mm2(samplesInThisSubject));
+    dt.subjetPhase = nanmedian(subjetPhase(samplesInThisSubject));
     
     % Save data
     if strcmpi(json.samePatientAsSampleWithId,'New Patient')
@@ -98,9 +101,7 @@ end
 dataPerSubject(isToDeleteUniqueSubject) = [];
 
 %% Split to train & test
-isTraining = isFilesInTrainingSet(...
-    cellfun(@(x)(x.sampleId),dataPerSubject,'UniformOutput',false));
-
+isTraining = cellfun(@(x)(x.subjetPhase),dataPerSubject)==-1;
 
 % Go over all samples, modify
 iiToDelete = [];
@@ -182,7 +183,7 @@ subplot(2,3,[1 4]);
         numberOfSections(~isSampleInTrainingSet) ...
         );
 title(sprintf('Total %s: %d\n Average Area: %.2f mm^2',...
-    prefix, sum(numberOfSections(isSampleInTrainingSet)), ...
+    prefix, sum(numberOfSections(:)), ...
     sum(areaOfQualityData_mm2(isSampleInTrainingSet))/sum(numberOfSections(isSampleInTrainingSet))));
 subplot(2,3,2);
 bar([ ...
