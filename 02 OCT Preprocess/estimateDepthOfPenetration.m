@@ -6,7 +6,7 @@
 %% Inputs
 
 %OCT Data
-OCTVolumesFolder = [s3SubjectPath('42','LG') 'OCTVolumes/'];
+OCTVolumesFolder = [s3SubjectPath('12','LHC') 'OCTVolumes/'];
 
 % Problematic datasets
 % OCTVolumesFolder = [s3SubjectPath('10','LC') 'OCTVolumes/'];
@@ -103,9 +103,14 @@ for BScanI=1:length(bScanIndexs)
     % Interpolate where you couldn't find surface
     xI = 1:size(imOCT,2);
     nn = isnan(surfaceZPosition_px);
-    surfaceZPosition_px = interp1(xI(~nn),surfaceZPosition_px(~nn),xI);
-    surfaceZPosition_um = interp1(xI(~nn),meta.z.values(round(surfaceZPosition_px(~nn)))*1e3,xI);
-    surfaceZPosition_um = surfaceZPosition_um(:)';
+    if any(~nn)
+        surfaceZPosition_px = interp1(xI(~nn),surfaceZPosition_px(~nn),xI);
+        surfaceZPosition_um = interp1(xI(~nn),meta.z.values(round(surfaceZPosition_px(~nn)))*1e3,xI);
+        surfaceZPosition_um = surfaceZPosition_um(:)';
+    else
+        % Couldn't find surface interface in this slide, don't use it
+        continue;
+    end
     
     % Smooth, interface needs to be smooth to 10um level
     surfaceZPosition_um = mySmooth(surfaceZPosition_um, 10/xPixelSize_um);
