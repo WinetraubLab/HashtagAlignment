@@ -16,8 +16,8 @@ end
 datasetBaseDirectory = s3SubjectPath('','_Datasets');
 datasetNames = awsls(datasetBaseDirectory);
 
-isContainImageResolution = cellfun(@(x)(contains(x,imageResolution)),datasetNames);
-isContainTag = cellfun(@(x)(contains(x,datasetTag)),datasetNames);
+isContainImageResolution = cellfun(@(x)(contains(x,imageResolution,'IgnoreCase',true)),datasetNames);
+isContainTag = cellfun(@(x)(contains(x,datasetTag,'IgnoreCase',true)),datasetNames);
 
 if ~any(isContainImageResolution & isContainTag)
     error('Colud not find any data set with resulution "%s" and tag "%s"',imageResolution,datasetTag);
