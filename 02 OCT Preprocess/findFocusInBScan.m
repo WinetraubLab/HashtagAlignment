@@ -200,7 +200,11 @@ plot(dim.x.values([1 end]),focusDepth2*[1 1],'--');
 hold off;
 xlabel(['x [' dim.x.units ']'])
 ylabel(['z [' dim.z.units ']'])
-title('Choose focus');
+if (zDepths(frameI) < 0)
+    title(sprintf('Choose focus\nShould be about %.0fum above average gel-tissue interface',1000*abs(zDepths(frameI))));
+else
+    title(sprintf('Choose focus\nShould be about %.0fum below average gel-tissue interface',1000*abs(zDepths(frameI))));
+end
 legend('First Guess','Updated Guess');
 
 if (~isRunInAutomatedMode)
