@@ -5,7 +5,7 @@ disp('Looking For Focus Position...');
 %% Inputs
 
 %OCT Data
-OCTVolumesFolder = [s3SubjectPath('01','LH') 'OCTVolumes/'];
+OCTVolumesFolder = [s3SubjectPath('12','LHC') 'OCTVolumes/'];
 reconstructConfig = {'dispersionQuadraticTerm',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -129,7 +129,7 @@ for i=1:length(tissueZi)
     end
 end
 
-focusDepth1 = mean(dim.z.values(tissueZi)); %[um] - first guess
+focusDepth1 = median(dim.z.values(tissueZi)); %[um] - first guess
 
 %% Refine initial guess by going to the point where focus is highest
 disp('Refining Focus Position...');
