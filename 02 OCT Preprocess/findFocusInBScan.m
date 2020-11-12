@@ -5,7 +5,7 @@ disp('Looking For Focus Position...');
 %% Inputs
 
 %OCT Data
-OCTVolumesFolder = 's3://delazerdamatlab/Users/OCTHistologyLibrary/LB/LB-02D/OCTVolumes/';
+OCTVolumesFolder = [s3SubjectPath('01','LH') 'OCTVolumes/'];
 reconstructConfig = {'dispersionQuadraticTerm',6.539e07}; %Configuration for processing OCT Volume
 
 %Probe Data
@@ -133,7 +133,11 @@ focusDepth1 = mean(dim.z.values(tissueZi)); %[um] - first guess
 
 %% Refine initial guess by going to the point where focus is highest
 disp('Refining Focus Position...');
-frameI = 2; %frame = 1 is at the top of the gel, number 2 should be better
+
+% Find index of the top of the gel, but not the very top, one section
+% deeper.
+[~,ii] = sort(zDepths,'ascend'); % Sort from top of the gel to deepest part of the section
+frameI = ii(2); %frame = ii(1) is at the top of the gel, number ii(2) should be better
 fp = sprintf('%sData%02d/',OCTVolumesFolderVolume,frameI);
 
 [int1,dim1] = ...
