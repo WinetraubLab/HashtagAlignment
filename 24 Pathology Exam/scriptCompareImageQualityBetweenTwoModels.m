@@ -1,7 +1,7 @@
 % This script compares image quality between two models
 
-modelNameA = 'Yonatan OCT2Hist'; % Part of the model name
-modelNameB = 'Yonatan pix2pix'; % Part of the model name to compare to
+modelNameA = 'paper 2'; % Part of the model name
+modelNameB = 'paper 4'; % Part of the model name to compare to
 isCorrectAspectRatio2To1 = true;
 
 outputFolder = [pwd '\tmp\'];
@@ -24,8 +24,8 @@ st = awsReadJSON([modelToLoadFolderA '/dataset_oct_histology/original_image_pair
 [~,fpsA] = awsls([outputFolder 'A\']); fpsA = fpsA';
 [~,fpsB] = awsls([outputFolder 'B\']); fpsB = fpsB';
 
-trainingFilesI = pickNRandomSections(st,15,st.mlPhase == -1 & st.isSampleHealthy);
-testingFilesI  = pickNRandomSections(st,35,st.mlPhase == 1 & st.isSampleHealthy);
+trainingFilesI = pickNRandomSections(st,15,st.mlPhase == -1 & st.isSampleHealthy); % & computeOverallSectionQuality(st) == 2);
+testingFilesI  = pickNRandomSections(st,35,st.mlPhase == 1 & st.isSampleHealthy); %& computeOverallSectionQuality(st) == 2);
 
 whichFilesA = findFilesInST(fpsA, st, trainingFilesI | testingFilesI);
 whichFilesB = findFilesInST(fpsB, st, trainingFilesI | testingFilesI);
@@ -42,6 +42,11 @@ end
 fpsReal = fpsA(whichFilesReal);
 fpsA = fpsA(whichFilesA);
 fpsB = fpsB(whichFilesB);
+
+i = randperm(length(fpsA));
+fpsA = fpsA(i);
+fpsB = fpsB(i);
+fpsReal = fpsReal(i);
 
 %% Load Questions
 isABetterThenB = ones(sum(whichFilesA),1)*NaN; % A = 0, B=1
