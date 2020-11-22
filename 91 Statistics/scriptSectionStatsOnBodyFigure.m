@@ -1,6 +1,6 @@
 % This script generates a status report of all the finish sections
 
-libraryNames = {'LH','LG','LF','LE','LD','LC'};
+datasetTag = '2020-11-10'; % Which dataset tag to load? Will load the latest unless specific date is writen in tag
 
 % What to lookfor when applying statistics
 %mode = 'isHistologyImageUploaded'; % Will only consider slides with histology uploaded for plot
@@ -20,16 +20,25 @@ plotAreasMode = 4;
 filesInTestingSet = NaN;
 
 %% Which are the finished sections
-if false % Generate report
-    st = generateStatusReportByLibrary(libraryNames);
-else % Read report that was generated before
-    st = loadStatusReportByLibrary(libraryNames);
+
+[datasetPath, datasetName] = s3GetPathToLatestDataset('10x',datasetTag);
+stStructurePath = [datasetPath '/original_image_pairs/StatusReportBySection.json'];
+st = awsReadJSON(stStructurePath);
+
+% For backward compatibility, can remove this section in the future.
+if ~isfield(st,'isFreshHumanSample')
+    st.isFreshHumanSample = ...
+        ~cellfun(@(x)(contains(x,'LGM') | contains(x,'LFM')),st.subjectNames);
 end
+
+% Read current report
+%libraryNames = {'LH','LG','LF','LE','LD','LC'};
+%st = loadStatusReportByLibrary(libraryNames);
 
 %% Re organize data
 subjectPathsOut = st.subjectPahts; 
 subjectNamesOut = st.subjectNames;
-isGoodSections = st.(mode);
+isGoodSections = st.(mode) & st.isFreshHumanSample & st.isSampleHealthy;
 areaOfQualityData_mm2 = st.areaOfQualityData_mm2;
 subjetPhase = st.mlPhase;
 
