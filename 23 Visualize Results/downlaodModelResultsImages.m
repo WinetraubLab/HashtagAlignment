@@ -1,10 +1,8 @@
-function [modelToLoad,modelToLoadFolder] = downlaodModelResultsImages(modelName,isCorrectAspectRatio2To1,outputFolder,scaleBar)
+function [modelToLoadFolder] = downlaodModelResultsImages(resultsPath,isCorrectAspectRatio2To1,outputFolder,scaleBar)
 % This function downloads test and train images from aws. Saves locally for
 % further analysis
 % INPUTS:
-%   modelName - a partial string helping us search for the right model.
-%       Example: "10x Yonatan Pix2Pix"
-%       If more then one model exists with the same match, will pull latest
+%   resultsPath - path to model result, get using s3GetPathToModelResult
 %   isCorrectAspectRatio2To1 - if images are a square with 2 to 1 aspect
 %       ratio, set this flag to true (default) and will illongate
 %       accordingly
@@ -14,12 +12,12 @@ function [modelToLoad,modelToLoadFolder] = downlaodModelResultsImages(modelName,
 %       default: 100 [um]
 %
 % OUTPUTS:
-%   modelToLoad - folder name that was loaded
+%   modelToLoadFolder - folder name that was loaded
 
 %% Input checks
 
-if ~exist('modelName','var') || isempty(modelName)
-    modelName = 'Yonatan';
+if ~exist('resultsPath','var') || isempty(resultsPath)
+    [~,resultsPath] = s3GetPathToModelResult('Yonatan');
 end
 
 if ~exist('isCorrectAspectRatio2To1','var') || isempty(isCorrectAspectRatio2To1)
@@ -34,22 +32,7 @@ if ~exist('scaleBar','var') || isempty(scaleBar)
     scaleBar = 100;
 end
 
-%% Figure out the main folder
-datasetBaseDirectory = s3SubjectPath('','_MLModels');
-
-% Find the right model
-models = awsls(datasetBaseDirectory);
-isModelMatch = cellfun(@(x)(contains(x,modelName,'IgnoreCase',true)),models);
-modelToLoad = models{find(isModelMatch,1,'last')};
-modelToLoadFolder = [datasetBaseDirectory modelToLoad];
-
-% Find right sub-folder
-modelResultsFolder = [modelToLoadFolder 'results/'];
-subFolderNames = awsls(modelResultsFolder);
-if length(subFolderNames) > 1
-    error('Expected only one folder here: %s, found %d. Don''t know where to go from here - which folder should I pick?',...
-        modelResultsFolder,length(subFolderNames));
-end
+modelToLoadFolder = awsModifyPathForCompetability([resultsPath '../../'],false);
 
 %% Get all the images locally
 
@@ -57,11 +40,11 @@ end
 awsMkDir(outputFolder,true);
 
 % Copy test folder
-trainingModelFolder = [modelResultsFolder subFolderNames{1} 'test_latest/images/'];
+trainingModelFolder = [resultsPath '/test_latest/images/'];
 copyImages(trainingModelFolder,outputFolder,'test_');
 
 % Copy train folder
-trainingModelFolder = [modelResultsFolder subFolderNames{1} 'train_latest/images/'];
+trainingModelFolder = [resultsPath '/train_latest/images/'];
 copyImages(trainingModelFolder,outputFolder,'train_');
 
 %% Correct 2 to 1 ratio & scalebar if needed

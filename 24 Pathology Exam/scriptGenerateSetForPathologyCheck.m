@@ -3,7 +3,7 @@
 
 %% Inputs
 
-modelName = 'Yonatan OCT2Hist'; % Part of the model name
+modelName = 'paper v2'; % Part of the model name
 isCorrectAspectRatio2To1 = true;
 
 outputFolder = [pwd '\tmp\'];
@@ -15,8 +15,11 @@ capSectionsTrain = 14; % How many sections in train to cap
 capSectionsTest = 35; % How many sections in test to cap
 
 %% Download all images
-[~, modelToLoadFolder] = ...
-    downlaodModelResultsImages(modelName,isCorrectAspectRatio2To1,outputFolder,scaleBar);
+
+[~, resultsPath] = s3GetPathToModelResults(modelName);
+
+[modelToLoadFolder] = ...
+    downlaodModelResultsImages(resultsPath,isCorrectAspectRatio2To1,outputFolder,scaleBar);
 
 %% Gather meta data and st structure
 [fpNames,fpToKeep] = awsls([outputFolder '/']);
@@ -24,58 +27,57 @@ fpToKeep = fpToKeep(:);
 fp = fpToKeep;
 fpNames = fpNames(:);
 
-% Remove completely black patch
-ii = cellfun(@(x)(contains(x,'black_')),fpToKeep);
+% Remove completely black patch or OCT image
+ii = cellfun(@(x)(...
+    contains(x,'black_') | ...
+    contains(x,'real_A.png') ...
+    ),fpToKeep);
 fpToKeep(ii) = [];
 fpNames(ii) = [];
 
-% Figure out which libraries to load and load them
-libraryNames = fpNames;
-for i=1:length(libraryNames)
-   nm = fpNames{i};
-   ii=find(nm=='-',2,'first');
-   nm(ii(1):end)=[];
-   nm(1:find(nm=='_',1,'first')) = [];
-   libraryNames{i} = nm;
+%% Load ST data structure
+stStructurePath = [modelToLoadFolder 'dataset_oct_histology/original_image_pairs/StatusReportBySection.json'];
+if awsExist(stStructurePath,'file')
+    % Dataset saved st as part of the data. Just load it from there
+    st = awsReadJSON(stStructurePath);
+else
+    % Generate st based on current latest status
+    warning('Couldn''t find st json file at "%s", so generating one based on lates library status which is not ideal for statistics',stStructurePath);
+    
+    % Figure out which libraries to load and load them
+    libraryNames = fpNames;
+    for i=1:length(libraryNames)
+       nm = fpNames{i};
+       ii=find(nm=='-',2,'first');
+       nm(ii(1):end)=[];
+       nm(1:find(nm=='_',1,'first')) = [];
+       libraryNames{i} = nm;
+    end
+    libraryNames = unique(libraryNames);
+    st = loadStatusReportByLibrary(libraryNames);
 end
-libraryNames = unique(libraryNames);
-st = loadStatusReportByLibrary(libraryNames);
 
 %% Filter out un needed sections
-fpToKeepIndex = ones(size(fpToKeep),'logical');
 
 % Find sections with very best alignments
-verBest1 = computeOverallSectionQuality(st) == 2;
-isVeryBestAlignment = whichFilesContainTheseSections(fpToKeep, st, verBest1);
+veryBestI = computeOverallSectionQuality(st) == 2 ...
+    & st.isSampleHealthy==1; % Only get healthy subjects
 
-% Remove cancer samples
-ii = cellfun(@(x)(contains(x,'LGC-')),fpToKeep);
-fpToKeepIndex(ii) = false;
+% Pick sections from train and test sets
+sectionsToUse = ...
+    pickNRandomSections(st,capSectionsTrain,veryBestI & st.mlPhase == -1) | ...
+    pickNRandomSections(st,capSectionsTest,veryBestI & st.mlPhase == 1) ;
 
-% Remove cancer images
-ii = st.isSampleHealthy == 0;
-fpToKeepIndex(ii) = false;
+% Which files are from these subjects
+isVeryBestAlignment = findFilesInST(fpToKeep,st,sectionsToUse);
 
-% Print statistics
-fprintf('STATISTICS (excluding cancer):\n Training Set: %d Sections\n  Testing Set: %d Sections\n', ...
-    sum(cellfun(@(x)(contains(x,'train')),fpToKeep(fpToKeepIndex)))/2, ...
-    sum(cellfun(@(x)(contains(x,'test')),fpToKeep(fpToKeepIndex)))/2);
-fprintf(' Best aligned sections out of overall sections: %.1f%%\n',sum(isVeryBestAlignment)/length(isVeryBestAlignment)*100);
+if sum(sectionsToUse)~=sum(isVeryBestAlignment)/2
+    warning('Seems like very best slides acroding to st are different from actual sections loaded in dataset');
+end
 
-% Remove not very best alignment
-fpToKeepIndex(~isVeryBestAlignment) = false;
+fpToKeep(~isVeryBestAlignment) = [];
+fpNames(~isVeryBestAlignment) = [];
 
-fpToKeep(~fpToKeepIndex) = [];
-fpNames(~fpToKeepIndex) = [];
-
-%% Handle caps
-fpToKeepIndex = zeros(size(fpToKeep),'logical');
-
-fpToKeepIndex = fpToKeepIndex | PickWhichFilesToKeep(fpNames,'train',capSectionsTrain);
-fpToKeepIndex = fpToKeepIndex | PickWhichFilesToKeep(fpNames,'test',capSectionsTest);
-
-fpToKeep(~fpToKeepIndex) = [];
-fpNames(~fpToKeepIndex) = [];
 %% Copy best sections to a new temp folder, then copy back
 
 % Make temporary directory
@@ -100,86 +102,4 @@ for i=1:(length(ii)-1)
     for j=(ii(i)+1):ii(i+1)
         awsCopyFileFolder(fpToKeep{j},sd);
     end
-end
-
-function isFileInSt = whichFilesContainTheseSections(filePaths,st,stIToFindInFiles)
-% Auxilary function returning filePaths index which are of sections to
-% search for
-% INPUTS:
-%   filePaths - cell array of filepaths to match
-%   st - st structure of all sections
-%   stIToFindInFiles - which of st to search for in the files? Can be
-%   indexes or bollean array.
-% OUTPUTS:
-%   isFileInSt - logic array, for each file path, is it in the file to
-%   search or out?
-
-if (islogical(stIToFindInFiles))
-    stIToFindInFiles = find(stIToFindInFiles);
-end
-
-subjectNamesToSearchFor = cell(length(stIToFindInFiles),1);
-for isFileInSt=1:length(subjectNamesToSearchFor)
-    subjectNamesToSearchFor{isFileInSt} = [st.subjectNames{stIToFindInFiles(isFileInSt)} '-' st.sectionNames{stIToFindInFiles(isFileInSt)}];
-end
-
-% Remove sections that don't have the very best alignment
-isFileInSt = zeros(size(filePaths),'logical');
-for i=1:length(isFileInSt)
-    isFileInSt(i) = any(cellfun(@(x)(contains(filePaths{i},x)),subjectNamesToSearchFor));
-end
-
-end
-
-function fpToKeepIndex = PickWhichFilesToKeep(fpNames,phase,cap)
-% phase can be 'train' or 'test'
-% cap is the maximum number of samples from the phase
-
-% Find subjects for each fp
-fpSubjects = cell(size(fpNames));
-for i=1:length(fpSubjects)
-    tmp = fpNames{i};
-    fpSubjects{i} = tmp(1:(strfind(tmp,'-Slide')-1));
-end
-
-fpToKeepIndex = zeros(size(fpNames),'logical');
-
-%% Phase #1 - split real & fake, and figure out which files are from the rigth phase
-% Get only the files that are real & fake
-realBFilesIndex = find( ...
-    cellfun(@(x)(contains(x,'_real_B.')),fpNames) & ...
-    cellfun(@(x)(contains(x,[phase '_'])),fpNames));
-fakeBFilesIndex = find (...
-    cellfun(@(x)(contains(x,'_fake_B.')),fpNames) & ...
-    cellfun(@(x)(contains(x,[phase '_'])),fpNames));
-
-%% Step #2 select which files to keep
-% Randomize to mix a bit
-p = randperm(length(realBFilesIndex));
-realBFilesIndex = realBFilesIndex(p);
-fakeBFilesIndex = fakeBFilesIndex(p);
-
-% Trim down how many files needed to get rid off of to reach cap
-n = length(fakeBFilesIndex)-cap;
-for i=1:n
-    % Compute which subjects has maximal number of sections
-    [u, ~, ui] = unique(fpSubjects(realBFilesIndex),'stable');
-    ul = zeros(size(u));
-    for j=1:length(u)
-        ul(j) = sum(ui == j);
-    end
-    
-    % Find subject with max number of sections
-    s = u{find(ul == max(ul),1,'first')};
-    
-    % Remove one section from that subject
-    iToRemove = find(cellfun(@(x)(strcmp(s,x)),fpSubjects(realBFilesIndex)),1,'first');
-    realBFilesIndex(iToRemove) = [];
-    fakeBFilesIndex(iToRemove) = [];
-end
-
-%% Step #3: Overall what to keep
-fpToKeepIndex(realBFilesIndex) = true;
-fpToKeepIndex(fakeBFilesIndex) = true;
-
 end
