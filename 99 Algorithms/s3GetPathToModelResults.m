@@ -28,7 +28,7 @@ if ~exist('otherIdentifier','var')
     otherIdentifier = [];
 end
 
-if awsExist(modelName,'directory')
+if awsExist(modelName,'dir')
     pathToModel = modelName;
     option = 2;
 else
