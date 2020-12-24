@@ -1,7 +1,7 @@
 % This script compares image quality between two models
 
-modelNameA = 'paper 2'; % Part of the model name
-modelNameB = 'paper 4'; % Part of the model name to compare to
+modelNameA = 's3://delazerdamatlab/Users/OCTHistologyLibrary/_MLModels/2020-11-10 Jessica with_history_buff/'; % Part of the model name
+modelNameB = 'paper 4 used in paper v2'; % Part of the model name to compare to - version in the paper
 isCorrectAspectRatio2To1 = true;
 
 outputFolder = [pwd '\tmp\'];
