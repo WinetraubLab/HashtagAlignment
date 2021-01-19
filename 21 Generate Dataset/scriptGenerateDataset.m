@@ -8,7 +8,7 @@ octBScanToUseAroundCenter = [];
 isAverageOCTBScans = [];
 
 % Which libraries to take images from
-libraryNames = {'LC','LD','LE','LF','LG'};
+libraryNames = {'LC','LD','LE','LF','LG','LH'};
 
 %% Jenkins 
 %This function updates all input varible names that have name_ like this:
