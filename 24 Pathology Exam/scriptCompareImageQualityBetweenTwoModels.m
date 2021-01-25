@@ -24,8 +24,8 @@ st = awsReadJSON([modelToLoadFolderA '/dataset_oct_histology/original_image_pair
 [~,fpsA] = awsls([outputFolder 'A\']); fpsA = fpsA';
 [~,fpsB] = awsls([outputFolder 'B\']); fpsB = fpsB';
 
-trainingFilesI = pickNRandomSections(st,15,st.mlPhase == -1 & st.isSampleHealthy); % & computeOverallSectionQuality(st) == 2);
-testingFilesI  = pickNRandomSections(st,35,st.mlPhase == 1 & st.isSampleHealthy); %& computeOverallSectionQuality(st) == 2);
+trainingFilesI = pickNRandomSections(st,30,st.mlPhase == -1 & st.isSampleHealthy); % & computeOverallSectionQuality(st) == 2);
+testingFilesI  = pickNRandomSections(st,70,st.mlPhase == 1 & st.isSampleHealthy); %& computeOverallSectionQuality(st) == 2);
 
 whichFilesA = findFilesInST(fpsA, st, trainingFilesI | testingFilesI);
 whichFilesB = findFilesInST(fpsB, st, trainingFilesI | testingFilesI);
