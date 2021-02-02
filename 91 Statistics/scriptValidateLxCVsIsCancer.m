@@ -1,10 +1,10 @@
 % This script validates caner healthy vs non healthy is in agreement with
 % cancer name
 
-libraryNames = {'LC','LD','LE','LF','LG','LH'};
+libraryNames = s3GetAllLibs();
 st = loadStatusReportByLibrary(libraryNames);
 
-LxC = cellfun(@(x)(contains(x,'LGC') | contains(x,'LHC')),st.subjectNames);
+LxC = cellfun(@(x)(contains(x,'LGC') | contains(x,'LHC') | contains(x,'LIC')),st.subjectNames);
 
 IsHealthVsLxCConflict = (st.isSampleHealthy == LxC);
 subjectsWithConflict = unique(st.subjectNames(IsHealthVsLxCConflict));

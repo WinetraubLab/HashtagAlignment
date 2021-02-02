@@ -13,7 +13,7 @@ mode = 'isUsableInML'; % Most strict consideration
 %   4 - plot only test set without cancer
 %   3 - plot train and test but in different colors (blue is train, red is
 %       test)
-plotAreasMode = 4;
+plotAreasMode = 2;
 
 % When set, will devide up to training and testing, set to NaN to ignore
 % deviding, set to {} to use default split
@@ -32,7 +32,7 @@ if ~isfield(st,'isFreshHumanSample')
 end
 
 % Read current report
-%libraryNames = {'LH','LG','LF','LE','LD','LC'};
+%libraryNames = s3GetAllLibs();
 %st = loadStatusReportByLibrary(libraryNames);
 
 %% Re organize data

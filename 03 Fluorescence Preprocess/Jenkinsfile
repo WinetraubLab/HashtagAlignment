@@ -11,13 +11,13 @@ pipeline {
 	{
 		string(
 			name: "S3_DIR",
-			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LH/",
-			description:"Subject Directory.\nExample: s3://delazerdamatlab/Users/OCTHistologyLibrary/LH/",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LI/",
+			description:"Subjects Directory",
 			trim: true)
 		string(
 			name: "SAMPLE_ID",
-			defaultValue:"LH-00",
-			description:"Subject Id.\nExample: LH-01",
+			defaultValue:"LI-00",
+			description:"Subject Id.\nExample: LI-01",
 			trim: true)
 		string(
 			name: "MAIN_FOLDER",

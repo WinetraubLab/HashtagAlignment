@@ -12,7 +12,7 @@ function st = generateStatusReportByLibrary(libraryNames)
 %       see sectionStats.notes for explenation about the fields.
 
 if ~exist('libraryNames','var')
-    libraryNames = 'LH';
+    libraryNames = 'LI';
 end
 
 %%  What is the minimal usable area, let us folow calculation:

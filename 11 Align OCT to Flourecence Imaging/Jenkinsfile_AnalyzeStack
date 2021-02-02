@@ -12,8 +12,8 @@ pipeline {
 	{
 		string(
 			name: "S3_SUBJECT_DIR",
-			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LH/LH-01",
-			description:"Subject Directory.",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LI/LI-01",
+			description:"Subjects Directory",
 			trim: true)
 		booleanParam(
 			name: 'IS_MAKE_INSTRUCTIONS',
