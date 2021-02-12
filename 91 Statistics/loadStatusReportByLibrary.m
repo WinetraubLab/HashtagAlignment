@@ -4,11 +4,15 @@ function st = loadStatusReportByLibrary(libraryNames)
 %
 % INPUTS:
 %   libraryNames - can be a string or a cell containing library names. 
-%       Examples: 'LA' or {'LA','LB'}
+%       Examples: 'LA' or {'LA','LB'}, Keep empty if you would like all
+%       libraries
 % OUTPUTS:
 %   st - see generateStatusReportByLibrary.
 
 %% Input check
+if ~exist('libraryNames','var') || isempty(libraryNames)
+    libraryNames = s3GetAllLibs();
+end
 if ~iscell(libraryNames)
     libraryNames = {libraryNames};
 end
