@@ -1,22 +1,24 @@
 % This script validates caner healthy vs non healthy is in agreement with
 % cancer name
 
+%% Load Data
 libraryNames = s3GetAllLibs();
 st = loadStatusReportByLibrary(libraryNames);
 
+%% Discover & deal with healthy / cancer conflicts
 LxC = cellfun(@(x)(contains(x,'LGC') | contains(x,'LHC') | contains(x,'LIC')),st.subjectNames);
 
 IsHealthVsLxCConflict = (st.isSampleHealthy == LxC);
 subjectsWithConflict = unique(st.subjectNames(IsHealthVsLxCConflict));
 
-%% Print results
+%Print results
 fprintf('These subjects have conflict between Subject.json and LxC classification:\n   ');
 for i=1:length(subjectsWithConflict)
     fprintf('%s,',subjectsWithConflict{i})
 end
 fprintf('\n');
 
-%% Fix Cancer issues
+%Fix Cancer issues
 % You can manualy set subjectsWithConflict = {'LC-01'} if you would like to
 % change the identity of this sample specifically.
 for i=1:length(subjectsWithConflict)
