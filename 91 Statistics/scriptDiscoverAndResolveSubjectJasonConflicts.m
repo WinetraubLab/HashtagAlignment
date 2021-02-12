@@ -16,7 +16,7 @@ for i=1:length(subjectsWithConflict)
 end
 fprintf('\n');
 
-%% Fix issues
+%% Fix Cancer issues
 % You can manualy set subjectsWithConflict = {'LC-01'} if you would like to
 % change the identity of this sample specifically.
 for i=1:length(subjectsWithConflict)
@@ -33,4 +33,30 @@ for i=1:length(subjectsWithConflict)
         awsWriteJSON(json,subjectJsonPath);
     end
 end
+
+%% Fix if section is usable in ML but is not fresh human sample - that should be a mistake
+subjectsWithConflict = unique (st.subjectNames(st.isUsableInML==true & ~st.isFreshHumanSample));
+
+% Print results
+fprintf('These subjects have conflict between SubjectisUsableInML and LxC isFreshHumanSample:\n   ');
+for i=1:length(subjectsWithConflict)
+    fprintf('%s,',subjectsWithConflict{i})
+end
+fprintf('\n');
+
+% Fix
+for i=1:length(subjectsWithConflict)
+    ii = find(cellfun(@(x)(strcmp(x,subjectsWithConflict{i})),st.subjectNames),1,'first');
+    subjectJsonPath = awsModifyPathForCompetability([st.subjectPahts{ii} '/Subject.json']);
     
+    json = awsReadJSON(subjectJsonPath);
+    
+    an = questdlg(sprintf('%s is marked as usable in ml, but isFreshHumanSample is %d', ...
+        subjectsWithConflict{i} ,json.isFreshHumanSample),'?','Not Fresh Sample','Is Fresh Sample','Skip','Skip');
+    
+    if ~strcmp(an,'Skip') && ~isempty(an) % Update unless skip
+        disp(['Updating ' subjectsWithConflict{i} ' to ' an]);
+        json.sampleType = strcmp(an,'Is Fresh Sample');
+        awsWriteJSON(json,subjectJsonPath);
+    end
+end
