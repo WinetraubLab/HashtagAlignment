@@ -27,7 +27,8 @@ for i=1:length(subjectsWithConflict)
     
     json = awsReadJSON(subjectJsonPath);
     
-    an = questdlg([subjectsWithConflict{i} ' has sampleType as: "' json.sampleType '". is it healthy?'],'?','Healthy','Tumor','Skip','Skip');
+    an = questdlg(sprintf('%s has sampleType as: %s. is it healthy?',...
+        subjectsWithConflict{i} , json.sampleType),'?','Healthy','Tumor','Skip','Skip');
     
     if ~strcmp(an,'Skip') && ~isempty(an) % Update unless skip
         disp(['Updating ' subjectsWithConflict{i} ' to ' an]);
@@ -58,7 +59,7 @@ for i=1:length(subjectsWithConflict)
     
     if ~strcmp(an,'Skip') && ~isempty(an) % Update unless skip
         disp(['Updating ' subjectsWithConflict{i} ' to ' an]);
-        json.sampleType = strcmp(an,'Is Fresh Sample');
+        json.isFreshHumanSample = strcmp(an,'Is Fresh Sample');
         awsWriteJSON(json,subjectJsonPath);
     end
 end

@@ -89,6 +89,12 @@ QA.HandEImageQuality_InOverlapArea = processAnsers(in2(:,1),answer2);
 QA.AlignmentQuality = processAnsers(in3(:,1),answer3);
 QA.VisibleObjectsInBothImages = processAnsers(in4(:,1),answer4);
 
+
+%% Check for errors
+if (QA.AlignmentQuality.YAxisToleranceMicrons < 5)
+    error('OCT spot size is a few microns, its very unlikely that the Y Axis Tolerance Microns is so low');
+end
+
 function answer = askQuestions(in,dlgtitle,defaultAnswers)
 
 % Build default answers

@@ -5,7 +5,7 @@ function rectifyFineAlignedSections(subjectPath)
 % before doing so.
 
 if ~exist('subjectPath','var')
-    subjectPath = s3SubjectPath('58','LGC');
+    subjectPath = s3SubjectPath('36','LHC');
 end
 
 % When set to false, will not try to rectify sections that don't have h&e,
@@ -57,6 +57,15 @@ for i=1:length(slideConfigs)
     if ~isfield(slideConfig,'histologyImageFilePath')
         yAxisTolerance_um(i) = NaN; %No histology, means no way fine alignment has a reasonable tolerance.
     end
+end
+
+% Check tolerances before computing weights, if a section has 0 tolerance
+% this is a problem for the weights.. 
+badYAxisTolerances = find(yAxisTolerance_um==0);
+if ~isempty(badYAxisTolerances)
+    txt = cellfun(@(x)(sprintf('%s has unrealistic yAxisTolerance_um of 0, please correct.\n',x)),...
+        stackConfig.sections.names(badYAxisTolerances),'UniformOutput',false);
+    error([txt{:}]);
 end
 
 % Compute weight for each fine aligned sample

@@ -8,7 +8,7 @@
 %       the most latest dataset.
 datasetTag = 'currentLib'; % '2020-11-10'; 
 
-isGroupBySubject = false; % Would you like to group results by subject
+isGroupBySubject = true; % Would you like to group results by subject
 
 %% Load st structure
 if strcmp(datasetTag,'currentLib')
