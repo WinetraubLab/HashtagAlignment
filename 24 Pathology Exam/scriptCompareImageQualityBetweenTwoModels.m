@@ -1,31 +1,37 @@
 % This script compares image quality between two models
 
-modelNameA = 's3://delazerdamatlab/Users/OCTHistologyLibrary/_MLModels/2020-11-10 Jessica with_history_buff/'; % Part of the model name
+modelNameA = 'blend 4.1'; % Part of the model name
 modelNameB = 'paper 4 used in paper v2'; % Part of the model name to compare to - version in the paper
 isCorrectAspectRatio2To1 = true;
 
 outputFolder = [pwd '\tmp\'];
 scaleBar = 100; % Plot scale bar [um]
 
-%% Download data 
-disp('Downloading data ...');
-awsMkDir(outputFolder,true);
+%% Get path to model
 
+fprintf('%s Find models in S3.\n',datestr(datetime));
 [modelToLoadFolderA, resultsPathA] = s3GetPathToModelResults(modelNameA);
-downlaodModelResultsImages(resultsPathA,isCorrectAspectRatio2To1,[outputFolder 'A\'],scaleBar);
-
 [modelToLoadFolderB, resultsPathB] = s3GetPathToModelResults(modelNameB);
-downlaodModelResultsImages(resultsPathB,isCorrectAspectRatio2To1,[outputFolder 'B\'],scaleBar);
+
+%% Pick random files to compare
 
 st = awsReadJSON([modelToLoadFolderA '/dataset_oct_histology/original_image_pairs/StatusReportBySection.json']);
+trainingFilesI = pickNRandomSections(st,30,st.mlPhase == -1 & st.isSampleHealthy); % & computeOverallSectionQuality(st) == 2);
+testingFilesI  = pickNRandomSections(st,70,st.mlPhase == 1 & st.isSampleHealthy); %& computeOverallSectionQuality(st) == 2);
 
+%% Download data 
+
+fprintf('%s Downloading data from both models ...\n',datestr(datetime));
+awsMkDir(outputFolder,true);
+
+downlaodModelResultsImages(resultsPathA,isCorrectAspectRatio2To1,[outputFolder 'A\'],scaleBar);
+downlaodModelResultsImages(resultsPathB,isCorrectAspectRatio2To1,[outputFolder 'B\'],scaleBar);
+
+fprintf('%s Done.\n',datestr(datetime));
 %% Prepeare form
 
 [~,fpsA] = awsls([outputFolder 'A\']); fpsA = fpsA';
 [~,fpsB] = awsls([outputFolder 'B\']); fpsB = fpsB';
-
-trainingFilesI = pickNRandomSections(st,30,st.mlPhase == -1 & st.isSampleHealthy); % & computeOverallSectionQuality(st) == 2);
-testingFilesI  = pickNRandomSections(st,70,st.mlPhase == 1 & st.isSampleHealthy); %& computeOverallSectionQuality(st) == 2);
 
 whichFilesA = findFilesInST(fpsA, st, trainingFilesI | testingFilesI);
 whichFilesB = findFilesInST(fpsB, st, trainingFilesI | testingFilesI);

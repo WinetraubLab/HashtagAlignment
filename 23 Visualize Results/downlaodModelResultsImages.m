@@ -12,6 +12,7 @@ function [modelToLoadFolder] = downlaodModelResultsImages(...
 %   scaleBar - Should we add scale bar to histology images? if so set
 %       scaleBar to number of microns to put scalebar. If not set to 0.
 %       default: 100 [um]
+% OPTIONAL INPUTS:
 % The following inputs are optional if you would like to download only part
 % of the libery instead of all of it.
 %   st - st structure of all sections. Default is [], meaning no filter
