@@ -1,4 +1,5 @@
-% This script downloads dataset to local folder to be viewed by user
+% This script downloads dataset to local folder to be viewed by user, it
+% copies the OCT vs histology images
 
 %% Inputs
 imageResolution = '10x';
@@ -8,4 +9,4 @@ outputDir = 'tmpDataset';
 %% Gather dataset
 datasetPath = s3GetPathToLatestDataset(imageResolution,datasetTag);
 awsMkDir([pwd '/' outputDir '/'],true);
-awsCopyFileFolder(datasetPath,[outputDir '/']);
+awsCopyFileFolder([datasetPath 'original_image_pairs_view_for_user/'],[outputDir '/']);
