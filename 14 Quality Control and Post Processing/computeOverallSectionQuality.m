@@ -1,7 +1,7 @@
 function [qScore,...
     isOCTImageQualityGood, isHistologyImageQualityGood, alignmentQuality, ...
     areaOfQualityData_mm2 ...
-    ] = computeOverallSectionQuality (input1)
+    ] = computeOverallSectionQuality (input1,v)
 % This function computes an overall quality score for the section. Possible
 % USAGE (2 options):
 %   [...] = computeOverallSectionQuality(sectionPath)
@@ -9,6 +9,7 @@ function [qScore,...
 % INPUTS:
 %   sectionPath - path to section folder in s3.
 %   st - st structure
+%   v - verboose (default: false)
 % OUTPUTS:
 %   qScore - overall quality score:
 %       NaN - cannot deterimne, not enugh information.
@@ -27,7 +28,16 @@ minimalAreaForSectionToBeQualified_mm2 = 0.12; %mm^2
 
 %% Input checks
 if ~exist('input1','var')
-    input1 = [s3SubjectPath('07','LG') 'Slides/Slide03_Section03/'];
+    input1 = [s3SubjectPath('11','LH') 'Slides/Slide04_Section03/'];
+    v = true;
+end
+
+if ~exist('v','var')
+    v = false;
+end
+
+if v
+    vText = [];
 end
 
 if ischar(input1)
@@ -71,12 +81,26 @@ else
         slideConfigJson.QAInfo.OCTImageQuality.IsOverallImageQualityGood & ...
         slideConfigJson.QAInfo.OCTImageQuality.IsEpitheliumVisible & ...
        ~slideConfigJson.QAInfo.OCTImageQuality.IsMostOfImageShadowed;
-
+   
+    if v
+        vText = sprintf('%s\tisOCTImageQualityGood: %d. "and" logic of the following\n',vText,isOCTImageQualityGood);
+        vText = sprintf('%s\t\tQAInfo.IsOverallImageQualityGood: %d\n',vText,slideConfigJson.QAInfo.OCTImageQuality.IsOverallImageQualityGood);
+        vText = sprintf('%s\t\tQAInfo.IsEpitheliumVisible: %d\n',vText,slideConfigJson.QAInfo.OCTImageQuality.IsEpitheliumVisible);
+        vText = sprintf('%s\t\tNOT (QAInfo.IsMostOfImageShadowed: %d)\n',vText,slideConfigJson.QAInfo.OCTImageQuality.IsMostOfImageShadowed);
+    end
+        
     isHistologyImageQualityGood = ...
        slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.IsOverallImageQualityGood & ...
       ~slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.WasTissueFolded & ...
        (slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.TissueBreakageOrHolesPresent < 0.8) ... No big holes in the tissue
       ;%(slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.WasGelDetachedFromTissue < 0.2); % Gel detachment shouldn't effect usablilty
+  
+    if v
+        vText = sprintf('%s\tisHistologyImageQualityGood: %d. "and" logic of the following\n',vText,isHistologyImageQualityGood);
+        vText = sprintf('%s\t\tQAInfo.IsOverallImageQualityGood: %d\n',vText,slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.IsOverallImageQualityGood);
+        vText = sprintf('%s\t\tNOT(QAInfo.WasTissueFolded: %d)\n',vText,slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.WasTissueFolded);
+        vText = sprintf('%s\t\tQAInfo.TissueBreakageOrHolesPresent: %.2f (<0.8)\n',vText,slideConfigJson.QAInfo.HandEImageQuality_InOverlapArea.TissueBreakageOrHolesPresent);
+    end
 
     ql1 = slideConfigJson.QAInfo.AlignmentQuality.OverallAlignmentQuality;
     if ~slideConfigJson.QAInfo.AlignmentQuality.WasSurfaceUsedToAlign && ...
@@ -89,6 +113,12 @@ else
         ql2 = 2;
     end
     alignmentQuality = mean([ql1,ql2]);
+    
+    if v
+        vText = sprintf('%s\talignmentQuality: %.1f is average of\n',vText,alignmentQuality);
+        vText = sprintf('%s\t\tQAInfo.OverallAlignmentQuality: %.1f\n',vText,slideConfigJson.QAInfo.AlignmentQuality.OverallAlignmentQuality);
+        vText = sprintf('%s\t\t1 + (QAInfo.WasSurfaceUsedToAlign: %d) + (QAInfo.WereFeaturesInsideTissueUsedInAlignment: %d)\n',vText,slideConfigJson.QAInfo.AlignmentQuality.WasSurfaceUsedToAlign,slideConfigJson.QAInfo.AlignmentQuality.WereFeaturesInsideTissueUsedInAlignment);
+    end
 
     %% Compute what part of the section has both OCT and histology of the same spot
     if ~isfield(slideConfigJson,'alignedImagePath_Mask') 
@@ -102,13 +132,22 @@ else
         areaOfQualityData_mm2 = nPixelsWithGoodData*pixelArea_um2/1e3^2;
 
     isAreaThreshold = areaOfQualityData_mm2 > minimalAreaForSectionToBeQualified_mm2;
-
+    
+    if v
+        vText = sprintf('%s\tisAreaThreshold: %d\n',vText,isAreaThreshold);
+        vText = sprintf('%s\t\tareaOfQualityData_mm2 = %.3f > %.3f\n',vText,isAreaThreshold,minimalAreaForSectionToBeQualified_mm2);
+    end
+    
     %% Was fine alignment computed? if not it can be high quality :)
 
     if isfield(slideConfigJson.FM.singlePlaneFit_FineAligned,'wasRectified')
         wasRectified = slideConfigJson.FM.singlePlaneFit_FineAligned.wasRectified;
     else
         wasRectified = false;
+    end
+    
+    if v
+        vText = sprintf('%s\twasRectified: %d\n',vText,wasRectified);
     end
 
     didUserFineTuneAlignmentAfterRectified = false;
@@ -120,6 +159,10 @@ else
             tmp = slideConfigJson.FMOCTAlignment.planeDistanceFromOrigin_mm - slideConfigJson.FM.singlePlaneFit_FineAligned.d;
             didUserFineTuneAlignmentAfterRectified = abs(tmp) < 1e-3;
         end
+        
+        if v
+            vText = sprintf('%s\tdidUserFineTuneAlignmentAfterRectified: %d\n',vText,didUserFineTuneAlignmentAfterRectified);
+        end
     end
     
     yAxisTolerance_um = slideConfigJson.QAInfo.AlignmentQuality.YAxisToleranceMicrons;
@@ -128,13 +171,25 @@ end
 
 %% Final basic score
 isUsableInML = ...
-        (isAreaThreshold==true) & ... Histology is close enugh to OCT such that many pixels exist in both
+        (isAreaThreshold==true) & ... Histology is close enough to OCT such that many pixels exist in both
         (alignmentQuality > 1.5) & ... Alignment quality is high
         (isOCTImageQualityGood==true) & ... OCT quality is high
         (isHistologyImageQualityGood==true) & ... Histology quality is high
         (didUserFineTuneAlignmentAfterRectified==true); % User performed fine tuning
     
 qScore = ones(size(isUsableInML)).*(isUsableInML==true);
+
+if v
+    fprintf('Is Usable in ML: %d\n',isUsableInML(1));
+    fprintf('Reasons (and logic):\n');
+    fprintf('\tisAreaThreshold: %d\n',isAreaThreshold(1));
+    fprintf('\tAlignmentQuality: %.1f (> 1.5)\n',alignmentQuality(1));
+    fprintf('\tisOCTImageQualityGood: %d\n',isOCTImageQualityGood(1));
+    fprintf('\tisHistologyImageQualityGood: %d\n',isHistologyImageQualityGood(1));
+    fprintf('\tdidUserFineTuneAlignmentAfterRectified: %d\n',didUserFineTuneAlignmentAfterRectified(1));
+    
+    fprintf('Additional Information:\n%s',vText);
+end
 
 %% Update score if quality is particularly good
 qScore(isUsableInML & ...
@@ -145,3 +200,4 @@ qScore(isUsableInML & ...
     (isDermisVisibleInOCT==true) & ... We would like dermis to be visible for high quality
     (pGelDetachedFromTissue<0.75) ... Not alot of detachement
     ) = 2;    
+
