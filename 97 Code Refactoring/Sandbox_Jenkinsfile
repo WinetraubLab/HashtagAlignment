@@ -95,7 +95,7 @@ pipeline {
 		}}}
 		stage("Build Runme File and Run Matlab")
 		{steps{script{
-			writeFile(file: 'runme2.m', text: "$CODE_TO_RUN$")
+			writeFile(file: 'runme2.m', text: "${CODE_TO_RUN}")
 			bat("@CAT runme2.m >> runme.m");
 
 			try
