@@ -5,7 +5,7 @@ function rectifyFineAlignedSections(subjectPath)
 % before doing so.
 
 if ~exist('subjectPath','var')
-    subjectPath = s3SubjectPath('36','LHC');
+    subjectPath = s3SubjectPath('04','LI');
 end
 
 % When set to false, will not try to rectify sections that don't have h&e,
@@ -33,6 +33,8 @@ for i=1:length(slideConfigs)
     slideConfigsJsonPaths{i} = slideConfigJsonPath;
     if awsExist(slideConfigJsonPath,'file')
         slideConfigs{i} = awsReadJSON(slideConfigJsonPath);
+    else
+        warning('%s is missing a SlideConfig.json',nm);
     end
 end
 
@@ -150,7 +152,7 @@ for i=1:length(slideConfigs)
     end
     slideConfig = slideConfigs{i};
     if isempty(slideConfig)
-        error('Enpty Slide Config should never happen');
+        error('Empty Slide Config should never happen. Are you missing SlideConfig.json?');
         continue; % This should never happen
     end
     if ~isfield(slideConfig,'histologyImageFilePath') && ~shouldRectifySectionsWithNoHE
