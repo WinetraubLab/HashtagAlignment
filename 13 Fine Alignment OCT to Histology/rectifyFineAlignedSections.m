@@ -153,7 +153,7 @@ for i=1:length(slideConfigs)
     slideConfig = slideConfigs{i};
     if isempty(slideConfig)
         warning('Empty Slide Config should never happen. Are you missing SlideConfig.json?');
-        continue; % This should never happen
+        continue; % Don't update
     end
     if ~isfield(slideConfig,'histologyImageFilePath') && ~shouldRectifySectionsWithNoHE
         %No histology, means no fine alignment, and user asked not to
