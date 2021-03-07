@@ -12,8 +12,8 @@ pipeline {
 		text(
 			name: "CODE_TO_RUN",
 			defaultValue:"",
-			description:"Matlab code to run using Jenkins environment",
-			trim: true)
+			description:"Matlab code to run using Jenkins environment"
+			)
 		string(
 			name: "WHO_TO_EMAIL_WHEN_DONE",
 			defaultValue:"",
