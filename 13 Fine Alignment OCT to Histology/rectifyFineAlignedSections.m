@@ -152,7 +152,7 @@ for i=1:length(slideConfigs)
     end
     slideConfig = slideConfigs{i};
     if isempty(slideConfig)
-        error('Empty Slide Config should never happen. Are you missing SlideConfig.json?');
+        warning('Empty Slide Config should never happen. Are you missing SlideConfig.json?');
         continue; % This should never happen
     end
     if ~isfield(slideConfig,'histologyImageFilePath') && ~shouldRectifySectionsWithNoHE
