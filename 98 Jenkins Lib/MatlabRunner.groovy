@@ -59,8 +59,8 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 		{
 			echo "here 1"
 			// Go over output of matlab, see if it tried to use exit code 0, if that is the case ignore error
-			bat("dir .\\Testers")
-			def matlabLog = new File(".\\Testers\\matlablog.txt");
+			bat("dir " + System.properties['user.dir'])
+			def matlabLog = new File(System.properties['user.dir'] + "\\Testers\\matlablog.txt");
 			if (matlabLog.exists())
 			{
 				echo "->Exists"
