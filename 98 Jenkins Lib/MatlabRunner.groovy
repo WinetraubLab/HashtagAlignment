@@ -61,19 +61,8 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 			// Go over output of matlab, see if it tried to use exit code 0, if that is the case ignore error
 			def matlabLogText = readFile('Testers\\matlablog.txt').trim()
 			
-			echo "here 2"
-			def matlabLog = new File(System.properties['user.dir'] + "\\Testers\\matlablog.txt");
-			if (matlabLog.exists())
-			{
-				echo "->Exists"
-			}
-			else
-			{
-				echo "No exist";
-			}
-			def matlabLogText3 = matlabLog.getText("UTF-8");
 			echo "->"
-			if (matlabLogText.endsWith("Exit Code: 0\n"))
+			if (matlabLogText.endsWith("Exit Code: 0"))
 			{
 				currentBuild.result = statusBeforeRunningMatlab // Override status
 			}
