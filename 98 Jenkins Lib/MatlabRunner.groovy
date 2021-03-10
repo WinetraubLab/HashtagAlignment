@@ -63,7 +63,10 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 			if (matlabLogText.endsWith("Exit Code: 0"))
 			{
 				echo "here 2"
-				currentBuild.result = statusBeforeRunningMatlab // Override status
+				if (statusBeforeRunningMatlab == null || statusBeforeRunningMatlab == "SUCCESS")
+				{
+					currentBuild.result = "SUCCESS" // Override status
+				}
 			}
 		}
 	}
