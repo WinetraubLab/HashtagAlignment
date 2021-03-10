@@ -5,14 +5,25 @@
 def RunMatlabScript (scriptPath, isConnectToCluster=false) 
 {
 	def matlab_2019a = new File('C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe')
+	def matlab_2019b = new File('C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe')
+	def matlab_2020b = new File('C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe')
+	
 	def MATLAB_PATH = "Unknown"
-	if (matlab_2019a.exists())
+	if (matlab_2020b.exists())
+	{
+		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe"'
+	}
+	else if (matlab_2019a.exists())
 	{
 		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"'
 	}
-	else
+	else if (matlab_2019b.exists())
 	{
 		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe"'
+	}
+	else
+	{
+		throw("Could not find any of the matlab versions suported")
 	}
 	
 	//Build M File
