@@ -51,6 +51,7 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 			 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/"
 		
 		def statusBeforeRunningMatlab = currentBuild.result
+		echo(statusBeforeRunningMatlab)
 		try
 		{
 			bat("""cd Testers && """ + MATLAB_PATH + """ -nosplash -nodesktop -wait -r "runme_Jenkins('hiddenRunme',""" + isConnectToCluster + """)" -logfile matlablog.txt""")
@@ -63,6 +64,7 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 			//	echo "here2"
 				// Go over output of matlab, see if it tried to use exit code 0, if that is the case ignore error
 				def matlabLog = new File('Testers\\matlablog.txt');
+				echo "->"
 				def matlabLogText = matlabLog.getText("UTF-8");
 				echo "->"
 				if (matlabLogText.endsWith("Exit Code: 0\n"))
