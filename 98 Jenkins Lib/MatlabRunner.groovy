@@ -59,7 +59,9 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 		{
 			echo "here 1"
 			// Go over output of matlab, see if it tried to use exit code 0, if that is the case ignore error
-			echo("dir " + System.properties['user.dir'])
+			def matlabLogText = readFile('Testers\\matlablog.txt').trim()
+			
+			echo "here 2"
 			def matlabLog = new File(System.properties['user.dir'] + "\\Testers\\matlablog.txt");
 			if (matlabLog.exists())
 			{
@@ -69,7 +71,7 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 			{
 				echo "No exist";
 			}
-			def matlabLogText = matlabLog.getText("UTF-8");
+			def matlabLogText3 = matlabLog.getText("UTF-8");
 			echo "->"
 			if (matlabLogText.endsWith("Exit Code: 0\n"))
 			{
