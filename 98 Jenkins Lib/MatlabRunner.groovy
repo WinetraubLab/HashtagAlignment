@@ -56,8 +56,12 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 		}
 		catch (Exception e)
 		{
-			currentBuild.result = 'SUCCESS'
-			echo "Changed status"
+			// Go over output of matlab, see if it tried to use exit code 0, if that is the case ignore error
+			def matlabLog = new File('Testers\\matlablog.txt');
+			if (matlabLog.getText("UTF-8").find("Exit Code: 0"))
+			{
+				currentBuild.result = 'SUCCESS' // Override status
+			}
 		}
 	}
 	catch(Exception e)
