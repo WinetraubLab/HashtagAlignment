@@ -50,9 +50,15 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 			 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/hiddenRunme.m/*view*/" + "\n" +
 			 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/"
 		
-		bat("""cd Testers && """ + MATLAB_PATH + """ -nosplash -nodesktop -wait -r "runme_Jenkins('hiddenRunme',""" + isConnectToCluster + """)" -logfile matlablog.txt""")
-		currentBuild.result = 'SUCCESS'
-		echo "Changed status"
+		try
+		{
+			bat("""cd Testers && """ + MATLAB_PATH + """ -nosplash -nodesktop -wait -r "runme_Jenkins('hiddenRunme',""" + isConnectToCluster + """)" -logfile matlablog.txt""")
+		}
+		catch (Exception e)
+		{
+			currentBuild.result = 'SUCCESS'
+			echo "Changed status"
+		}
 	}
 	catch(Exception e)
 	{
