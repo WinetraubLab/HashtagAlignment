@@ -57,13 +57,12 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 		}
 		catch (Exception e)
 		{
-			echo "here 1"
 			// Go over output of matlab, see if it tried to use exit code 0, if that is the case ignore error
 			def matlabLogText = readFile('Testers\\matlablog.txt').trim()
-			
-			echo "->"
+			echo "here 1"
 			if (matlabLogText.endsWith("Exit Code: 0"))
 			{
+				echo "here 2"
 				currentBuild.result = statusBeforeRunningMatlab // Override status
 			}
 		}
