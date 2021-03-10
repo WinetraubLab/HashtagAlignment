@@ -59,7 +59,7 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 		{
 			echo "here 1"
 			// Go over output of matlab, see if it tried to use exit code 0, if that is the case ignore error
-			def matlabLog = new File('Testers/matlablog.txt');
+			def matlabLog = new File('matlablog.txt');
 			if (matlabLog.exists())
 			{
 				echo "->Exists"
