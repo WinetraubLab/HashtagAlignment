@@ -185,8 +185,13 @@ st.notes = sprintf([ ...
     ]);
 
 %% For debug purposes, find a specific slide that we would like to focus on
-dSubject = 'LG-42';
-dSlideSection = 'Slide05_Section03';
+%% NOTE FOR FUTURE SELF!
+% If you are interested in why a specific section is either used or not
+% used in the dataset. see computeOverallSectionQuality function. You can
+% set the inputs and check what the status of qScore. qScore>1 means it
+% will be included.
+dSubject = 'LHC-06';
+dSlideSection = 'Slide06_Section03';
 dI = cellfun(@(x)(contains(x,dSubject) && contains(x,dSlideSection)),sectionPathsOut); 
 if ~any(dI) 
     dI = -1;

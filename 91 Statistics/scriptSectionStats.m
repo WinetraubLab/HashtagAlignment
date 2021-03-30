@@ -1,14 +1,24 @@
 % Collect general section statistics
 
 %% Inputs
-datasetTag = ''; % Which dataset tag to load? Will load the latest unless specific date is writen in tag
+
+% Which dataset tag to load? 
+% - Set to '' to load the dataset
+% - Set to 'currentLib' to load the current library (not dataset) - this is
+%       the most latest dataset.
+datasetTag = 'currentLib'; % '2020-11-10'; 
 
 isGroupBySubject = true; % Would you like to group results by subject
 
 %% Load st structure
-[datasetPath, datasetName] = s3GetPathToLatestDataset('10x',datasetTag);
-stStructurePath = [datasetPath '/original_image_pairs/StatusReportBySection.json'];
-st = awsReadJSON(stStructurePath);
+if strcmp(datasetTag,'currentLib')
+    st =loadStatusReportByLibrary();
+    datasetName = 'Latest Library';
+else
+    [datasetPath, datasetName] = s3GetPathToLatestDataset('10x',datasetTag);
+    stStructurePath = [datasetPath '/original_image_pairs/StatusReportBySection.json'];
+    st = awsReadJSON(stStructurePath);
+end
 
 % For backward compatibility, can remove this section in the future.
 if ~isfield(st,'isFreshHumanSample')
@@ -63,3 +73,59 @@ fprintf('\n');
 if isGroupBySubject
     fprintf('%.0f good sections per good subject on average.\n',avgGoodSectionsInGoodSubject);
 end
+
+%% Make report by library
+libNames = s3GetAllLibs();
+
+fprintf('\n');
+fprintf('%3s || %7s | %5s %5s || %6s | %5s %5s\n','Lib','Healthy','Train','Test','Cancer','Train','Test');
+fprintf('%s',repmat('-',1,52));
+fprintf('\n');
+
+for i=1:length(libNames)
+
+    ii = cellfun(@(x)(strcmp(x,libNames{i})),st.libraryNames) & st.isUsableInML & st.isFreshHumanSample;
+    
+    if isGroupBySubject
+        [~,~,uI] = unique(st.subjectNames(ii));
+        uI([false;uI(2:end) == uI(1:(end-1))]) = false;
+        uI = uI>0;
+    else
+        uI = ones(sum(ii),1,'logical');
+    end
+    
+    h = st.isSampleHealthy(ii); h = h(uI);
+    p = st.mlPhase(ii); p = p(uI);
+    
+    fprintf('%3s || %7d | %5d %5d || %6d | %5d %5d\n',...
+        libNames{i},...
+        sum(h==1),...
+        sum(h==1 & p==-1), sum(h==1 & p==1),...
+        sum(h==0),...
+        sum(h==0 & p==-1), sum(h==0 & p==1)...
+        );
+end
+
+% total
+ii = st.isUsableInML & st.isFreshHumanSample;
+
+if isGroupBySubject
+    [~,~,uI] = unique(st.subjectNames(ii));
+    uI([false;uI(2:end) == uI(1:(end-1))]) = false;
+    uI = uI>0;
+else
+    uI = ones(sum(ii),1,'logical');
+end
+
+h = st.isSampleHealthy(ii); h = h(uI);
+p = st.mlPhase(ii); p = p(uI);
+
+fprintf('%s',repmat('-',1,52));
+fprintf('\n');
+fprintf('%3s || %7d | %5d %5d || %6d | %5d %5d\n',...
+    'Tot',...
+    sum(h==1),...
+    sum(h==1 & p==-1), sum(h==1 & p==1),...
+    sum(h==0),...
+    sum(h==0 & p==-1), sum(h==0 & p==1)...
+    );

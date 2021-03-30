@@ -5,7 +5,7 @@ function rectifyFineAlignedSections(subjectPath)
 % before doing so.
 
 if ~exist('subjectPath','var')
-    subjectPath = s3SubjectPath('58','LGC');
+    subjectPath = s3SubjectPath('04','LI');
 end
 
 % When set to false, will not try to rectify sections that don't have h&e,
@@ -33,6 +33,8 @@ for i=1:length(slideConfigs)
     slideConfigsJsonPaths{i} = slideConfigJsonPath;
     if awsExist(slideConfigJsonPath,'file')
         slideConfigs{i} = awsReadJSON(slideConfigJsonPath);
+    else
+        warning('%s is missing a SlideConfig.json',nm);
     end
 end
 
@@ -57,6 +59,15 @@ for i=1:length(slideConfigs)
     if ~isfield(slideConfig,'histologyImageFilePath')
         yAxisTolerance_um(i) = NaN; %No histology, means no way fine alignment has a reasonable tolerance.
     end
+end
+
+% Check tolerances before computing weights, if a section has 0 tolerance
+% this is a problem for the weights.. 
+badYAxisTolerances = find(yAxisTolerance_um==0);
+if ~isempty(badYAxisTolerances)
+    txt = cellfun(@(x)(sprintf('%s has unrealistic yAxisTolerance_um of 0, please correct.\n',x)),...
+        stackConfig.sections.names(badYAxisTolerances),'UniformOutput',false);
+    error([txt{:}]);
 end
 
 % Compute weight for each fine aligned sample
@@ -141,8 +152,8 @@ for i=1:length(slideConfigs)
     end
     slideConfig = slideConfigs{i};
     if isempty(slideConfig)
-        error('Enpty Slide Config should never happen');
-        continue; % This should never happen
+        warning('Empty Slide Config should never happen. Are you missing SlideConfig.json?');
+        continue; % Don't update
     end
     if ~isfield(slideConfig,'histologyImageFilePath') && ~shouldRectifySectionsWithNoHE
         %No histology, means no fine alignment, and user asked not to

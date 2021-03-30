@@ -1,4 +1,5 @@
-function [modelToLoadFolder] = downlaodModelResultsImages(resultsPath,isCorrectAspectRatio2To1,outputFolder,scaleBar)
+function [modelToLoadFolder] = downlaodModelResultsImages(...
+    resultsPath,isCorrectAspectRatio2To1,outputFolder,scaleBar,st,additionalFilter)
 % This function downloads test and train images from aws. Saves locally for
 % further analysis
 % INPUTS:
@@ -6,10 +7,17 @@ function [modelToLoadFolder] = downlaodModelResultsImages(resultsPath,isCorrectA
 %   isCorrectAspectRatio2To1 - if images are a square with 2 to 1 aspect
 %       ratio, set this flag to true (default) and will illongate
 %       accordingly
-%   outputFolder - where to write files, default is '\tmp\'
+%   outputFolder - where to write files, default is '\tmp\'. Output folder
+%       contains training and testing set results
 %   scaleBar - Should we add scale bar to histology images? if so set
 %       scaleBar to number of microns to put scalebar. If not set to 0.
 %       default: 100 [um]
+% OPTIONAL INPUTS:
+% The following inputs are optional if you would like to download only part
+% of the libery instead of all of it.
+%   st - st structure of all sections. Default is [], meaning no filter
+%   additionalFilter - vector to filter. Sections will be picked out of
+%       st.<parameter>(additionalFilter==1), Default is no filter
 %
 % OUTPUTS:
 %   modelToLoadFolder - folder name that was loaded
@@ -32,6 +40,11 @@ if ~exist('scaleBar','var') || isempty(scaleBar)
     scaleBar = 100;
 end
 
+if ~exist('st','var') || isempty(st)
+    st = [];
+    additionalFilter = [];
+end
+
 modelToLoadFolder = awsModifyPathForCompetability([resultsPath '../../'],false);
 
 %% Get all the images locally
@@ -41,11 +54,11 @@ awsMkDir(outputFolder,true);
 
 % Copy test folder
 trainingModelFolder = [resultsPath '/test_latest/images/'];
-copyImages(trainingModelFolder,outputFolder,'test_');
+copyImages(trainingModelFolder,outputFolder,'test_',st,additionalFilter);
 
 % Copy train folder
 trainingModelFolder = [resultsPath '/train_latest/images/'];
-copyImages(trainingModelFolder,outputFolder,'train_');
+copyImages(trainingModelFolder,outputFolder,'train_',st,additionalFilter);
 
 %% Correct 2 to 1 ratio & scalebar if needed
 
@@ -98,14 +111,22 @@ for i=1:length(ds.Files)
     imwrite(im,fn);
 end 
 
-function copyImages(sourceFoloder,destFolder,prefix)
+function copyImages(sourceFolder,destFolder,prefix,st,additionalFilter)
 
 % Copy files to new folder
 destFolder1 = [destFolder '/' prefix '/'];
 awsMkDir(destFolder1,true);
 
-% Copy files
-awsCopyFileFolder(sourceFoloder,destFolder1);
+% See if we need to apply a filter
+if ~isempty(st)
+    [~,fp] = awsls(sourceFolder);
+    isKeep = findFilesInST(fp, st, additionalFilter);
+    fp(~isKeep) = [];
+    awsCopyFileFolder(fp,destFolder1);
+else
+    % Copy all files
+    awsCopyFileFolder(sourceFolder,destFolder1);
+end
 
 [fileNames,filePaths] = awsls(destFolder1);
 
@@ -114,7 +135,7 @@ ii = cellfun(@(x)(~contains(x,'.png')),filePaths);
 fileNames(ii) = [];
 filePaths(ii) = [];
 
-if mod(length(fileNames),3) ~= 0
+if mod(length(fileNames),3) ~= 0 || length(fileNames) ~= length(filePaths)
     error('No equal number of real A, real B and fake B');
 end
 

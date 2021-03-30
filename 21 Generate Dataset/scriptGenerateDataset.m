@@ -8,7 +8,7 @@ octBScanToUseAroundCenter = [];
 isAverageOCTBScans = [];
 
 % Which libraries to take images from
-libraryNames = {'LC','LD','LE','LF','LG'};
+libraryNames = s3GetAllLibs();
 
 %% Jenkins 
 %This function updates all input varible names that have name_ like this:

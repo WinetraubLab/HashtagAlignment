@@ -8,7 +8,7 @@ function p=s3SubjectPath(subject,lib,isCalibrationFolder)
 if (~exist('lib','var') || isempty(lib))
     %Before releasing a new libary, update lib. Don't forget to search Jenkins
     %file for the same library update
-    lib = 'LH'; 
+    lib = 'LI'; 
 end
 
 if ~exist('isCalibrationFolder','var')
@@ -16,7 +16,7 @@ if ~exist('isCalibrationFolder','var')
 end
 
 % Figure out prefix
-if strcmp(lib,'LFM') || strcmp(lib,'LGC') || strcmp(lib,'LHC')
+if  length(lib)>=3 && lib(1) == 'L' && (lib(3)=='C' || lib(3) =='M')
     prefx = lib(3);
     lib = lib(1:2);
 else

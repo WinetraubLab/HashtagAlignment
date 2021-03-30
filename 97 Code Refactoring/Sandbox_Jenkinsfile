@@ -1,4 +1,4 @@
-//This Jenkinsfile will preform prceprocess of flourecence images
+//This Jenkinsfile will run in sandbox mode, to allow user to run whatever code through Jenkins
 pipeline {
 	agent any
 	environment {
@@ -9,39 +9,22 @@ pipeline {
   	}
 	parameters 
 	{
-		string(
-			name: "S3_DIR",
-			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LI/",
-			description:"Subjects Directory",
-			trim: true)
-		string(
-			name: "SAMPLE_ID",
-			defaultValue:"LI-00",
-			description:"Subject Id.\nExample: LI-01",
-			trim: true)
-		string(
-			name: "MAIN_FOLDER",
+		text(
+			name: "CODE_TO_RUN",
 			defaultValue:"",
-			description:"Directed at the main directory, Under the main directory we expect to have these folders \\slide #\\sec #\\ \nIn each folder palace MetaData and Tif files of the scan\nThis folder should be local",
-			trim: true)
-		
+			description:"Matlab code to run using Jenkins environment"
+			)
 		string(
-			name: "ANG_ROTATE",
-			defaultValue:"0",
-			description:"Angle to rotate slide such that lines are on the top (counter clockwise)",
-			trim: true)	
+			name: "WHO_TO_EMAIL_WHEN_DONE",
+			defaultValue:"",
+			description:"Who should get an email with the results?  (Apart from you! - you will get an email anyways)\n\nUse comma to specify multiple emails\nExample: me@stanford.edu, you@stanford.edu",
+			trim: true)
+		booleanParam(
+			name: 'AWS_PARALLEL_COMPUTING',
+			defaultValue:true,
+			description:"1. Check this box if you would like to use cloud computing (AWS).\n2. Make sure your files are uploaded to Amazon cloud (s3) to be able to use this function.\n3. Please note: 1hr cloud computing is about 1USD.")
     }
 	stages{
-		stage("Parameters Check and Env Setup") 
-		{steps{script{			
-			echo "Input checks"
-			if (params.MAIN_FOLDER == "")
-			{
-				currentBuild.result = 'ABORTED'
-				echo('Please a folder to load data from')
-				error('Please a folder to load data from')
-			}
-		}}}
 		stage("Checkout")
 		{steps{script{
 			//Figure out which branch Jenkinsfile was checked out, we will checkout the same one
@@ -106,25 +89,60 @@ pipeline {
 			bat("@echo disp('https://github.com/MyYo/HashtagAlignment/tree/" + hashtagAlignmentVer + "'); >> runme.m")
 			bat("@echo disp('https://github.com/MyYo/myOCT/tree/"            + myOCTVer + "'); >> runme.m")
 		}}}
-		stage("Build Runme and Import")
+		stage("Build Runme File and Run Matlab")
 		{steps{script{
-			bat("@echo s3Dir_ = '%S3_DIR%/%SAMPLE_ID%/'; >> runme.m")
-			bat("@echo folderStructurePath_ = '%MAIN_FOLDER%'; >> runme.m")
-			bat("@echo angRotate_ = %ANG_ROTATE%; >> runme.m")
+			writeFile(file: 'runme2.m', text: "${CODE_TO_RUN}")
+			bat("@type runme2.m >> runme.m");
 
-			bat("@echo run SP5Import.m  >> runme.m")
-			
-			RunMatlabRunme();
+			try
+			{
+				RunMatlabRunme(params.AWS_PARALLEL_COMPUTING)
+				currentBuild.result = 'SUCCESS'
+			}
+			catch(Exception e)
+			{
+				currentBuild.result = 'FAILURE'
+				throw("Matlab Failed")
+			}
+			finally
+			{
+				//EMAIL
+				//Get the email of the user who started the build
+				def userId = currentBuild.getRawBuild().getCauses()[0].getUserId()
+				hudson.model.User user = hudson.model.User.get(userId)
+				email = user.getProperty(hudson.tasks.Mailer.UserProperty).getAddress()
+				
+				try
+				{
+				emailext ( //Using ext-email plugin
+					subject: "[OCTHist] Sandbox Mode Complete ${currentBuild.result} #$BUILD_NUMBER",
+					from : "Yonatan",
+					body: 
+					"Hi,<br>" +
+					"Your files are processed (Build # ${BUILD_NUMBER}, ${currentBuild.result}).<br>" +
+					""
+					,
+					attachLog: true,
+					attachmentsPattern: "Testers\\*.png",
+					to: "$WHO_TO_EMAIL_WHEN_DONE," + email,
+					mimeType: "text/html")
+				}
+				catch(Exception e)
+				{
+					echo "Might had a problem with sending the email out"
+				}
+				
+			}
 		}}}
 	}
 }
-def RunMatlabRunme() //runs runme.m
+def RunMatlabRunme(isConnectToCluster=false)  //runs runme.m
 {
 	try
 	{
 		def rootDir = pwd()
 		def MatlabRunner = load "${rootDir}/98 Jenkins Lib/MatlabRunner.Groovy"
-		MatlabRunner.RunMatlabScript ("runme.m");
+		MatlabRunner.RunMatlabScript ("runme.m",isConnectToCluster);
 		bat("@del \f runme.m");
 	}
 	catch(Exception e)
@@ -133,4 +151,3 @@ def RunMatlabRunme() //runs runme.m
 		throw("Matlab Failed")
 	}
 }
-

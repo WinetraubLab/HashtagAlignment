@@ -5,14 +5,25 @@
 def RunMatlabScript (scriptPath, isConnectToCluster=false) 
 {
 	def matlab_2019a = new File('C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe')
+	def matlab_2019b = new File('C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe')
+	def matlab_2020b = new File('C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe')
+	
 	def MATLAB_PATH = "Unknown"
-	if (matlab_2019a.exists())
+	if (matlab_2020b.exists())
+	{
+		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe"'
+	}
+	else if (matlab_2019a.exists())
 	{
 		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"'
 	}
-	else
+	else if (matlab_2019b.exists())
 	{
 		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe"'
+	}
+	else
+	{
+		throw("Could not find any of the matlab versions suported")
 	}
 	
 	//Build M File
@@ -39,7 +50,23 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 			 "- Runme file:\n\t" + env.BUILD_URL + "execution/node/3/ws/Testers/hiddenRunme.m/*view*/" + "\n" +
 			 "- Workspace:\n\t" + env.BUILD_URL + "execution/node/3/ws/"
 		
-		bat("""cd Testers && """ + MATLAB_PATH + """ -nosplash -nodesktop -wait -r "runme_Jenkins('hiddenRunme',""" + isConnectToCluster + """)" -logfile matlablog.txt""")
+		def statusBeforeRunningMatlab = currentBuild.result
+		try
+		{
+			bat("""cd Testers && """ + MATLAB_PATH + """ -nosplash -nodesktop -wait -r "runme_Jenkins('hiddenRunme',""" + isConnectToCluster + """)" -logfile matlablog.txt""")
+		}
+		catch (Exception e)
+		{
+			// Go over output of matlab, see if it tried to use exit code 0, if that is the case ignore error
+			def matlabLogText = readFile('Testers\\matlablog.txt').trim()
+			if (matlabLogText.endsWith("Exit Code: 0"))
+			{
+				if (statusBeforeRunningMatlab == null || statusBeforeRunningMatlab == "SUCCESS")
+				{
+					currentBuild.result = "SUCCESS" // Override status
+				}
+			}
+		}
 	}
 	catch(Exception e)
 	{

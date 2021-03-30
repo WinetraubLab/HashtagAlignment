@@ -1,6 +1,6 @@
 % This script computs stats for the following libraries
 
-libraryNames = {'LH','LG','LF','LE','LD','LC'};
+libraryNames = fliplr(sort(s3GetAllLibs())); %Start from latest lib first
 
 isGoogleSheetUpdate = true; % Set to just update json and skip google sheet updates
 
