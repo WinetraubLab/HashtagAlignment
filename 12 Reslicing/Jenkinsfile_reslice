@@ -11,7 +11,7 @@ pipeline {
 	{
 		string(
 			name: "SUBJECT_FOLDER_PATH",
-			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LI/LI-01/",
+			defaultValue:"s3://delazerdamatlab/Users/OCTHistologyLibrary/LJ/LJ-01/",
 			description:"Subjects Directory",
 			trim: true)
 		string(
