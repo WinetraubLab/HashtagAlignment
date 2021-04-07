@@ -8,18 +8,19 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 	def matlab_2019b = new File('C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe')
 	def matlab_2020b = new File('C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe')
 	
+	// Check which Matlab is available (ranked by preference)
 	def MATLAB_PATH = "Unknown"
-	if (matlab_2020b.exists())
+	if (matlab_2019b.exists())
 	{
-		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe"'
+		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe"'
 	}
 	else if (matlab_2019a.exists())
 	{
 		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"'
 	}
-	else if (matlab_2019b.exists())
+	else if (matlab_2020b.exists())
 	{
-		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe"'
+		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe"'
 	}
 	else
 	{
