@@ -3,8 +3,7 @@
 %% Inputs
 
 % Set subject path an slide/section programaticaly
-lib = 'LG';
-subjectPath = s3SubjectPath('01',lib); % Get latest subject path
+subjectPath = s3SubjectPath('01'); % Get latest subject path
 sectionName = 'Slide01_Section01';
 
 % Set to true to override selection above and let user select subject using

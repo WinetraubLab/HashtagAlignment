@@ -6,7 +6,13 @@ libraryNames = s3GetAllLibs();
 st = loadStatusReportByLibrary(libraryNames);
 
 %% Discover & deal with healthy / cancer conflicts
-LxC = cellfun(@(x)(contains(x,'LGC') | contains(x,'LHC') | contains(x,'LIC')),st.subjectNames);
+
+% Find cancers
+libs = s3GetAllLibs ();
+LxC = zeros(size(st.subjectNames),'logical');
+for i=1:length(libs)
+    LxC = LxC | cellfun(@(x)(contains(x,[libs{i} 'C'])),st.subjectNames);
+end
 
 IsHealthVsLxCConflict = (st.isSampleHealthy == LxC);
 subjectsWithConflict = unique(st.subjectNames(IsHealthVsLxCConflict));
