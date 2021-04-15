@@ -10,6 +10,11 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 	
 	// Check which Matlab is available (ranked by preference)
 	def MATLAB_PATH = "Unknown"
+	if (isConnectToCluster && matlab_2020b.exists())
+	{
+		// If running on cluster use latest version of Matlab
+		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe"'
+	}
 	if (matlab_2019b.exists())
 	{
 		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe"'
