@@ -13,9 +13,10 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 	if (isConnectToCluster && matlab_2020b.exists())
 	{
 		// If running on cluster use latest version of Matlab
+		echo "Running on cluster using the latest Matlab version"
 		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe"'
 	}
-	if (matlab_2019b.exists())
+	else if (matlab_2019b.exists())
 	{
 		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe"'
 	}
@@ -75,9 +76,9 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 				{
 					currentBuild.result = "SUCCESS" // Override status
 				}
-				else
-					throw("Matlab ended with an error")			
 			}
+			else
+				throw("Matlab ended with an error")			
 		}
 	}
 	catch(Exception e)
