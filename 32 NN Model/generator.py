@@ -12,7 +12,6 @@ Constructs ResNet-based generator with that consists of 9 Resnet blocks between 
         loss_object     (TensorFlow.keras.losses) : The type of GAN loss that the generator will incorporate
 '''
 def build_model():
-
     loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
     return resnet_model, loss_object
 
@@ -49,18 +48,17 @@ def compute_loss(loss_object, disc_generated_output, gen_output, target):
     # pix2pix paper
     LAMBDA = 100
 
-    # The sigmoid cross entropy loss of the generated images and an array of ones. We send an array of ones
-    # because the generator only cares about minimizing the loss with respect to the generator output. Therefore,
-    # we can ignore the term in the cross entropy calculation that incorporates the output of the discriminator when
-    # passing in the real histology image - passing an array of ones to the sigmoid cross-entropy loss function makes
-    # this term zero.
+    # Binary sigmoid cross entropy loss of the fake histology images and array of ones
+    # We send an array of ones the same shape as disc_generated_output because we want to train the generator to create
+    # images that fool the discriminator. Therefore, the generator is attempting to minimize the loss so that the fake
+    # images appear real to the discriminator
     gan_loss = loss_object(tf.ones_like(disc_generated_output), disc_generated_output)
 
     # mean absolute error (L1 loss) between the real histology image and the corresponding fake histology image
     # produced by the generator
     ground_truth_loss = tf.reduce_mean(tf.abs(target - gen_output))
 
-    # Total generator loss
+    # Total generator loss  (See the pix2pix paper for more details: https://arxiv.org/abs/1611.07004)
     total_gen_loss = gan_loss + (LAMBDA * ground_truth_loss)
 
     return total_gen_loss, gan_loss, ground_truth_loss
