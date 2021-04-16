@@ -10,7 +10,13 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 	
 	// Check which Matlab is available (ranked by preference)
 	def MATLAB_PATH = "Unknown"
-	if (matlab_2019b.exists())
+	if (isConnectToCluster && matlab_2020b.exists())
+	{
+		// If running on cluster use latest version of Matlab
+		echo "Running on cluster using the latest Matlab version"
+		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe"'
+	}
+	else if (matlab_2019b.exists())
 	{
 		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe"'
 	}
@@ -58,6 +64,10 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 		}
 		catch (Exception e)
 		{
+			// Do nothing
+		}
+		finally
+		{
 			// Go over output of matlab, see if it tried to use exit code 0, if that is the case ignore error
 			def matlabLogText = readFile('Testers\\matlablog.txt').trim()
 			if (matlabLogText.endsWith("Exit Code: 0"))
@@ -67,6 +77,8 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 					currentBuild.result = "SUCCESS" // Override status
 				}
 			}
+			else
+				throw("Matlab ended with an error")			
 		}
 	}
 	catch(Exception e)
