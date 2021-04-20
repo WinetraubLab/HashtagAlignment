@@ -17,7 +17,7 @@ if ~exist('isCalibrationFolder','var')
 end
 
 % Figure out prefix
-if  length(lib)>=3 && lib(1) == 'L' && (lib(3)=='C' || lib(3) =='M')
+if  length(lib)>=3 && lib(1) == 'L' && (lib(3)=='C' || lib(3) =='M' || lib(3) =='B')
     prefx = lib(3);
     lib = lib(1:2);
 else
