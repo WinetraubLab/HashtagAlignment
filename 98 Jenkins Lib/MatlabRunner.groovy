@@ -6,15 +6,15 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 {
 	def matlab_2019a = new File('C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe')
 	def matlab_2019b = new File('C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe')
-	def matlab_2020b = new File('C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe')
+	def matlab_2021a = new File('C:\\Program Files\\MATLAB\\R2021a\\bin\\matlab.exe')
 	
 	// Check which Matlab is available (ranked by preference)
 	def MATLAB_PATH = "Unknown"
-	if (isConnectToCluster && matlab_2020b.exists())
+	if (isConnectToCluster && matlab_2021a.exists())
 	{
 		// If running on cluster use latest version of Matlab
 		echo "Running on cluster using the latest Matlab version"
-		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe"'
+		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2021a\\bin\\matlab.exe"'
 	}
 	else if (matlab_2019b.exists())
 	{
@@ -24,9 +24,9 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 	{
 		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"'
 	}
-	else if (matlab_2020b.exists())
+	else if (matlab_2021a.exists())
 	{
-		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2020b\\bin\\matlab.exe"'
+		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2021a\\bin\\matlab.exe"'
 	}
 	else
 	{
