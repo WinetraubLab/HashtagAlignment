@@ -1,4 +1,7 @@
 import tensorflow as tf
+import tensorflow_addons as tfa
+from tensorflow.keras import layers
+from tensorflow import keras
 from network_building_blocks import downsample
 
 '''
@@ -19,33 +22,43 @@ def build_model():
     # standard deviation 0.02
     initializer = tf.random_normal_initializer(0., 0.02)
 
+    #Define Normalization layer type: can be "batch" or "instance"
+    NORM_TYPE = "instance"
+
     # Define the structure of the images (OCT image and histology image - real or fake) passing into the discriminator.
     # Define the discriminator input as the concatenation of the OCT_image and hist_image Input Tensors
-    OCT_image = tf.keras.layers.Input(shape=[256, 256, 3], name='OCT_image')
-    hist_image = tf.keras.layers.Input(shape=[256, 256, 3], name='hist_image')
-    disc_input = tf.keras.layers.concatenate([OCT_image, hist_image])  # (bs=batch_size, 256, 256, channels*2)
+    OCT_image = layers.Input(shape=[256, 256, 3], name='OCT_image')
+    hist_image = layers.Input(shape=[256, 256, 3], name='hist_image')
+    disc_input = layers.concatenate([OCT_image, hist_image])  # (bs=batch_size, 256, 256, channels*2)
 
     # Downsample the image dimensions by a factor of 2 three times
-    down1 = downsample(64, 4, False)(disc_input)  # (bs, 128, 128, 64)
-    down2 = downsample(128, 4)(down1)  # (bs, 64, 64, 128)
-    down3 = downsample(256, 4)(down2)  # (bs, 32, 32, 256)
+    down1 = downsample(64, 4, norm_type="none")(disc_input)  # (bs, 128, 128, 64)
+    down2 = downsample(128, 4, norm_type="instance")(down1)  # (bs, 64, 64, 128)
+    down3 = downsample(256, 4, norm_type="instance")(down2)  # (bs, 32, 32, 256)
 
     # Zero pad the height and width by 1 on each side and pass the zero padded result into a convolution layer
-    zero_pad1 = tf.keras.layers.ZeroPadding2D()(down3)  # (bs, 34, 34, 256)
-    conv = tf.keras.layers.Conv2D(512, 4, strides=1, kernel_initializer=initializer,
-                                  use_bias=False)(zero_pad1)  # (bs, 31, 31, 512)
+    zero_pad1 = layers.ZeroPadding2D()(down3)  # (bs, 34, 34, 256)
+    conv = layers.Conv2D(512, 4, strides=1, kernel_initializer=initializer,
+                                  use_bias=NORM_TYPE == "instance")(zero_pad1)  # (bs, 31, 31, 512)
 
-    # Apply batch normalization and a Leaky ReLU activation function
-    batchnorm1 = tf.keras.layers.BatchNormalization()(conv)
-    leaky_relu = tf.keras.layers.LeakyReLU(alpha=0.2)(batchnorm1)
+    # Apply batch or instance normalization
+    if NORM_TYPE == "batch":
+        norm = layers.BatchNormalization()(conv)
+    elif NORM_TYPE == "instance":
+        norm = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-5, center=False, scale=False)(conv)
+    else:
+        raise Exception("NORM_TYPE must be 'instance' or 'batch'")
+
+    # Apply a Leaky ReLU activation function
+    leaky_relu = layers.LeakyReLU(alpha=0.2)(norm)
 
     # Repeat the zero-padding and convolution steps one more time
-    zero_pad2 = tf.keras.layers.ZeroPadding2D()(leaky_relu)  # (bs, 33, 33, 512)
-    last = tf.keras.layers.Conv2D(1, 4, strides=1, kernel_initializer=initializer)(zero_pad2)  # (bs, 30, 30, 1)
+    zero_pad2 = layers.ZeroPadding2D()(leaky_relu)  # (bs, 33, 33, 512)
+    last = layers.Conv2D(1, 4, strides=1, kernel_initializer=initializer)(zero_pad2)  # (bs, 30, 30, 1)
 
     # Define the model constructed by the above layers as well as the associated loss function
-    patch_GAN_model = tf.keras.Model(inputs=[OCT_image, hist_image], outputs=last)
-    loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+    patch_GAN_model = keras.Model(inputs=[OCT_image, hist_image], outputs=last)
+    loss_object = keras.losses.BinaryCrossentropy(from_logits=True)
 
     return patch_GAN_model, loss_object
 
