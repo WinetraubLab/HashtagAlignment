@@ -82,8 +82,8 @@ def upsample(num_filters, filter_size, norm_type, out_pad):
     result = tf.keras.Sequential()
     result.add(
         tf.keras.layers.Conv2DTranspose(num_filters, filter_size, strides=2, padding='same',
-                                        kernel_initializer=initializer, use_bias=norm_type == "instance"),
-                                        output_padding=out_pad)
+                                        kernel_initializer=initializer, use_bias=norm_type == "instance",
+                                        output_padding=out_pad))
 
     # Add a batch or instance normalization layer if specified
     if norm_type == "batch":
