@@ -1,6 +1,6 @@
 import tensorflow as tf
 import os
-import random
+import tensorflow_addons as tfa
 
 '''
 Constructs a TensorFlow dataset object
@@ -11,32 +11,32 @@ Constructs a TensorFlow dataset object
 		 									 histology images. This value can be a blank string or the list can contain 
 		 									 blank string entries, in which case the returned TensorFlow dataset object 
 		 									 cannot be used for training (is_train = False).
-											  
+
 											NOTES:
-											
+
 											1. Folder names must end with '/'
-											 
+
 											2. The order of OCT and histology folder names in the OCT_data_folders list 
 											   and the hist_data_folders list must be in corresponding order across both
 											   lists. 
-											   
+
 											   Example: 
 											   OCT_data_folders  = ['OCT_folder_A/', 'OCT_folder_B/', 'OCT_folder_C/']
 											   hist_data_folders = ['hist_folder_A/', 'hist_folder_B/', 'hist_folder_C/']
-											
+
 											3. If one or more folders of OCT images don't have a corresponding folder of 
 											   histology images, make sure these folder names appear at the end of the 
 											   OCT_data_folders list
-											   
+
 											   Example: 
 											   OCT_data_folders  = ['OCT_folder_A/', 'OCT_folder_C/', 'OCT_folder_B/']
 											   hist_data_folders = ['hist_folder_A/', 'hist_folder_C/']
-											
+
 											4. Corresponding OCT and histology images must have the same file name 
 											   within corresponding data folders. 
-											   
+
 											5. The images must be in jpg format.
-											  
+
 		is_train     	 (boolean)		   - Indicates whether the OCT_data_folders and hist_data_folders are pointing 
 											 to train data or test data. 
 											 ** NOTE: When generating the train dataset, we introduce randomization 
@@ -121,7 +121,6 @@ def load_dataset(OCT_data_folders, hist_data_folders=[''], is_train=True):
 
     return dataset
 
-
 '''
 Applies preprocessing steps to the input image. 
 
@@ -179,7 +178,7 @@ Resizes the input image and corresponding real image to the specified dimensions
 		real_image	(Tensor) : A tensor holding the image of the real translation of the input image
 		height		(int)	 : Desired height for resizing the tensors
 		width		(int)	 : Desired width for resizing the tensors
-	
+
 	Returns:
 		resized_input_image (Tensor) : Resized version of input_image Tensor with dimensions (height x width)
 		resized_real_image	(Tensor) : Resized version of real_image Tensor with dimensions (height x width)
@@ -256,28 +255,18 @@ to increase robustness in the model.
 
 @tf.function
 def random_translate_jitter(input_image, real_image, im_height, im_width, jit_height, jit_width):
-    height = tf.shape(input_image)[0]
-    width = tf.shape(input_image)[1]
+
+    shape = tf.shape(input_image)
+    height = tf.cast(shape[0], tf.float32)
+    width = tf.cast(shape[1], tf.float32)
 
     # translate images by a random amount to increase robustness
     scale = 0.5
-    randx = random.uniform(-1, 1) * width * scale
-    randy = random.uniform(-1, 1) * height * scale
-    input_image = tf.keras.preprocessing.image.apply_affine_transform(input_image,
-                                                                      theta=0,
-                                                                      tx=randx, ty=randy,
-                                                                      shear=0,
-                                                                      zx=1, zy=1,
-                                                                      row_axis=0, col_axis=1, channel_axis=2,
-                                                                      fill_mode='nearest', cval=0.0, order=1)
+    randx = tf.random.uniform(shape=[], minval=-1, maxval=1) * width * scale
+    randy = tf.random.uniform(shape=[], minval=-1, maxval=1) * height * scale
 
-    real_image = tf.keras.preprocessing.image.apply_affine_transform(real_image,
-                                                                     theta=0,
-                                                                     tx=randx, ty=randy,
-                                                                     shear=0,
-                                                                     zx=1, zy=1,
-                                                                     row_axis=0, col_axis=1, channel_axis=2,
-                                                                     fill_mode='nearest', cval=0.0, order=1)
+    input_image = tfa.image.translate(input_image, translations=[randx, randy], fill_mode='nearest')
+    real_image = tfa.image.translate(real_image, translations=[randx, randy], fill_mode='nearest')
 
     # resize
     input_image, real_image = resize(input_image, real_image, jit_height, jit_width)
