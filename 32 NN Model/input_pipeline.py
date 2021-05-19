@@ -47,77 +47,80 @@ Constructs a TensorFlow dataset object
 	Returns:
 		dataset 		 (tf.data.Dataset) - A TensorFlow dataset object containing images from data_folder
 '''
+
+
 def load_dataset(OCT_data_folders, hist_data_folders=[''], is_train=True):
+    BUFFER_SIZE = 400
+    BATCH_SIZE = 1
 
-	BUFFER_SIZE = 400
-	BATCH_SIZE = 1
+    # If OCT_data_folders and OCT_data_folders are strings, convert them each to lists of length 1
+    if isinstance(OCT_data_folders, str):
+        OCT_data_folders = [OCT_data_folders]
+    if isinstance(hist_data_folders, str):
+        hist_data_folders = [hist_data_folders]
 
-	# If OCT_data_folders and OCT_data_folders are strings, convert them each to lists of length 1
-	if isinstance(OCT_data_folders, str):
-		OCT_data_folders = [OCT_data_folders]
-	if isinstance(hist_data_folders, str):
-		hist_data_folders = [hist_data_folders]
+    # Verify that is_train is set to True only if there are no empty folder names in hist_data_folders
+    if ('' in hist_data_folders or len(OCT_data_folders) > len(hist_data_folders)) and is_train:
+        raise Exception('hist_data_folders cannot be empty or cannot contain less folder names than OCT_data_folders '
+                        'when generating a train dataset')
 
-	# Verify that is_train is set to True only if there are no empty folder names in hist_data_folders
-	if ('' in hist_data_folders or len(OCT_data_folders) > len(hist_data_folders)) and is_train:
-		raise Exception('hist_data_folders cannot be empty or cannot contain less folder names than OCT_data_folders '
-						'when generating a train dataset')
+    # Verify that the number of folders in hist_data_folders list is <= the number of folders in hist_data_folders list
+    if len(OCT_data_folders) < len(hist_data_folders):
+        raise Exception('Length of the list hist_data_folders can only be less than or equal to the length of list '
+                        'OCT_data_folders.')
 
-	# Verify that the number of folders in hist_data_folders list is <= the number of folders in hist_data_folders list
-	if len(OCT_data_folders) < len(hist_data_folders):
-		raise Exception('Length of the list hist_data_folders can only be less than or equal to the length of list '
-						'OCT_data_folders.')
+    # Pad the hist_data_folders lists with empty strings for the OCT data folders that don't have corresponding
+    # histology data folders
+    elif len(OCT_data_folders) < len(hist_data_folders):
+        while len(OCT_data_folders) != len(hist_data_folders):
+            hist_data_folders.append('')
 
-	# Pad the hist_data_folders lists with empty strings for the OCT data folders that don't have corresponding
-	# histology data folders
-	elif len(OCT_data_folders) < len(hist_data_folders):
-		while len(OCT_data_folders) != len(hist_data_folders):
-			hist_data_folders.append('')
+    # Construct TensorFlow dataset by iterating through OCT_data_folders and hist_data_folders
+    for i, (OCT_data_folder, hist_data_folder) in enumerate(zip(OCT_data_folders, hist_data_folders)):
+        # Create OCT and histology datasets of all files matching the glob pattern jpg
+        OCT_dataset = tf.data.Dataset.list_files(OCT_data_folder + '*.jpg', shuffle=False)
+        if hist_data_folder != '':
+            hist_dataset = tf.data.Dataset.list_files(hist_data_folder + '*.jpg', shuffle=False)
+            # Verify that each jpg file in the OCT_data_folder contains a corresponding jpg image of the same name in
+            # the hist_data_folder (and vice versa). Throw an exception otherwise.
+            OCT_jpg_names = [os.path.basename(x) for x in tf.data.Dataset.as_numpy_iterator(OCT_dataset)]
+            hist_jpg_names = [os.path.basename(x) for x in tf.data.Dataset.as_numpy_iterator(hist_dataset)]
+            if OCT_jpg_names.sort() != hist_jpg_names.sort():
+                raise Exception(
+                    '1 or more jpg images in {} does not contain a corresponding jpg image of the same name '
+                    'in {} (or vice versa).'.format(OCT_data_folder, hist_data_folder))
 
-	# Construct TensorFlow dataset by iterating through OCT_data_folders and hist_data_folders
-	for i, (OCT_data_folder, hist_data_folder) in enumerate(zip(OCT_data_folders, hist_data_folders)):
-		# Create OCT and histology datasets of all files matching the glob pattern jpg
-		OCT_dataset = tf.data.Dataset.list_files(OCT_data_folder + '*.jpg', shuffle=False)
-		if hist_data_folder != '':
-			hist_dataset = tf.data.Dataset.list_files(hist_data_folder + '*.jpg', shuffle=False)
-			# Verify that each jpg file in the OCT_data_folder contains a corresponding jpg image of the same name in
-			# the hist_data_folder (and vice versa). Throw an exception otherwise.
-			OCT_jpg_names = [os.path.basename(x) for x in tf.data.Dataset.as_numpy_iterator(OCT_dataset)]
-			hist_jpg_names = [os.path.basename(x) for x in tf.data.Dataset.as_numpy_iterator(hist_dataset)]
-			if OCT_jpg_names.sort() != hist_jpg_names.sort():
-				raise Exception('1 or more jpg images in {} does not contain a corresponding jpg image of the same name '
-								'in {} (or vice versa).'.format(OCT_data_folder, hist_data_folder))
+        # If histology images were provided, pair the corresponding OCT and histology images together
+        if hist_data_folder != '':
+            tmp_dataset = tf.data.Dataset.zip((OCT_dataset, hist_dataset))
+        else:
+            # If no histology images are provided, duplicate the OCT images in the dataset for tensor format consistency
+            tmp_dataset = tf.data.Dataset.zip((OCT_dataset, OCT_dataset))
 
-		# If histology images were provided, pair the corresponding OCT and histology images together
-		if hist_data_folder != '':
-			tmp_dataset = tf.data.Dataset.zip((OCT_dataset, hist_dataset))
-		else:
-			# If no histology images are provided, duplicate the OCT images in the dataset for tensor format consistency
-			tmp_dataset = tf.data.Dataset.zip((OCT_dataset, OCT_dataset))
+        # Instantiate dataset on first iteration
+        if i == 0:
+            dataset = tmp_dataset
+        # Append to tmp_dataset to dataset
+        else:
+            dataset.concatenate(tmp_dataset)
 
-		# Instantiate dataset on first iteration
-		if i == 0:
-			dataset = tmp_dataset
-		# Append to tmp_dataset to dataset
-		else:
-			dataset.concatenate(tmp_dataset)
-
-	# Apply the _preprocess_image function to each element of the OCT and histology/OCT datasets and return
-	# a new dataset containing the transformed elements, in the same order as they appeared before pre-processing
-	dataset = dataset.map(lambda OCT, hist: _preprocess_image(OCT, hist, is_train),
+    # Apply the _preprocess_image function to each element of the OCT and histology/OCT datasets and return
+    # a new dataset containing the transformed elements, in the same order as they appeared before pre-processing
+    dataset = dataset.map(lambda OCT, hist: _preprocess_image(OCT, hist, is_train),
                           num_parallel_calls=tf.data.AUTOTUNE)
 
-	# Randomly shuffle the elements of the dataset
-	# The dataset fills a buffer with BUFFER_SIZE elements, then randomly samples elements from this buffer,
-	# replacing the selected elements with new elements. For perfect shuffling, a buffer size >= the full size
-	# of the dataset is needed
-	dataset = dataset.shuffle(BUFFER_SIZE)
+    # Randomly shuffle the elements of the dataset
+    # The dataset fills a buffer with BUFFER_SIZE elements, then randomly samples elements from this buffer,
+    # replacing the selected elements with new elements. For perfect shuffling, a buffer size >= the full size
+    # of the dataset is needed
+    dataset = dataset.shuffle(BUFFER_SIZE)
 
-	# Combine consecutive elements of this dataset into batches
-	# The components of the resulting element will have an additional outer dimension which will be BATCH_SIZE
-	dataset = dataset.batch(BATCH_SIZE)
+    # Combine consecutive elements of this dataset into batches
+    # The components of the resulting element will have an additional outer dimension which will be BATCH_SIZE
+    dataset = dataset.batch(BATCH_SIZE)
 
-	return dataset
+    return dataset
+
 
 '''
 Applies preprocessing steps to the input image. 
@@ -135,36 +138,38 @@ and then the image may be randomly chosen to be mirrored. If the image is from t
 	Returns:
 		preprocessed_image (Tensor) : The preprocessed OCT image
 '''
+
+
 def _preprocess_image(OCT_image_file, hist_image_file, is_train):
+    IMG_JIT_WIDTH = 286
+    IMG_JIT_HEIGHT = 286
+    IMG_WIDTH = 256
+    IMG_HEIGHT = 256
 
-	IMG_JIT_WIDTH = 286
-	IMG_JIT_HEIGHT = 286
-	IMG_WIDTH = 256
-	IMG_HEIGHT = 256
+    # Read in the images, decode the JPEG-encoded images to uint8 tensor, and cast them as a set of floats
+    OCT_image = tf.io.read_file(OCT_image_file)
+    OCT_image = tf.image.decode_jpeg(OCT_image)
+    OCT_image = tf.cast(OCT_image, tf.float32)
 
-	# Read in the images, decode the JPEG-encoded images to uint8 tensor, and cast them as a set of floats
-	OCT_image = tf.io.read_file(OCT_image_file)
-	OCT_image = tf.image.decode_jpeg(OCT_image)
-	OCT_image = tf.cast(OCT_image, tf.float32)
+    hist_image = tf.io.read_file(hist_image_file)
+    hist_image = tf.image.decode_jpeg(hist_image)
+    hist_image = tf.cast(hist_image, tf.float32)
 
-	hist_image = tf.io.read_file(hist_image_file)
-	hist_image = tf.image.decode_jpeg(hist_image)
-	hist_image = tf.cast(hist_image, tf.float32)
+    if is_train:
+        # Translate images by a random amount to increase robustness. Also apply random jittering (resize by
+        # 286 x 286 x 3, random crop to 256 x 256 x 3 image size, and apply random mirroring)
+        OCT_image, hist_image = random_translate_jitter(OCT_image, hist_image, IMG_HEIGHT, IMG_WIDTH, IMG_JIT_HEIGHT,
+                                                        IMG_JIT_WIDTH)
 
-	if is_train:
-		# Translate images by a random amount to increase robustness. Also apply random jittering (resize by
-		# 286 x 286 x 3, random crop to 256 x 256 x 3 image size, and apply random mirroring)
-		OCT_image, hist_image = random_translate_jitter(OCT_image, hist_image, IMG_HEIGHT, IMG_WIDTH, IMG_JIT_HEIGHT,
-														IMG_JIT_WIDTH)
+    else:
+        # resize to 256 x 256 x 3 image size
+        OCT_image, hist_image = resize(OCT_image, hist_image, IMG_HEIGHT, IMG_WIDTH)
 
-	else:
-		# resize to 256 x 256 x 3 image size
-		OCT_image, hist_image = resize(OCT_image, hist_image, IMG_HEIGHT, IMG_WIDTH)
+    # normalize image values to be in range [-1, 1]
+    OCT_image, hist_image = normalize(OCT_image, hist_image)
 
-	# normalize image values to be in range [-1, 1]
-	OCT_image, hist_image = normalize(OCT_image, hist_image)
+    return (OCT_image, hist_image)
 
-	return (OCT_image, hist_image)
 
 '''
 Resizes the input image and corresponding real image to the specified dimensions
@@ -179,12 +184,14 @@ Resizes the input image and corresponding real image to the specified dimensions
 		resized_input_image (Tensor) : Resized version of input_image Tensor with dimensions (height x width)
 		resized_real_image	(Tensor) : Resized version of real_image Tensor with dimensions (height x width)
 '''
+
+
 def resize(input_image, real_image, height, width):
+    resized_input_image = tf.image.resize(input_image, [height, width], method=tf.image.ResizeMethod.BICUBIC)
+    resized_real_image = tf.image.resize(real_image, [height, width], method=tf.image.ResizeMethod.BICUBIC)
 
-	resized_input_image = tf.image.resize(input_image, [height, width], method=tf.image.ResizeMethod.BICUBIC)
-	resized_real_image = tf.image.resize(real_image, [height, width], method=tf.image.ResizeMethod.BICUBIC)
+    return resized_input_image, resized_real_image
 
-	return resized_input_image, resized_real_image
 
 '''
 Randomly crops the input image and corresponding real image to the specified dimensions
@@ -199,12 +206,14 @@ Randomly crops the input image and corresponding real image to the specified dim
 		cropped_image[0]	(Tensor) : Cropped version of input_image Tensor with dimensions (height x width)
 		cropped_image[1]	(Tensor) : Cropped version of real_image Tensor with dimensions (height x width)
 '''
+
+
 def random_crop(input_image, real_image, height, width):
+    stacked_image = tf.stack([input_image, real_image], axis=0)
+    cropped_image = tf.image.random_crop(stacked_image, size=[2, height, width, 3])
 
-	stacked_image = tf.stack([input_image, real_image], axis=0)
-	cropped_image = tf.image.random_crop(stacked_image, size=[2, height, width, 3])
+    return cropped_image[0], cropped_image[1]
 
-	return cropped_image[0], cropped_image[1]
 
 '''
 Normalizes the input image and corresponding real image to have values in range [-1, 1]
@@ -217,12 +226,14 @@ Normalizes the input image and corresponding real image to have values in range 
 		norm_input_image	(Tensor) : Normalized version of input_image Tensor 
 		norm_real_image		(Tensor) : Normalized version of real_image Tensor 
 '''
+
+
 def normalize(input_image, real_image):
+    norm_input_image = (input_image / 127.5) - 1
+    norm_real_image = (real_image / 127.5) - 1
 
-	norm_input_image = (input_image / 127.5) - 1
-	norm_real_image = (real_image / 127.5) - 1
+    return norm_input_image, norm_real_image
 
-	return norm_input_image, norm_real_image
 
 '''
 Translates images by a random amount to increase robustness. Also apply random jittering (resize by
@@ -241,41 +252,42 @@ to increase robustness in the model.
 		final_input_image 	(Tensor) : Translated and jittered version of input_image Tensor with dimensions (im_height x im_width)
 		final_real_image	(Tensor) : Translated and jittered version of real_image Tensor with dimensions (im_height x im_width)
 '''
+
+
 @tf.function
 def random_translate_jitter(input_image, real_image, im_height, im_width, jit_height, jit_width):
+    height = tf.shape(input_image)[0]
+    width = tf.shape(input_image)[1]
 
-	height = tf.shape(input_image)[0]
-	width = tf.shape(input_image)[1]
+    # translate images by a random amount to increase robustness
+    scale = 0.5
+    randx = random.uniform(-1, 1) * width * scale
+    randy = random.uniform(-1, 1) * height * scale
+    input_image = tf.keras.preprocessing.image.apply_affine_transform(input_image,
+                                                                      theta=0,
+                                                                      tx=randx, ty=randy,
+                                                                      shear=0,
+                                                                      zx=1, zy=1,
+                                                                      row_axis=0, col_axis=1, channel_axis=2,
+                                                                      fill_mode='nearest', cval=0.0, order=1)
 
-	# translate images by a random amount to increase robustness
-	scale = 0.5
-	randx = random.uniform(-1, 1) * width * scale
-	randy = random.uniform(-1, 1) * height * scale
-	input_image = tf.keras.preprocessing.image.apply_affine_transform(input_image,
-																	  theta=0,
-																	  tx=randx, ty=randy,
-																	  shear=0,
-																	  zx=1, zy=1,
-																	  row_axis=0, col_axis=1, channel_axis=2,
-																	  fill_mode='nearest', cval=0.0, order=1)
+    real_image = tf.keras.preprocessing.image.apply_affine_transform(real_image,
+                                                                     theta=0,
+                                                                     tx=randx, ty=randy,
+                                                                     shear=0,
+                                                                     zx=1, zy=1,
+                                                                     row_axis=0, col_axis=1, channel_axis=2,
+                                                                     fill_mode='nearest', cval=0.0, order=1)
 
-	real_image = tf.keras.preprocessing.image.apply_affine_transform(real_image,
-																	 theta=0,
-																	 tx=randx, ty=randy,
-																	 shear=0,
-																	 zx=1, zy=1,
-																	 row_axis=0, col_axis=1, channel_axis=2,
-																	 fill_mode='nearest', cval=0.0, order=1)
+    # resize
+    input_image, real_image = resize(input_image, real_image, jit_height, jit_width)
 
-	# resize
-	input_image, real_image = resize(input_image, real_image, jit_height, jit_width)
+    # random crop
+    out_input_image, out_real_image = random_crop(input_image, real_image, im_height, im_width)
 
-	# random crop
-	out_input_image, out_real_image = random_crop(input_image, real_image, im_height, im_width)
+    # random mirroring
+    if tf.random.uniform(()) > 0.5:
+        out_input_image = tf.image.flip_left_right(out_input_image)
+        out_real_image = tf.image.flip_left_right(out_real_image)
 
-	# random mirroring
-	if tf.random.uniform(()) > 0.5:
-		out_input_image = tf.image.flip_left_right(out_input_image)
-		out_real_image = tf.image.flip_left_right(out_real_image)
-
-	return out_input_image, out_real_image
+    return out_input_image, out_real_image
