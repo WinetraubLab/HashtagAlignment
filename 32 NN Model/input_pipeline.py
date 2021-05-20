@@ -254,7 +254,7 @@ to increase robustness in the model.
 
 
 @tf.function
-def random_translate_jitter(input_image, real_image, im_height, im_width, jit_height, jit_width):
+def random_translate_jitter(input_image, real_image, im_height=256, im_width=256, jit_height=286, jit_width=286):
 
     shape = tf.shape(input_image)
     height = tf.cast(shape[0], tf.float32)
