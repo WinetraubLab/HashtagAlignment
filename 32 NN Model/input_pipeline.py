@@ -146,8 +146,9 @@ def _preprocess_image(OCT_image_file, hist_image_file, is_train):
     IMG_HEIGHT = 256
 
     # Read in the images, decode the JPEG-encoded images to uint8 tensor, and cast them as a set of floats
+    # Convert the OCT from grayscale to RGB
     OCT_image = tf.io.read_file(OCT_image_file)
-    OCT_image = tf.image.decode_jpeg(OCT_image)
+    OCT_image = tf.image.decode_jpeg(OCT_image, channels=3)
     OCT_image = tf.cast(OCT_image, tf.float32)
 
     hist_image = tf.io.read_file(hist_image_file)
