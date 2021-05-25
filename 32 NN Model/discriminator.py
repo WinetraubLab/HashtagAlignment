@@ -14,7 +14,7 @@ The shape of the output after the last layer is (batch_size, 30, 30, 1). Each 30
     Returns:
         patch_GAN_model     (TensorFlow.keras.Model)  : The constructed keras Model object with the desired PatchGAN 
                                                         structure 
-        loss_object         (TensorFlow.keras.losses) : The type of GAN loss that the generator will incorporate
+        loss_object         (TensorFlow.keras.losses) : The type of GAN loss that the discriminator will incorporate
 '''
 def build_model():
 
