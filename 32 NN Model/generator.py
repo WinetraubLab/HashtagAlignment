@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from network_building_blocks import downsample, upsample
 from tensorflow import keras
-from tensorflow.keras import layers
+from keras import layers
 
 '''
 Constructs ResNet-based generator with that consists of 9 Resnet blocks between a few downsampling/upsampling operations.
@@ -23,6 +23,7 @@ def build_model():
     NUM_FILTERS = 64  # Number of filters in last convolutional layer
     USE_DROPOUT = True
     NORM_TYPE = "instance"  # Define Normalization layer type: can be "batch" or "instance"
+    NUM_UP_DOWN_SAMPLING = 2 # Number of upsampling and downsampling layers
 
     # Weights of all convolutional layers are randomly initialized from a Gaussian distribution with mean 0 and
     # standard deviation 0.02
@@ -48,8 +49,7 @@ def build_model():
     downsample_input = layers.ReLU()(norm1)
 
     # Apply downsampling layers
-    n_downsampling = 2
-    for i in range(n_downsampling):
+    for i in range(NUM_UP_DOWN_SAMPLING):
         mult = 2 ** i
         # Refer to:
         # https://stackoverflow.com/questions/53819528/how-does-tf-keras-layers-conv2d-with-padding-same-and-strides-1-behave
@@ -58,7 +58,7 @@ def build_model():
         downsample_input = layers.ZeroPadding2D(padding=1)(downsample_input)
         downsample_input = downsample(NUM_FILTERS * mult * 2, 3, norm_type=NORM_TYPE, apply_leaky_relu=False)(downsample_input)
 
-    mult = 2 ** n_downsampling
+    mult = 2 ** NUM_UP_DOWN_SAMPLING
     # Apply ResNet blocks
     resnet_input = downsample_input
     for i in range(NUM_BLOCKS):
@@ -66,9 +66,8 @@ def build_model():
 
     upsample_input = resnet_input
     # Upsampling Block
-    for i in range(n_downsampling):  # add upsampling layers
-        mult = 2 ** (n_downsampling - i)
-        upsample_input = layers.ZeroPadding2D(padding=1)(upsample_input)
+    for i in range(NUM_UP_DOWN_SAMPLING):  # add upsampling layers
+        mult = 2 ** (NUM_UP_DOWN_SAMPLING - i)
         upsample_input = upsample(int(NUM_FILTERS * mult) / 2, 3, norm_type=NORM_TYPE, out_pad=1)(upsample_input)
 
     # Pad the upsampled tensor using the reflection of the input boundary (similar to nn.ReflectionPad2d in PyTorch)

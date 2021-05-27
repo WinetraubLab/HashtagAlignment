@@ -31,7 +31,7 @@ def downsample(num_filters, filter_size, norm_type, apply_leaky_relu=True):
     # Define the layers within the downsample block (Conv -> BatchNorm -> Leaky ReLU)
     result = tf.keras.Sequential()
     result.add(
-      tf.keras.layers.Conv2D(num_filters, filter_size, strides=2, padding='same', kernel_initializer=initializer,
+      tf.keras.layers.Conv2D(num_filters, filter_size, strides=2, kernel_initializer=initializer,
                              use_bias=norm_type == "instance"))
 
     # Add a batch or instance normalization layer if specified
