@@ -107,7 +107,7 @@ def load_dataset(OCT_data_folders, hist_data_folders=[''], is_train=True):
     # Apply the _preprocess_image function to each element of the OCT and histology/OCT datasets and return
     # a new dataset containing the transformed elements, in the same order as they appeared before pre-processing
     dataset = dataset.map(lambda OCT, hist: _preprocess_image(OCT, hist, is_train),
-                          num_parallel_calls=tf.data.AUTOTUNE)
+                          num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
     # Randomly shuffle the elements of the dataset
     # The dataset fills a buffer with BUFFER_SIZE elements, then randomly samples elements from this buffer,
@@ -266,8 +266,8 @@ def random_translate_jitter(input_image, real_image, im_height=256, im_width=256
     randx = tf.random.uniform(shape=[], minval=-1, maxval=1) * width * scale
     randy = tf.random.uniform(shape=[], minval=-1, maxval=1) * height * scale
 
-    input_image = tfa.image.translate(input_image, translations=[randx, randy], fill_mode='nearest')
-    real_image = tfa.image.translate(real_image, translations=[randx, randy], fill_mode='nearest')
+    input_image = tfa.image.translate(input_image, translations=[randx, randy])#, fill_mode='nearest')
+    real_image = tfa.image.translate(real_image, translations=[randx, randy])#, fill_mode='nearest')
 
     # resize
     input_image, real_image = resize(input_image, real_image, jit_height, jit_width)

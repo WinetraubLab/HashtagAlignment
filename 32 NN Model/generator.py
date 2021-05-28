@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from network_building_blocks import downsample, upsample
 from tensorflow import keras
-from keras import layers
+from tensorflow.keras import layers
 
 '''
 Constructs ResNet-based generator with that consists of 9 Resnet blocks between a few downsampling/upsampling operations.
