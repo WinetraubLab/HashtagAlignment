@@ -5,15 +5,20 @@ import os
 
 if __name__ == '__main__':
 
+    # Specify the number of epochs at which the learning rate should be constant and the number of epochs at which
+    # the learning rate should decay
+    NUM_EPOCHS_CONST_LR = 100
+    NUM_EPOCHS_DECAY_LR = 100
+    EPOCHS = NUM_EPOCHS_CONST_LR + NUM_EPOCHS_DECAY_LR
+
     train_dataset = ip.load_dataset('patches_1024px_512px/train_A/', 'patches_1024px_512px/train_B/', is_train=True)
-    model = OCT2HistModel()
+    model = OCT2HistModel(num_epochs_const_lr=NUM_EPOCHS_CONST_LR, num_epochs_decay_lr=NUM_EPOCHS_DECAY_LR, is_train=True)
     checkpoint_dir = './training_checkpoints'
     checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
     checkpoint = tf.train.Checkpoint(generator_optimizer=model.generator_optimizer,
                                      discriminator_optimizer=model.discriminator_optimizer,
                                      generator=model.generator,
                                      discriminator=model.discriminator)
-    EPOCHS = 200
 
     for epoch in range(EPOCHS):
         start = time.time()

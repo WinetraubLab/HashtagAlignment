@@ -2,6 +2,7 @@ import tensorflow as tf
 import discriminator
 import generator
 import datetime
+from learning_rate_scheduler import DelayedLinearDecayLR
 
 '''
 This class contains all the components of the OCT2Hist model and with the train_step method. 
@@ -25,13 +26,30 @@ This class contains all the components of the OCT2Hist model and with the train_
         summary_writer           (TensorFlow.summary.SummaryWriter) : The SummaryWriter object which tracks metrics (loss, 
                                                                       accuracy, etc.) that can be viewed on TensorBoard
 '''
+
+
 class OCT2HistModel:
 
-    def __init__(self):
+    '''
+    Initialize class variables
+
+    Parameters:
+        num_epochs_const_lr (int)       : The number of epochs at which the learning rate should be constant
+        num_epochs_decay_lr (int)       : The number of epochs at which the learning rate should decay
+        is_train            (Boolean)   : Indicates whether the model is being used for training or testing
+    '''
+    def __init__(self, num_epochs_const_lr=0, num_epochs_decay_lr=0, is_train=False):
         self.discriminator, self.discriminator_loss = discriminator.build_model()
         self.generator, self.generator_loss = generator.build_model()
-        self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
-        self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+
+        if is_train:
+            self.generator_optimizer = tf.keras.optimizers.Adam(DelayedLinearDecayLR(2e-4, num_epochs_const_lr,
+                                                                                     num_epochs_decay_lr), beta_1=0.5)
+            self.discriminator_optimizer = tf.keras.optimizers.Adam(DelayedLinearDecayLR(2e-4, num_epochs_const_lr,
+                                                                                         num_epochs_decay_lr), beta_1=0.5)
+        else:
+            self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+            self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 
         log_dir = "logs/"
         self.summary_writer = tf.summary.create_file_writer(
