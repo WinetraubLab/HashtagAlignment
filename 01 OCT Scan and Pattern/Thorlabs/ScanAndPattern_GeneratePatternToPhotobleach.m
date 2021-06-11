@@ -95,9 +95,9 @@ if (~config.photobleach.isPhotobleachEnabled)
 end
 
 %% Seperate Photobleaching
-
+epsilon = 10e-3; % mm, small buffer number
 [ptStart_Scan,ptEnd_Scan] = yOCTApplyEnableZone(ptStart, ptEnd, ...
-    @(x,y)(abs(x)<ini.RangeMaxX/2 & abs(y)<ini.RangeMaxX/2) , 10e-3);
+    @(x,y)(abs(x)<ini.RangeMaxX/2-epsilon & abs(y)<ini.RangeMaxY/2-epsilon) , 10e-3);
 
 %Overview / extended
 %Dont photobleach in that area during overview, it is to be photobleached
@@ -127,3 +127,8 @@ axis ij;
 grid on;
 xlabel('x[mm]');
 ylabel('y[mm]');
+
+%% Check that length of lines is never more than what we can
+if any( sqrt(sum((ptStart_Scan - ptEnd_Scan).^2)) > ini.RangeMaxX)
+    error('One (or more) of the photobleach lines is longer than the allowed size, this might cause photobleaching errors!');
+end
