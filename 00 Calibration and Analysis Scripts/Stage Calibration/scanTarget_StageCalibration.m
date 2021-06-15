@@ -78,7 +78,7 @@ end
 
 %% Y
 for i=1:nJumps
-    dy = motorMovement*(i-1)+L;
+    dy = motorMovement*(i-1)+L*2;
     
     if isDoMove
         ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0+dy); %Movement [mm]
