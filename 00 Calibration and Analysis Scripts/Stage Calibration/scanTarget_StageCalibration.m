@@ -15,7 +15,10 @@ subjectPaths = s3GetAllSubjectsInLib();
 subjectPath = subjectPaths{end};
 config = awsReadJSON([subjectPath 'OCTVolumes/ScanConfig.json']);
 
-isDoMove = false; % Would you like the stage to actually move or just pretend for testing?
+% Mock option: When set to true the stage will not move and we will not
+% photobleach. Use "true" when you would like to see the output without
+% physcaily running the test.
+isMockTrial = false;
 
 %% Create a photobleach template, one for x galvo and the other for y galvo
 L = config.photobleach.lineLength/2;
@@ -24,11 +27,11 @@ l = L/2;
 
 xGalvoTemplate_Start = [ ...
      0,  d, ;...
-    -L, -L, ;...
+    -L, -l, ;...
     ];
 xGalvoTemplate_End = [ ...
      0, d, ;...
-     L, L, ;...
+     L, l, ;...
     ];
 
 yGalvoTemplate_Start = [ ...
@@ -44,23 +47,32 @@ yGalvoTemplate_End = [ ...
 overallLines_Start = [];
 overallLines_End = [];
 
-if isDoMove
-    ThorlabsImagerNETLoadLib(); %Init library
+if ~isMockTrial
     
+    fprintf('%s Initialzing... \n\t(if Matlab is taking more than 2 minutes to finish this step, restart matlab and try again)\n',datestr(datetime));
+    
+    ThorlabsImagerNETLoadLib(); %Init library
     x0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('x'); %Init stage
     y0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('y'); %Init stage
+    %ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(octProbePath); %Init OCT
+    
+    fprintf('%s Initialzing Completed.\n',datestr(datetime));
 end
 
 %% X
+fprintf('%s X Stage Lines...\n',datestr(datetime));
 for i=1:nJumps
     dx = motorMovement*(i-1);
     
-    if isDoMove
+    if ~isMockTrial 
+        fprintf('%s Line set %d of %d.\n',datestr(datetime),i,nJumps);
         ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',x0+dx); %Movement [mm]
+        
         yOCTPhotobleachTile(xGalvoTemplate_Start,xGalvoTemplate_End,...
             'octProbePath',octProbePath,...
             'exposure',config.photobleach.exposure,...
-            'nPasses',config.photobleach.nPasses); 
+            'nPasses',config.photobleach.nPasses, ...
+            'v', false); 
     end
     
     tmp_start = xGalvoTemplate_Start; tmp_start(1,:) = tmp_start(1,:)+dx;
@@ -71,21 +83,24 @@ for i=1:nJumps
 end
 
 %Return stage to original position
-if isDoMove
+if ~isMockTrial
     ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',x0);
     ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0);
 end
 
 %% Y
+fprintf('%s Y Stage Lines...\n',datestr(datetime));
 for i=1:nJumps
     dy = motorMovement*(i-1)+L*2;
     
-    if isDoMove
+    if ~isMockTrial
+        fprintf('%s Line set %d of %d.\n',datestr(datetime),i,nJumps);
         ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0+dy); %Movement [mm]
         yOCTPhotobleachTile(yGalvoTemplate_Start,yGalvoTemplate_End,...
             'octProbePath',octProbePath,...
             'exposure',config.photobleach.exposure,...
-            'nPasses',config.photobleach.nPasses); 
+            'nPasses',config.photobleach.nPasses, ...
+            'v', false); 
     end
     
     tmp_start = yGalvoTemplate_Start; tmp_start(2,:) = tmp_start(2,:)+dy;
@@ -96,13 +111,12 @@ for i=1:nJumps
 end
 
 %Return stage to original position
-if isDoMove
+if ~isMockTrial
     ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',x0);
     ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0);
 end
 
-
-%% Drow
+%% Plot
 figure(1);
 for i=1:length(overallLines_Start)
     plot(...
@@ -113,3 +127,12 @@ for i=1:length(overallLines_Start)
     end
 end
 hold off;
+axis equal;
+ylim([...
+    round(min([overallLines_Start(2,:) overallLines_End(2,:)])-0.5)
+    round(max([overallLines_Start(2,:) overallLines_End(2,:)])+0.5) ...
+    ]);
+xlabel('x[mm]');
+ylabel('y[mm]');
+title('Photobleach Pattern');
+grid on;
