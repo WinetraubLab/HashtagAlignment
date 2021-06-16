@@ -2,14 +2,14 @@
 
 
 %% Inputs
-photobleachImagePath = 's3://delazerdamatlab/Users/Aidan/Photobleach Lines Experiments/Photobleach 6.15.2021/Experiment_TileScan_003_Merging001_z0_ch00.tif';
-imageResolution = 3; % microns per pixel
+photobleachImagePath = 's3://delazerdamatlab/Users/Aidan/Photobleach Lines Experiments/Photobleach 6.16.2021/Experiment_TileScan_001_Merging001_z0_ch00.tif';
+imageResolution = 2.8; % microns per pixel. 1x is 2.8 microns per pixel
 
 lineRatio = 5; % Ratio between two long lines vs long line to its short line
                % This ratio is motorMovement/d in scanTarget_StageCalibration.m
 
-mmToDeviceUnitsX = 34609.935; %100000/2.9151; % Get this number from ThrolabsImagerStage.cpp
-mmToDeviceUnitsY = 34862.567; %100000/2.9151; % Get this number from ThrolabsImagerStage.cpp
+mmToDeviceUnitsX = 33998; %100000/2.9151; % Get this number from ThrolabsImagerStage.cpp
+mmToDeviceUnitsY = 33998; %100000/2.9151; % Get this number from ThrolabsImagerStage.cpp
                
 %% Read Image
 dsIm = imageDatastore(photobleachImagePath);
@@ -96,6 +96,10 @@ switch(directionStr)
 end
 roi = round(getrect());
 
+% Add x% on height to capture a baseline without photobleaching area
+%roi(2) = round(roi(2) - 0.1*roi(4));
+%roi(4) = round(roi(4) + 0.2*roi(4));
+
 im_x = im(roi(2)+(1:roi(4)),roi(1)+(1:roi(3)));
 imshow(im_x);
 %% Choose which are the good line set
@@ -152,7 +156,7 @@ lineRatio_measured = meanLargeLineDiff_pix/meanLargeLineSmallLineDiff_pix;
 fprintf('%s Motor: Distance Between Large Lines is %.4f X Distance Between Large Line to Small Line.\n\tWe would like this ratio to be %.4f.\n',...
     directionStr,lineRatio_measured);
 fprintf('Please correct mmToDeviceUnits from %.8g to NEW VALUE: %.8g\n',...
-    mmToDeviceUnits,mmToDeviceUnits*lineRatio_measured/lineRatio);
+    mmToDeviceUnits,mmToDeviceUnits*lineRatio/lineRatio_measured);
 
 end
 
@@ -216,20 +220,25 @@ end
 
 function pt1 = findLineSeperation_sub(im_roi,imageResolution)
 
+
 % Get data and smooth
-d1 = mean(im_roi,1);
-f = fft(d1); f(2:round(end*0.90)) = 0; d1 = abs(ifft(f));
+d = mean(im_roi,1);
+f = fftshift(fft(d));
+flt = ones(size(f));
+flt(round(end/2+(-2:2)))=0; % Delete DC Component
+flt(1:round(end*0.15))=0;
+flt(round(end*0.85):end)=0;
+d = abs(ifft(fftshift(f.*flt)));
 
 % Find line positions
-[d1_pt,pt1] = findpeaks(-d1, ...
-    'MinPeakProminence',2,..., ... Gray scale units
-    'MinPeakWidth',20/imageResolution ... Min distance between peaks should be ~20 microns
+[d1_pt,pt1] = findpeaks(d, ...
+    'MinPeakProminence',20 ... Gray scale units
+    ...'MinPeakWidth',20/imageResolution ... Min distance between peaks should be ~20 microns
     );
-d1_pt = -d1_pt;
 
 % Plot
 figure(225);
-plot(d1); 
+plot(d); 
 hold on; 
 plot(pt1,d1_pt,'*');
 hold off;
