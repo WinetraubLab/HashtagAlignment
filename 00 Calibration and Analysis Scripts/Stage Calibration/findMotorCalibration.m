@@ -156,7 +156,7 @@ lineRatio_measured = meanLargeLineDiff_pix/meanLargeLineSmallLineDiff_pix;
 fprintf('%s Motor: Distance Between Large Lines is %.4f X Distance Between Large Line to Small Line.\n\tWe would like this ratio to be %.4f.\n',...
     directionStr,lineRatio_measured);
 fprintf('Please correct mmToDeviceUnits from %.8g to NEW VALUE: %.8g\n',...
-    mmToDeviceUnits,mmToDeviceUnits*lineRatio/lineRatio_measured);
+    mmToDeviceUnits,mmToDeviceUnits*lineRatio_measured/lineRatio);
 
 end
 
