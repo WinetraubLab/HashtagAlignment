@@ -2,15 +2,15 @@
 
 
 %% Inputs
-photobleachImagePath = 's3://delazerdamatlab/Users/Aidan/Photobleach Lines Experiments/Photobleach 6.16.2021/Experiment_TileScan_001_Merging001_z0_ch00.tif';
+photobleachImagePath = 's3://delazerdamatlab/Users/Aidan/Photobleach Lines Experiments/Photobleach 6.17.2021/Experiment_TileScan_001_Merging001_z0_ch00.tif';
 imageResolution = 2.8; % microns per pixel. 1x is 2.8 microns per pixel
 
 lineRatio = 5; % Ratio between two long lines vs long line to its short line
                % This ratio is motorMovement/d in scanTarget_StageCalibration.m
 
-mmToDeviceUnitsX = 33998; %100000/2.9151; % Get this number from ThrolabsImagerStage.cpp
-mmToDeviceUnitsY = 33998; %100000/2.9151; % Get this number from ThrolabsImagerStage.cpp
-               
+mmToDeviceUnitsX = 34609.935; %100000/2.9151; % Get this number from ThrolabsImagerStage.cpp
+mmToDeviceUnitsY = 34862.567; %100000/2.9151; % Get this number from ThrolabsImagerStage.cpp
+
 %% Read Image
 dsIm = imageDatastore(photobleachImagePath);
 im = dsIm.read();
