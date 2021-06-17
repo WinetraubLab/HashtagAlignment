@@ -18,7 +18,7 @@ config = awsReadJSON([subjectPath 'OCTVolumes/ScanConfig.json']);
 % Mock option: When set to true the stage will not move and we will not
 % photobleach. Use "true" when you would like to see the output without
 % physcaily running the test.
-isMockTrial = true;
+isMockTrial = false;
 
 %% Create a photobleach template, one for x galvo and the other for y galvo
 L = config.photobleach.lineLength/2;
