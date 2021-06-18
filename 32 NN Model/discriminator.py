@@ -32,9 +32,12 @@ def build_model():
     disc_input = layers.concatenate([OCT_image, hist_image])  # (bs=batch_size, 256, 256, channels*2)
 
     # Downsample the image dimensions by a factor of 2 three times
-    down1 = downsample(64, 4, norm_type="none")(disc_input)  # (bs, 128, 128, 64)
-    down2 = downsample(128, 4, norm_type="instance")(down1)  # (bs, 64, 64, 128)
-    down3 = downsample(256, 4, norm_type="instance")(down2)  # (bs, 32, 32, 256)
+    down1_input = layers.ZeroPadding2D(padding=1)(disc_input)
+    down1 = downsample(64, 4, norm_type="none")(down1_input)  # (bs, 128, 128, 64)
+    down2_input = layers.ZeroPadding2D(padding=1)(down1)
+    down2 = downsample(128, 4, norm_type="instance")(down2_input)  # (bs, 64, 64, 128)
+    down3_input = layers.ZeroPadding2D(padding=1)(down2)
+    down3 = downsample(256, 4, norm_type="instance")(down3_input)  # (bs, 32, 32, 256)
 
     # Zero pad the height and width by 1 on each side and pass the zero padded result into a convolution layer
     zero_pad1 = layers.ZeroPadding2D()(down3)  # (bs, 34, 34, 256)
@@ -84,6 +87,6 @@ def compute_loss(loss_object, disc_real_output, disc_generated_output):
     generated_loss = loss_object(tf.zeros_like(disc_generated_output), disc_generated_output)
 
     # Combine both cross entropy losses (See the pix2pix paper for more details: https://arxiv.org/abs/1611.07004)
-    total_disc_loss = real_loss + generated_loss
+    total_disc_loss = (real_loss + generated_loss) * 0.5
 
     return total_disc_loss
