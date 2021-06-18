@@ -148,7 +148,7 @@ def compute_loss(loss_object, disc_generated_output, gen_output, target):
 
     # Weight set to balance between the adversarial GAN loss and the L1 loss. This parameter is set to 100 in the
     # pix2pix paper
-    LAMBDA = 100
+    LAMBDA = 100.0
 
     # Binary sigmoid cross entropy loss of the fake histology images and array of ones
     # We send an array of ones the same shape as disc_generated_output because we want to train the generator to create
