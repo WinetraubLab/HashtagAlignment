@@ -56,7 +56,7 @@ json1 = yOCTPhotobleachTile(pattern1_Start,pattern1_End,...
     'nPasses',config.photobleach.nPasses,...
     'skipHardware',isMockTrial, ...
     'oct2stageXYAngleDeg',oct2stageXYAngleDeg ...
-    ); 
+    'v',true); 
 
 fprintf('%s Pattern 2, drow a cross in the middle of FOV for every position...\n',datestr(datetime));
 if ~isMockTrial
@@ -67,7 +67,7 @@ ycc = [0 0 0  L -L];
 for i=1:length(xcc)
     
     % Put pattern at the center of FOV
-    yOCTStageMoveTo(x0+xcc(i),y0+ycc(i));
+    yOCTStageMoveTo(x0+xcc(i),y0+ycc(i),NaN,true);
     
     % Photobleach
     json2 = yOCTPhotobleachTile(template2_Start,template2_End,...
