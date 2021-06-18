@@ -78,6 +78,8 @@ for i=1:length(xcc)
         'skipHardware',isMockTrial ...
         ); 
 end
+% Clean up
+yOCTStageMoveTo(x0,y0,NaN,true);
 
 %% Plot
 isPlot2ndPattern = true;
