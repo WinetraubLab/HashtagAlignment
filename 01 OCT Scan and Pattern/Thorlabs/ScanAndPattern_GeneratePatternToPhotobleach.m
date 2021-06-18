@@ -2,6 +2,8 @@ function [ptStart_Scan, ptEnd_Scan, ptStart_Extended, ptEnd_Extended] = ScanAndP
 %This auxilary function will generate line set to photobleach as part of
 %the scan and the extended lines
 
+epsilon = 10e-3; % mm, small buffer number
+
 ptStart = [];
 ptEnd = [];
 
@@ -70,7 +72,7 @@ if (config.photobleach.isDrawTickmarks)
         [pts,pte] = yOCTApplyEnableZone(...
             c-v*config.photobleach.lineLength, ...
             c+v*config.photobleach.lineLength, ...
-            isCleared, 10e-3);
+            isCleared, epsilon);
 
         ptStart = [ptStart pts];
         ptEnd = [ptEnd pte];
@@ -86,7 +88,7 @@ end
 if ~config.photobleach.isPhotobleachOverview
     %Trim everything to one FOV if it doesn't fit
     [ptStart,ptEnd] = yOCTApplyEnableZone(ptStart, ptEnd, ...
-            @(x,y)(abs(x)<ini.RangeMaxX/2 & abs(y)<ini.RangeMaxY/2) , 10e-3);
+            @(x,y)(abs(x)<ini.RangeMaxX/2 & abs(y)<ini.RangeMaxY/2) , epsilon);
 end
 
 if (~config.photobleach.isPhotobleachEnabled)
@@ -95,9 +97,8 @@ if (~config.photobleach.isPhotobleachEnabled)
 end
 
 %% Seperate Photobleaching
-
 [ptStart_Scan,ptEnd_Scan] = yOCTApplyEnableZone(ptStart, ptEnd, ...
-    @(x,y)(abs(x)<ini.RangeMaxX/2 & abs(y)<ini.RangeMaxX/2) , 10e-3);
+    @(x,y)(abs(x)<ini.RangeMaxX/2-epsilon & abs(y)<ini.RangeMaxY/2-epsilon) , epsilon);
 
 %Overview / extended
 %Dont photobleach in that area during overview, it is to be photobleached
@@ -108,7 +109,7 @@ keepPhotobleachOut = @(x,y) (...
     ); 
 
 [ptStart_Extended,ptEnd_Extended] = yOCTApplyEnableZone(ptStart, ptEnd, ...
-            @(x,y)(~keepPhotobleachOut(x,y)) , 10e-3);
+            @(x,y)(~keepPhotobleachOut(x,y)) , epsilon);
 
 %% Make a figurePlot
 ptStartplot = [ptStart_Scan ptStart_Extended];
@@ -127,3 +128,8 @@ axis ij;
 grid on;
 xlabel('x[mm]');
 ylabel('y[mm]');
+
+%% Check that length of lines is never more than what we can
+if any( sqrt(sum((ptStart_Scan - ptEnd_Scan).^2)) > ini.RangeMaxX)
+    error('One (or more) of the photobleach lines is longer than the allowed size, this might cause photobleaching errors!');
+end

@@ -27,8 +27,9 @@ end
 probeIniPath = getProbeIniPath();
 
 % Reference Scan JSON - where to get default scan parameters from
-configPath = s3SubjectPath('01');
-config = awsReadJSON([configPath 'OCTVolumes/ScanConfig.json']);
+subjectPaths = s3GetAllSubjectsInLib();
+subjectPath = subjectPaths{end};
+config = awsReadJSON([subjectPath 'OCTVolumes/ScanConfig.json']);
 
 % Output path 
 s3OutputPath = s3SubjectPath([datestr(now,'yyyy-mm-dd') ' ' experimentType],[],true);
