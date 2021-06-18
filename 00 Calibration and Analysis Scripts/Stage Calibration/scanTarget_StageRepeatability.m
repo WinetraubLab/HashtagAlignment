@@ -46,7 +46,7 @@ pattern2_Start = makePattern(template2_Start);
 pattern2_End = makePattern(template2_End);
 
 %% Photobleach the two patterns
-fprintf('%s Pattern 1...\n',datestr(datetime));
+fprintf('%s Pattern 1, drow squares...\n',datestr(datetime));
 json1 = yOCTPhotobleachTile(pattern1_Start,pattern1_End,...
     'octProbePath',octProbePath,...
     'exposure',config.photobleach.exposure,...
@@ -54,32 +54,59 @@ json1 = yOCTPhotobleachTile(pattern1_Start,pattern1_End,...
     'skipHardware',isMockTrial ...
     ); 
 
-fprintf('%s Pattern 2...\n',datestr(datetime));
-json2 = yOCTPhotobleachTile(pattern2_Start,pattern2_End,...
-    'octProbePath',octProbePath,...
-    'exposure',config.photobleach.exposure,...
-    'nPasses',config.photobleach.nPasses,...
-    'skipHardware',isMockTrial ...
-    ); 
+fprintf('%s Pattern 2, drow a cross in the middle of FOV for every position...\n',datestr(datetime));
+if ~isMockTrial
+    x0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('x'); %Init stage
+    y0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('y'); %Init stage
+end
+xcc = [0 L -L 0  0];
+ycc = [0 0 0  L -L];
+for i=1:length(xcc)
+    
+    % Put pattern at the center of FOV
+    if (i~=1 && xcc(i) ~= xcc(i-1))
+        if ~isMockTrial
+            ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',x0+xcc(i)); %Movement [mm]
+        end
+    end
+    if (i~=1 && ycc(i) ~= ycc(i-1))
+        if ~isMockTrial
+            ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0+ycc(i)); %Movement [mm]
+        end
+    end
+   
+    % Photobleach
+    json2 = yOCTPhotobleachTile(template2_Start,template2_End,...
+        'octProbePath',octProbePath,...
+        'exposure',config.photobleach.exposure,...
+        'nPasses',config.photobleach.nPasses,...
+        'skipHardware',isMockTrial ...
+        ); 
+end
 
 %% Plot
+isPlot2ndPattern = true;
+
 overallLines_Start = [pattern1_Start pattern2_Start];
 overallLines_End = [pattern1_End pattern2_End];
 figure(1);
 % Plot the photobleached lines
-for i=1:length(overallLines_Start)
+for i=1:length(pattern1_Start)
     plot(...
-        [overallLines_Start(1,i) overallLines_End(1,i)],...
-        [overallLines_Start(2,i) overallLines_End(2,i)]);
+        [pattern1_Start(1,i) pattern1_End(1,i)],...
+        [pattern1_Start(2,i) pattern1_End(2,i)]);
     if (i==1)
         hold on;
     end
 end
-
-if (length([json1.photobleachInstructions.stageCenterX]) ~= length([json2.photobleachInstructions.stageCenterX]) || ...
-    any([json1.photobleachInstructions.stageCenterX]~=[json2.photobleachInstructions.stageCenterX])) 
-    warning('Cant trust stage position markers');
+if isPlot2ndPattern
+    for i=1:length(pattern2_Start)
+        plot(...
+            [pattern2_Start(1,i) pattern2_End(1,i)],...
+            [pattern2_Start(2,i) pattern2_End(2,i)],'k','LineWidth',2);
+    end
 end
+
 % Plot the stage center positions
 for i=1:length(json1.photobleachInstructions)
     x = json1.photobleachInstructions(i).stageCenterX;
