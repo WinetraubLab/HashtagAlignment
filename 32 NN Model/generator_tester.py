@@ -16,10 +16,11 @@ class GeneratorTest(tf.test.TestCase):
     # Verify that the generator model is not empty
     def test_build_model_not_empty(self):
         self.generator, self.generator_loss = generator.build_model()
-        self.assertNotEmpty(self.generator, msg="Generator model must be initialized.")
+        self.assertIsNotNone(self.generator, msg="Generator model must be initialized.")
 
     # Generate image of generator architecture for verification
     def test_build_model_visualization(self):
+        self.generator, self.generator_loss = generator.build_model()
         tf.keras.utils.plot_model(self.generator, show_shapes=True, dpi=64, to_file="gen_model.png")
 
 
