@@ -51,11 +51,11 @@ class OCT2HistModel:
             self.generator_optimizer = tf.keras.optimizers.Adam(DelayedLinearDecayLR(2e-4, num_epochs_const_lr,
                                                                                      num_epochs_decay_lr, num_batches,
                                                                                      self.summary_writer),
-                                                                                     beta_1=0.5)
+                                                                                     beta_1=0.5, epsilon=1e-8)
             self.discriminator_optimizer = tf.keras.optimizers.Adam(DelayedLinearDecayLR(2e-4, num_epochs_const_lr,
                                                                                          num_epochs_decay_lr, num_batches,
                                                                                          self.summary_writer),
-                                                                                         beta_1=0.5)
+                                                                                         beta_1=0.5, epsilon=1e-8)
         else:
             self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
             self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
