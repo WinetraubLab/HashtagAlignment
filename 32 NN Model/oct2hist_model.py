@@ -36,24 +36,29 @@ class OCT2HistModel:
     Parameters:
         num_epochs_const_lr (int)       : The number of epochs at which the learning rate should be constant
         num_epochs_decay_lr (int)       : The number of epochs at which the learning rate should decay
+        num_batches         (int)       : Number of batches in an epoch
         is_train            (Boolean)   : Indicates whether the model is being used for training or testing
     '''
-    def __init__(self, num_epochs_const_lr=0, num_epochs_decay_lr=0, is_train=False):
+    def __init__(self, num_epochs_const_lr=0, num_epochs_decay_lr=0, num_batches=0, is_train=False):
+        log_dir = "logs/"
+        self.summary_writer = tf.summary.create_file_writer(
+            log_dir + "fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+
         self.discriminator, self.discriminator_loss = discriminator.build_model()
         self.generator, self.generator_loss = generator.build_model()
 
         if is_train:
             self.generator_optimizer = tf.keras.optimizers.Adam(DelayedLinearDecayLR(2e-4, num_epochs_const_lr,
-                                                                                     num_epochs_decay_lr), beta_1=0.5)
+                                                                                     num_epochs_decay_lr, num_batches,
+                                                                                     self.summary_writer),
+                                                                                     beta_1=0.5)
             self.discriminator_optimizer = tf.keras.optimizers.Adam(DelayedLinearDecayLR(2e-4, num_epochs_const_lr,
-                                                                                         num_epochs_decay_lr), beta_1=0.5)
+                                                                                         num_epochs_decay_lr, num_batches,
+                                                                                         self.summary_writer),
+                                                                                         beta_1=0.5)
         else:
             self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
             self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
-
-        log_dir = "logs/"
-        self.summary_writer = tf.summary.create_file_writer(
-            log_dir + "fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
 
     '''
     Run the OCT and histology image pair through the GAN model and record the losses to be logged on TensorBoard. 

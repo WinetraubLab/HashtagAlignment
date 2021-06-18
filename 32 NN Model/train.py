@@ -11,8 +11,10 @@ if __name__ == '__main__':
     NUM_EPOCHS_DECAY_LR = 100
     EPOCHS = NUM_EPOCHS_CONST_LR + NUM_EPOCHS_DECAY_LR
 
-    train_dataset = ip.load_dataset('patches_1024px_512px/train_A/', 'patches_1024px_512px/train_B/', is_train=True)
-    model = OCT2HistModel(num_epochs_const_lr=NUM_EPOCHS_CONST_LR, num_epochs_decay_lr=NUM_EPOCHS_DECAY_LR, is_train=True)
+    train_dataset, num_batches = ip.load_dataset('patches_1024px_512px/train_A/', 'patches_1024px_512px/train_B/',
+                                                 is_train=True)
+    model = OCT2HistModel(num_epochs_const_lr=NUM_EPOCHS_CONST_LR, num_epochs_decay_lr=NUM_EPOCHS_DECAY_LR,
+                          num_batches=num_batches, is_train=True)
     checkpoint_dir = './training_checkpoints'
     checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
     checkpoint = tf.train.Checkpoint(generator_optimizer=model.generator_optimizer,

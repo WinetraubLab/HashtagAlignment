@@ -1,6 +1,7 @@
 import tensorflow as tf
 import os
 import tensorflow_addons as tfa
+import math
 
 '''
 Constructs a TensorFlow dataset object
@@ -46,6 +47,7 @@ Constructs a TensorFlow dataset object
 
 	Returns:
 		dataset 		 (tf.data.Dataset) - A TensorFlow dataset object containing images from data_folder
+		num_batches      (float)           - The number of batches created from the dataset 
 '''
 
 
@@ -75,6 +77,8 @@ def load_dataset(OCT_data_folders, hist_data_folders=[''], is_train=True):
         while len(OCT_data_folders) != len(hist_data_folders):
             hist_data_folders.append('')
 
+    num_images = 0
+
     # Construct TensorFlow dataset by iterating through OCT_data_folders and hist_data_folders
     for i, (OCT_data_folder, hist_data_folder) in enumerate(zip(OCT_data_folders, hist_data_folders)):
         # Create OCT and histology datasets of all files matching the glob pattern jpg
@@ -89,7 +93,8 @@ def load_dataset(OCT_data_folders, hist_data_folders=[''], is_train=True):
                 raise Exception(
                     '1 or more jpg images in {} does not contain a corresponding jpg image of the same name '
                     'in {} (or vice versa).'.format(OCT_data_folder, hist_data_folder))
-
+            # Keep track of number of OCT-Histology image pairs in the dataset
+            num_images += len(OCT_jpg_names)
         # If histology images were provided, pair the corresponding OCT and histology images together
         if hist_data_folder != '':
             tmp_dataset = tf.data.Dataset.zip((OCT_dataset, hist_dataset))
@@ -119,7 +124,7 @@ def load_dataset(OCT_data_folders, hist_data_folders=[''], is_train=True):
     # The components of the resulting element will have an additional outer dimension which will be BATCH_SIZE
     dataset = dataset.batch(BATCH_SIZE)
 
-    return dataset
+    return dataset, math.ceil(num_images / BATCH_SIZE)
 
 '''
 Applies preprocessing steps to the input image. 
