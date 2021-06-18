@@ -1,4 +1,5 @@
-% This script analyzes photobleached lines to find motor calibration
+% This script analyzes photobleached lines to find motor scale calibration
+% This script runs on the data of photobleached using this script: scanTarget_StageCalibration
 
 
 %% Inputs

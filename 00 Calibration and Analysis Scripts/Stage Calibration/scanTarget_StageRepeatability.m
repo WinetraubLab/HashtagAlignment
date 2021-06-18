@@ -9,6 +9,9 @@ isMockTrial = false;
 % Photobleach pattern configuration
 octProbePath = getProbeIniPath();
 
+% Current calibration angle between OCT and Stage
+oct2stageXYAngleDeg = 4.7;
+
 %% Reference Scan JSON - where to get default scan parameters from
 subjectPaths = s3GetAllSubjectsInLib();
 subjectPath = subjectPaths{end};
@@ -51,30 +54,21 @@ json1 = yOCTPhotobleachTile(pattern1_Start,pattern1_End,...
     'octProbePath',octProbePath,...
     'exposure',config.photobleach.exposure,...
     'nPasses',config.photobleach.nPasses,...
-    'skipHardware',isMockTrial ...
+    'skipHardware',isMockTrial, ...
+    'oct2stageXYAngleDeg',oct2stageXYAngleDeg ...
     ); 
 
 fprintf('%s Pattern 2, drow a cross in the middle of FOV for every position...\n',datestr(datetime));
 if ~isMockTrial
-    x0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('x'); %Init stage
-    y0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('y'); %Init stage
+    [x0,y0] = yOCTStageInit(oct2stageXYAngleDeg);
 end
 xcc = [0 L -L 0  0];
 ycc = [0 0 0  L -L];
 for i=1:length(xcc)
     
     % Put pattern at the center of FOV
-    if (i~=1 && xcc(i) ~= xcc(i-1))
-        if ~isMockTrial
-            ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',x0+xcc(i)); %Movement [mm]
-        end
-    end
-    if (i~=1 && ycc(i) ~= ycc(i-1))
-        if ~isMockTrial
-            ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0+ycc(i)); %Movement [mm]
-        end
-    end
-   
+    yOCTStageMoveTo(x0+xcc(i),y0+ycc(i));
+    
     % Photobleach
     json2 = yOCTPhotobleachTile(template2_Start,template2_End,...
         'octProbePath',octProbePath,...

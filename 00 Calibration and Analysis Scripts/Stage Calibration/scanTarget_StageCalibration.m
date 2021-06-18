@@ -50,9 +50,7 @@ if ~isMockTrial
     fprintf('%s Initialzing... \n\t(if Matlab is taking more than 2 minutes to finish this step, restart matlab and try again)\n',datestr(datetime));
     
     ThorlabsImagerNETLoadLib(); %Init library
-    x0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('x'); %Init stage
-    y0=ThorlabsImagerNET.ThorlabsImager.yOCTStageInit('y'); %Init stage
-    %ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(octProbePath); %Init OCT
+    [x0,y0] = yOCTStageInit();
     
     fprintf('%s Initialzing Completed.\n',datestr(datetime));
 end
@@ -64,7 +62,7 @@ for i=1:nJumps
     
     if ~isMockTrial 
         fprintf('%s Line set %d of %d.\n',datestr(datetime),i,nJumps);
-        ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',x0+dx); %Movement [mm]
+        yOCTStageMoveTo(x0+dx);
         
         yOCTPhotobleachTile(xGalvoTemplate_Start,xGalvoTemplate_End,...
             'octProbePath',octProbePath,...
@@ -82,8 +80,7 @@ end
 
 %Return stage to original position
 if ~isMockTrial
-    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',x0);
-    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0);
+    yOCTStageMoveTo(x0,y0);
 end
 
 %% Y
@@ -93,7 +90,8 @@ for i=1:nJumps
     
     if ~isMockTrial
         fprintf('%s Line set %d of %d.\n',datestr(datetime),i,nJumps);
-        ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0+dy); %Movement [mm]
+        yOCTStageMoveTo(NaN,y0+dy);
+        
         yOCTPhotobleachTile(yGalvoTemplate_Start,yGalvoTemplate_End,...
             'octProbePath',octProbePath,...
             'exposure',config.photobleach.exposure,...
@@ -110,8 +108,7 @@ end
 
 %Return stage to original position
 if ~isMockTrial
-    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('x',x0);
-    ThorlabsImagerNET.ThorlabsImager.yOCTStageSetPosition('y',y0);
+    yOCTStageMoveTo(x0,y0);
 end
 
 %% Plot
