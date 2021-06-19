@@ -10,7 +10,7 @@ isMockTrial = false;
 octProbePath = getProbeIniPath();
 
 % Current calibration angle between OCT and Stage
-oct2stageXYAngleDeg = 4.7;
+oct2stageXYAngleDeg = -4.7;
 
 %% Reference Scan JSON - where to get default scan parameters from
 subjectPaths = s3GetAllSubjectsInLib();
@@ -30,7 +30,7 @@ template1_End = template1_Start(:,[2 3 4 1]);
 
 % Add L Shape
 template1_Start = [template1_Start [-L2 -L2;  L2 -L2]];
-template1_End =   [template1_End   [-L2  L2; -L2 -L2]];
+template1_End =   [template1_End   [-L2  0; -L2 -L2]];
 
 template2_Start = [ ...
      0  -L2 ;...
@@ -40,7 +40,7 @@ template2_End = -template2_Start;
 
 %% Define pattern
 makePattern = @(p)(...
-    [p (p+[L;0]) (p+[-L;0]) (p+[0;L]) (p+[0;-L])] ...
+    [p (p(:,1:min(end,4))+[L;0]) (p(:,1:min(end,4))+[-L;0]) (p(:,1:min(end,4))+[0;L]) (p(:,1:min(end,4))+[0;-L])] ...
     );
 
 pattern1_Start = makePattern(template1_Start);
@@ -67,7 +67,9 @@ ycc = [0 0 0  L -L];
 for i=1:length(xcc)
     
     % Put pattern at the center of FOV
-    yOCTStageMoveTo(x0+xcc(i),y0+ycc(i),NaN,true);
+    if ~isMockTrial
+        yOCTStageMoveTo(x0+xcc(i),y0+ycc(i),NaN,true);
+    end
     
     % Photobleach
     json2 = yOCTPhotobleachTile(template2_Start,template2_End,...
@@ -79,7 +81,9 @@ for i=1:length(xcc)
         ); 
 end
 % Clean up
-yOCTStageMoveTo(x0,y0,NaN,true);
+if ~isMockTrial
+    yOCTStageMoveTo(x0,y0,NaN,true);
+end
 
 %% Plot
 isPlot2ndPattern = true;
