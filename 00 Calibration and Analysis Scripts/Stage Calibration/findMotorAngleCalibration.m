@@ -161,7 +161,7 @@ plot(xc(1) + D*[-1 1],yc(1) + D*tan(img2OCTAngle_deg*pi/180)*[-1 1]);
 plot(xc(1) + D*[-1 1],yc(1) + D*tan(img2Stage_deg*pi/180)*[-1 1]);
 hold off;
 legend('OCT Coordinate System','Stage Coordinate System');
-title(sprintf('Difference OCT->Stage is %.2f Degrees',-img2OCTAngle_deg+img2Stage_deg));
+title(sprintf('Difference OCT->Stage is %.2f Degrees',+img2OCTAngle_deg-img2Stage_deg));
 
 function plotMap()
 plot([-1 1]*1.2,[0 0],'k');
