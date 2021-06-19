@@ -3,11 +3,15 @@
 
 %% Inputs
 photobleachImagePath = 's3://delazerdamatlab/Users/Aidan/Photobleach Lines Experiments/Photobleach 6.18.2021/Gel2_Scan1/Experiment_TileScan_001_Merging001_z0_ch00.tif';
+photobleachImagePath = 's3://delazerdamatlab/Users/Aidan/Photobleach Lines Experiments/Photobleach 6.18.2021/Gel6.2_Scan1/Experiment_TileScan_003_Merging001_z0_ch00.tif';
 imageResolution = 2.89; % microns per pixel. 1x is 2.88 microns per pixel
 
 %% Read Image
 dsIm = imageDatastore(photobleachImagePath);
 im = dsIm.read();
+
+% SP5 images are flipped compared to project coordinate system
+im = fliplr(im);
 
 %% Find best rotation
 figure(1);
@@ -78,18 +82,32 @@ for tuneI=1:length(alphaRanges)
     alpha = alphas(j);
 end
 
+% 90 degree modifications
+while(1)
+    imshow(imrotate(im_roi,alpha));
+    a = questdlg('Would You like to Rotate by 90 degrees to get "L" Shape?');
+    switch(a)
+        case 'Yes'
+            alpha = alpha + 90;
+        case 'No'
+            break;
+        otherwise
+            return;
+    end
+end
+
 % Output is alpha
 im = double(imrotate(im,alpha));
 
 %% Find Center Square
 subplot(1,1,1);
-imshow(im)
+imagesc(im); colormap gray;
 title('Mark the center square');
 r=getrect();
 
 %Get points
 subplot(1,2,1);
-imshow(im);
+imagesc(im);
 xlim([r(1) r(1)+r(3)]);
 ylim([r(2) r(2)+r(4)]);
 a = gca;
@@ -120,12 +138,12 @@ yc = zeros(size(squares));
 
 for i=1:length(squares)
     subplot(1,1,1);
-    imshow(im)
-    title(['Mark the ' squares{i} ' square']);
+    imagesc(im); colormap gray;
+    title(['Mark the ' squares{i} ' square (make sure L shape is upright)']);
     r=getrect();
     
     subplot(1,2,1);
-    imshow(im);
+    imagesc(im); colormap gray;
     xlim([r(1) r(1)+r(3)]);
     ylim([r(2) r(2)+r(4)]);
     a = gca;
@@ -161,13 +179,14 @@ plot(xc(1) + D*[-1 1],yc(1) + D*tan(img2OCTAngle_deg*pi/180)*[-1 1]);
 plot(xc(1) + D*[-1 1],yc(1) + D*tan(img2Stage_deg*pi/180)*[-1 1]);
 hold off;
 legend('OCT Coordinate System','Stage Coordinate System');
-title(sprintf('Difference OCT->Stage is %.2f Degrees',+img2OCTAngle_deg-img2Stage_deg));
+title(sprintf('Difference OCT->Stage is %.2f Degrees',-img2OCTAngle_deg+img2Stage_deg));
 
 function plotMap()
 plot([-1 1]*1.2,[0 0],'k');
 hold on;
 plot([0 0],[-1 1]*1.2,'k');
 plot([-1 -1 1 1 -1],[-1 1 1 -1 -1],'k');
+plot([-1.2 -1.2 0],[1 -1.2 -1.2],'k');
 hold off;
 axis equal;
 xlim([-2 2]);
