@@ -60,7 +60,13 @@ json1 = yOCTPhotobleachTile(pattern1_Start,pattern1_End,...
 
 fprintf('%s Pattern 2, drow a cross in the middle of FOV for every position...\n',datestr(datetime));
 if ~isMockTrial
+    ThorlabsImagerNETLoadLib(); %Init library
+    ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(octProbePath); %Init OCT
+
+
     [x0,y0] = yOCTStageInit(oct2stageXYAngleDeg);
+    ini = yOCTReadProbeIniToStruct(json.octProbePath);
+
 end
 xcc = [0 L -L 0  0];
 ycc = [0 0 0  L -L];
@@ -69,16 +75,19 @@ for i=1:length(xcc)
     % Put pattern at the center of FOV
     if ~isMockTrial
         yOCTStageMoveTo(x0+xcc(i),y0+ycc(i),NaN,true);
-    end
     
-    % Photobleach
-    json2 = yOCTPhotobleachTile(template2_Start,template2_End,...
-        'octProbePath',octProbePath,...
-        'exposure',config.photobleach.exposure,...
-        'nPasses',config.photobleach.nPasses,...
-        'oct2stageXYAngleDeg',oct2stageXYAngleDeg, ...
-        'skipHardware',isMockTrial ...
-        ); 
+        % Photobleach Pattern
+        yOCTTurnLaser(true);
+        for j=1:length(template2_Start)
+            d = sqrt(sum( (template2_Start(:,j) - template2_End(:,j)).^2));
+            ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
+                template2_Start(1,j),template2_Start(2,j), ... Start X,Y
+                template2_End(1,j),  template2_End(2,j)  , ... End X,y
+                config.photobleach.exposure*d,  ... Exposure time sec
+                config.photobleach.nPasses);
+        end
+        yOCTTurnLaser(false);
+    end
 end
 % Clean up
 if ~isMockTrial
