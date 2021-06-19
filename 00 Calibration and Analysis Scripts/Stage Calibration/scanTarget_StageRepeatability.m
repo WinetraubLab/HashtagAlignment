@@ -65,7 +65,7 @@ if ~isMockTrial
 
 
     [x0,y0] = yOCTStageInit(oct2stageXYAngleDeg);
-    ini = yOCTReadProbeIniToStruct(json.octProbePath);
+    ini = yOCTReadProbeIniToStruct(octProbePath);
 
 end
 xcc = [0 L -L 0  0];
