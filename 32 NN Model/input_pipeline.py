@@ -52,7 +52,7 @@ Constructs a TensorFlow dataset object
 
 
 def load_dataset(OCT_data_folders, hist_data_folders=[''], is_train=True):
-    BUFFER_SIZE = 400
+    BUFFER_SIZE = 553
     BATCH_SIZE = 1
 
     # If OCT_data_folders and OCT_data_folders are strings, convert them each to lists of length 1
@@ -118,7 +118,7 @@ def load_dataset(OCT_data_folders, hist_data_folders=[''], is_train=True):
     # The dataset fills a buffer with BUFFER_SIZE elements, then randomly samples elements from this buffer,
     # replacing the selected elements with new elements. For perfect shuffling, a buffer size >= the full size
     # of the dataset is needed
-    dataset = dataset.shuffle(BUFFER_SIZE)
+    dataset = dataset.shuffle(BUFFER_SIZE, seed=8)
 
     # Combine consecutive elements of this dataset into batches
     # The components of the resulting element will have an additional outer dimension which will be BATCH_SIZE
