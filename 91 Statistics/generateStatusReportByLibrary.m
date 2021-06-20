@@ -12,7 +12,7 @@ function st = generateStatusReportByLibrary(libraryNames)
 %       see sectionStats.notes for explenation about the fields.
 
 if ~exist('libraryNames','var')
-    libraryNames = 'LH';
+    libraryNames = s3GetAllLibs('last');
 end
 
 %%  What is the minimal usable area, let us folow calculation:
@@ -190,8 +190,8 @@ st.notes = sprintf([ ...
 % used in the dataset. see computeOverallSectionQuality function. You can
 % set the inputs and check what the status of qScore. qScore>1 means it
 % will be included.
-dSubject = 'LHC-06';
-dSlideSection = 'Slide06_Section03';
+dSubject = 'LHC-31';
+dSlideSection = 'Slide04_Section02';
 dI = cellfun(@(x)(contains(x,dSubject) && contains(x,dSlideSection)),sectionPathsOut); 
 if ~any(dI) 
     dI = -1;

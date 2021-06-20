@@ -1,9 +1,10 @@
-% This script analyzes photobleached lines to find motor calibration
+% This script analyzes photobleached lines to find motor scale calibration
+% This script runs on the data of photobleached using this script: scanTarget_StageCalibration
 
 
 %% Inputs
-photobleachImagePath = 's3://delazerdamatlab/Users/Aidan/Photobleach Lines Experiments/Photobleach 6.17.2021/Experiment_TileScan_001_Merging001_z0_ch00.tif';
-imageResolution = 2.8; % microns per pixel. 1x is 2.8 microns per pixel
+photobleachImagePath = 's3://delazerdamatlab/Users/Aidan/Photobleach Lines Experiments/Photobleach 6.17.2021/Scan 2/Experiment_TileScan_002_Merging001_z0_ch00.tif';
+imageResolution = 2.89; % microns per pixel. 1x is 2.88 microns per pixel
 
 lineRatio = 5; % Ratio between two long lines vs long line to its short line
                % This ratio is motorMovement/d in scanTarget_StageCalibration.m
@@ -153,7 +154,9 @@ meanLargeLineDiff_pix = mean([p1(1) p2(1)]);
 meanLargeLineSmallLineDiff_pix = abs(mean(pt2-pt1));
 lineRatio_measured = meanLargeLineDiff_pix/meanLargeLineSmallLineDiff_pix;
 
-fprintf('%s Motor: Distance Between Large Lines is %.4f X Distance Between Large Line to Small Line.\n\tWe would like this ratio to be %.4f.\n',...
+fprintf('%s Motor: Distance Between Large Lines is %.1f microns.\n',...
+    directionStr,meanLargeLineDiff_pix*imageResolution);
+fprintf('%s Motor: Distance Between Large Lines is %.3f X Distance Between Large Line to Small Line.\n\tWe would like this ratio to be %.4f.\n',...
     directionStr,lineRatio_measured);
 fprintf('Please correct mmToDeviceUnits from %.8g to NEW VALUE: %.8g\n',...
     mmToDeviceUnits,mmToDeviceUnits*lineRatio_measured/lineRatio);

@@ -84,7 +84,9 @@ fprintf('\n');
 
 for i=1:length(libNames)
 
-    ii = cellfun(@(x)(strcmp(x,libNames{i})),st.libraryNames) & st.isUsableInML & st.isFreshHumanSample;
+    ii = cellfun(@(x)(strcmp(x,libNames{i})),st.libraryNames) & ...
+        st.isUsableInML & ...
+        st.isFreshHumanSample;
     
     if isGroupBySubject
         [~,~,uI] = unique(st.subjectNames(ii));
@@ -107,7 +109,8 @@ for i=1:length(libNames)
 end
 
 % total
-ii = st.isUsableInML & st.isFreshHumanSample;
+ii = st.isUsableInML & ...
+    st.isFreshHumanSample;
 
 if isGroupBySubject
     [~,~,uI] = unique(st.subjectNames(ii));
