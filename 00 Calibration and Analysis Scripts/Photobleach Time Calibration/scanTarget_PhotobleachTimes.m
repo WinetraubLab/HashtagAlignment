@@ -4,15 +4,14 @@
 %% Inputs
 
 exposures = [1 2 5 15 30 60]; %Units are sec per 1mm of line
-nPasses =   [2 2 2 2  2  2 ]; % Number of passes should be as low as possible but still allow OCT scanner not to crash
+nPasses =   [2 2 2 2  2  4 ]; % Number of passes should be as low as possible but still allow OCT scanner not to crash
 
 x = linspace(-1,1,length(exposures)); % X Positions of the lines
 
-%% Setup 
-
 % Photobleach pattern configuration
-octProbePath = getProbeIniPath();
+octProbePath = getProbeIniPath('40x');
 
+%% Setup 
 ThorlabsImagerNETLoadLib(); %Init library
 ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(octProbePath); %Init OCT
 
