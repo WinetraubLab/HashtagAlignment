@@ -113,7 +113,8 @@ def load_dataset(OCT_data_folders, hist_data_folders=[''], is_train=True):
     # The dataset fills a buffer with BUFFER_SIZE elements, then randomly samples elements from this buffer,
     # replacing the selected elements with new elements. For perfect shuffling, a buffer size >= the full size
     # of the dataset is needed
-    dataset = dataset.shuffle(BUFFER_SIZE, seed=8)
+    if is_train:
+        dataset = dataset.shuffle(BUFFER_SIZE, seed=8)
 
     # Apply the _preprocess_image function to each element of the OCT and histology/OCT datasets and return
     # a new dataset containing the transformed elements, in the same order as they appeared before pre-processing
