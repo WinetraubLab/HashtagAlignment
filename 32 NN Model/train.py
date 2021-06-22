@@ -28,7 +28,7 @@ if __name__ == '__main__':
         print("Epoch: ", epoch)
 
         # Train
-        for n, (input_image, target) in train_dataset.enumerate():
+        for n, (filepath, input_image, target) in train_dataset.enumerate():
             print('.', end='')
             if (n + 1) % 100 == 0:
                 print()
