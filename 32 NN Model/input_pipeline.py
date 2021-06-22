@@ -195,6 +195,10 @@ def resize(input_image, real_image, height, width):
     resized_input_image = tf.image.resize(input_image, [height, width], method=tf.image.ResizeMethod.BICUBIC)
     resized_real_image = tf.image.resize(real_image, [height, width], method=tf.image.ResizeMethod.BICUBIC)
 
+    # Clamp the images since cubic interpolant's extrema can exceed the original extrema in the given interval
+    resized_input_image = tf.cast(tf.saturate_cast(resized_input_image, tf.uint8), tf.float32)
+    resized_real_image = tf.cast(tf.saturate_cast(resized_real_image, tf.uint8), tf.float32)
+
     return resized_input_image, resized_real_image
 
 
