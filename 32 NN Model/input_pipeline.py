@@ -109,16 +109,16 @@ def load_dataset(OCT_data_folders, hist_data_folders=[''], is_train=True):
         else:
             dataset.concatenate(tmp_dataset)
 
-    # Apply the _preprocess_image function to each element of the OCT and histology/OCT datasets and return
-    # a new dataset containing the transformed elements, in the same order as they appeared before pre-processing
-    dataset = dataset.map(lambda OCT, hist: _preprocess_image(OCT, hist, is_train),
-                          num_parallel_calls=tf.data.experimental.AUTOTUNE)
-
     # Randomly shuffle the elements of the dataset
     # The dataset fills a buffer with BUFFER_SIZE elements, then randomly samples elements from this buffer,
     # replacing the selected elements with new elements. For perfect shuffling, a buffer size >= the full size
     # of the dataset is needed
     dataset = dataset.shuffle(BUFFER_SIZE, seed=8)
+
+    # Apply the _preprocess_image function to each element of the OCT and histology/OCT datasets and return
+    # a new dataset containing the transformed elements, in the same order as they appeared before pre-processing
+    dataset = dataset.map(lambda OCT, hist: _preprocess_image(OCT, hist, is_train),
+                          num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
     # Combine consecutive elements of this dataset into batches
     # The components of the resulting element will have an additional outer dimension which will be BATCH_SIZE
@@ -173,7 +173,8 @@ def _preprocess_image(OCT_image_file, hist_image_file, is_train):
     # normalize image values to be in range [-1, 1]
     OCT_image, hist_image = normalize(OCT_image, hist_image)
 
-    return (OCT_image, hist_image)
+    # Return file path along with images
+    return (OCT_image_file, OCT_image, hist_image)
 
 
 '''
