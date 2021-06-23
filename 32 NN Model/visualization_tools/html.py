@@ -21,11 +21,14 @@ class HTML:
         """
         self.title = title
         self.web_dir = web_dir
-        self.img_dir = os.path.join(self.web_dir, 'images')
+        self.img_dir = os.path.join(self.web_dir, 'images_256x256')
+        self.img_original_dim_dir = os.path.join(self.web_dir, 'images')
         if not os.path.exists(self.web_dir):
             os.makedirs(self.web_dir)
         if not os.path.exists(self.img_dir):
             os.makedirs(self.img_dir)
+        if not os.path.exists(self.img_original_dim_dir):
+            os.makedirs(self.img_original_dim_dir)
 
         self.doc = dominate.document(title=title)
         if refresh > 0:
@@ -35,6 +38,10 @@ class HTML:
     def get_image_dir(self):
         """Return the directory that stores images"""
         return self.img_dir
+
+    def get_image_original_dim_dir(self):
+        """Return the directory that stores images with the original image dimensions before pre-processing"""
+        return self.img_original_dim_dir
 
     def add_header(self, text):
         """Insert a header to the HTML file
