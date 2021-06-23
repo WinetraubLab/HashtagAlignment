@@ -3,15 +3,15 @@ function p = getProbeIniPath(magnificationStr)
 
 %% Input checks
 if ~exist('magnificationStr','var') || isempty(magnificationStr)
-	magnificationStr = '10x'
+	magnificationStr = '10x';
 end
 
 %% Set name 
 switch(magnificationStr)
 	case '10x'
-		probeName = 'Probe - Olympus 10x.ini'
+		probeName = 'Probe - Olympus 10x.ini';
 	case '40x'
-		probeName = 'Probe - Olympus 40x.ini'
+		probeName = 'Probe - Olympus 40x.ini';
 end
 
 %% Path
