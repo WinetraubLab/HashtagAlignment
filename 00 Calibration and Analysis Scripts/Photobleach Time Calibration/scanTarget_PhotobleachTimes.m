@@ -3,17 +3,14 @@
 
 %% Inputs
 
-% Use this as initial set
-exposures = [1 2 4 5 15 30]; %Units are sec per 1mm of line
-nPasses =   [2 2 2 2 2  2 ]; % Number of passes should be as low as possible but still allow OCT scanner not to crash
-
-% Fine tuning for 40x
-exposures = [1 2 5 10 15]; %Units are sec per 1mm of line
-nPasses =   [2 2 2 2   2]; % Number of passes should be as low as possible but still allow OCT scanner not to crash
-
+% Exposure and n passes settings
+exposures = [1 2 5 10 15 30]; %Units are sec per 1mm of line
+nPasses =   [2 2 2 2   2  3]; % Number of passes should be as low as possible but still allow OCT scanner not to crash
+% For 10x, we usually use: 15 sec/1mm and 2 passes.
+% For 40x, we usually use: 5  sec/1mm and 2 passes.
 
 % Photobleach pattern configuration
-octProbePath = getProbeIniPath('40x');
+octProbePath = getProbeIniPath('10x');
 
 lineLength = 1; %mm
 x = linspace(-lineLength/2,lineLength/2,length(exposures)+2); % X Positions of the lines

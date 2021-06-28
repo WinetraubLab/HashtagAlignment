@@ -4,10 +4,10 @@
 % Mock option: When set to true the stage will not move and we will not
 % photobleach. Use "true" when you would like to see the output without
 % physcaily running the test.
-isMockTrial = false;
+isMockTrial = true;
 
 % Photobleach pattern configuration
-octProbePath = getProbeIniPath('40x'); % Select lens magnification
+octProbePath = getProbeIniPath('10x'); % Select lens magnification
 
 % Current calibration angle between OCT and Stage
 oct2stageXYAngleDeg = -4.7;
