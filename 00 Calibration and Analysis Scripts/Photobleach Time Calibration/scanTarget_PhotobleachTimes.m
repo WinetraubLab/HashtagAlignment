@@ -12,7 +12,7 @@ nPasses =   [2 2 2 2   2  3]; % Number of passes should be as low as possible bu
 % Photobleach pattern configuration
 octProbePath = getProbeIniPath('10x');
 
-lineLength = 1; %mm
+lineLength = 0.5; %mm
 x = linspace(-lineLength/2,lineLength/2,length(exposures)+2); % X Positions of the lines
 x([1 end]) = [];
 

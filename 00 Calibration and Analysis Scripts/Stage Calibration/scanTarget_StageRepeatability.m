@@ -92,6 +92,7 @@ end
 % Clean up
 if ~isMockTrial
     yOCTStageMoveTo(x0,y0,NaN,true);
+    ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose(); % Clean up
 end
 
 %% Plot
