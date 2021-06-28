@@ -12,26 +12,41 @@ currentFileFolder = [fileparts(mfilename('fullpath')) '\'];
 outputFolder = 'output'; %This will be override if running with Jenkins
 outputFolder = [outputFolder '\'];
 
-%OCT scan defenitions (scan is centered along (0,0)
+% Lens
+lens = '10x'; % Which lens we use for this experiment
+
+% Lens based configuration
+switch(lens)
+    case '10x'
+        volumeSize = 1; %mm
+        exposure = 15; % sec per mm line
+        base = 100/1000; %base seperation [mm]
+    case '40x'
+        volumeSize = 0.5; %mm
+        exposure = 5; % sec per mm line
+        base = 50/1000; %base seperation [mm]
+end
+
+% OCT scan defenitions (scan is centered along (0,0)
 config.volume.isScanEnabled = true; %Enable/Disable regular scan
-config.volume.xRange = 1; %[mm]
-config.volume.yRange = 1; %[mm]
+config.volume.xRange = volumeSize; %[mm]
+config.volume.yRange = volumeSize; %[mm]
 config.volume.nXPixels = 1000; %How many pixels in x direction
 config.volume.nYPixels = 1000; %How many pixels in y direction
 config.volume.nBScanAvg = 1;
 
-%Depth Defenitions
-%We assume stage starting position is at the top of the tissue.
-%z defenitions below are compared to starting position
-%+z is deeper
+% Depth Defenitions
+% We assume stage starting position is at the top of the tissue.
+% z defenitions below are compared to starting position
+% +z is deeper
 config.zToScan = ((-190:15:500)-5)*1e-3; %[mm]
 config.isZScanStartFromTop = false; % Would you like to start scanning from the top of the sample (true) or bottom (false)
 
-%Tissue Defenitions
+% Tissue Defenitions
 config.tissueRefractiveIndex = 1.4;
 config.gelIterfacePosionWithRespectToTissueTop_mm = -300e-3; % Z position of the gel-air interface compared to gel-tissue interface. Negative Z means above.
 
-%Overview of the entire area
+% Overview of the entire area
 config.overview.isScanEnabled = false; %Do you want to scan overview volume? When running on Jenkins, will allways run overview 
 config.overview.rangeAllX = 8;%[mm] Total tiles range
 config.overview.rangeAllY = 7;%[mm] Total tiles range
@@ -39,36 +54,29 @@ config.overview.range = config.volume.xRange;%[mm] x=y range of each tile
 config.overview.nPixels = max(config.volume.nXPixels/20,50); %same for x and y, number of pixels in each tile
 config.overview.nZToScan = 3; %How many different depths to scan in overview to provide coverage
 
-%Photobleaching defenitions
-%Line placement (vertical - up/down, horizontal - left/right)
-base = 100/1000; %base seperation [mm]
-%LA,LB
-%config.photobleach.vLinePositions = base*[-1 0 3]; %[mm] 
-%config.photobleach.hLinePositions = base*[-1 0 2]; %[mm] 
-%LC, LE, LF, LG
+% Photobleaching defenitions
+% Line placement (vertical - up/down, horizontal - left/right)
+% LG
 config.photobleach.vLinePositions = base*[-4  0 1 3]; %[mm] 
 config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm]
-%LD
-%config.photobleach.vLinePositions = base*[-3 -2 0 5 6]; %[mm] 
-%config.photobleach.hLinePositions = base*[-4 -3 0 4 5]; %[mm] 
-config.photobleach.exposure = 30/2; %[sec per line length (mm)]
+config.photobleach.exposure = exposure; %[sec per line length (mm)]
 config.photobleach.nPasses = 2;
 config.photobleach.lineLength = 2; %[mm]
 config.photobleach.isPhotobleachEnabled = true; %Would you like to photobleach? this flag disables all photobleaching
 config.photobleach.isPhotobleachOverview = true; %Would you like to photobleach overview areas as well (extended photobleach)
 config.photobleach.photobleachOverviewBufferZone = 0.170; %See extended lines design of #, this is to prevent multiple lines appearing in the same slice 
    
-%Probe defenitions
-config.octProbePath = getProbeIniPath();
+% Probe defenitions
+config.octProbePath = getProbeIniPath(lens);
 config.oct2stageXYAngleDeg = -4.7; % Current calibration angle between OCT and Stage 
 % See findMotorAngleCalibration if you need to recalibrate (e.g. when OCT head was moved)
 
-%Tickmarks (if required)
+% Tickmarks (if required)
 config.photobleach.isDrawTickmarks = false;
 config.photobleach.tickmarksX0 = [0.3, -0.25];
 config.photobleach.tickmarksY0 = [-0.25,0.25];
 
-%Orientation dot
+% Orientation dot
 config.photobleach.isDrawTheDot = false;
 config.theDotX = -config.photobleach.lineLength/2*0.8;
 config.theDotY = +config.photobleach.lineLength/2*0.8;
@@ -166,7 +174,7 @@ config.photobleach.ptEnd_Extended = ptEnd_Extended;
     
 %% Actual Photobleach (first run)
 if (config.photobleach.isPhotobleachEnabled)
-%Safety warning
+% Safety warning
 fprintf('%s Put on safety glasses. photobleaching in ...',datestr(datetime));
 for i=5:-1:1
     fprintf(' %d',i);
@@ -174,7 +182,7 @@ for i=5:-1:1
 end
 fprintf('\n');
 
-%Photobleach without the part that moves
+% Photobleach without the part that moves
 yOCTPhotobleachTile(config.photobleach.ptStart_Scan,config.photobleach.ptEnd_Scan,...
     'octProbePath',config.octProbePath,...
     'z',config.photobleach.z,'exposure',config.photobleach.exposure,...
@@ -187,7 +195,7 @@ end
 
 %% Scans
 
-%Volume
+% Volume
 if (config.volume.isScanEnabled)
 fprintf('%s Scanning Volume\n',datestr(datetime));
 volumeOutputFolder = [outputFolder '\Volume\'];
@@ -211,11 +219,11 @@ for fn = fieldnames(scanParameters)'
 end
 end
 
-%Overview
+% Overview
 if (config.overview.isScanEnabled)
 	fprintf('%s Scanning Overview\n',datestr(datetime));
     
-    %Overview center positons
+    % Overview center positons
     gridXc = (-config.overview.rangeAllX/2+config.overview.range/2):config.overview.range:(config.overview.rangeAllX/2-config.overview.range/2);
     gridYc = (-config.overview.rangeAllY/2+config.overview.range/2):config.overview.range:(config.overview.rangeAllY/2-config.overview.range/2);
     
@@ -251,7 +259,6 @@ if (config.overview.isScanEnabled)
 end
 
 %% Actual Photobleach (second run for overview photobleaching \ extended lines)
-
 if config.photobleach.isPhotobleachOverview && config.photobleach.isPhotobleachEnabled
     %Safety warning
     fprintf('%s Photobleaching overview in ...',datestr(datetime));
@@ -274,12 +281,12 @@ end
 %% Finalize
 fprintf('%s Finalizing\n',datestr(datetime));
 
-%Remove fields that are not in use again, their information is redundent
+% Remove fields that are not in use again, their information is redundent
 config = rmfield(config,{'tissueRefractiveIndex','zToScan'});
     
-%Save scan configuration parameters
+% Save scan configuration parameters
 if exist([outputFolder 'ScanConfig.json'],'file')
-	%Load Config first, dont override it
+	% Load Config first, dont override it
 	cfg = awsReadJSON([outputFolder 'ScanConfig.json']);
     for fn = fieldnames(cfg)'
         config.(fn{1}) = cfg.(fn{1});
@@ -294,5 +301,5 @@ config.volume
 disp('config.overview');
 config.overview
 
-%Save
+% Save config
 awsWriteJSON(config, [outputFolder 'ScanConfig.json']);
