@@ -4,7 +4,7 @@
 % Mock option: When set to true the stage will not move and we will not
 % photobleach. Use "true" when you would like to see the output without
 % physcaily running the test.
-isMockTrial = true;
+isMockTrial = false;
 
 % Photobleach pattern configuration
 octProbePath = getProbeIniPath('10x'); % Select lens magnification
@@ -19,9 +19,10 @@ config = awsReadJSON([subjectPath 'OCTVolumes/ScanConfig.json']);
 
 %% Define pattern template
 L = 3; % Positions to move around (mm)
-L1 = 0.4; %(mm)
-L2 = L1*1.5; %(mm)
+L1 = 0.3; %(mm)
+L2 = 0.5; %(mm)
 
+% Square shape
 template1_Start = [ ...
     -L1  L1 L1 -L1;...
     -L1 -L1 L1  L1;...
@@ -32,6 +33,7 @@ template1_End = template1_Start(:,[2 3 4 1]);
 template1_Start = [template1_Start [-L2 -L2;  L2 -L2]];
 template1_End =   [template1_End   [-L2  0; -L2 -L2]];
 
+% Cross
 template2_Start = [ ...
      0  -L2 ;...
     -L2  0  ;...
