@@ -7,7 +7,8 @@
 isMockTrial = false;
 
 % Photobleach pattern configuration
-octProbePath = getProbeIniPath('10x'); % Select lens magnification
+lens = '10x';
+octProbePath = getProbeIniPath(lens); % Select lens magnification
 
 % Current calibration angle between OCT and Stage
 oct2stageXYAngleDeg = -4.7;
@@ -18,9 +19,16 @@ subjectPath = subjectPaths{end};
 config = awsReadJSON([subjectPath 'OCTVolumes/ScanConfig.json']);
 
 %% Define pattern template
-L = 3; % Positions to move around (mm)
-L1 = 0.3; %(mm)
-L2 = 0.5; %(mm)
+switch(lens)
+    case '10x'
+        L = 3;% Positions to move around (mm)
+        L1 = 0.5; %(mm)
+        L2 = 0.6; %(mm)
+    case '40x'
+        L = 2.5; % Positions to move around (mm)
+        L1 = 0.3; %(mm)
+        L2 = 0.5; %(mm)
+end
 
 % Square shape
 template1_Start = [ ...
