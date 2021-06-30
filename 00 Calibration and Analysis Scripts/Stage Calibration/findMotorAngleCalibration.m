@@ -3,10 +3,10 @@
 
 %% Inputs
 photobleachImagePath = 's3://delazerdamatlab/Users/Aidan/Photobleach Lines Experiments/Photobleach 6.18.2021/Gel2_Scan1/Experiment_TileScan_001_Merging001_z0_ch00.tif';
-photobleachImagePath = 's3://delazerdamatlab/Users/Aidan/Photobleach Lines Experiments/Photobleach 6.18.2021/Gel6.2_Scan1/Experiment_TileScan_003_Merging001_z0_ch00.tif';
 imageResolution = 2.89; % microns per pixel. 1x is 2.88 microns per pixel
 
 %% Read Image
+awsSetCredentials();
 dsIm = imageDatastore(photobleachImagePath);
 im = dsIm.read();
 
