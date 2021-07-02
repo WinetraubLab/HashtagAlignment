@@ -13,10 +13,13 @@ outputFolder = 'output'; %This will be override if running with Jenkins
 outputFolder = [outputFolder '\'];
 
 % Lens
-lens = '10x'; % Which lens we use for this experiment
+config.octProbeLens = '10x'; % Which lens we use for this experiment
+if (isRunningOnJenkins() && exist('octProbeLens_','var'))
+    config.octProbeLens = octProbeLens_;
+end
 
 % Lens based configuration
-switch(lens)
+switch(config.octProbeLens)
     case '10x'
         volumeSize = 1; %mm
         exposure = 15; % sec per mm line
@@ -44,7 +47,7 @@ config.isZScanStartFromTop = false; % Would you like to start scanning from the 
 
 % Tissue Defenitions
 config.tissueRefractiveIndex = 1.4;
-config.gelIterfacePosionWithRespectToTissueTop_mm = -300e-3; % Z position of the gel-air interface compared to gel-tissue interface. Negative Z means above.
+config.gelIterfacePosionWithRespectToTissueTop_mm = -300e-3; %[mm]. Z position of the gel-air interface compared to gel-tissue interface. Negative Z means above.
 
 % Overview of the entire area
 config.overview.isScanEnabled = false; %Do you want to scan overview volume? When running on Jenkins, will allways run overview 
@@ -61,13 +64,13 @@ config.photobleach.vLinePositions = base*[-4  0 1 3]; %[mm]
 config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm]
 config.photobleach.exposure = exposure; %[sec per line length (mm)]
 config.photobleach.nPasses = 2;
-config.photobleach.lineLength = 2; %[mm]
+config.photobleach.lineLength = volumeSize*2; %[mm]
 config.photobleach.isPhotobleachEnabled = true; %Would you like to photobleach? this flag disables all photobleaching
 config.photobleach.isPhotobleachOverview = true; %Would you like to photobleach overview areas as well (extended photobleach)
 config.photobleach.photobleachOverviewBufferZone = 0.170; %See extended lines design of #, this is to prevent multiple lines appearing in the same slice 
    
 % Probe defenitions
-config.octProbePath = getProbeIniPath(lens);
+config.octProbePath = getProbeIniPath(config.octProbeLens);
 config.oct2stageXYAngleDeg = -4.7; % Current calibration angle between OCT and Stage 
 % See findMotorAngleCalibration if you need to recalibrate (e.g. when OCT head was moved)
 
