@@ -81,7 +81,6 @@ pipeline {
 		choice(
 			name: "LENS",
 			choices: ['10x','40x'],
-			defaultValue:"10x",
 			description:"Which lens is used today"
 			)			
 		
