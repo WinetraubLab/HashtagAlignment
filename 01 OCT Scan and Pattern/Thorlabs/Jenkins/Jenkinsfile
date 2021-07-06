@@ -77,7 +77,13 @@ pipeline {
 			name: "SKIN_TYPE",
 			choices: ['Unknown','1','2','3','4','5','6'],
 			description:"Fitzpatrick Skin Type"
-			)		
+			)	
+		choice(
+			name: "LENS",
+			choices: ['10x','40x'],
+			defaultValue:"10x",
+			description:"Which lens is used today"
+			)			
 		
 		//Debug purpose 
 		booleanParam(
@@ -194,6 +200,7 @@ pipeline {
 			bat("@echo zGelTop_mm_=%Z_POSITION_TOP_OF_GEL_UM%/1000; >> runme.m") //Matlab works in mm, Z_POSITION_TOP_OF_GEL_UM is in um here
 			bat("@echo outputFolder_='" + VOLUME_OUTPUT_FOLDER() + "'; >> runme.m")
 			bat("@echo isDrawTickmarks_=%IS_PHOTOBLEACH_TICKMARKS%; >> runme.m")
+			bat("@echo octProbeLens_='%LENS%'; >> runme.m")
 			bat("@echo ; %CODE_TO_RUN_BEFORE_RUNNING_MAIN_SCRIPT% >> runme.m")
 			bat("@echo run ScanAndPattern_Thorlabs.m  >> runme.m")
 				
