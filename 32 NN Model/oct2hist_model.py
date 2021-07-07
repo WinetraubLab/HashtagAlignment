@@ -110,4 +110,4 @@ class OCT2HistModel:
             tf.summary.scalar('gen_gan_loss', gen_gan_loss, step=epoch)
             tf.summary.scalar('gen_l1_loss', gen_l1_loss, step=epoch)
             tf.summary.scalar('disc_loss', disc_loss, step=epoch)
-            tf.summary.image("Training Data", [input_image, gen_output], step=epoch)
+            tf.summary.image("Training Data", tf.squeeze([input_image, gen_output]), step=epoch)
