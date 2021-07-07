@@ -24,12 +24,14 @@ for i=1:length(subjectsWithConflict)
 end
 fprintf('\n');
 
-%Fix Cancer issues
+%% Fix Cancer issues
 % You can manualy set subjectsWithConflict = {'LC-01'} if you would like to
 % change the identity of this sample specifically.
 for i=1:length(subjectsWithConflict)
     ii = find(cellfun(@(x)(strcmp(x,subjectsWithConflict{i})),st.subjectNames),1,'first');
     subjectJsonPath = awsModifyPathForCompetability([st.subjectPahts{ii} '/Subject.json']);
+    
+    isSubjectFolderIndicatesCancer = LxC(ii);
     
     json = awsReadJSON(subjectJsonPath);
     
@@ -40,6 +42,21 @@ for i=1:length(subjectsWithConflict)
         disp(['Updating ' subjectsWithConflict{i} ' to ' an]);
         json.sampleType = an;
         awsWriteJSON(json,subjectJsonPath);
+        
+        if strcmp(an,'Tumor') && ~isSubjectFolderIndicatesCancer
+            oldName = subjectsWithConflict{i};
+            newName = strrep(oldName,'-','C-');
+        elseif strcmp(an,'Healthy') && ~isSubjectFolderIndicatesCancer
+            oldName = subjectsWithConflict{i};
+            newName = strrep(oldName,'C-','-');
+        else
+            continue; % No need to change folder
+        end
+        oldFolder = st.subjectPahts{ii};
+        newFolder = strrep(oldFolder,oldName,newName);
+        fprintf('Changing folder name %s --> %s\n',oldFolder,newName);
+        awsCopyFileFolder(oldFolder,newFolder);
+        awsRmDir(oldFolder);
     end
 end
 
