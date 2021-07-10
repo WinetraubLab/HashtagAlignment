@@ -22,10 +22,12 @@ end
 switch(config.octProbeLens)
     case '10x'
         volumeSize = 1; %mm
+        overviewSingleTileVolumeSize = 1; %mm
         exposure = 15; % sec per mm line
         base = 100/1000; %base seperation [mm]
     case '40x'
         volumeSize = 0.5; %mm
+        overviewSingleTileVolumeSize = 1; %mm
         exposure = 5; % sec per mm line
         base = 50/1000; %base seperation [mm]
 end
@@ -53,7 +55,7 @@ config.gelIterfacePosionWithRespectToTissueTop_mm = -300e-3; %[mm]. Z position o
 config.overview.isScanEnabled = false; %Do you want to scan overview volume? When running on Jenkins, will allways run overview 
 config.overview.rangeAllX = 8;%[mm] Total tiles range
 config.overview.rangeAllY = 7;%[mm] Total tiles range
-config.overview.range = config.volume.xRange;%[mm] x=y range of each tile
+config.overview.range = overviewSingleTileVolumeSize;%[mm] x=y range of each tile
 config.overview.nPixels = max(config.volume.nXPixels/20,50); %same for x and y, number of pixels in each tile
 config.overview.nZToScan = 3; %How many different depths to scan in overview to provide coverage
 
