@@ -25,11 +25,13 @@ switch(config.octProbeLens)
         overviewSingleTileVolumeSize = 1; %mm
         exposure = 15; % sec per mm line
         base = 100/1000; %base seperation [mm]
+        photobleachUnderInterface_mm = +50e-3; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm)
     case '40x'
         volumeSize = 0.5; %mm
         overviewSingleTileVolumeSize = 1; %mm
-        exposure = 5; % sec per mm line
+        exposure = 10; % sec per mm line
         base = 50/1000; %base seperation [mm]
+        photobleachUnderInterface_mm = +100e-3; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm)
 end
 
 % OCT scan defenitions (scan is centered along (0,0)
@@ -135,7 +137,9 @@ else
 end
 
 % Photobleach x microns under gel top
-config.photobleach.z = config.gelIterfacePosionWithRespectToTissueTop_mm+50e-3; %[mm] this parameter is ignored if running from jenkins - will assume provided by jenkins
+config.photobleach.z = ...
+    config.gelIterfacePosionWithRespectToTissueTop_mm ...
+    + photobleachUnderInterface_mm; %[mm] where to photobleach. We usually want to photobleach a little under the top of the gel
 
 %% Add preprogramed config parameter
 
@@ -145,9 +149,9 @@ if ~any(config.zToScan == 0)
 end
 
 % Scan one silce where we photobleaching
-config.zToScan_TopOfGelZ = config.photobleach.z;
+config.zToScan_TopOfGelZ = config.gelIterfacePosionWithRespectToTissueTop_mm;
 config.zToScan_TopTissueZ = config.zToScan(1);
-config.zToScan = unique([config.photobleach.z config.zToScan]);
+config.zToScan = unique([config.zToScan_TopOfGelZ config.zToScan]);
 
 % Flip zToScan if user selected to start from the bottom
 if (~config.isZScanStartFromTop)
