@@ -4,8 +4,9 @@
 % IMPORTANT: 
 % Before running this script make sure target is at focus
 
+lens = '10x';
 % What are we imaging
-switch(1)
+switch(2)
     case 1
         %Imaging a flat surface target but placing it on motorized stage so
         %we can take multiple images at different depths.
@@ -15,7 +16,9 @@ switch(1)
         experimentType = 'Imaging Flat Surface On Motorized Stage';
         zDepths = [0 0.25 0.5];
     case 2
-        %Similar experiment as motorized stage, but on a flat optic table
+        % Similar experiment as motorized stage, but on a flat optic table
+        % Image a patri dish with ater in it. Focus on the water-plastic
+        % interface.
         experimentType = 'Imaging Flat Surface On Optic Table';
         zDepths = 0;
     case 3
@@ -24,7 +27,7 @@ switch(1)
 end
 
 %Path to probe ini
-probeIniPath = getProbeIniPath();
+probeIniPath = getProbeIniPath(lens);
 
 % Reference Scan JSON - where to get default scan parameters from
 subjectPaths = s3GetAllSubjectsInLib();
