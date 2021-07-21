@@ -3,7 +3,7 @@
 
 %% Inputs
 %experimentPath = s3SubjectPath('2019-11-30 Imaging Flat Surface On Motorized Stage','',true);
-experimentPath = s3SubjectPath('2020-01-24 Imaging Flat Surface On Optic Table','',true);
+experimentPath = s3SubjectPath('2021-07-21 Imaging Flat Surface On Optic Table','',true);
 
 json = awsReadJSON([experimentPath 'ScanInfo.json']);
 
