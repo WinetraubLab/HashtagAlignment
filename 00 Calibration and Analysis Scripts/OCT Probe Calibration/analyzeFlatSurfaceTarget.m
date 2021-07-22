@@ -1,5 +1,5 @@
-%This script calibrates optical path correction.
-%Be sure to scan a flat surface using scanTarget function
+% This script calibrates optical path correction.
+% Be sure to scan a flat surface using scanTarget function
 
 %% Inputs
 %experimentPath = s3SubjectPath('2019-11-30 Imaging Flat Surface On Motorized Stage','',true);
@@ -19,7 +19,7 @@ for sI = 1:length(json.octFolders)
         % Load scan Abs and dimensions
         [scanAbs,dim] = yOCTFromTif([octPath 'scanAbs.tif']);
         
-        %z dimensions
+        % z dimensions
         minZ = 20;
         z = dim.z.values(minZ:end); %[um]
 
@@ -38,10 +38,10 @@ fprintf('%s Fit polynomials... \n',datestr(datetime));
 for sI = 1:length(json.octFolders)
     octPath = awsModifyPathForCompetability([experimentPath json.octFolders{sI} '/']);
     
-    %Load data
+    % Load data
     [interfaceZ,dim] = yOCTFromMat([octPath 'interfaceZPositions.mat']);
     
-    %Set dimensions
+    % Set dimensions
     x = dim.x.values; %um
     y = dim.y.values; %um
     z = dim.z.values; %um
@@ -50,16 +50,19 @@ for sI = 1:length(json.octFolders)
     [xx,yy] = meshgrid(x,y);
     A = [ones(numel(xx),1) xx(:) yy(:) xx(:).^2 yy(:).^2 xx(:).*yy(:)];
     
-    %Try to get rid of outliers first
+    % Get rid of obvious outliers, those who are very far for median
     interfaceZ_med = medfilt2(interfaceZ,[50 50],'symmetric');
-    a =  A\interfaceZ_med(:); 
+    isOutlier = abs(interfaceZ_med-median(interfaceZ_med(:))) > 200; %mum
+    
+    % Fine tune to find more outliers
+    a =  A(~isOutlier,:)\interfaceZ_med(~isOutlier); 
     e = mdl(xx(:),yy(:),a)-interfaceZ(:);
-    isOutlier = abs(e) > 10; %mum
+    isOutlier = abs(e) > 20; %mum
 
-    %Fit without the outliers
+    % Fit without the outliers
     a =  A(~isOutlier,:)\interfaceZ(~isOutlier); %Polynomial values
 
-    %Print coefients
+    % Print coefients
     fprintf('\n');
     fprintf('# Z Correction (microns) Polynomial for correcting optical path.\n')
     fprintf('# Coefficients are [x y x^2 y^2 x*y] where x,y are positions in microns.\n')
@@ -68,15 +71,15 @@ for sI = 1:length(json.octFolders)
     fprintf('\n');
     
     %% Figure out peak positions and Save
-    %Peak Position
+    % Peak Position
     xPeak = -a(2)/(2*a(4));
     yPeak = -a(3)/(2*a(5));
 
-    %Index of Peak Position
+    % Index of Peak Position
     [~,yPeakI] = min(abs(yPeak-y));
     [~,xPeakI] = min(abs(xPeak-x));
 
-    %Save parameters
+    % Save parameters
     fit.info = 'interfaceZ uints is (um), dimentions are y(um),x(um). p(1)+p(2)*x+p(3)*y+p(4)*x^2+p(5)*y^2+p(6)*x*y';
     fit.p = a;
     fit.xPeak = xPeak;
@@ -123,14 +126,14 @@ for sI = 1:length(json.octFolders)
 
     subplot(2,2,4);
     e = mdl(xx(~isOutlier),yy(~isOutlier),a)-interfaceZ(~isOutlier);
-    hist(e,200);
+    histogram(e,200);
     xlim(round(std(e)*10)*[-1 1]);
     title('Error From Model');
     xlabel('Error [\mum]');
     ylabel('Probability');
     grid on;
     
-    %Temporary text before image loading is completed
+    % Temporary text before image loading is completed
     subplot(2,2,3);
     plot(0,0,'*');
     text(0,0,'Processing ...');
@@ -172,14 +175,14 @@ if ~exist('xx','var')
     [xx,yy] = meshgrid(x,y);
 end
 
-%Compute difference
+% Compute difference
 pf = awsReadJSON([octPath '../interfaceZPositions_PolyFit.json']);
 p = pf.p;
 p_ref = json.octProbe.OpticalPathCorrectionPolynomial;
 d = mdl(xx,yy,p) - mdl(xx,yy,[0;p_ref]);
 d = d-mean(d(:));
 
-%Plot
+% Plot
 f=figure(100);
 set(f,'units','normalized','outerposition',[0 0 1 1]);
 subplot(1,2,1);
@@ -214,7 +217,7 @@ if length(json.octFolders) > 1
         interfZ(:,:,sI) = mdl(xx,yy,p);
     end
     
-    %Compute mean and deviation from the mean
+    % Compute mean and deviation from the mean
     m = squeeze(mean(mean(interfZ,2),1));
     interfZ_NoMean = zeros(size(interfZ));
     for i=1:length(m)
