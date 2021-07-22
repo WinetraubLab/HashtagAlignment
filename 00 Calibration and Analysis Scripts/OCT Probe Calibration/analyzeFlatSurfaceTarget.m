@@ -106,7 +106,8 @@ for sI = 1:length(json.octFolders)
     hold off;
     xlabel('x[\mum]');
     ylabel('y[\mum]');
-    title('Interface Depth (Data) [\mum]')
+    [~,probeName] = fileparts(json.octProbePath);
+    title(sprintf('Interface Depth (Data) [\\mum] (%s)',probeName));
     grid on;
     legend(sprintf('Polyfit: %.0f+%.1ex+%.1ey+%.1ex^2+%.1ey^2+%.1exy',a(1),a(2),a(3),a(4),a(5),a(6)),...
         'location','south')
