@@ -92,11 +92,15 @@ yToLoad = dim.y.index(...
 [int1,dim1] = ...
     yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'YFramesToProcess',yToLoad}]);
 [scan1,dim1] = yOCTInterfToScanCpx ([{int1, dim1, 'n', n}, reconstructConfig]);
-scan1 = abs(scan1);
-for i=length(size(scan1)):-1:4 %Average BScan, AScan avg but no z,x,y
-    scan1 = squeeze(mean(scan1,i));
-end
+
+% Take the absolute value of the slices and apply any A-scan and/or B-scan
+% averaging
+scan1 = yOCTApplyAbsoluteValueAScanBScanAveraging(scan1);
+
 dim.z = dim1.z; %Update dimensions structure
+
+% Optical Path Correction
+scan1 = yOCTOpticalPathCorrection(scan1, dim1, json.volume.octProbe);
 
 %Compute the total travel distance of the scanning process
 totalZDistance = diff(zDepths([1 end]))*1000; %mu
@@ -143,10 +147,13 @@ fp = sprintf('%sData%02d/',OCTVolumesFolderVolume,frameI);
 [int1,dim1] = ...
     yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'YFramesToProcess',yToLoad}]);
 [scan1,dim1] = yOCTInterfToScanCpx ([{int1, dim1, 'n', n}, reconstructConfig]);
-scan1 = abs(scan1);
-for i=length(size(scan1)):-1:4 %Average BScan, AScan avg but no z,x,y
-    scan1 = squeeze(mean(scan1,i));
-end
+
+% Take the absolute value of the slices and apply any A-scan and/or B-scan
+% averaging
+scan1 = yOCTApplyAbsoluteValueAScanBScanAveraging(scan1);
+
+% Optical Path Correction
+scan1 = yOCTOpticalPathCorrection(scan1, dim1, json.volume.octProbe);
 
 %Define search space
 zsToUse = dim.z.values > focusDepth1 - focusSigma*2 & dim.z.values < focusDepth1 + focusSigma*2;
