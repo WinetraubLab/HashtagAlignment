@@ -36,7 +36,7 @@ if isfield(json.volume,'tissueRefractiveIndex')
 elseif isfield(json.overview,'tissueRefractiveIndex')
     n = json.overview.tissueRefractiveIndex; 
 else
-    warining('Can''t figure out what is index of refraction, assuming default value');
+    warning('Can''t figure out what is index of refraction, assuming default value');
     n = 1.33;
 end
 
@@ -74,12 +74,8 @@ elseif isfield(json.overview,'zDepths')
 end
 
 %% Get peak data
-%Get Dimensions of one reference volume
-dim = yOCTLoadInterfFromFile(fp,'peakOnly',true);
-dim.x.units = 'microns';
-dim.x.values = 1000* linspace(-xRange/2,xRange/2,length(dim.x.values));
-dim.y.values = 1000* linspace(-yRange/2,yRange/2,length(dim.y.values));
-dim.y.units = 'microns';
+%Get Dimensions of one reference volume'
+[dim, dimProcessed] = yOCTTileScanGetDimOfOneTile(OCTVolumesFolderVolume, 'micron');
 
 %Load a few y slices
 yToLoad = dim.y.index(...
@@ -90,7 +86,7 @@ yToLoad = dim.y.index(...
 
 %Load a few y slices
 [int1,dim1] = ...
-    yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'YFramesToProcess',yToLoad}]);
+    yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'dimensions', dim,'YFramesToProcess',yToLoad}]);
 [scan1,dim1] = yOCTInterfToScanCpx ([{int1, dim1, 'n', n}, reconstructConfig]);
 
 % Take the absolute value of the slices and apply any A-scan and/or B-scan
@@ -145,7 +141,7 @@ frameI = ii(2); %frame = ii(1) is at the top of the gel, number ii(2) should be 
 fp = sprintf('%sData%02d/',OCTVolumesFolderVolume,frameI);
 
 [int1,dim1] = ...
-    yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'YFramesToProcess',yToLoad}]);
+    yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'dimensions', dim, 'YFramesToProcess',yToLoad}]);
 [scan1,dim1] = yOCTInterfToScanCpx ([{int1, dim1, 'n', n}, reconstructConfig]);
 
 % Take the absolute value of the slices and apply any A-scan and/or B-scan
