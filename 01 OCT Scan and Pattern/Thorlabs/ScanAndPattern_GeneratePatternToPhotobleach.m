@@ -70,8 +70,8 @@ if (config.photobleach.isDrawTickmarks)
         v = [config.photobleach.tickmarksX0(i); -config.photobleach.tickmarksY0(i)]; v = v/norm(v);
 
         [pts,pte] = yOCTApplyEnableZone(...
-            c-v*config.photobleach.lineLength, ...
-            c+v*config.photobleach.lineLength, ...
+            c-v*max([config.photobleach.lineLength, 2]), ... mm
+            c+v*max([config.photobleach.lineLength, 2]), ... mm
             isCleared, epsilon);
 
         ptStart = [ptStart pts];
@@ -129,7 +129,14 @@ grid on;
 xlabel('x[mm]');
 ylabel('y[mm]');
 
-%% Check that length of lines is never more than what we can
+%% Check that length of lines is never more or less than what we can
 if any( sqrt(sum((ptStart_Scan - ptEnd_Scan).^2)) > ini.RangeMaxX)
     error('One (or more) of the photobleach lines is longer than the allowed size, this might cause photobleaching errors!');
+end
+
+% Don't photobleach shorter distance than 10% of the range
+ini =  yOCTReadProbeIniToStruct(config.octProbePath);
+minDist = ini.RangeMaxX*0.1;
+if any( sqrt(sum((ptStart_Scan - ptEnd_Scan).^2)) < minDist)
+    error('One (or more) of the photobleach lines is shorter than the allowed size, this might cause photobleaching errors!');
 end
