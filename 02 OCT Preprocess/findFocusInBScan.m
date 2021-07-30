@@ -97,7 +97,7 @@ dim.z = dim1.z; %Update dimensions structure
 
 % Optical Path Correction
 scanInfoJson = awsReadJSON([OCTVolumesFolderVolume 'ScanInfo.json']);
-scan1 = yOCTOpticalPathCorrection(scan1, dim1, scanInfoJson);
+[scan1, scan1ValidDataMap] = yOCTOpticalPathCorrection(scan1, dim1, scanInfoJson);
 
 %Compute the total travel distance of the scanning process
 totalZDistance = diff(zDepths([1 end]))*1000; %mu
@@ -150,7 +150,7 @@ fp = sprintf('%sData%02d/',OCTVolumesFolderVolume,frameI);
 scan1 = yOCTApplyAbsoluteValueAScanBScanAveraging(scan1);
 
 % Optical Path Correction
-scan1 = yOCTOpticalPathCorrection(scan1, dim1, scanInfoJson);
+[scan1, scan1ValidDataMap] = yOCTOpticalPathCorrection(scan1, dim1, scanInfoJson);
 
 %Define search space
 zsToUse = dim.z.values > focusDepth1 - focusSigma*2 & dim.z.values < focusDepth1 + focusSigma*2;
