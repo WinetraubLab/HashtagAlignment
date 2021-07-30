@@ -26,12 +26,14 @@ switch(config.octProbeLens)
         exposure = 15; % sec per mm line
         base = 100/1000; %base seperation [mm]
         photobleachUnderInterface_mm = +50e-3; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm)
+        scanZJump_mm = 15;% Scan every x um in z
     case '40x'
         volumeSize = 0.5; %mm
         overviewSingleTileVolumeSize = 1; %mm
         exposure = 10; % sec per mm line
         base = 50/1000; %base seperation [mm]
         photobleachUnderInterface_mm = +75e-3; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm)
+        scanZJump_mm = 10;% Scan every x um i z
 end
 
 % OCT scan defenitions (scan is centered along (0,0)
@@ -46,7 +48,7 @@ config.volume.nBScanAvg = 1;
 % We assume stage starting position is at the top of the tissue.
 % z defenitions below are compared to starting position
 % +z is deeper
-config.zToScan = ((-190:15:500)-5)*1e-3; %[mm]
+config.zToScan = ((-190:scanZJump_mm:500)-5)*1e-3; %[mm]
 config.isZScanStartFromTop = false; % Would you like to start scanning from the top of the sample (true) or bottom (false)
 
 % Tissue Defenitions
