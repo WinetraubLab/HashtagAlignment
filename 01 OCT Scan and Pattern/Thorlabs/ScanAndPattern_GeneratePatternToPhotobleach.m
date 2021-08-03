@@ -130,13 +130,16 @@ xlabel('x[mm]');
 ylabel('y[mm]');
 
 %% Check that length of lines is never more or less than what we can
-if any( sqrt(sum((ptStart_Scan - ptEnd_Scan).^2)) > ini.RangeMaxX)
-    error('One (or more) of the photobleach lines is longer than the allowed size, this might cause photobleaching errors!');
-end
+if ~isempty(ptStart_Scan) % Preform checks if some points exist
+    
+    if any( sqrt(sum((ptStart_Scan - ptEnd_Scan).^2)) > ini.RangeMaxX)
+        error('One (or more) of the photobleach lines is longer than the allowed size, this might cause photobleaching errors!');
+    end
 
-% Don't photobleach shorter distance than 10% of the range
-ini =  yOCTReadProbeIniToStruct(config.octProbePath);
-minDist = ini.RangeMaxX*0.1;
-if any( sqrt(sum((ptStart_Scan - ptEnd_Scan).^2)) < minDist)
-    error('One (or more) of the photobleach lines is shorter than the allowed size, this might cause photobleaching errors!');
+    % Don't photobleach shorter distance than 10% of the range
+    ini =  yOCTReadProbeIniToStruct(config.octProbePath);
+    minDist = ini.RangeMaxX*0.1;
+    if any( sqrt(sum((ptStart_Scan - ptEnd_Scan).^2)) < minDist)
+        error('One (or more) of the photobleach lines is shorter than the allowed size, this might cause photobleaching errors!');
+    end
 end

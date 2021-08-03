@@ -169,7 +169,7 @@ config.version = 2.2; %Version of this JSON file
 if ~exist(outputFolder,'dir')
 	mkdir(outputFolder);
 end
-logFolder = [outputFolder '..\Log\01 OCT Scan and Pattern\'];
+logFolder = awsModifyPathForCompetability([outputFolder '..\Log\01 OCT Scan and Pattern\']);
 if ~exist(logFolder,'dir')
 	mkdir(logFolder);
 end
