@@ -84,7 +84,14 @@ yind = round(size(he_new,1)/2) - round(size(bf,1)/2)+ [1:size(bf,1)];
 
 bf_new = zeros(size(he_new));
 bf_new0 = zeros(size(he_new));
-bf_new(yind,xind) = bf;
+try % Add a try catch because we are getting an error on this line but not sure why, after we get an answer we can remove catch clause
+    bf_new(yind,xind) = bf;
+catch e
+    disp('Here are varibles that might help troubleshoot:');
+    yind
+    xind
+    rethrow(e);
+end
 bf_new0(yind,xind) = bf0;
 %% Section 1 - coarse registration
 
