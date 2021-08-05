@@ -87,8 +87,8 @@ config.photobleach.tickmarksY0 = [-0.25,0.25];
 
 % Orientation dot
 config.photobleach.isDrawTheDot = false;
-config.theDotX = -config.photobleach.lineLength/2*0.8;
-config.theDotY = +config.photobleach.lineLength/2*0.8;
+config.theDotX = +config.photobleach.lineLength/2*0.8;
+config.theDotY = -config.photobleach.lineLength/2*0.8;
 
 %% Inputs from Jenkins
 isExecutingOnJenkins = isRunningOnJenkins();
