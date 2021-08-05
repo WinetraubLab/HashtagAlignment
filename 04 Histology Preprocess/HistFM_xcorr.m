@@ -81,6 +81,8 @@ bf = 255- bf;
 % place bf image in 0 padded image of same size as HE image
 xind = round(size(he_new,2)/2) - round(size(bf,2)/2) + [1:size(bf,2)];
 yind = round(size(he_new,1)/2) - round(size(bf,1)/2)+ [1:size(bf,1)];
+xind(xind<0) = []; % remove bad indexies
+yind(yind<0) = []; % remove bad indexies
 
 bf_new = zeros(size(he_new));
 bf_new0 = zeros(size(he_new));
