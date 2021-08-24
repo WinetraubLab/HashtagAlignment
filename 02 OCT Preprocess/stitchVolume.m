@@ -4,7 +4,6 @@
 OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
 dispersionQuadraticTerm = []; %Use default that is specified in ini probe file
 
-focusSigma = 20; %When stitching along Z axis (multiple focus points), what is the size of each focus in z [pixel]
 outputFileFormat = 'tif'; %Can be 'tif' or 'mat' for debug
 
 isRunOnJenkins = false;
@@ -22,9 +21,16 @@ SubjectFolder = awsModifyPathForCompetability([OCTVolumesFolder '..\']);
 logFolder = awsModifyPathForCompetability([SubjectFolder '\Log\02 OCT Preprocess\VolumeDebug\']);
 outputFolder = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/']);
 
-%% Process scan
+%% Lens Based Settings
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
+switch(json.octProbeLens)
+    case '10x'
+        focusSigma = 20; %When stitching along Z axis (multiple focus points), what is the size of each focus in z [pixel]
+    case '40x'
+        focusSigma = 1; %When stitching along Z axis (multiple focus points), what is the size of each focus in z [pixel]
+end
 
+%% Process scan
 if ~isfield(json,'focusPositionInImageZpix')
     error('Please run findFocusInBScan first');
 end

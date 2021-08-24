@@ -33,7 +33,7 @@ switch(config.octProbeLens)
         exposure = 10; % sec per mm line
         base = 50/1000; %base seperation [mm]
         photobleachUnderInterface_mm = +75e-3; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm)
-        scanZJump_um = 10;% Scan every x um i z
+        scanZJump_um = 5;% Scan every x um i z
 end
 
 % OCT scan defenitions (scan is centered along (0,0)
