@@ -56,7 +56,7 @@ end
 if (config.photobleach.isDrawTickmarks)
 
     %Make sure tick marks don't collide with regular lines
-    clrnce = 0.1;
+    clrnce = 0.05;
     isCleared = @(x,y)( ...
         ( ...
             x < (min (config.photobleach.vLinePositions)-clrnce) | ...
@@ -129,11 +129,11 @@ grid on;
 xlabel('x[mm]');
 ylabel('y[mm]');
 
-%% Check that length of lines is never more or less than what we can
+%% Check that length of lines in the main section (ignore overview) is not too long
 if ~isempty(ptStart_Scan) % Preform checks if some points exist
     
     if any( sqrt(sum((ptStart_Scan - ptEnd_Scan).^2)) > ini.RangeMaxX)
-        error('One (or more) of the photobleach lines is longer than the allowed size, this might cause photobleaching errors!');
+        error('One (or more) of the photobleach lines in the main part is longer than the allowed size, this might cause photobleaching errors!');
     end
 
     % Don't photobleach shorter distance than 10% of the range
