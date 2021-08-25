@@ -29,7 +29,7 @@ switch(config.octProbeLens)
         scanZJump_um = 15;% Scan every x um in z
     case '40x'
         volumeSize = 0.5; %mm
-        overviewSingleTileVolumeSize = 1; %mm
+        overviewSingleTileVolumeSize = 0.8; %mm
         exposure = 10; % sec per mm line
         base = 50/1000; %base seperation [mm]
         photobleachUnderInterface_mm = +75e-3; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm)
