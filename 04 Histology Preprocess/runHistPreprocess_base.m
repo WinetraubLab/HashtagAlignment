@@ -45,7 +45,7 @@ end
     
 imshow(slideInfoIm);
 title('Do you see slide information?');
-[out] = inputdlg({'Library:','Subject Number:','Slide Number:'},'Slide Info',[1 35],{'LC','01','01'});
+[out] = inputdlg({'Library:','Subject Number:','Slide Number:'},'Slide Info',[1 35],{s3GetAllLibs('last'),'01','01'});
 close;
 
 if isempty(out)
