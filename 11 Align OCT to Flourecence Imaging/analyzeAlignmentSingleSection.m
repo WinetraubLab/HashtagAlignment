@@ -26,7 +26,11 @@ disp([datestr(now) ' Loading JSON(s)']);
 if ~exist('subjectFolderUsed','var') || ~strcmp(subjectFolder,subjectFolderUsed)
     subjectFolderUsed = subjectFolder;
     %First time, load all JSONs
-    ds = fileDatastore(subjectFolder,'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
+    % Any fileDatastore request to AWS S3 is limited to 1000 files in 
+    % MATLAB 2021a. Due to this bug, we have replaced all calls to 
+    % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
+    % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
+    ds = imageDatastore(subjectFolder,'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
     jsons = ds.readall();
     jsonsFilePaths = ds.Files;
 end
@@ -45,7 +49,11 @@ SlidesJsonsStack = [jsons{slideJsonsI2}]; %For the entire subject
 
 %% Load Enface view if avilable 
 try
-    ds = fileDatastore([subjectFolder '/OCTVolumes/OverviewScanAbs_Enface.tif'],'ReadFcn',@yOCTFromTif,'FileExtensions','.tif','IncludeSubfolders',true);
+    % Any fileDatastore request to AWS S3 is limited to 1000 files in 
+    % MATLAB 2021a. Due to this bug, we have replaced all calls to 
+    % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
+    % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
+    ds = imageDatastore([subjectFolder '/OCTVolumes/OverviewScanAbs_Enface.tif'],'ReadFcn',@yOCTFromTif,'FileExtensions','.tif','IncludeSubfolders',true);
     enfaceView = ds.read();
 catch
     enfaceView = [];
@@ -68,7 +76,11 @@ end
 
 %Load Flourecent image
 disp([datestr(now) ' Loading Flourecent Image']);
-ds = fileDatastore(awsModifyPathForCompetability([slideFolder slideJson.photobleachedLinesImagePath]),'ReadFcn',@imread);
+% Any fileDatastore request to AWS S3 is limited to 1000 files in 
+% MATLAB 2021a. Due to this bug, we have replaced all calls to 
+% fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
+% 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
+ds = imageDatastore(awsModifyPathForCompetability([slideFolder slideJson.photobleachedLinesImagePath]),'ReadFcn',@imread);
 histologyFluorescenceIm = ds.read();
 
 %% Align and plot

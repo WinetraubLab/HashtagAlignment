@@ -38,7 +38,11 @@ if ~exist(folderStructurePath,'dir')
     error('Please provide a valid folder path. Got: %s',folderStructurePath);
 end
 
-dsXml = fileDatastore(folderStructurePath,'ReadFcn',@(x)(x),'FileExtensions','.xml','IncludeSubfolders',true);
+% Any fileDatastore request to AWS S3 is limited to 1000 files in 
+% MATLAB 2021a. Due to this bug, we have replaced all calls to 
+% fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
+% 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
+dsXml = imageDatastore(folderStructurePath,'ReadFcn',@(x)(x),'FileExtensions','.xml','IncludeSubfolders',true);
 xmlFiles = dsXml.Files;
 
 folders = cellfun(@(x)fileparts(x),xmlFiles,'UniformOutput',false);
@@ -56,7 +60,11 @@ for i=1:length(folders)
 folder = folders{i};
 
 %% Find a tif file, and slide & section
-ds = fileDatastore(folder,'FileExtensions','.tif','ReadFcn',@(x)(x));
+% Any fileDatastore request to AWS S3 is limited to 1000 files in 
+% MATLAB 2021a. Due to this bug, we have replaced all calls to 
+% fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
+% 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
+ds = imageDatastore(folder,'FileExtensions','.tif','ReadFcn',@(x)(x));
 fp = ds.Files{1};
 
 slideNumber = NaN;
@@ -88,7 +96,11 @@ folder = [folder '\'];
 fileName = fileName(1:(strfind(fileName,'_ch0')-1)); %Trim chanel
 fileName = replace(fileName,'_z0','');
 
-ds = fileDatastore([folder fileName '*'],'ReadFcn',@(x)(x));
+% Any fileDatastore request to AWS S3 is limited to 1000 files in 
+% MATLAB 2021a. Due to this bug, we have replaced all calls to 
+% fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
+% 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
+ds = imageDatastore([folder fileName '*'],'ReadFcn',@(x)(x));
 files = ds.Files;
 
 flourescenceImagePath = files(cellfun(@(x)(contains(x,sprintf('ch%02d',flourescenceChanel))),files));
@@ -121,7 +133,11 @@ end
 %% Read pixel size from meta data
 
 %Read subfolders
-ds = fileDatastore(folder,'ReadFcn',@(x)(x),'IncludeSubfolders',true,'FileExtensions','.xml');
+% Any fileDatastore request to AWS S3 is limited to 1000 files in 
+% MATLAB 2021a. Due to this bug, we have replaced all calls to 
+% fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
+% 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
+ds = imageDatastore(folder,'ReadFcn',@(x)(x),'IncludeSubfolders',true,'FileExtensions','.xml');
 files = ds.Files;
 
 fileToUse = cellfun(@(x)(contains(lower(x),'_properties.xml') & contains(x,fileName)),files);
@@ -208,7 +224,11 @@ if ~isempty(beadsImagePath)
     awsCopyFileFolder(json.beadsImagePath,outputFolder);
 end
 
-ds = fileDatastore(folder,'ReadFcn',@(x)(x),'IncludeSubfolders',true);
+% Any fileDatastore request to AWS S3 is limited to 1000 files in 
+% MATLAB 2021a. Due to this bug, we have replaced all calls to 
+% fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
+% 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
+ds = imageDatastore(folder,'ReadFcn',@(x)(x),'IncludeSubfolders',true);
 files = ds.Files;
 toSend = cellfun(@(x)(contains(x,fileName)),files);
 files = files(toSend);

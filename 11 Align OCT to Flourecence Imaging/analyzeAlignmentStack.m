@@ -58,7 +58,11 @@ disp([datestr(now) ' Loading Enface View']);
 enfaceFilePath = awsModifyPathForCompetability( ...
     [subjectFolder '/OCTVolumes/OverviewScanAbs_Enface.tif']);
 if awsExist(enfaceFilePath,'file')
-    ds = fileDatastore(enfaceFilePath,'ReadFcn',@yOCTFromTif);
+    % Any fileDatastore request to AWS S3 is limited to 1000 files in 
+    % MATLAB 2021a. Due to this bug, we have replaced all calls to 
+    % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
+    % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
+    ds = imageDatastore(enfaceFilePath,'ReadFcn',@yOCTFromTif);
     enfaceView = ds.read();
 else
     enfaceView = [];

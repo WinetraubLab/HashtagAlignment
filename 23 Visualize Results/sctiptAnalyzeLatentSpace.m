@@ -13,7 +13,11 @@ latentPath = [baseMLFolder '/results/' modelName '/feats/center/'];
 isCorrectAspectRatio2To1 = true; % Set to true if aspect ratio needs correction to 2 to 1
 
 %% Load all latent features
-ds = fileDatastore([latentPath 'L*.mat'],'ReadFcn',@load);
+% Any fileDatastore request to AWS S3 is limited to 1000 files in 
+% MATLAB 2021a. Due to this bug, we have replaced all calls to 
+% fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
+% 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
+ds = imageDatastore([latentPath 'L*.mat'],'ReadFcn',@load);
 featuresDS = ds.readall();
 features = cellfun(@(x)(x.feats(:)'),featuresDS(:),'UniformOutput',false);
 features = cell2mat(features);
@@ -138,25 +142,29 @@ for subjectI=1:length(subjectsNameUnique)
         refPath = [trainImagesPath samplesName{firstSampleOfSubjectI(subjectI)}];
     end
     subplot(2,3,1);
-    ds = fileDatastore([refPath '_real_A*'],'ReadFcn',@imread);
+    % Any fileDatastore request to AWS S3 is limited to 1000 files in 
+    % MATLAB 2021a. Due to this bug, we have replaced all calls to 
+    % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
+    % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
+    ds = imageDatastore([refPath '_real_A*'],'ReadFcn',@imread);
     imshow(ds.read());
     title(sprintf('%s OCT',subjectsNameUnique{subjectI}));
     ylabel('Test Sample');
 
     subplot(2,3,2);
-    ds = fileDatastore([refPath '_fake_B*'],'ReadFcn',@imread);
+    ds = imageDatastore([refPath '_fake_B*'],'ReadFcn',@imread);
     imshow(ds.read());
     title(sprintf('%s Generated Histology',subjectsNameUnique{subjectI}));
 
     subplot(2,3,3);
-    ds = fileDatastore([refPath '_real_B*'],'ReadFcn',@imread);
+    ds = imageDatastore([refPath '_real_B*'],'ReadFcn',@imread);
     imshow(ds.read());
     title(sprintf('%s Real Histology',subjectsNameUnique{subjectI}));
 
     % Shortest diatnace 
     for i=1:3
         % Get one image associated with subject
-        ds = fileDatastore([trainImagesPath samplesName{firstSampleOfSubjectI(ii(i))} '_real_B*'],'ReadFcn',@imread);
+        ds = imageDatastore([trainImagesPath samplesName{firstSampleOfSubjectI(ii(i))} '_real_B*'],'ReadFcn',@imread);
         subplot(2,3,i+3);
         imshow(ds.read());
         
