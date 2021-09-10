@@ -24,7 +24,6 @@ switch(config.octProbeLens)
         volumeSize = 1; %mm
         overviewSingleTileVolumeSize = 1; %mm
         exposure = 15; % sec per mm line
-        base = 100/1000; %base seperation [mm]
         photobleachUnderInterface_mm = +50e-3; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm)
         scanZJump_um = 15;% Scan every x um in z
         overview_nZToScanDefault = 3; % How many depth points to scan overview in
@@ -32,7 +31,6 @@ switch(config.octProbeLens)
         volumeSize = 0.5; %mm
         overviewSingleTileVolumeSize = 0.8; %mm
         exposure = 10; % sec per mm line
-        base = 50/1000; %base seperation [mm]
         photobleachUnderInterface_mm = +75e-3; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm)
         scanZJump_um = 5;% Scan every x um i z
         overview_nZToScanDefault = 2; % How many depth points to scan overview in. At 40x we have so many overview tiles, its worth scanning less
@@ -68,6 +66,7 @@ config.overview.nZToScan = overview_nZToScanDefault; %How many different depths 
 % Photobleaching defenitions
 % Line placement (vertical - up/down, horizontal - left/right)
 % LG
+base = 1/1000; %base seperation [mm], we don't want to go under 0.1mm because lines become overlap.
 config.photobleach.vLinePositions = base*[-4  0 1 3]; %[mm] 
 config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm]
 config.photobleach.exposure = exposure; %[sec per line length (mm)]
