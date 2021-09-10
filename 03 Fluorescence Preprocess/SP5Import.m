@@ -42,7 +42,7 @@ end
 % MATLAB 2021a. Due to this bug, we have replaced all calls to 
 % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
 % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-dsXml = imageDatastore(folderStructurePath,'ReadFcn',@(x)(x),'FileExtensions','.xml','IncludeSubfolders',true);
+dsXml = fileDatastore(folderStructurePath,'ReadFcn',@(x)(x),'FileExtensions','.xml','IncludeSubfolders',true);
 xmlFiles = dsXml.Files;
 
 folders = cellfun(@(x)fileparts(x),xmlFiles,'UniformOutput',false);
@@ -64,7 +64,7 @@ folder = folders{i};
 % MATLAB 2021a. Due to this bug, we have replaced all calls to 
 % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
 % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-ds = imageDatastore(folder,'FileExtensions','.tif','ReadFcn',@(x)(x));
+ds = fileDatastore(folder,'FileExtensions','.tif','ReadFcn',@(x)(x));
 fp = ds.Files{1};
 
 slideNumber = NaN;
@@ -100,7 +100,7 @@ fileName = replace(fileName,'_z0','');
 % MATLAB 2021a. Due to this bug, we have replaced all calls to 
 % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
 % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-ds = imageDatastore([folder fileName '*'],'ReadFcn',@(x)(x));
+ds = fileDatastore([folder fileName '*'],'ReadFcn',@(x)(x));
 files = ds.Files;
 
 flourescenceImagePath = files(cellfun(@(x)(contains(x,sprintf('ch%02d',flourescenceChanel))),files));
@@ -137,7 +137,7 @@ end
 % MATLAB 2021a. Due to this bug, we have replaced all calls to 
 % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
 % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-ds = imageDatastore(folder,'ReadFcn',@(x)(x),'IncludeSubfolders',true,'FileExtensions','.xml');
+ds = fileDatastore(folder,'ReadFcn',@(x)(x),'IncludeSubfolders',true,'FileExtensions','.xml');
 files = ds.Files;
 
 fileToUse = cellfun(@(x)(contains(lower(x),'_properties.xml') & contains(x,fileName)),files);
@@ -228,7 +228,7 @@ end
 % MATLAB 2021a. Due to this bug, we have replaced all calls to 
 % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
 % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-ds = imageDatastore(folder,'ReadFcn',@(x)(x),'IncludeSubfolders',true);
+ds = fileDatastore(folder,'ReadFcn',@(x)(x),'IncludeSubfolders',true);
 files = ds.Files;
 toSend = cellfun(@(x)(contains(x,fileName)),files);
 files = files(toSend);

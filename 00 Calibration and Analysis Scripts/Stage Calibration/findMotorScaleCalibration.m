@@ -17,7 +17,7 @@ mmToDeviceUnitsY = 34862.567; %100000/2.9151; % Get this number from ThrolabsIma
 % MATLAB 2021a. Due to this bug, we have replaced all calls to 
 % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
 % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-dsIm = imageDatastore(photobleachImagePath);
+dsIm = fileDatastore(photobleachImagePath);
 im = dsIm.read();
 
 %% Rotate - Course

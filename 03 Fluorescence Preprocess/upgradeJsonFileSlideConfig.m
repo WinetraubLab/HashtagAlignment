@@ -11,7 +11,7 @@ folder = awsModifyPathForCompetability([fileparts(filePath) '/']);
 % MATLAB 2021a. Due to this bug, we have replaced all calls to 
 % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
 % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-ds = imageDatastore(folder,'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
+ds = fileDatastore(folder,'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
 ds.Files = ds.Files(cellfun(@(x)(contains(x,'SlideConfig')),ds.Files));
 
 jsonIns = ds.readall;
@@ -45,7 +45,7 @@ for i=1:length(fps)
             % MATLAB 2021a. Due to this bug, we have replaced all calls to 
             % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
             % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-            ds = imageDatastore(plFP,'ReadFcn',@imfinfo);
+            ds = fileDatastore(plFP,'ReadFcn',@imfinfo);
             info = ds.read;
             jsonOut.FM.imageSize_pix = [info.Height info.Width];
             
