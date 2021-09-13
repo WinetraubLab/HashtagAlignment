@@ -66,7 +66,7 @@ config.overview.nZToScan = overview_nZToScanDefault; %How many different depths 
 % Photobleaching defenitions
 % Line placement (vertical - up/down, horizontal - left/right)
 % LG
-base = 1/1000; %base seperation [mm], we don't want to go under 0.1mm because lines become overlap.
+base = 100e-3; %base seperation [mm], we don't want to go under 0.1mm because lines become overlap.
 config.photobleach.vLinePositions = base*[-4  0 1 3]; %[mm] 
 config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm]
 config.photobleach.exposure = exposure; %[sec per line length (mm)]
