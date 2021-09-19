@@ -30,7 +30,7 @@ if ~exist('subjectFolderUsed','var') || ~strcmp(subjectFolder,subjectFolderUsed)
     % MATLAB 2021a. Due to this bug, we have replaced all calls to 
     % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
     % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-    ds = fileDatastore(subjectFolder,'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
+    ds = imageDatastore(subjectFolder,'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
     jsons = ds.readall();
     jsonsFilePaths = ds.Files;
 end
@@ -53,7 +53,7 @@ try
     % MATLAB 2021a. Due to this bug, we have replaced all calls to 
     % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
     % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-    ds = fileDatastore([subjectFolder '/OCTVolumes/OverviewScanAbs_Enface.tif'],'ReadFcn',@yOCTFromTif,'FileExtensions','.tif','IncludeSubfolders',true);
+    ds = imageDatastore([subjectFolder '/OCTVolumes/OverviewScanAbs_Enface.tif'],'ReadFcn',@yOCTFromTif,'FileExtensions','.tif','IncludeSubfolders',true);
     enfaceView = ds.read();
 catch
     enfaceView = [];
@@ -80,7 +80,7 @@ disp([datestr(now) ' Loading Flourecent Image']);
 % MATLAB 2021a. Due to this bug, we have replaced all calls to 
 % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
 % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-ds = fileDatastore(awsModifyPathForCompetability([slideFolder slideJson.photobleachedLinesImagePath]),'ReadFcn',@imread);
+ds = imageDatastore(awsModifyPathForCompetability([slideFolder slideJson.photobleachedLinesImagePath]),'ReadFcn',@imread);
 histologyFluorescenceIm = ds.read();
 
 %% Align and plot

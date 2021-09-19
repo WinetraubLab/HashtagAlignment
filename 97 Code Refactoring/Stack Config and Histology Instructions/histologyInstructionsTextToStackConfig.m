@@ -17,12 +17,13 @@ slidesFolder = awsModifyPathForCompetability([subjectPath '/Slides/']);
 try
     if readFileFromOperational
         % Any fileDatastore request to AWS S3 is limited to 1000 files in 
-        % MATLAB 2021a. Due to this bug, we have replaced all calls to 
-        % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
+        % MATLAB 2021a. Due to this bug, we have modified certain calls to 
+        % fileDatastore by encompassing the file path or folder name using matlab.io.datastore.DsFileSet
+        % Note: This change results it a much longer runtime 
         % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-        ds = fileDatastore([logsFloder 'histoInstructions.txt'],'ReadFcn',@fileread);
+        ds = fileDatastore(matlab.io.datastore.DsFileSet([logsFloder 'histoInstructions.txt']),'ReadFcn',@fileread);
     else
-        ds = fileDatastore([depricatedFolder 'histoInstructions.txt'],'ReadFcn',@fileread);
+        ds = fileDatastore(matlab.io.datastore.DsFileSet([depricatedFolder 'histoInstructions.txt']),'ReadFcn',@fileread);
     end
     hiText = ds.read;
 catch

@@ -66,7 +66,7 @@ subjectFolder = s3SubjectPath(out{2},out{1});
 % MATLAB 2021a. Due to this bug, we have replaced all calls to 
 % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
 % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-fd = fileDatastore(sprintf('%sSlides/Slide%s*',subjectFolder,out{3}),'ReadFcn',@(x)(x),'FileExtensions','.json');
+fd = imageDatastore(sprintf('%sSlides/Slide%s*',subjectFolder,out{3}),'ReadFcn',@(x)(x),'FileExtensions','.json');
 fld = cellfun(@fileparts,fd.Files,'UniformOutput',false); %Get folders 
 fld = unique(fld);
 slideSections = cellfun(@(x)(strrep(x,sprintf('%sSlides/',subjectFolder),'')),fld,'UniformOutput',false);
@@ -124,7 +124,7 @@ for i=1:length(slideS3Path)
     % MATLAB 2021a. Due to this bug, we have replaced all calls to 
     % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
     % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-    ds = fileDatastore(fileName,'ReadFcn',@imread);
+    ds = imageDatastore(fileName,'ReadFcn',@imread);
     im = ds.read;
     imshow(im);
     

@@ -182,10 +182,10 @@ try
     % MATLAB 2021a. Due to this bug, we have replaced all calls to 
     % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
     % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-    ds = fileDatastore(folder,'ReadFcn',@awsReadJSON,'FileExtensions','.json');
+    ds = imageDatastore(folder,'ReadFcn',@awsReadJSON,'FileExtensions','.json');
     handles.slideJsonFilePath = ds.Files{1};
     handles.slideJson = ds.read();
-    ds = fileDatastore(awsModifyPathForCompetability([folder handles.slideJson.photobleachedLinesImagePath]),'ReadFcn',@imread);
+    ds = imageDatastore(awsModifyPathForCompetability([folder handles.slideJson.photobleachedLinesImagePath]),'ReadFcn',@imread);
     handles.im = ds.read();
     
     handles.allSlidesPath = awsModifyPathForCompetability([fileparts(handles.slideJsonFilePath) '/../']);
@@ -195,7 +195,7 @@ try
     % MATLAB 2021a. Due to this bug, we have replaced all calls to 
     % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
     % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-    ds = fileDatastore(handles.allSlidesPath,'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
+    ds = imageDatastore(handles.allSlidesPath,'ReadFcn',@awsReadJSON,'FileExtensions','.json','IncludeSubfolders',true);
     ds.Files = ds.Files(cellfun(@(x)(contains(x,'SlideConfig')),ds.Files)); %Make sure we use only slides JSONs
     slideJsonStack = ds.readall;
     xx = cellfun(@(x)(isequaln(handles.slideJson,x)),slideJsonStack);
@@ -211,7 +211,7 @@ try
     % MATLAB 2021a. Due to this bug, we have replaced all calls to 
     % fileDatastore with imageDatastore since the bug does not affect imageDatastore. 
     % 'https://www.mathworks.com/matlabcentral/answers/502559-filedatastore-request-to-aws-s3-limited-to-1000-files'
-    ds = fileDatastore(folder,'ReadFcn',@awsReadJSON,'FileExtensions','.json');
+    ds = imageDatastore(folder,'ReadFcn',@awsReadJSON,'FileExtensions','.json');
     handles.octVolumeJsonFilePath = ds.Files{1};
     handles.octVolumeJson = ds.read();
     
