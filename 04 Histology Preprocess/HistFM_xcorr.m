@@ -83,6 +83,7 @@ bf = 255- bf;
 
 %% Downscaled Registration
 [optimizer,metric] = imregconfig('multimodal');
+optimizer.InitialRadius = optimizer.InitialRadius/3.5;
 
 % Apply histogram equalization. This step helps improve registration
 % accuracy
@@ -96,27 +97,38 @@ he_new_downscaled = imresize(he_new_hist_eq, downscale);
 he_new_fliplr_downscaled = imresize(he_new_fliplr1_hist_eq, downscale);
 bf_downscaled = imresize(bf1_hist_eq, downscale);
 
-tform_fliplr = imregtform(he_new_fliplr_downscaled,bf_downscaled,'rigid',optimizer,metric);
-tform_normal = imregtform(he_new_downscaled,bf_downscaled,'rigid',optimizer,metric);
+tform_fliplr_downscaled = imregtform(he_new_fliplr_downscaled,bf_downscaled,'rigid',optimizer,metric);
+tform_normal_downscaled = imregtform(he_new_downscaled,bf_downscaled,'rigid',optimizer,metric);
 
-% Fix Translation Factor Due to Downscaling
+% Fix Translation Factor Due to Downscaling and Pre-process scaling by SP52Hist_scale
+
+tform_fliplr = tform_fliplr_downscaled;
+tform_fliplr.T(1,1) = tform_fliplr.T(1,1) * SP52Hist_scale;
+tform_fliplr.T(1,2) = tform_fliplr.T(1,2) * SP52Hist_scale;
+tform_fliplr.T(2,1) = tform_fliplr.T(2,1) * SP52Hist_scale;
+tform_fliplr.T(2,2) = tform_fliplr.T(2,2) * SP52Hist_scale;
 tform_fliplr.T(3,1) = tform_fliplr.T(3,1) * 8;
 tform_fliplr.T(3,2) = tform_fliplr.T(3,2) * 8;
 
+tform_normal = tform_normal_downscaled;
+tform_normal.T(1,1) = tform_normal.T(1,1) * SP52Hist_scale;
+tform_normal.T(1,2) = tform_normal.T(1,2) * SP52Hist_scale;
+tform_normal.T(2,1) = tform_normal.T(2,1) * SP52Hist_scale;
+tform_normal.T(2,2) = tform_normal.T(2,2) * SP52Hist_scale;
 tform_normal.T(3,1) = tform_normal.T(3,1) * 8;
 tform_normal.T(3,2) = tform_normal.T(3,2) * 8;
 
-% Debug Plotting
-%Rfixed = imref2d(size(bf));
-%he_new_fliplr_registered = imwarp(he_new_fliplr,tform_fliplr, 'OutputView', Rfixed);
-%he_new_registered = imwarp(he_new,tform_normal, 'OutputView', Rfixed);
-%figure();imshowpair(he_new_fliplr_registered, bf);title("Flipped Registration");
-%figure();imshowpair(he_new_registered, bf);title("Un-Flipped Registration");
+% Debug Plotting  
+%Rfixed = imref2d(size(imFM));
+%he_new_fliplr_registered = imwarp(fliplr(imHist),tform_fliplr, 'OutputView', Rfixed);
+%he_new_registered = imwarp(imHist,tform_normal, 'OutputView', Rfixed);
+%figure();imshowpair(he_new_fliplr_registered, imFM);title("Flipped Registration");
+%figure();imshowpair(he_new_registered, imFM);title("Un-Flipped Registration");
 
 %% Apply registration to histology image
 Rfixed_downscaled = imref2d(size(bf_downscaled));
-he_new_fliplr_reg_downscaled = imwarp(imresize(he_new_fliplr, downscale),tform_fliplr,'OutputView',Rfixed_downscaled);
-he_new_reg_downscaled = imwarp(imresize(he_new, downscale),tform_normal,'OutputView',Rfixed_downscaled);
+he_new_fliplr_reg_downscaled = imwarp(imresize(he_new_fliplr, downscale),tform_fliplr_downscaled,'OutputView',Rfixed_downscaled);
+he_new_reg_downscaled = imwarp(imresize(he_new, downscale),tform_normal_downscaled,'OutputView',Rfixed_downscaled);
 
 %% Determine flip orientation 
 flipC = normxcorr2(he_new_fliplr_reg_downscaled, bf_downscaled);
