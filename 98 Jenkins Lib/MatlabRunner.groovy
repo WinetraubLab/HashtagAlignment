@@ -4,25 +4,17 @@
 //Usually, write a script called runme.m and execute RunMatlabScript("runme.m")
 def RunMatlabScript (scriptPath, isConnectToCluster=false) 
 {
-	def matlab_2019a = new File('C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe')
-	def matlab_2019b = new File('C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe')
-	def matlab_2021a = new File('C:\\Program Files\\MATLAB\\R2021a\\bin\\matlab.exe')
-	
+
 	// Check which Matlab is available (ranked by preference)
-	def MATLAB_PATH = "Unknown"
-	if (matlab_2019b.exists())
-	{
-		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019b\\bin\\matlab.exe"'
-	}
-	else if (matlab_2019a.exists())
-	{
-		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2019a\\bin\\matlab.exe"'
-	}
-	else if (matlab_2021a.exists())
-	{
-		MATLAB_PATH = '"C:\\Program Files\\MATLAB\\R2021a\\bin\\matlab.exe"'
-	}
-	else
+	def MATLAB_PATH = RunMatlabScript_FindMatlabCopy("2021b")
+	
+	if (MATLAB_PATH == "Unknown")
+		MATLAB_PATH = RunMatlabScript_FindMatlabCopy("2021a")
+	if (MATLAB_PATH == "Unknown")
+		MATLAB_PATH = RunMatlabScript_FindMatlabCopy("2019b")
+	if (MATLAB_PATH == "Unknown")
+		MATLAB_PATH = RunMatlabScript_FindMatlabCopy("2019a")
+	if (MATLAB_PATH == "Unknown")
 	{
 		throw("Could not find any of the matlab versions suported")
 	}
@@ -93,6 +85,22 @@ def RunMatlabScript (scriptPath, isConnectToCluster=false)
 			echo ------------------------------ LOG END -----------------------------
 			echo --------------------------------------------------------------------
 			"""
+	}
+}
+
+// Helper function for the above script
+def RunMatlabScript_FindMatlabCopy(matlabVersion)
+{
+	def filePath = 'C:\\Program Files\\MATLAB\\R' + matlabVersion + '\\bin\\matlab.exe'
+	def matlabVer = new File(filePath)
+	
+	if (matlabVer.exists())
+	{
+		return '"' + filePath + '"'
+	}
+	else
+	{
+		return "Unknown"
 	}
 }
 
