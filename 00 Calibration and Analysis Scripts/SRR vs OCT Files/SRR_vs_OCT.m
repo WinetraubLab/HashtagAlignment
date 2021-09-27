@@ -24,8 +24,6 @@
 %% Step #3 - .SRR Scan
 
 % Add path
-currentFileFolder = [fileparts(mfilename('fullpath')) '\'];
-addpath(genpath(currentFileFolder));
 ThorlabsImagerNETLoadLib();
 outputFolder = 'SRR_vs_OCT_Step3\';
 
