@@ -31,6 +31,8 @@ switch(config.octProbeLens)
         % Photobleaching
         vLinePositions = [-4  0 1 3]; %Unitless, vLine positions as multiplication of base
         hLinePositions = [-3 -2 1 3]; %Unitless, hLine positions as multiplication of base
+        
+        tissueRefractiveIndex = 1.4; % Silicon Oil
     case '40x'
         volumeSize = 0.5; %mm
         overviewSingleTileVolumeSize = 0.8; %mm
@@ -42,6 +44,8 @@ switch(config.octProbeLens)
         % Photobleaching
         vLinePositions = [-1  0 2]; %Unitless, vLine positions as multiplication of base
         hLinePositions = [-2 -1 2]; %Unitless, hLine positions as multiplication of base
+        
+        tissueRefractiveIndex = 1.33; % Water
 end
 
 % OCT scan defenitions (scan is centered along (0,0)
@@ -60,7 +64,7 @@ config.zToScan = ((-190:scanZJump_um:500)-5)*1e-3; %[mm]
 config.isZScanStartFromTop = false; % Would you like to start scanning from the top of the sample (true) or bottom (false)
 
 % Tissue Defenitions
-config.tissueRefractiveIndex = 1.4;
+config.tissueRefractiveIndex = tissueRefractiveIndex;
 config.gelIterfacePosionWithRespectToTissueTop_mm = -300e-3; %[mm]. Z position of the gel-air interface compared to gel-tissue interface. Negative Z means above.
 
 % Overview of the entire area
