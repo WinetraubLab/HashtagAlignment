@@ -23,11 +23,13 @@
 
 %% Step #3 - .SRR Scan
 
-% Add path
+disp('Make sure to turn off OCT Thorlabs software');
+
+% Initialize
 ThorlabsImagerNETLoadLib();
 outputFolder = 'SRR_vs_OCT_Step3\';
 
-
+% Scan
 scanParameters = yOCTScanTile (...
     outputFolder, ...
     'octProbePath', getProbeIniPath('40x'), ...
