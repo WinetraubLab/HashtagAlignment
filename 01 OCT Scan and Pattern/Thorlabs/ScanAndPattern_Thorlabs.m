@@ -27,13 +27,25 @@ switch(config.octProbeLens)
         photobleachUnderInterface_mm = +50e-3; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm)
         scanZJump_um = 15;% Scan every x um in z
         overview_nZToScanDefault = 3; % How many depth points to scan overview in
+        
+        % Photobleaching
+        vLinePositions = [-4  0 1 3]; %Unitless, vLine positions as multiplication of base
+        hLinePositions = [-3 -2 1 3]; %Unitless, hLine positions as multiplication of base
+        
+        tissueRefractiveIndex = 1.4; % Silicon Oil
     case '40x'
         volumeSize = 0.5; %mm
         overviewSingleTileVolumeSize = 0.8; %mm
         exposure = 10; % sec per mm line
-        photobleachUnderInterface_mm = +75e-3; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm)
+        photobleachUnderInterface_mm = +50e-3 + [0 50e-3 100e-3]; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm). 40x we photobleach in a few spots
         scanZJump_um = 5;% Scan every x um i z
         overview_nZToScanDefault = 2; % How many depth points to scan overview in. At 40x we have so many overview tiles, its worth scanning less
+        
+        % Photobleaching
+        vLinePositions = [-1  0 2]; %Unitless, vLine positions as multiplication of base
+        hLinePositions = [-2 -1 2]; %Unitless, hLine positions as multiplication of base
+        
+        tissueRefractiveIndex = 1.33; % Water
 end
 
 % OCT scan defenitions (scan is centered along (0,0)
@@ -52,7 +64,7 @@ config.zToScan = ((-190:scanZJump_um:500)-5)*1e-3; %[mm]
 config.isZScanStartFromTop = false; % Would you like to start scanning from the top of the sample (true) or bottom (false)
 
 % Tissue Defenitions
-config.tissueRefractiveIndex = 1.4;
+config.tissueRefractiveIndex = tissueRefractiveIndex;
 config.gelIterfacePosionWithRespectToTissueTop_mm = -300e-3; %[mm]. Z position of the gel-air interface compared to gel-tissue interface. Negative Z means above.
 
 % Overview of the entire area
@@ -65,10 +77,9 @@ config.overview.nZToScan = overview_nZToScanDefault; %How many different depths 
 
 % Photobleaching defenitions
 % Line placement (vertical - up/down, horizontal - left/right)
-% LG
 base = 100e-3; %base seperation [mm], we don't want to go under 0.1mm because lines become overlap.
-config.photobleach.vLinePositions = base*[-4  0 1 3]; %[mm] 
-config.photobleach.hLinePositions = base*[-3 -2 1 3]; %[mm]
+config.photobleach.vLinePositions = base*vLinePositions; %[mm] 
+config.photobleach.hLinePositions = base*hLinePositions; %[mm]
 config.photobleach.exposure = exposure; %[sec per line length (mm)]
 config.photobleach.nPasses = 2;
 config.photobleach.lineLength = volumeSize*2; %[mm]
@@ -78,7 +89,7 @@ config.photobleach.photobleachOverviewBufferZone = 0.170; %See extended lines de
    
 % Probe defenitions
 config.octProbePath = getProbeIniPath(config.octProbeLens);
-config.oct2stageXYAngleDeg = -1.95; % Current calibration angle between OCT and Stage 
+config.oct2stageXYAngleDeg = -1.11; % Current calibration angle between OCT and Stage 
 % See findMotorAngleCalibration if you need to recalibrate (e.g. when OCT head was moved)
 
 % Tickmarks (if required)
@@ -282,7 +293,8 @@ if config.photobleach.isPhotobleachOverview && config.photobleach.isPhotobleachE
     
     yOCTPhotobleachTile(config.photobleach.ptStart_Extended,config.photobleach.ptEnd_Extended,...
         'octProbePath',config.octProbePath,...
-        'z',config.photobleach.z,'exposure',config.photobleach.exposure,...
+        'z',config.photobleach.z(1), ... For exended lines just photobleach the first depth (no need to do deeper)
+        'exposure',config.photobleach.exposure,...
         'nPasses',config.photobleach.nPasses,...
 		'oct2stageXYAngleDeg', config.oct2stageXYAngleDeg); 
     pause(0.5);

@@ -84,10 +84,10 @@ zEndI   = min(zEndI,size(overviewVol,1));
 
 %See if zStartI is above gel interface. If it is, it has reflections that
 %will cause us problems
-zTissueClear = json.photobleach.z+175e-3; %Have some clearence
+zTissueClear = json.photobleach.z(1)+175e-3; %Have some clearence
 if (zOverview(zStartI) < zTissueClear)
     warning('Overview scan starts at %.0f[um], however photboleach line is at %.0f[um] (%.0f[um] just to be safe).\nAdjusting zStart such that we will not include gel interface in enface',...
-        zOverview(zStartI)*1e3,json.photobleach.z*1e3,zTissueClear*1e3);
+        zOverview(zStartI)*1e3,json.photobleach.z(1)*1e3,zTissueClear*1e3);
     zStartI = find(zOverview > zTissueClear,1,'first');
 end
 
