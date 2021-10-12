@@ -32,7 +32,7 @@ def save_images(webpage, visuals, image_path, original_im_dimensions, width=256)
     # Iterate through the OCT, real histology, and generated histology image for each slide
     for label, im_data in visuals.items():
         im = util.tensor2im(im_data)
-        image_name = '%s_%s.jpg' % (name, label)
+        image_name = '%s_%s.png' % (name, label)
         save_path = os.path.join(image_dir, image_name)
         save_path_original_dim = os.path.join(image_dir_original_dim, image_name)
 
