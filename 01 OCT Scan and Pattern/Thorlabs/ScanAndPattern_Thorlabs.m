@@ -180,6 +180,7 @@ config.version = 2.2; %Version of this JSON file
 % Make dirs for output and log
 if ~exist(outputFolder,'dir')
 	mkdir(outputFolder);
+    addpath(genpath(outputFolder));
 end
 logFolder = awsModifyPathForCompetability([outputFolder '..\Log\01 OCT Scan and Pattern\']);
 if ~exist(logFolder,'dir')
