@@ -43,7 +43,7 @@ switch(config.octProbeLens)
         
         % Photobleaching
         vLinePositions = [-1  0 2]; %Unitless, vLine positions as multiplication of base
-        hLinePositions = [-2 -1 2]; %Unitless, hLine positions as multiplication of base
+        hLinePositions = [-2 -1 2]-0.5; %Unitless, hLine positions as multiplication of base
         
         tissueRefractiveIndex = 1.33; % Water
 end
