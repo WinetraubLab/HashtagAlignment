@@ -38,7 +38,7 @@ switch(config.octProbeLens)
         overviewSingleTileVolumeSize = 0.8; %mm
         exposure = 10; % sec per mm line
         photobleachUnderInterface_mm = +25e-3 + [0 50e-3 100e-3]; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm). 40x we photobleach in a few spots
-        scanZJump_um = 5;% Scan every x um i z
+        scanZJump_um = 25;% Scan every x um i z
         overview_nZToScanDefault = 2; % How many depth points to scan overview in. At 40x we have so many overview tiles, its worth scanning less
         
         % Photobleaching
@@ -60,7 +60,7 @@ config.volume.nBScanAvg = 1;
 % We assume stage starting position is at the top of the tissue.
 % z defenitions below are compared to starting position
 % +z is deeper
-config.zToScan = ((-190:scanZJump_um:500)-5)*1e-3; %[mm]
+config.zToScan = ((-25:scanZJump_um:100))*1e-3; %[mm]
 config.isZScanStartFromTop = false; % Would you like to start scanning from the top of the sample (true) or bottom (false)
 
 % Tissue Defenitions
