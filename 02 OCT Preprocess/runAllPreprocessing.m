@@ -53,16 +53,6 @@ else
     outputFolderAWS = false;
 end
 
-if (isUploadToCloud)
-    volumeFoldersPath = strcat(SubjectFolderIn, 'OCTVolumes/Volume/');
-    volumeFolders = dir(volumeFoldersPath);
-    folderNames = {volumeFolders([volumeFolders.isdir]).name};
-    folderNames = folderNames(~ismember(folderNames,{'.','..','ScanInfo.json'}));
-    for folder = folderNames
-        yOCTUnzipOCTFolder(strcat(volumeFoldersPath, char(folder), '/VolumeFile.oct'),strcat(volumeFoldersPath, char(folder)),true);
-    end
-end
-
 % if requesting to upload to the cloud, make sure folder is not already in s3 :)
 if (isUploadToCloud && inputFolderAWS)
      disp(['Input folder "' SubjectFolderIn '" is already in the cloud, will not override. Skipping']);
