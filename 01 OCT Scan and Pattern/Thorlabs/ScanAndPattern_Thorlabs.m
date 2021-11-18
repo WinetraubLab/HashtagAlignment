@@ -42,8 +42,8 @@ switch(config.octProbeLens)
         overview_nZToScanDefault = 2; % How many depth points to scan overview in. At 40x we have so many overview tiles, its worth scanning less
         
         % Photobleaching
-        vLinePositions = [-1  0 2]; %Unitless, vLine positions as multiplication of base
-        hLinePositions = [-2 -1 2]-0.5; %Unitless, hLine positions as multiplication of base
+        vLinePositions = [-2 -1 2]; %Unitless, vLine positions as multiplication of base
+        hLinePositions = [-1  0 2]-0.5; %Unitless, hLine positions as multiplication of base
         
         tissueRefractiveIndex = 1.33; % Water
 end
