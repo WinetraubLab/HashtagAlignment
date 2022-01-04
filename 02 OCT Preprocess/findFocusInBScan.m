@@ -5,8 +5,9 @@ disp('Looking For Focus Position...');
 %% Inputs
 
 %OCT Data
-OCTVolumesFolder = [s3SubjectPath('12','LHC') 'OCTVolumes/'];
+OCTVolumesFolder = [s3SubjectPath('12','LE') 'OCTVolumes/'];
 reconstructConfig = {'dispersionQuadraticTerm',6.539e07}; %Configuration for processing OCT Volume
+%reconstructConfig = {'dispersionQuadraticTerm',9.56e7}; %Configuration for processing OCT Volume
 
 %Probe Data
 focusSigma = 20; %Sigma size of focus [pixel]
@@ -36,7 +37,7 @@ if isfield(json.volume,'tissueRefractiveIndex')
 elseif isfield(json.overview,'tissueRefractiveIndex')
     n = json.overview.tissueRefractiveIndex; 
 else
-    warning('Can''t figure out what is index of refraction, assuming default value');
+    warining('Can''t figure out what is index of refraction, assuming default value');
     n = 1.33;
 end
 
@@ -74,8 +75,12 @@ elseif isfield(json.overview,'zDepths')
 end
 
 %% Get peak data
-%Get Dimensions of one reference volume'
-[dim, dimProcessed] = yOCTTileScanGetDimOfOneTile(OCTVolumesFolderVolume, 'micron');
+%Get Dimensions of one reference volume
+dim = yOCTLoadInterfFromFile(fp,'peakOnly',true);
+dim.x.units = 'microns';
+dim.x.values = 1000* linspace(-xRange/2,xRange/2,length(dim.x.values));
+dim.y.values = 1000* linspace(-yRange/2,yRange/2,length(dim.y.values));
+dim.y.units = 'microns';
 
 %Load a few y slices
 yToLoad = dim.y.index(...
@@ -86,18 +91,13 @@ yToLoad = dim.y.index(...
 
 %Load a few y slices
 [int1,dim1] = ...
-    yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'dimensions', dim,'YFramesToProcess',yToLoad}]);
+    yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'YFramesToProcess',yToLoad}]);
 [scan1,dim1] = yOCTInterfToScanCpx ([{int1, dim1, 'n', n}, reconstructConfig]);
-
-% Take the absolute value of the slices and apply any A-scan and/or B-scan
-% averaging
-scan1 = yOCTApplyAbsoluteValueAScanBScanAveraging(scan1);
-
+scan1 = abs(scan1);
+for i=length(size(scan1)):-1:4 %Average BScan, AScan avg but no z,x,y
+    scan1 = squeeze(mean(scan1,i));
+end
 dim.z = dim1.z; %Update dimensions structure
-
-% Optical Path Correction
-scanInfoJson = awsReadJSON([OCTVolumesFolderVolume 'ScanInfo.json']);
-[scan1, scan1ValidDataMap] = yOCTOpticalPathCorrection(scan1, dim1, scanInfoJson);
 
 %Compute the total travel distance of the scanning process
 totalZDistance = diff(zDepths([1 end]))*1000; %mu
@@ -142,15 +142,12 @@ frameI = ii(2); %frame = ii(1) is at the top of the gel, number ii(2) should be 
 fp = sprintf('%sData%02d/',OCTVolumesFolderVolume,frameI);
 
 [int1,dim1] = ...
-    yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'dimensions', dim, 'YFramesToProcess',yToLoad}]);
+    yOCTLoadInterfFromFile([{fp}, reconstructConfig, {'YFramesToProcess',yToLoad}]);
 [scan1,dim1] = yOCTInterfToScanCpx ([{int1, dim1, 'n', n}, reconstructConfig]);
-
-% Take the absolute value of the slices and apply any A-scan and/or B-scan
-% averaging
-scan1 = yOCTApplyAbsoluteValueAScanBScanAveraging(scan1);
-
-% Optical Path Correction
-[scan1, scan1ValidDataMap] = yOCTOpticalPathCorrection(scan1, dim1, scanInfoJson);
+scan1 = abs(scan1);
+for i=length(size(scan1)):-1:4 %Average BScan, AScan avg but no z,x,y
+    scan1 = squeeze(mean(scan1,i));
+end
 
 %Define search space
 zsToUse = dim.z.values > focusDepth1 - focusSigma*2 & dim.z.values < focusDepth1 + focusSigma*2;
