@@ -27,6 +27,7 @@ switch(config.octProbeLens)
         photobleachUnderInterface_mm = +50e-3; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm)
         scanZJump_um = 15;% Scan every x um in z
         overview_nZToScanDefault = 3; % How many depth points to scan overview in
+		nPixels = 1000;
         
         % Photobleaching
         vLinePositions = [-4  0 1 3]; %Unitless, vLine positions as multiplication of base
@@ -37,6 +38,7 @@ switch(config.octProbeLens)
         tissueRefractiveIndex = 1.4; % Silicon Oil
     case '40x'
         volumeSize = 0.5; %mm
+		nPixels = 500;
         overviewSingleTileVolumeSize = 0.8; %mm
         exposure = 15; % sec per mm line
         photobleachUnderInterface_mm = +50e-3 + [0 75e-3 150e-3]; % We don't want to photobleach exactly at the gel-air interface. How much below it? (mm). 40x we photobleach in a few spots
@@ -55,8 +57,8 @@ end
 config.volume.isScanEnabled = true; %Enable/Disable regular scan
 config.volume.xRange = volumeSize; %[mm]
 config.volume.yRange = volumeSize; %[mm]
-config.volume.nXPixels = 1000; %How many pixels in x direction
-config.volume.nYPixels = 1000; %How many pixels in y direction
+config.volume.nXPixels = nPixels; %How many pixels in x direction
+config.volume.nYPixels = nPixels; %How many pixels in y direction
 config.volume.nBScanAvg = 1;
 
 % Depth Defenitions
