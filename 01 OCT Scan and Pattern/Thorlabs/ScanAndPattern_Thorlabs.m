@@ -93,7 +93,7 @@ config.photobleach.photobleachOverviewBufferZone = 0.170; %See extended lines de
    
 % Probe defenitions
 config.octProbePath = getProbeIniPath(config.octProbeLens);
-config.oct2stageXYAngleDeg = -1.11; % Current calibration angle between OCT and Stage 
+config.oct2stageXYAngleDeg = +4.91; % Current calibration angle between OCT and Stage 
 % See findMotorAngleCalibration if you need to recalibrate (e.g. when OCT head was moved)
 
 % Tickmarks (if required)
