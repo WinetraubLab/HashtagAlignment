@@ -131,8 +131,8 @@ isOutlier = any(isOutlier);
 isOk = ~isOutlier;
 
 % Check to make sure we don't have too many outliers. If too many outliers
-% are present, fit is failed, ignore planes that don't have single plane fit.
-if (sum(isOk) < (length(isOk)-sum(isSPFNaN))/3 || sum(isOk)<2)
+% are present, fit is failed, ignore planes that don't have single plane fit (but stil give them penalty).
+if (sum(isOk) < (length(isOk)-sum(isSPFNaN)/2)/3 || sum(isOk)<2)
     warning('Not enugh good samples, everything seems to be an outlier');
     isOutlierOut = boolean(ones(size(isOutlier)));
     spfsOut = makeOutput(spfs_,isSPFCell);
