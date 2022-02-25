@@ -88,6 +88,9 @@ for sI = 1:length(whichIterationsToReslice)
     % Figure out how to slice on y' direction (new y direction)
     n = stackAlignment.planeNormal; % Normal to plane, make sure not to flip it otherwise image will be fliped!
     d_um = stackAlignment.planeDistanceFromOCTOrigin_um;
+    if isempty(stackAlignment.planeNormal)
+        error('stackAlignment.planeNormal is empty, was stack alignment ran?');
+    end
     
     % Dimensions of the original volume (mm)
     xRange = max(dimensions.x.values) - min(dimensions.x.values);
