@@ -4,6 +4,9 @@
 %       reprocess)
 %   2) 11 Align OCT to Flourecence Imaging - alignment was calculated
 
+% Subject to operate on
+subjectFolder = s3SubjectPath('15','LK');
+
 appendToDimensions.note = [...
     'Y direction at the resliced volume is not along the cutting direction!\n' ...
     'Its just prepandicular to u and v which may be anti-parallel to histology cutting direction.\n'];
@@ -15,9 +18,6 @@ runningOnJenkins = false;
 % When reslicing take some buffer (microns) before the first slice and
 % after the last one
 bufferSize_um = 300; % take some buffer on both ends.
-
-
-subjectFolder = s3SubjectPath('01');
 
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %Jenkins
