@@ -89,7 +89,7 @@ for sI = 1:length(whichIterationsToReslice)
     n = stackAlignment.planeNormal; % Normal to plane, make sure not to flip it otherwise image will be fliped!
     d_um = stackAlignment.planeDistanceFromOCTOrigin_um;
     if isempty(stackAlignment.planeNormal)
-        error('stackAlignment.planeNormal is empty, was analyzeAlignemntStack.m ran with no errors?');
+        error('stackAlignment.planeNormal is empty, when running analyzeAlignemntStack.m did you get the warning "Iteration #x doesn''t have any valid single plane fits that are not outliers, cannot compute stack alignment"? - if so solve that');
     end
     
     % Dimensions of the original volume (mm)

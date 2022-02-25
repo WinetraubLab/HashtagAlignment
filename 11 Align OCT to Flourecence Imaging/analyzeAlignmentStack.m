@@ -6,7 +6,7 @@
 %false if saved locally only
 isUpdateCloud = false; 
 
-subjectFolder = s3SubjectPath('21','LFM');
+subjectFolder = s3SubjectPath('12','LK');
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %Jenkins
     isUpdateCloud = true;
@@ -130,6 +130,7 @@ for i=1:nIterations
     
     if (sum(singlePlaneFits_IsOutlier(ii)) == sum(ii))
         % All planes are outliers, the alignment failed, this is not usable
+        warning('Iteration #%d doesn''t have any valid single plane fits that are not outliers, cannot compute stack alignment',i);
         singlePlaneFits_IsUsableSlide(ii) = false;
         nOut = [];
         sectionDistanceToOriginOut = NaN*zeros(sum(ii),1);
