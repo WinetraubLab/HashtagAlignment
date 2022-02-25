@@ -6,7 +6,7 @@
 %false if saved locally only
 isUpdateCloud = false; 
 
-subjectFolder = s3SubjectPath('12','LK');
+subjectFolder = s3SubjectPath('15','LK');
 if exist('subjectFolder_','var')
     subjectFolder = subjectFolder_; %Jenkins
     isUpdateCloud = true;
@@ -447,7 +447,7 @@ leaveJsonData (lk,d_lastSlide)
 
 %% Update data to the cloud
 if isUpdateCloud
-    disp('Uploading images to cloud ...');
+    disp('Uploading to the cloud ...');
     %Save images to log
     if ~isempty(logFolder)
         saveas(fig2,'StackAlignmentFigure2.png');
@@ -462,8 +462,9 @@ if isUpdateCloud
     awsWriteJSON(scJson,stackConfigFilePath);
     
     disp ('Done');
+else
+    disp('Not updating cloud!');
 end
-
 
 %% Helper function to generate Json handles
 function leaveJsonData (lk,d_lastSlide_mm)
