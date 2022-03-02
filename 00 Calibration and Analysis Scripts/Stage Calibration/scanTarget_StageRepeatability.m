@@ -11,7 +11,7 @@ lens = '10x';
 octProbePath = getProbeIniPath(lens); % Select lens magnification
 
 % Current calibration angle between OCT and Stage
-oct2stageXYAngleDeg = -4.7;
+oct2stageXYAngleDeg = +1.59;
 
 %% Reference Scan JSON - where to get default scan parameters from
 subjectPaths = s3GetAllSubjectsInLib();

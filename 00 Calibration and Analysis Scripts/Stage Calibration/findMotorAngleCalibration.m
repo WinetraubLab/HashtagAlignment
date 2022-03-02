@@ -2,8 +2,8 @@
 % This script runs on the data of photobleached using this script: scanTarget_StageRepeatability
 
 %% Inputs
-photobleachImagePath = 's3://delazerdamatlab/Users/Aidan/Photobleach Lines Experiments/Photobleach 6.18.2021/Gel2_Scan1/Experiment_TileScan_001_Merging001_z0_ch00.tif';
-imageResolution = 2.89; % microns per pixel. 1x is 2.88 microns per pixel
+photobleachImagePath = 's3://delazerdamatlab/Users/Aidan/Alignment Calibration/9.30.2021/Gel 2/Repeatability/2x/Experiment_TileScan_001_Merging001_z0_ch00.tif';
+imageResolution = 1.44; % microns per pixel. 1x is 2.88 microns per pixel
 
 %% Read Image
 awsSetCredentials();
