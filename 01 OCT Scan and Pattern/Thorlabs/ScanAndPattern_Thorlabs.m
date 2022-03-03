@@ -33,7 +33,8 @@ switch(config.octProbeLens)
         vLinePositions = [-4  0 1 3]; %Unitless, vLine positions as multiplication of base
         hLinePositions = [-3 -2 1 3]; %Unitless, hLine positions as multiplication of base
 		base = 100e-3; %base seperation [mm], we don't want to go under 0.1mm because lines become overlap.
-
+        numberOfLinesInOverview=3;
+        photobleachOverviewBufferZone=0.170; %[mm]
         
         tissueRefractiveIndex = 1.4; % Silicon Oil
     case '40x'
@@ -49,7 +50,13 @@ switch(config.octProbeLens)
         vLinePositions = [-2 -1 2]; %Unitless, vLine positions as multiplication of base
         hLinePositions = [-1  0 2]-0.5; %Unitless, hLine positions as multiplication of base
 		base = 75e-3; %base seperation [mm]
-
+        
+        vLinePositions = [-4  0 1 3]-7; %Unitless, vLine positions as multiplication of base
+        hLinePositions = [-3 -2 1 3]-7; %Unitless, hLine positions as multiplication of base
+		base = 100e-3; %base seperation [mm], we don't want to go under 0.1mm because lines become overlap.
+        photobleachOverviewBufferZone = 0; %
+        numberOfLinesInOverview = 4;
+        
         tissueRefractiveIndex = 1.33; % Water
 end
 
@@ -89,7 +96,8 @@ config.photobleach.nPasses = 2;
 config.photobleach.lineLength = volumeSize*2; %[mm]
 config.photobleach.isPhotobleachEnabled = true; %Would you like to photobleach? this flag disables all photobleaching
 config.photobleach.isPhotobleachOverview = true; %Would you like to photobleach overview areas as well (extended photobleach)
-config.photobleach.photobleachOverviewBufferZone = 0.170; %See extended lines design of #, this is to prevent multiple lines appearing in the same slice 
+config.photobleach.photobleachOverviewBufferZone = photobleachOverviewBufferZone; %[mm] See extended lines design of #, this is to prevent multiple lines appearing in the same slice 
+config.photobleach.numberOfLinesInOverview = numberOfLinesInOverview; % Number of v&h lines in overview (outside of main OCT scan area)
    
 % Probe defenitions
 config.octProbePath = getProbeIniPath(config.octProbeLens);
