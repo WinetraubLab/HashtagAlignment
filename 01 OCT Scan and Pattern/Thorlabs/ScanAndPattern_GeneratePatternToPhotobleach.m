@@ -112,15 +112,17 @@ keepPhotobleachOut = @(x,y) (...
             @(x,y)(~keepPhotobleachOut(x,y)) , epsilon);
         
 %% Remove short lines
-ini =  yOCTReadProbeIniToStruct(config.octProbePath);
-minDist = ini.RangeMaxX*0.1;
-i = sqrt(sum((ptStart_Scan - ptEnd_Scan).^2)) < minDist;
-ptStart_Scan(:,i) = [];
-ptEnd_Scan(:,i) = [];
+if ~isempty(ptStart_Scan) % Skip this part if no lines exist
+    ini =  yOCTReadProbeIniToStruct(config.octProbePath);
+    minDist = ini.RangeMaxX*0.1;
+    i = sqrt(sum((ptStart_Scan - ptEnd_Scan).^2)) < minDist;
+    ptStart_Scan(:,i) = [];
+    ptEnd_Scan(:,i) = [];
 
-i = sqrt(sum((ptStart_Extended - ptEnd_Extended).^2)) < minDist;
-ptStart_Extended(:,i) = [];
-ptEnd_Extended(:,i) = [];
+    i = sqrt(sum((ptStart_Extended - ptEnd_Extended).^2)) < minDist;
+    ptStart_Extended(:,i) = [];
+    ptEnd_Extended(:,i) = [];
+end
 
 %% Make a figurePlot
 ptStartplot = [ptStart_Scan ptStart_Extended];
