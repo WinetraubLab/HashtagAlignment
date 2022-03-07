@@ -41,19 +41,20 @@ switch(config.octProbeLens)
         volumeSize = 0.5; %mm
 		nPixels = 500;
         overviewSingleTileVolumeSize = 0.8; %mm
-        exposure = 15; % sec per mm line
+        exposure = 20; % sec per mm line
         photobleachUnderInterface_mm = +75e-3; %+50e-3 + [0 75e-3 150e-3]; % [mm] We don't want to photobleach exactly at the gel-air interface. How much below it? (mm). 40x we photobleach in a few spots
         scanZJump_um = 5;% Scan every x um i z
         overview_nZToScanDefault = 2; % How many depth points to scan overview in. At 40x we have so many overview tiles, its worth scanning less
         
         % Photobleaching
+		base = 75e-3; %base seperation [mm]
         vLinePositions = [-2 -1 2]; %Unitless, vLine positions as multiplication of base
         hLinePositions = [-1  0 2]-0.5; %Unitless, hLine positions as multiplication of base
-		base = 75e-3; %base seperation [mm]
         
-        vLinePositions = [-4  0 1 3]-7; %Unitless, vLine positions as multiplication of base
-        hLinePositions = [-3 -2 1 3]-6; %Unitless, hLine positions as multiplication of base
 		base = 100e-3; %base seperation [mm], we don't want to go under 0.1mm because lines become overlap.
+        vLinePositions = [-4  0 1 3]-7; %Unitless, vLine positions as multiplication of base
+        hLinePositions = [-3 -2 1 3]-0.4/base; %Unitless, hLine positions as multiplication of base
+		
         photobleachOverviewBufferZone = 0; %
         numberOfLinesInOverview = 4;
         
@@ -207,7 +208,7 @@ config.photobleach.ptStart_Scan = ptStart_Scan;
 config.photobleach.ptEnd_Scan = ptEnd_Scan;
 config.photobleach.ptStart_Extended = ptStart_Extended;
 config.photobleach.ptEnd_Extended = ptEnd_Extended;
-    
+
 %% Actual Photobleach (first run)
 if (config.photobleach.isPhotobleachEnabled)
 % Safety warning
