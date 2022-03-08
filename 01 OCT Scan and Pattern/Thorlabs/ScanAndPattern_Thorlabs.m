@@ -37,6 +37,7 @@ switch(config.octProbeLens)
         photobleachOverviewBufferZone=0.170; %[mm]
         
         tissueRefractiveIndex = 1.4; % Silicon Oil
+        maxLensFOV = []; % Use lens default
     case '40x'
         volumeSize = 0.5; %mm
 		nPixels = 500;
@@ -59,6 +60,8 @@ switch(config.octProbeLens)
         numberOfLinesInOverview = 4;
         
         tissueRefractiveIndex = 1.33; % Water
+        
+        maxLensFOV = 0.75; %mm, smaller than FOV of the lens to have better lines
 end
 
 % OCT scan defenitions (scan is centered along (0,0)
@@ -99,6 +102,7 @@ config.photobleach.isPhotobleachEnabled = true; %Would you like to photobleach? 
 config.photobleach.isPhotobleachOverview = true; %Would you like to photobleach overview areas as well (extended photobleach)
 config.photobleach.photobleachOverviewBufferZone = photobleachOverviewBufferZone; %[mm] See extended lines design of #, this is to prevent multiple lines appearing in the same slice 
 config.photobleach.numberOfLinesInOverview = numberOfLinesInOverview; % Number of v&h lines in overview (outside of main OCT scan area)
+config.photobleach.maxLensFOV = maxLensFOV; % mm
    
 % Probe defenitions
 config.octProbePath = getProbeIniPath(config.octProbeLens);
@@ -225,6 +229,7 @@ yOCTPhotobleachTile(config.photobleach.ptStart_Scan,config.photobleach.ptEnd_Sca
     'z',config.photobleach.z,'exposure',config.photobleach.exposure,...
     'nPasses',config.photobleach.nPasses,...
 	'oct2stageXYAngleDeg', config.oct2stageXYAngleDeg,...
+    'maxLensFOV',config.photobleach.maxLensFOV,...
     'plotPattern',true);    
 pause(0.5);
 
@@ -312,6 +317,7 @@ if config.photobleach.isPhotobleachOverview && config.photobleach.isPhotobleachE
         'exposure',config.photobleach.exposure,...
         'nPasses',config.photobleach.nPasses,...
 		'oct2stageXYAngleDeg', config.oct2stageXYAngleDeg,...
+        'maxLensFOV',config.photobleach.maxLensFOV,...
         'plotPattern',true); 
     pause(0.5);
 
