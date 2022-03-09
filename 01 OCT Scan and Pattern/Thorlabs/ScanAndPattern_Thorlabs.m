@@ -61,7 +61,7 @@ switch(config.octProbeLens)
         
         tissueRefractiveIndex = 1.33; % Water
         
-        maxLensFOV = 0.75; %mm, smaller than FOV of the lens to have better lines
+        maxLensFOV = 0.3; %mm, smaller than FOV of the lens to have better lines
 end
 
 % OCT scan defenitions (scan is centered along (0,0)
