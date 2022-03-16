@@ -42,7 +42,7 @@ switch(config.octProbeLens)
         volumeSize = 0.5; %mm
 		nPixels = 500;
         overviewSingleTileVolumeSize = 0.8; %mm
-        exposure = 20; % sec per mm line
+        exposure = 15; % sec per mm line
         photobleachUnderInterface_mm = +75e-3; %+50e-3 + [0 75e-3 150e-3]; % [mm] We don't want to photobleach exactly at the gel-air interface. How much below it? (mm). 40x we photobleach in a few spots
         scanZJump_um = 5;% Scan every x um i z
         overview_nZToScanDefault = 2; % How many depth points to scan overview in. At 40x we have so many overview tiles, its worth scanning less
