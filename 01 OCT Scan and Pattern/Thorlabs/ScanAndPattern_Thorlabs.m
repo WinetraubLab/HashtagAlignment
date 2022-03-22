@@ -53,7 +53,7 @@ switch(config.octProbeLens)
         hLinePositions = [-1  0 2]-0.5; %Unitless, hLine positions as multiplication of base
         
 		base = 100e-3; %base seperation [mm], we don't want to go under 0.1mm because lines become overlap.
-        vLinePositions = [-4  0 1 3]-7; %Unitless, vLine positions as multiplication of base
+        vLinePositions = [-4  0 1 3]+7; %Unitless, vLine positions as multiplication of base
         hLinePositions = [-3 -2 1 3]-0.4/base; %Unitless, hLine positions as multiplication of base
 		
         photobleachOverviewBufferZone = 0; %
