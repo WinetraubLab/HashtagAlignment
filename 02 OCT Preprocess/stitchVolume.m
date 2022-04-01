@@ -1,10 +1,11 @@
 %This script stitches images aquired at different z depths 2gezer
 
 %OCT Data
-OCTVolumesFolder = [s3SubjectPath('01') 'OCTVolumes/'];
+OCTVolumesFolder = [s3SubjectPath('16','LK') 'OCTVolumes/'];
 dispersionQuadraticTerm = []; %Use default that is specified in ini probe file
 
-outputFileFormat = 'tif'; %Can be 'tif' or 'mat' for debug
+% Smoothing parameter
+sigma_um = 1.5; %microns
 
 isRunOnJenkins = false;
 
@@ -20,6 +21,7 @@ SubjectFolder = awsModifyPathForCompetability([OCTVolumesFolder '..\']);
 
 logFolder = awsModifyPathForCompetability([SubjectFolder '\Log\02 OCT Preprocess\VolumeDebug\']);
 outputFolder = awsModifyPathForCompetability([OCTVolumesFolder '/VolumeScanAbs/']);
+outputTiffFile = [outputFolder(1:(end-1)) '_All.tif'];
 
 %% Lens Based Settings
 json = awsReadJSON([OCTVolumesFolder 'ScanConfig.json']);
@@ -40,7 +42,7 @@ if isRunOnJenkins
 end
 yOCTProcessTiledScan(...
         [OCTVolumesFolder 'Volume\'], ... Input
-        {outputFolder [outputFolder(1:(end-1)) '_All.tif']},...
+        {outputTiffFile},... Save only Tiff file as folder will be generated after smoothing
         'focusPositionInImageZpix',json.focusPositionInImageZpix,... No Z scan filtering
 		'focusSigma',focusSigma,...
         'dispersionQuadraticTerm',dispersionQuadraticTerm,...
@@ -48,3 +50,27 @@ yOCTProcessTiledScan(...
         'howManyYPlanes',3,... Save some raw data ys if there are multiple depths
         'interpMethod','sinc5', ...
         'v',true);
+    
+%% Apply gaussian filtering % threshold
+
+% Load the data we just processed
+[data, metadata, c] = yOCTFromTif(outputTiffFile);
+metadata_um = yOCTChangeDimensionsStructureUnits(metadata,'um');
+
+% Compute Gaussian filter (XY only)
+dx_um = diff(metadata_um.x.values(1:2)); % Pixel size in microns
+grid = -(4*sigma_um):(4*sigma_um);
+[z,x,y]=ndgrid(0,grid,grid);
+filt = exp(-(x.^2+y.^2+(z*2).^2)/(2*sigma_um.^2));
+filt = filt / sum(filt(:)); % Normalization
+
+% Apply Gaussian filtering
+dataFilt = mag2db(convn(db2mag(data),filt,'same'));
+
+% Present to user
+imagesc(squeeze(dataFilt(:,:,100)));colormap('gray');
+caxis([min(dataFilt(:)) max(dataFilt(:))]);
+axis equal;
+
+% Save new version (override the original)
+yOCT2Tif(dataFilt,{outputFolder outputTiffFile}, 'metadata',metadata);
