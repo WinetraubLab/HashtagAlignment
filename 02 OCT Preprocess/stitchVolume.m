@@ -1,7 +1,7 @@
 %This script stitches images aquired at different z depths 2gezer
 
 %OCT Data
-OCTVolumesFolder = [s3SubjectPath('16','LK') 'OCTVolumes/'];
+OCTVolumesFolder = [s3SubjectPath('36','LK') 'OCTVolumes/'];
 dispersionQuadraticTerm = []; %Use default that is specified in ini probe file
 
 % Smoothing parameter
@@ -67,10 +67,20 @@ filt = filt / sum(filt(:)); % Normalization
 % Apply Gaussian filtering
 dataFilt = mag2db(convn(db2mag(data),filt,'same'));
 
+% Find threshold
+average_signal = mean(dataFilt,[2 3]); % Create an average singal
+p = ceil(rand(1,100000)*numel(dataFilt)); % Speed up the job by using a subset of the data
+c_max = prctile(dataFilt(p),99.99); 
+c_min = min(average_signal);
+
 % Present to user
-imagesc(squeeze(dataFilt(:,:,100)));colormap('gray');
-caxis([min(dataFilt(:)) max(dataFilt(:))]);
+imagesc(...
+    metadata.x.values,... 
+    metadata.z.values,...
+    squeeze(dataFilt(:,:,100)));colormap('gray');
+caxis([c_min c_max]);
 axis equal;
+xlabel('mm');
 
 % Save new version (override the original)
-yOCT2Tif(dataFilt,{outputFolder outputTiffFile}, 'metadata',metadata);
+yOCT2Tif(dataFilt,{outputFolder outputTiffFile}, 'metadata',metadata,'clim',[c_min c_max]);
