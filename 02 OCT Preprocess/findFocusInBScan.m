@@ -210,6 +210,7 @@ legend('First Guess','Updated Guess');
 
 if (~isRunInAutomatedMode)
     %Manual mode, ask user to refine
+    disp('Manually refining focus position. User should select focus position on figure');
     [~,focusDepth3] = ginput(1); %Get z index of the focus
     fprintf('Distance between my guess and user: %.1f[um]\n',abs(focusDepth3-focusDepth2));
     
