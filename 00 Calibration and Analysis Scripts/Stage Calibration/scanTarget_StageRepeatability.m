@@ -73,10 +73,11 @@ if ~isMockTrial
     ThorlabsImagerNETLoadLib(); %Init library
     ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(octProbePath); %Init OCT
 
-
     [x0,y0] = yOCTStageInit(oct2stageXYAngleDeg);
     ini = yOCTReadProbeIniToStruct(octProbePath);
-
+    
+    yOCTTurnOpticalSwitch('OCT'); % Turn optical switch "off"
+    yOCTTurnLaser(true); % Turn beam on
 end
 xcc = [0 L -L 0  0];
 ycc = [0 0 0  L -L];
@@ -87,20 +88,27 @@ for i=1:length(xcc)
         yOCTStageMoveTo(x0+xcc(i),y0+ycc(i),NaN,true);
     
         % Photobleach Pattern
-        yOCTTurnLaser(true);
         for j=1:length(template2_Start)
             d = sqrt(sum( (template2_Start(:,j) - template2_End(:,j)).^2));
+            
+            % Turn optical switch on
+            yOCTTurnOpticalSwitch('photodiode');
+            
+            % Pattern line
             ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
                 template2_Start(1,j),template2_Start(2,j), ... Start X,Y
                 template2_End(1,j),  template2_End(2,j)  , ... End X,y
                 config.photobleach.exposure*d,  ... Exposure time sec
                 config.photobleach.nPasses);
+            
+            % Set optical switch to "off" position
+            yOCTTurnOpticalSwitch('OCT');
         end
-        yOCTTurnLaser(false);
     end
 end
 % Clean up
 if ~isMockTrial
+    yOCTTurnLaser(false); % Turn off the beam
     yOCTStageMoveTo(x0,y0,NaN,true);
     ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose(); % Clean up
 end
