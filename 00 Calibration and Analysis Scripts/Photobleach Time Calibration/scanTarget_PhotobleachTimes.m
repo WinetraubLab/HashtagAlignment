@@ -21,7 +21,9 @@ ThorlabsImagerNETLoadLib(); %Init library
 ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(octProbePath); %Init OCT
 
 %% Photobleach
-yOCTTurnLaser(true);
+yOCTTurnOpticalSwitch('OCT'); % Turn optical switch "off"
+yOCTTurnLaser(true); % Turn beam on
+yOCTTurnOpticalSwitch('photodiode'); % Turn optical switch "on"
 for i=1:length(x)
     fprintf('%s Photobleaching line #%d. Exposure: %.1f sec/mm, nPasses: %d.\n', ...
         datestr(datetime),i,exposures(i)/lineLength,nPasses(i));
@@ -31,7 +33,8 @@ for i=1:length(x)
         exposures(i),  ... Exposure time sec
         nPasses(i));
 end
-yOCTTurnLaser(false);
+yOCTTurnOpticalSwitch('OCT'); % Turn optical switch "off"
+yOCTTurnLaser(false); % Turn beam off]
 
 %% Clean up
 ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose();
