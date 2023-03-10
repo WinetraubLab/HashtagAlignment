@@ -13,7 +13,8 @@ nPasses =   [2 2 2 2   2  3  3  3]; % Number of passes should be as low as possi
 octProbePath = getProbeIniPath('40x');
 lineLength = 0.5; %mm
 
-zDepths = [0, 0.1, 0.2]; %Photobleach line depth. mm. +z means deeper
+% z = 0 is the tissue/air interface.
+zDepths = [-0.300, 0.000, 0.050, 0.100]; %Photobleach line depth. mm. +z means deeper
 
 %% Photobleach loop
 for i=1:length(x)
