@@ -17,7 +17,7 @@ lineLength = 0.5; %mm
 zDepths = [-0.300, 0.000, 0.050, 0.100]; %Photobleach line depth. mm. +z means deeper
 
 %% Photobleach loop
-for i=1:length(x)
+for i=1:length(exposures)
     fprintf('%s Photobleaching line #%d. Exposure: %.1f sec/mm, nPasses: %d.\n', ...
         datestr(datetime),i,exposures(i),nPasses(i));
     
