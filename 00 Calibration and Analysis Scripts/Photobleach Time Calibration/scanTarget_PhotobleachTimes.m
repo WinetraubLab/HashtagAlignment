@@ -4,7 +4,7 @@
 %% Inputs
 
 % Exposure and n passes settings
-exposures = [1 2 5 10 15 30]; %Units are sec per 1mm of line
+exposures = [1 2 5 10 15 30]; % Units are sec per 1mm of line
 nPasses =   [2 2 2 2   2  3]; % Number of passes should be as low as possible but still allow OCT scanner not to crash
 % For 10x, we usually use: 15 sec/1mm and 2 passes.
 % For 40x, we usually use: 5  sec/1mm and 2 passes.
@@ -26,11 +26,11 @@ yOCTTurnLaser(true); % Turn beam on
 yOCTTurnOpticalSwitch('photodiode'); % Turn optical switch "on"
 for i=1:length(x)
     fprintf('%s Photobleaching line #%d. Exposure: %.1f sec/mm, nPasses: %d.\n', ...
-        datestr(datetime),i,exposures(i)/lineLength,nPasses(i));
+        datestr(datetime),i,exposures(i),nPasses(i));
     ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
         x(i),-lineLength/2, ... Start X,Y
         x(i), lineLength/2, ... End X,y
-        exposures(i),  ... Exposure time sec
+        exposures(i)*lineLength,  ... Exposure time sec
         nPasses(i));
 end
 yOCTTurnOpticalSwitch('OCT'); % Turn optical switch "off"
