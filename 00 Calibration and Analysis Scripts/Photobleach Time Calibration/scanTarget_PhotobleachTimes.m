@@ -4,37 +4,33 @@
 %% Inputs
 
 % Exposure and n passes settings
-exposures = [1 2 5 10 15 30]; % Units are sec per 1mm of line
-nPasses =   [2 2 2 2   2  3]; % Number of passes should be as low as possible but still allow OCT scanner not to crash
+exposures = [1 2 5 10 15 30 45 60]; % Units are sec per 1mm of line
+nPasses =   [2 2 2 2   2  3  3  3]; % Number of passes should be as low as possible but still allow OCT scanner not to crash
 % For 10x, we usually use: 15 sec/1mm and 2 passes.
 % For 40x, we usually use: 5  sec/1mm and 2 passes.
 
 % Photobleach pattern configuration
-octProbePath = getProbeIniPath('10x');
-
+octProbePath = getProbeIniPath('40x');
 lineLength = 0.5; %mm
-x = linspace(-lineLength/2,lineLength/2,length(exposures)+2); % X Positions of the lines
-x([1 end]) = [];
 
-%% Setup 
-ThorlabsImagerNETLoadLib(); %Init library
-ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(octProbePath); %Init OCT
+zDepths = [0, 0.1, 0.2]; %Photobleach line depth. mm. +z means deeper
 
-%% Photobleach
-yOCTTurnOpticalSwitch('OCT'); % Turn optical switch "off"
-yOCTTurnLaser(true); % Turn beam on
-yOCTTurnOpticalSwitch('photodiode'); % Turn optical switch "on"
+%% Photobleach loop
 for i=1:length(x)
     fprintf('%s Photobleaching line #%d. Exposure: %.1f sec/mm, nPasses: %d.\n', ...
         datestr(datetime),i,exposures(i),nPasses(i));
-    ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
-        x(i),-lineLength/2, ... Start X,Y
-        x(i), lineLength/2, ... End X,y
-        exposures(i)*lineLength,  ... Exposure time sec
-        nPasses(i));
-end
-yOCTTurnOpticalSwitch('OCT'); % Turn optical switch "off"
-yOCTTurnLaser(false); % Turn beam off]
+    
+    % Perform photobleach
+    yOCTPhotobleachTile([0,-lineLength/2],[0,+lineLength/2], ...
+        'octProbePath',octProbePath, ...
+        'exposure',exposures(i),'nPasses',nPasses(i),...
+        'z',zDepths);
+    
+    pause(0.5);
+    
+    %Translate stage by a little
+    [x0,y0,z0] = yOCTStageInit();
+    yOCTStageMoveTo(x0+lineLength/4,y0,z0);
 
-%% Clean up
-ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose();
+    pause(0.5);
+end
