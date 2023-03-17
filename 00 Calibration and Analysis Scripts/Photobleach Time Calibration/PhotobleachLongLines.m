@@ -13,7 +13,7 @@ lineLength = 4; %mm
 lineSpacing = 0.5; % mm difference between two nearby lines
 
 % z = 0 is the tissue/air interface.
-zDepths = [-0.300, 0.000, 0.050, 0.100]; %Photobleach line depth. mm. +z means deeper
+zDepths = [-0.300, 0.000, 0.100]; %Photobleach line depth. mm. +z means deeper
 
 % Set to true if you want to do a dry run
 skipHardware = false;
