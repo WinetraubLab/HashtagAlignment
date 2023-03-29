@@ -18,6 +18,11 @@ zDepths = [-0.300, 0.000, 0.100]; %Photobleach line depth. mm. +z means deeper
 % Set to true if you want to do a dry run
 skipHardware = false;
 
+%% Initiate lateral position
+if ~skipHardware
+    [x0,y0,z0] = yOCTStageInit();
+end
+
 %% Photobleach loop
 for i=1:length(exposures)
     fprintf('%s Photobleaching line #%d. Exposure: %.1f sec/mm, nPasses: %d.\n', ...
@@ -33,9 +38,13 @@ for i=1:length(exposures)
     
     %Translate stage by a little
     if ~skipHardware
-        [x0,y0,z0] = yOCTStageInit();
-        yOCTStageMoveTo(x0+lineSpacing,y0,z0);
+        yOCTStageMoveTo(x0+i*lineSpacing,y0,z0);
     end
 
     pause(0.5);
+end
+
+%% Clean up
+if ~skipHardware
+    yOCTStageMoveTo(x0,y0,z0); % Bring stage back to center
 end
