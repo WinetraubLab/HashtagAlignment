@@ -13,7 +13,7 @@ outputFolder = 'output'; %This will be override if running with Jenkins
 outputFolder = [outputFolder '\'];
 
 % Lens
-config.octProbeLens = '10x'; % Which lens we use for this experiment
+config.octProbeLens = '40x'; % Which lens we use for this experiment
 if (isRunningOnJenkins() && exist('octProbeLens_','var'))
     config.octProbeLens = octProbeLens_;
 end
@@ -212,6 +212,18 @@ config.photobleach.ptStart_Scan = ptStart_Scan;
 config.photobleach.ptEnd_Scan = ptEnd_Scan;
 config.photobleach.ptStart_Extended = ptStart_Extended;
 config.photobleach.ptEnd_Extended = ptEnd_Extended;
+
+% Image with photobleach windows
+yOCTPhotobleachTile(config.photobleach.ptStart_Extended,config.photobleach.ptEnd_Extended,...
+    'octProbePath',config.octProbePath,...
+    'z',config.photobleach.z,'exposure',config.photobleach.exposure,...
+    'nPasses',config.photobleach.nPasses,...
+	'oct2stageXYAngleDeg', config.oct2stageXYAngleDeg,...
+    'maxLensFOV',config.photobleach.maxLensFOV,...
+    'utilizeAllFOV',false,...
+    'plotPattern',true,'skipHardware',true);
+
+return;
 
 %% Actual Photobleach (first run)
 if (config.photobleach.isPhotobleachEnabled)
