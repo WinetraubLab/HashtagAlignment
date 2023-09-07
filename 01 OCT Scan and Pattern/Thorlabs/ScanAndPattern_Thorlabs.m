@@ -105,7 +105,7 @@ config.photobleach.numberOfLinesInOverview = numberOfLinesInOverview; % Number o
 config.photobleach.maxLensFOV = maxLensFOV; % mm
    
 % Probe defenitions
-config.octProbePath = getProbeIniPath(config.octProbeLens);
+config.octProbePath = yOCTGetProbeIniPath(config.octProbeLens);
 config.oct2stageXYAngleDeg = +1.59; % Current calibration angle between OCT and Stage 
 % See findMotorAngleCalibration if you need to recalibrate (e.g. when OCT head was moved)
 
