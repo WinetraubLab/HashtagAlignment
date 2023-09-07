@@ -8,7 +8,7 @@ isMockTrial = false;
 
 % Photobleach pattern configuration
 lens = '40x';
-octProbePath = getProbeIniPath(lens); % Select lens magnification
+octProbePath = yOCTGetProbeIniPath(lens); % Select lens magnification
 
 % Current calibration angle between OCT and Stage
 oct2stageXYAngleDeg = +1.59;

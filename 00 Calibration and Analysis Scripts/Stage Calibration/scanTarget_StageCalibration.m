@@ -8,7 +8,7 @@ motorMovement = 0.5; % mm
 d = 0.1; % mm. Movement within lens FOV
 
 % Photobleach pattern configuration
-octProbePath = getProbeIniPath();
+octProbePath = yOCTGetProbeIniPath();
 
 % Reference Scan JSON - where to get default scan parameters from
 subjectPaths = s3GetAllSubjectsInLib();

@@ -27,7 +27,7 @@ switch(2)
 end
 
 %Path to probe ini
-probeIniPath = getProbeIniPath(lens);
+probeIniPath = yOCTGetProbeIniPath(lens);
 
 % Reference Scan JSON - where to get default scan parameters from
 subjectPaths = s3GetAllSubjectsInLib();

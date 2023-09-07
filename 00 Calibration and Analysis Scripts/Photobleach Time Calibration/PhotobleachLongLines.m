@@ -8,7 +8,7 @@ exposures = [90 120 180]; % Units are sec per 1mm of line
 nPasses =   [ 3   3   4]; % Number of passes should be as low as possible but still allow OCT scanner not to crash
 
 % Photobleach pattern configuration
-octProbePath = getProbeIniPath('40x');
+octProbePath = yOCTGetProbeIniPath('40x');
 lineLength = 4; % mm (centered around the first position)
 lineSpacing = 0.5; % mm difference between two nearby lines
 

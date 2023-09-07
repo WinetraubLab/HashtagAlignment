@@ -10,7 +10,7 @@ nPasses =   [3  3  3  3   3   4]; % Number of passes should be as low as possibl
 % For 40x, we usually use: 5  sec/1mm and 2 passes.
 
 % Photobleach pattern configuration
-octProbePath = getProbeIniPath('40x');
+octProbePath = yOCTGetProbeIniPath('40x');
 lineLength = 0.5; %mm
 
 % z = 0 is the tissue/air interface.
