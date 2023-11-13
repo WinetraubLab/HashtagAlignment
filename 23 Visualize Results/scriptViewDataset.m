@@ -15,3 +15,4 @@ if isRaw
     awsCopyFileFolder([datasetPath 'original_image_pairs/'],[outputDir '/']);
 else
     awsCopyFileFolder([datasetPath 'original_image_pairs_view_for_user/'],[outputDir '/']);
+end
