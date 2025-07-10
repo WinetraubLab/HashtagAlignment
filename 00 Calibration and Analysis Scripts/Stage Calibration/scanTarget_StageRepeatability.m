@@ -1,24 +1,33 @@
 % This script will draw a target to measure repetablilty of photobleach
 
 %% Inputs
-% Mock option: When set to true the stage will not move and we will not
+% skipHardware: When set to true the stage will not move and we will not
 % photobleach. Use "true" when you would like to see the output without
 % physcaily running the test.
-isMockTrial = false;
+skipHardware = false;  % If true, skip real photobleaching and scanning
 
 % Photobleach pattern configuration
-lens = '40x';
-octProbePath = yOCTGetProbeIniPath(lens); % Select lens magnification
+octProbePath = yOCTGetProbeIniPath('40x','OCTP900'); % Inputs to the function are OBJECTIVE_DEPENDENT: '10x' or '40x', and scanning system dependent 'OCTP900' or ''
 
 % Current calibration angle between OCT and Stage
-oct2stageXYAngleDeg = +1.59;
+oct2stageXYAngleDeg = 0;
 
-%% Reference Scan JSON - where to get default scan parameters from
-subjectPaths = s3GetAllSubjectsInLib();
-subjectPath = subjectPaths{end};
-config = awsReadJSON([subjectPath 'OCTVolumes/ScanConfig.json']);
+% Hashtag Photobleach Configurations
+exposure_mm_sec = 2; % mm/sec
+nPasses = 4; % Keep as low as possible. If galvo gets stuck, increase number
 
 %% Define pattern template
+[~, fileName, ~] = fileparts(octProbePath); % Extract filename from path to get lens magniciation
+tokens = regexp(fileName, '(\d+x)', 'tokens');
+if ~isempty(tokens)
+    lens = tokens{1}{1};  % identify lens magnification '10x', '40x'
+else
+    error('No magnification found in filename.');
+end
+
+% Uncomment next line to set lens manually
+% lens = '40x';
+
 switch(lens)
     case '10x'
         L = 3;% Positions to move around (mm)
@@ -59,32 +68,35 @@ pattern2_Start = makePattern(template2_Start);
 pattern2_End = makePattern(template2_End);
 
 %% Photobleach the two patterns
-fprintf('%s Pattern 1, drow squares...\n',datestr(datetime));
+fprintf('%s Pattern 1, draw squares...\n',datestr(datetime));
 json1 = yOCTPhotobleachTile(pattern1_Start,pattern1_End,...
     'octProbePath',octProbePath,...
-    'exposure',config.photobleach.exposure,...
-    'nPasses',config.photobleach.nPasses,...
-    'skipHardware',isMockTrial, ...
+    'exposure',exposure_mm_sec,...
+    'nPasses',nPasses,...
+    'skipHardware',skipHardware, ...
     'oct2stageXYAngleDeg',oct2stageXYAngleDeg, ...
-    'v',true); 
+    'plotPattern',true,...
+    'v',true);
 
 fprintf('%s Pattern 2, drow a cross in the middle of FOV for every position...\n',datestr(datetime));
-if ~isMockTrial
+if ~skipHardware
     ThorlabsImagerNETLoadLib(); %Init library
-    ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(octProbePath); %Init OCT
+    ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(octProbePath); % Init OCT System
+    [x0,y0,z0] = yOCTStageInit(oct2stageXYAngleDeg, NaN, NaN, true);   % Initialize Translation Stage
+    ini = yOCTReadProbeIniToStruct(octProbePath);                   % Load probe ini
 
-    [x0,y0] = yOCTStageInit(oct2stageXYAngleDeg);
-    ini = yOCTReadProbeIniToStruct(octProbePath);
-    
-    yOCTTurnOpticalSwitch('OCT'); % Turn optical switch "off"
-    yOCTTurnLaser(true); % Turn beam on
+    yOCTTurnOpticalSwitch('init'); % Initialize first
+	yOCTTurnOpticalSwitch('OCT');  % Set switch position away from photodiode
+    yOCTTurnLaser(true);           % Turn beam on
 end
+
 xcc = [0 L -L 0  0];
 ycc = [0 0 0  L -L];
+
 for i=1:length(xcc)
     
     % Put pattern at the center of FOV
-    if ~isMockTrial
+    if ~skipHardware
         yOCTStageMoveTo(x0+xcc(i),y0+ycc(i),NaN,true);
     
         % Photobleach Pattern
@@ -98,18 +110,23 @@ for i=1:length(xcc)
             ThorlabsImagerNET.ThorlabsImager.yOCTPhotobleachLine( ...
                 template2_Start(1,j),template2_Start(2,j), ... Start X,Y
                 template2_End(1,j),  template2_End(2,j)  , ... End X,y
-                config.photobleach.exposure*d,  ... Exposure time sec
-                config.photobleach.nPasses);
+                exposure_mm_sec*d,  ... Exposure time sec
+                nPasses);
             
             % Set optical switch to "off" position
             yOCTTurnOpticalSwitch('OCT');
+
+            % Wait before moving the stage to next position to prevent stage
+            % motor jamming.
+            pause(0.5);
         end
     end
 end
 % Clean up
-if ~isMockTrial
-    yOCTTurnLaser(false); % Turn off the beam
-    yOCTStageMoveTo(x0,y0,NaN,true);
+if ~skipHardware
+    yOCTTurnOpticalSwitch('OCT');       % Set switch position away from photodiode
+    yOCTTurnLaser(false);               % Turn off the beam
+    yOCTStageMoveTo(x0,y0,z0,true);     % Return stage to original position
     ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose(); % Clean up
 end
 
@@ -137,9 +154,9 @@ if isPlot2ndPattern
 end
 
 % Plot the stage center positions
-for i=1:length(json1.photobleachInstructions)
-    x = json1.photobleachInstructions(i).stageCenterX;
-    y = json1.photobleachInstructions(i).stageCenterY;
+for i=1:length(json1.photobleachPlan)
+    x = json1.photobleachPlan(i).stageCenterX_mm;
+    y = json1.photobleachPlan(i).stageCenterY_mm;
     plot(x,y,'ob');
     text(x,y,sprintf('Stage %d',i),'HorizontalAlignment','center','VerticalAlignment','top');
 end
