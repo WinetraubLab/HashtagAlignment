@@ -4,12 +4,10 @@
 % skipHardware: When set to true the stage will not move and we will not
 % photobleach. Use "true" when you would like to see the output without
 % physcaily running the test.
-skipHardware = true;  % If true, skip real photobleaching and scanning
+skipHardware = false;  % If true, skip real photobleaching and scanning
 
 % Photobleach pattern configuration
-lens = '40x';
-scanner = 'OCTP900';
-octProbePath = yOCTGetProbeIniPath(lens, scanner);
+octProbePath = yOCTGetProbeIniPath('40x','OCTP900'); % Inputs to the function are OBJECTIVE_DEPENDENT: '10x' or '40x', and scanning system dependent 'OCTP900' or ''
 
 % Current calibration angle between OCT and Stage
 oct2stageXYAngleDeg = 0;
@@ -19,6 +17,17 @@ exposure_mm_sec = 2; % mm/sec
 nPasses = 4; % Keep as low as possible. If galvo gets stuck, increase number
 
 %% Define pattern template
+[~, fileName, ~] = fileparts(octProbePath); % Extract filename from path to get lens magniciation
+tokens = regexp(fileName, '(\d+x)', 'tokens');
+if ~isempty(tokens)
+    lens = tokens{1}{1};  % identify lens magnification '10x', '40x'
+else
+    error('No magnification found in filename.');
+end
+
+% Uncomment next line to set lens manually
+% lens = '40x';
+
 switch(lens)
     case '10x'
         L = 3;% Positions to move around (mm)
@@ -73,7 +82,7 @@ fprintf('%s Pattern 2, drow a cross in the middle of FOV for every position...\n
 if ~skipHardware
     ThorlabsImagerNETLoadLib(); %Init library
     ThorlabsImagerNET.ThorlabsImager.yOCTScannerInit(octProbePath); % Init OCT System
-    [x0,y0,z0] = yOCTStageInit(oct2stageXYAngleDeg, NaN, NaN, v);   % Initialize Translation Stage
+    [x0,y0,z0] = yOCTStageInit(oct2stageXYAngleDeg, NaN, NaN, true);   % Initialize Translation Stage
     ini = yOCTReadProbeIniToStruct(octProbePath);                   % Load probe ini
 
     yOCTTurnOpticalSwitch('init'); % Initialize first
@@ -117,7 +126,7 @@ end
 if ~skipHardware
     yOCTTurnOpticalSwitch('OCT');       % Set switch position away from photodiode
     yOCTTurnLaser(false);               % Turn off the beam
-    yOCTStageMoveTo(x0,y0,NaN,true);    % Return stage to original position
+    yOCTStageMoveTo(x0,y0,z0,true);     % Return stage to original position
     ThorlabsImagerNET.ThorlabsImager.yOCTScannerClose(); % Clean up
 end
 
